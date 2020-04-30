@@ -31,10 +31,13 @@ scoreCheck <- function(team, players) {
 
 scores_template = tibble(
   player = as.character(),
-  round_num = as.numeric(),
+  round_num = as.character(),
   points_scored = as.numeric(),
   shooting = as.logical()
 )
+
+rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
+round_labels = rep(c("Pass the dice", "Next round"),100)
 
 library(shiny)
 
@@ -142,17 +145,23 @@ server <- function(input, output, session) {
     score = NULL,
     error_msg = NULL,
     print = FALSE,
+    
     score_a = 0,
     score_b = 0,
+    
     name_p1 = NULL,
     name_p2 = NULL,
     name_p3 = NULL,
     name_p4 = NULL,
+    
     p1_score = 0,
     p2_score = 0,
     p3_score = 0,
     p4_score = 0,
-    scores = scores_template
+    scores = scores_template,
+    
+    shot_num = 1
+
   )
   
   #TODO: create list of players and their team
@@ -161,17 +170,22 @@ server <- function(input, output, session) {
     team_b = list(NULL, NULL)
   )
   
-  round_num = reactiveVal({
-    1
-  })
+
   
 
 # Outputs -----------------------------------------------------------------
 
+  # Switch between pass the dice and next round
+  output$selector_ui <- renderUI({
+    actionButton("next_round", label = round_labels[vals$shot_num])
+  })
   
   # Increment round number
+  round_num = reactive({
+    rounds[vals$shot_num]
+  })
   output$round_num = renderText({
-    as.character(round_num())
+    round_num()
   })
   
   # Output Team A's score
