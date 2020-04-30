@@ -7,29 +7,67 @@
 #    http://shiny.rstudio.com/
 #
 
+# Create pop-up dialog box when someone scores
+scoreCheck <- function(team, players) {
+  # Identify which team scored
+  team_scored = paste("ok", team, sep = "_")
+  
+  # Ask how many points were scored and by whom
+  modalDialog(
+    numericInput("score", label = "Noice, how many points?",
+                 value = 1, min = 1, max = 9,
+                 step = 1),
+    
+    selectInput("scorer", label = h3("Who scored?"), 
+                choices = players),
+    textOutput("skip_error_msg"),
+    footer = tagList(
+      modalButton("Cancel"),
+      actionButton(team_scored, "OK")
+    )
+  )
+  
+}
+
+scores_template = tibble(
+  player = as.character(),
+  round_num = as.numeric(),
+  points_scored = as.numeric(),
+  shooting = as.logical()
+)
+
 library(shiny)
+
+# UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
-  
   # Application title
   titlePanel("Snappa Scoreboard"),
+  
+  
+  
   
   sidebarLayout(
     
     sidebarPanel(
-      "So you want to ya some da?"
+      "So you want to ya some da?",
+      actionButton("finish_game", "Finish game")
       #TODO: Tip of the day
     ),
+    
+    
     
     mainPanel(
       
       tabsetPanel(
         # Switching mechanism
         id = "switcher",
+        
+        ## Start Screen
         tabPanel("start_screen", 
                  # Enter Player Names
                  fluidRow(
