@@ -94,6 +94,8 @@ ui <- fluidPage(
                    column(5)
                  )
         ),
+        
+        ## Scoreboard
         tabPanel("scoreboard", 
                  
                  # Scoreboard
