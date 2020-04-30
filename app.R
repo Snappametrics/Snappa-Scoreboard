@@ -55,10 +55,15 @@ ui <- fluidPage(
   
   
   sidebarLayout(
-    
+
+    # Sidebar ----
     sidebarPanel(
       "So you want to ya some da?",
       helpText("Note: All players must enter their name before the game can begin"),
+      
+      actionButton("new_game", "New game"),
+      
+      
       actionButton("finish_game", "Finish game")
       #TODO: Tip of the day
     ),
@@ -71,7 +76,10 @@ ui <- fluidPage(
         # Switching mechanism
         id = "switcher",
         
-        ## Start Screen
+
+# Start Screen ------------------------------------------------------------
+
+        
         tabPanel("start_screen", 
                  # Enter Player Names
                  fluidRow(
@@ -235,6 +243,13 @@ server <- function(input, output, session) {
     
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
+    vals$score_a = 0
+    vals$score_b = 0
+    vals$p1_score = 0
+    vals$p2_score = 0
+    vals$p3_score = 0
+    vals$p4_score = 0
+    
     
     vals$name_p1 = input$name_p1
     vals$name_p2 = input$name_p2
@@ -332,6 +347,29 @@ server <- function(input, output, session) {
                   downloadButton("downloadData", "Download"))
     )
     
+  })
+  
+  observeEvent(input$new_game, {
+    
+    showModal(
+      modalDialog(
+        helpText("Are you sure?"),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("new_game_sure", "OK")
+        )
+      )
+    )
+    
+  })
+  
+  observeEvent(input$new_game_sure, {
+    
+    updateTabsetPanel(session, "switcher", selected = "start_screen")
+    vals$scores = scores
+    vals$shot_num = 1
+    walk(c("name_p1", "name_p2", "name_p3", "name_p4"), function(id) updateTextInput(session, inputId = id, value = "", placeholder = "A thrower needs a name"))
+    removeModal()
   })
   
 
