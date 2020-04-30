@@ -1,5 +1,5 @@
 # This script attempts to figure out how to connect between the Rstudio cloud and 
-# a SQL database using RPostgreSQL
+# a SQL database hosted on AWS using RPostgres
 
 
 
@@ -13,7 +13,13 @@ library(dbplyr)
 
 
 # Connecting ------------------------------------
-con <- dbConnect(RPostgres::Postgres())
+con <- dbConnect(RPostgres::Postgres(),
+                 user = "postgres",
+                 password = rstudioapi::askForPassword("connection password"),
+                 host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
+                 port = 5432,
+                 dbname = "Snappa Scoreboard"
+                 )
 
 
 
