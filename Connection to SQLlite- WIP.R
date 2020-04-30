@@ -1,19 +1,10 @@
-library(RMySQL)
-
-options(mysql = list(
-  "host" = "127.0.0.1",
-  "port" = ,
-  "user" = "",
-  "password" = ""
-))
-databaseName <- "Snappa Scoreboard"
-table <- "players"
+library(RSQLite)
+sqlitePath <- "/path/to/sqlite/database"
+table <- "responses"
 
 saveData <- function(data) {
   # Connect to the database
-  db <- dbConnect(MySQL(), dbname = databaseName, host = options()$mysql$host, 
-                  port = options()$mysql$port, user = options()$mysql$user, 
-                  password = options()$mysql$password)
+  db <- dbConnect(SQLite(), sqlitePath)
   # Construct the update query by looping over the data fields
   query <- sprintf(
     "INSERT INTO %s (%s) VALUES ('%s')",
@@ -28,9 +19,7 @@ saveData <- function(data) {
 
 loadData <- function() {
   # Connect to the database
-  db <- dbConnect(MySQL(), dbname = databaseName, host = options()$mysql$host, 
-                  port = options()$mysql$port, user = options()$mysql$user, 
-                  password = options()$mysql$password)
+  db <- dbConnect(SQLite(), sqlitePath)
   # Construct the fetching query
   query <- sprintf("SELECT * FROM %s", table)
   # Submit the fetch query and disconnect
