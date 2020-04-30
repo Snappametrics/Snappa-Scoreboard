@@ -182,96 +182,110 @@ server <- function(input, output, session) {
     vals$score_b
   })
   
-  # Create object to store reactive values
-  vals <- reactiveValues(
-    score = NULL,
-    error_msg = NULL,
-    print = FALSE,
-    score_a = 0,
-    score_b = 0,
-    name_p1 = NULL,
-    name_p2 = NULL,
-    name_p3 = NULL,
-    name_p4 = NULL,
-    p1_score = 0,
-    p2_score = 0,
-    p3_score = 0,
-    p4_score = 0
-  )
+  # Output error message
+  output$skip_error_msg <- renderText({
+    vals$error_msg
+  })
   
-  # Create pop-up dialog box when someone scores
-  scoreCheck <- function(team) {
-    # Identify which team scored
-    team_scored = paste("ok", team, sep = "_")
+  
+
+# Events ------------------------------------------------------------------
+
+  
+  # When we click "Start Game", switch to the scoreboard
+  observeEvent(input$start_game, {
+    updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
-    # Ask how many points were scored and by whom
-    modalDialog(
-      numericInput("score", label = "Noice, how many points?",
-                   value = 1, min = 1, max = 9,
-                   step = 1),
-      
-      selectInput("scorer", label = h3("Who scored?"), 
-                  choices = list(players()[team])),
-      browser(),
-      textOutput("skip_error_msg"),
-      footer = tagList(
-        modalButton("Cancel"),
-        actionButton(team_scored, "OK")
-      )
-    )
-  }
+    vals$name_p1 = input$name_p1
+    vals$name_p2 = input$name_p2
+    vals$name_p3 = input$name_p3
+    vals$name_p4 = input$name_p4
+    
+    players$team_a = c(input$name_p1, input$name_p2)
+    players$team_b = c(input$name_p3, input$name_p4)
+  })
   
-  # Show modal when button is clicked
+  observeEvent(input$next_round, {
+    next_round = round_num() + 1
+    round_num(next_round)
+  })
+  
+  # When team A's score button is pushed
   observeEvent(input$a_score_button, {
     vals$error_msg <- NULL
-    showModal(scoreCheck("A"))
+    showModal(scoreCheck("a", players$team_a))
+
+    
   })
   
   
   observeEvent(input$b_score_button, {
     vals$error_msg <- NULL
-    showModal(scoreCheck("B"))
+    showModal(scoreCheck("b", players$team_b))
   })
   
   
   # Validate submission
-  observeEvent(input$ok_A, {
+  observeEvent(input$ok_a, {
     vals$score <- input$score
     
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
       vals$score_a = vals$score_a + vals$score
+
+      vals$scores = bind_rows(vals$scores,
+                              tibble(
+                                player = input$scorer,
+                                round_num = round_num(),
+                                points_scored = input$score,
+                                shooting = F
+                                ))
     } else {
       vals$error_msg <- "You did not input anything."
     }
   })
   
-  observeEvent(input$ok_B, {
+  observeEvent(input$ok_b, {
     vals$score <- input$score
     
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
       vals$score_b = vals$score_b + vals$score
+      
+      vals$scores = bind_rows(vals$scores,
+                              tibble(
+                                player = input$scorer,
+                                round_num = round_num(),
+                                points_scored = input$score,
+                                shooting = F
+                              ))
     } else {
       vals$error_msg <- "You did not input anything."
     }
   })
   
-  # Output error message
-  output$skip_error_msg <- renderText({
-    vals$error_msg
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste('data-', Sys.Date(), '.csv', sep='')
+    },
+    content = function(con) {
+      write.csv(vals$scores, con)
+    }
+  )
+  
+  
+  
+  observeEvent(input$finish_game, {
+    
+    showModal(
+      modalDialog(title = "Save that data!",
+                downloadButton("downloadData", "Download"))
+    )
   })
   
-  # Output inputted text
-  output$print <- renderPrint({
-    if (vals$print) {
-      vals$score
-    } else {
-      NULL
-    }
-  })
+  
   
 }
 
