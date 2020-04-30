@@ -128,23 +128,48 @@ ui <- fluidPage(
   
 )
 
-# Define server logic required to draw a histogram
+
+
+
+
+# Server ------------------------------------------------------------------
 server <- function(input, output, session) {
   
-  # When we click "Start Game", switch to the scoreboard
-  observeEvent(input$start_game, {
-    updateTabsetPanel(session, "switcher", selected = "scoreboard")
-    vals$name_p1 = input$name_p1
-    vals$name_p2 = input$name_p2
-    vals$name_p3 = input$name_p3
-    vals$name_p4 = input$name_p4
-  })
+  # Create object to store reactive values
+  vals <- reactiveValues(
+    score = NULL,
+    error_msg = NULL,
+    print = FALSE,
+    score_a = 0,
+    score_b = 0,
+    name_p1 = NULL,
+    name_p2 = NULL,
+    name_p3 = NULL,
+    name_p4 = NULL,
+    p1_score = 0,
+    p2_score = 0,
+    p3_score = 0,
+    p4_score = 0,
+    scores = scores_template
+  )
   
   #TODO: create list of players and their team
+  players = reactiveValues(
+    team_a = list(NULL, NULL),
+    team_b = list(NULL, NULL)
+  )
+  
+  round_num = reactiveVal({
+    1
+  })
+  
+
+# Outputs -----------------------------------------------------------------
+
   
   # Increment round number
   output$round_num = renderText({
-    as.character(input$next_round+1)
+    as.character(round_num())
   })
   
   # Output Team A's score
