@@ -23,7 +23,6 @@ con <- dbConnect(RPostgres::Postgres(),
 
 
 
-
 ###### Generate a table and work on merging it
 copy_to(con, nycflights13::flights, "flights",
         temporary = F,
@@ -56,44 +55,26 @@ copy_to(con, flights_new, 'flights',
 
 
 
+## Use purrr to turn a preexisting data table into a vector of strings that I can
+# insert into SQL
+
+x <- tibble(a = c(1, 2, 3), 
+            b = c("hello", "world", "sup"), 
+            c = c("yo", "my", "dudes"))
+
+x %>% 
+  mutate(combined = str_c("(", a , " , '" , b , "' , '" , c, "' )" )) %>% 
+  pull(combined) %>% 
+  map_chr(., function(vals) str_c("SQL INSERT ", vals, " INTO TABLE")) %>% 
+  walk(., print)
+
+strangs <- map(.x = x, 
+               .f = str_c("( ", a , " , " , b , " , " , c, " )" ))
 
 
 
+INSERT INTO 
+VALUES 
 
 
 
-
-
-
-
-
-# Taken from the shiny site on RSQLite integration. Possibly not useful
-library(RSQLite)
-sqlitePath <- "/path/to/sqlite/database"
-table <- "responses"
-
-saveData <- function(data) {
-  # Connect to the database
-  db <- dbConnect(SQLite(), sqlitePath)
-  # Construct the update query by looping over the data fields
-  query <- sprintf(
-    "INSERT INTO %s (%s) VALUES ('%s')",
-    table, 
-    paste(names(data), collapse = ", "),
-    paste(data, collapse = "', '")
-  )
-  # Submit the update query and disconnect
-  dbGetQuery(db, query)
-  dbDisconnect(db)
-}
-
-loadData <- function() {
-  # Connect to the database
-  db <- dbConnect(SQLite(), sqlitePath)
-  # Construct the fetching query
-  query <- sprintf("SELECT * FROM %s", table)
-  # Submit the fetch query and disconnect
-  data <- dbGetQuery(db, query)
-  dbDisconnect(db)
-  data
-}
