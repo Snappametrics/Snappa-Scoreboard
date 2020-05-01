@@ -7,6 +7,15 @@
 #    http://shiny.rstudio.com/
 #
 
+library(DBI)
+library(tidyverse)
+library(shiny)
+library(lubridate)
+library(dbplyr)
+
+
+# Prior to app startup ----------------------------------------------------
+
 # Create pop-up dialog box when someone scores
 scoreCheck <- function(team, players) {
   # Identify which team scored
