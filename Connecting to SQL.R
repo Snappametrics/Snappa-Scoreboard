@@ -1,5 +1,5 @@
 # This script attempts to figure out how to connect between the Rstudio cloud and 
-# a SQL database using RPostgreSQL
+# a SQL database hosted on AWS using RPostgres
 
 
 
@@ -13,8 +13,13 @@ library(dbplyr)
 
 
 # Connecting ------------------------------------
-con <- dbConnect(RPostgres::Postgres())
-
+con <- dbConnect(RPostgres::Postgres(),
+                 user = "postgres",
+                 password = rstudioapi::askForPassword("connection password"),
+                 host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
+                 port = 5432,
+                 dbname = "Snappa Scoreboard"
+                 )
 
 
 
@@ -50,44 +55,24 @@ copy_to(con, flights_new, 'flights',
 
 
 
+## Use purrr to turn a preexisting data table into a vector of SQL query strings
+
+x <- tibble(a = c(1, 2, 3), 
+            b = c("hello", "world", "sup"), 
+            c = c("yo", "my", "dudes"))
+
+x <- tbl_memdb(x)
+
+x %>% 
+  mutate(combined = str_c("( ", a , " , '" , b , "' , '" , c, "' )" )) %>% 
+  pull(combined) %>% 
+  map_chr(., function(vals) str_c("INSERT INTO ", "table", " VALUES ", vals)) %>% 
+  walk(., print) %>% show_query()
+    
+
+y <- tbl_memdb(x)
+
+## Use dbplyr's sql() command to directly write SQL queries in R
 
 
 
-
-
-
-
-
-
-
-
-# Taken from the shiny site on RSQLite integration. Possibly not useful
-library(RSQLite)
-sqlitePath <- "/path/to/sqlite/database"
-table <- "responses"
-
-saveData <- function(data) {
-  # Connect to the database
-  db <- dbConnect(SQLite(), sqlitePath)
-  # Construct the update query by looping over the data fields
-  query <- sprintf(
-    "INSERT INTO %s (%s) VALUES ('%s')",
-    table, 
-    paste(names(data), collapse = ", "),
-    paste(data, collapse = "', '")
-  )
-  # Submit the update query and disconnect
-  dbGetQuery(db, query)
-  dbDisconnect(db)
-}
-
-loadData <- function() {
-  # Connect to the database
-  db <- dbConnect(SQLite(), sqlitePath)
-  # Construct the fetching query
-  query <- sprintf("SELECT * FROM %s", table)
-  # Submit the fetch query and disconnect
-  data <- dbGetQuery(db, query)
-  dbDisconnect(db)
-  data
-}
