@@ -17,7 +17,7 @@ library(dbplyr)
 # Prior to app startup ----------------------------------------------------
 
 # Create pop-up dialog box when someone scores
-scoreCheck <- function(team, players) {
+score_check <- function(team, players) {
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
   
