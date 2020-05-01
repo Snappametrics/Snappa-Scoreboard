@@ -55,26 +55,24 @@ copy_to(con, flights_new, 'flights',
 
 
 
-## Use purrr to turn a preexisting data table into a vector of strings that I can
-# insert into SQL
+## Use purrr to turn a preexisting data table into a vector of SQL query strings
 
 x <- tibble(a = c(1, 2, 3), 
             b = c("hello", "world", "sup"), 
             c = c("yo", "my", "dudes"))
 
+x <- tbl_memdb(x)
+
 x %>% 
-  mutate(combined = str_c("(", a , " , '" , b , "' , '" , c, "' )" )) %>% 
+  mutate(combined = str_c("( ", a , " , '" , b , "' , '" , c, "' )" )) %>% 
   pull(combined) %>% 
-  map_chr(., function(vals) str_c("SQL INSERT ", vals, " INTO TABLE")) %>% 
-  walk(., print)
+  map_chr(., function(vals) str_c("INSERT INTO ", "table", " VALUES ", vals)) %>% 
+  walk(., print) %>% show_query()
+    
 
-strangs <- map(.x = x, 
-               .f = str_c("( ", a , " , " , b , " , " , c, " )" ))
+y <- tbl_memdb(x)
 
-
-
-INSERT INTO 
-VALUES 
+## Use dbplyr's sql() command to directly write SQL queries in R
 
 
 
