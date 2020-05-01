@@ -42,22 +42,6 @@ score_check <- function(team, players) {
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
-con <- dbConnect(RPostgres::Postgres(),
-                 user = "postgres",
-                 password = rstudioapi::askForPassword("connection password"),
-                 host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
-                 port = 5432,
-                 dbname = "Snappa Scoreboard"
-)
-
-dbListTables(con)
-players_tbl = tbl(con, "players") %>% collect()
-scores_tbl = tbl(con, "scores") %>% collect()
-games_tbl = tbl(con, "games") %>% collect()
-
-next_game_id <- sum(dbGetQuery(con, "SELECT count(*) FROM players"),1)
-
-
 
 #### Talking to the database ####
 
@@ -69,19 +53,16 @@ con <- dbConnect(RPostgres::Postgres(),
                           dbname = "Snappa Scoreboard"
        )
 
+dbListTables(con)
 
-# Pull games and necessary information
+# Pull db tables for tibble templates
+players_tbl = tbl(con, "players") %>% collect()
+scores_tbl = tbl(con, "scores") %>% collect()
+games_tbl = tbl(con, "games") %>% collect()
 
-games_old <- tbl(con, "games") %>% collect()
-
-new_game_id <- games_old %>% pull(game_id) %>% max() + 1
+next_game_id <- sum(dbGetQuery(con, "SELECT count(*) FROM games"),1)
 
 
-# Pull players and necessary information
-
-players_old <- tbl(con, "players") %>% collect()
-
-players_list <- players_old %>% pull(name)
 
 
 # Scores doesn't need to be pulled but will be referenced later
