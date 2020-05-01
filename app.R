@@ -184,13 +184,7 @@ server <- function(input, output, session) {
   
   # Create object to store reactive values
   vals <- reactiveValues(
-    score = NULL,
-    error_msg = NULL,
-    print = FALSE,
-    
-    # Scores
-    score_a = 0,
-    score_b = 0,
+    shot_num = 1,
 
     # Player names
     name_p1 = NULL,
@@ -204,14 +198,22 @@ server <- function(input, output, session) {
     p3_score = 0,
     p4_score = 0,
     
-    # Scores table
-    scores = scores_template,
-    # Games table
-    games = games_template,
-    # Players template
-    players = players_template,
     
-    shot_num = 1
+    # Scores
+    score_a = 0,
+    score_b = 0,
+    
+    # Values used in scoring events
+    score = NULL,
+    error_msg = NULL,
+    print = FALSE,
+    
+    # Scores table
+    scores = slice(scores_tbl, 0),
+    # Games table
+    games = slice(games_tbl, 0),
+    # Players template
+    players = slice(players_tbl, 0)
 
   )
   
@@ -220,6 +222,20 @@ server <- function(input, output, session) {
     team_a = list(NULL, NULL),
     team_b = list(NULL, NULL)
   )
+  
+  # Increment round number
+  round_num = reactive({
+    rounds[vals$shot_num]
+  })
+  
+  # Rebuttal
+  # 1. When either team's score is >=21 and the other team's score is two less (or lesser)
+  # rebuttal = reactive({
+  #   case_when(
+  #     # E
+  #     any((vals$score_a >= 21 & vals$score_b <= 19), (vals$score_b >= 21 & vals$score_a <= 19))
+  #   )
+  # })
   
 
   
@@ -231,22 +247,19 @@ server <- function(input, output, session) {
     actionButton("next_round", label = round_labels[vals$shot_num])
   })
   
-  # Increment round number
-  round_num = reactive({
-    rounds[vals$shot_num]
-  })
+  
   output$round_num = renderText({
     round_num()
   })
   
   # Output Team A's score
   output$score_a = renderText({
-    vals$score_a
+    vals$current_scores$team_a
   })
   
   # Output Team B's score
   output$score_b = renderText({
-    vals$score_b
+    vals$current_scores$team_b
   })
   
   # Output error message
@@ -280,8 +293,8 @@ server <- function(input, output, session) {
     
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
-    vals$score_a = 0
-    vals$score_b = 0
+    vals$current_scores$team_a = 0
+    vals$current_scores$team_b = 0
     vals$p1_score = 0
     vals$p2_score = 0
     vals$p3_score = 0
@@ -346,7 +359,7 @@ server <- function(input, output, session) {
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
-      vals$score_a = vals$score_a + vals$score
+      vals$current_scores$team_a = vals$current_scores$team_a + vals$score
       vals$scores = bind_rows(vals$scores,
                               tibble(
                                 player = input$scorer,
@@ -365,7 +378,7 @@ server <- function(input, output, session) {
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
-      vals$score_b = vals$score_b + vals$score
+      vals$current_scores$team_b = vals$current_scores$team_b + vals$score
       
       vals$scores = bind_rows(vals$scores,
                               tibble(
