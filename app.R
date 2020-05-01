@@ -194,19 +194,28 @@ server <- function(input, output, session) {
     error_msg = NULL,
     print = FALSE,
     
+    # Scores
     score_a = 0,
     score_b = 0,
-    
+
+    # Player names
     name_p1 = NULL,
     name_p2 = NULL,
     name_p3 = NULL,
     name_p4 = NULL,
     
+    # Players' scores
     p1_score = 0,
     p2_score = 0,
     p3_score = 0,
     p4_score = 0,
+    
+    # Scores table
     scores = scores_template,
+    # Games table
+    games = games_template,
+    # Players template
+    players = players_template,
     
     shot_num = 1
 
@@ -264,6 +273,11 @@ server <- function(input, output, session) {
   
 
 # Events ------------------------------------------------------------------
+  
+  
+
+
+# Game Start --------------------------------------------------------------
 
   
   # When we click "Start Game", switch to the scoreboard
@@ -354,6 +368,9 @@ server <- function(input, output, session) {
   })
   
   
+
+# End of the game ---------------------------------------------------------
+
   
   
   observeEvent(input$finish_game, {
@@ -377,6 +394,11 @@ server <- function(input, output, session) {
     )
     
   })
+  
+
+# Restart game ------------------------------------------------------------
+
+  
   
   observeEvent(input$new_game, {
     
