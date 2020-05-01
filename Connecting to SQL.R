@@ -23,35 +23,6 @@ con <- dbConnect(RPostgres::Postgres(),
 
 
 
-###### Generate a table and work on merging it
-copy_to(con, nycflights13::flights, "flights",
-        temporary = F,
-        indexes = list(
-          c("year", "month", "day", 
-            "carrier", "tailnum", "dest")
-        )
-)
-
-flights_db <- tbl(con, "flights")
-flights_old <- flights_db %>% collect()
-
-# Proof of concept: Make a dataframe from a SQL select, join that with 
-# the new data frame, then export the new dataframe as the new table
-# on the server
-
-new_data <- flights_old[1:10,]
-
-
-flights_new <- flights_old %>% full_join(new_data)
-# Still need to figure out what indexes do
-copy_to(con, flights_new, 'flights',
-        temporary = F,
-        overwrite = T,
-        indexes = list(
-          c("year", "month", "day",
-            "carrier", "tailnum", "dest")
-        )
-)
 
 
 
@@ -61,18 +32,84 @@ x <- tibble(a = c(1, 2, 3),
             b = c("hello", "world", "sup"), 
             c = c("yo", "my", "dudes"))
 
-x <- tbl_memdb(x)
+
 
 x %>% 
   mutate(combined = str_c("( ", a , " , '" , b , "' , '" , c, "' )" )) %>% 
   pull(combined) %>% 
-  map_chr(., function(vals) str_c("INSERT INTO ", "table", " VALUES ", vals)) %>% 
-  walk(., print) %>% show_query()
+  map_chr(., function(vals) str_c("INSERT INTO ", "flights (tailnum, year, month)", " VALUES ", vals)) %>%
+  walk(., dbGetQuery, conn = con)
     
 
-y <- tbl_memdb(x)
+# make a function which can do the last bit of this code
+query_walk <- function(new_vector, dbtable, connection){
+  vars <- colnames(dbtable)
+  table_name <- deparse(substitute(dbtable))
 
-## Use dbplyr's sql() command to directly write SQL queries in R
+output <- new_vector %>% map_chr(., function(vals) str_c("INSERT INTO ", 
+                                  str_c(table_name, 
+                                  " ( ", 
+                                  str_c(vars, collapse = " , ") ,
+                                  " )",
+                                  " VALUES ", 
+                                  vals)) ) %>%
+          walk(., dbExecute, conn = connection)
+return(output)
+}
+
+# Test with a small scale example
+
+y <- tibble(a = c(1,2,3), b = c("like", "and", "subscribe"), c = c("sql", "is", "hard"))
+
+copy_to(con, y , "y",
+        temporary = F,
+        overwrite = T
+        )
+
+
+x %>% 
+  mutate(combined = str_c("( ", a , " , '" , b , "' , '" , c, "' )" )) %>% 
+  pull(combined) %>% query_walk(y, con)
+
+
+y2 <- tbl(con, "y") %>% collect()
+
+
+
+
+################ Use dplyr merges to accomplish updating
+
+#### Pipeline:
+# 1. Shiny pulls table information from the database and stores it
+# 2. Shiny collects streaming game data
+# 3. At the end of the game, Shiny creates a joined table and puts
+#   that back into the database, overwriting the old one, then closes
+#   its connection to the database
+
+
+# 1. Pull data (copy_to generates the table in the database:
+# only run it once)
+copy_to(con, nycflights13::flights, "flights",
+        temporary = F,
+        overwrite = T,
+        append = F,
+        indexes = list(
+          c("year", "month", "day",
+            "carrier", "tailnum", "dest")
+        )
+)
+
+flights_db <- tbl(con, "flights")
+flights_old <- flights_db %>% collect()
+
+
+#The app needs to know particular things in order to get started
+current_game_id <- flights_old %>% pull(year) %>% max() + 1
+
+
+#2. Data is collected
+
+new_data <- flights_old %>% filter(month < 2)
 
 
 
