@@ -302,15 +302,33 @@ server <- function(input, output, session) {
     players$team_a = c(input$name_p1, input$name_p2)
     players$team_b = c(input$name_p3, input$name_p4)
     
+    vals$games = bind_rows(vals$games,
+                           tibble(
+                             game_id = max(vals$games$game_id)+1,
+                             start = as_datetime(today()),
+                             player_a1 = 1,
+                             player_a2 = 2,
+                             player_b1 = 3,
+                             player_b2 = 4
+                           ))
+    
     
   })
   
   
+
+# Next Round --------------------------------------------------------------
+
   
   observeEvent(input$next_round, {
     vals$shot_num = vals$shot_num+1
   })
   
+  
+  
+
+# Scoring -----------------------------------------------------------------
+
   
   # When team A's score button is pushed
   observeEvent(input$a_score_button, {
