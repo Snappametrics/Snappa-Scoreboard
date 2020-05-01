@@ -65,8 +65,44 @@ round_labels = rep(c("Pass the dice", "Next round"),100)
 
 
 
-# TODO: Access games table for game_id
-# TODO: Access players table for previous players
+#### Talking to the database ####
+
+con <- dbConnect(RPostgres::Postgres(),
+                          user = "postgres",
+                          password = rstudioapi::askForPassword("connection password"),
+                          host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
+                          port = 5432,
+                          dbname = "Snappa Scoreboard"
+       )
+
+
+# Pull games and necessary information
+
+games_old <- tbl(con, "games") %>% collect()
+
+new_game_id <- games_old %>% pull(game_id) %>% max() + 1
+
+
+# Pull players and necessary information
+
+players_old <- tbl(con, "players") %>% collect()
+
+players_list <- players_old %>% pull(name)
+
+
+# Scores doesn't need to be pulled but will be referenced later
+
+
+
+# Updating the db at the end ----------------------------------------------
+# I'd be amazed if this is the correct location for this block 
+# of code. I'm betting it's not.
+
+
+
+
+
+
 
 
 
