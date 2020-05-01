@@ -372,7 +372,7 @@ server <- function(input, output, session) {
   # When team A's score button is pushed
   observeEvent(input$a_score_button, {
     vals$error_msg <- NULL
-    showModal(scoreCheck("a", players$team_a))
+    showModal(score_check("a", players$team_a))
 
     
   })
@@ -380,7 +380,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$b_score_button, {
     vals$error_msg <- NULL
-    showModal(scoreCheck("b", players$team_b))
+    showModal(score_check("b", players$team_b))
   })
   
   
