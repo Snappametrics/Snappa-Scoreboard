@@ -38,30 +38,24 @@ score_check <- function(team, players) {
   
 }
 
-scores_template = tibble(
-  game_id = as.numeric(),
-  player_id = as.character(),
-  round_num = as.character(),
-  points_scored = as.numeric(),
-  shooting = as.logical()
-)
-
-games_template = tibble(
-  game_id = as.numeric(0),
-  start_time = as_datetime(today()),
-  player_a1 = as.numeric(0),
-  player_a2 = as.numeric(0),
-  player_b1 = as.numeric(0),
-  player_b2 = as.numeric(0)
-)
-
-players_template = tibble(
-  player_name = as.character(),
-  player_id = as.numeric()
-)
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
+
+con <- dbConnect(RPostgres::Postgres(),
+                 user = "postgres",
+                 password = rstudioapi::askForPassword("connection password"),
+                 host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
+                 port = 5432,
+                 dbname = "Snappa Scoreboard"
+)
+
+dbListTables(con)
+players_tbl = tbl(con, "players") %>% collect()
+scores_tbl = tbl(con, "scores") %>% collect()
+games_tbl = tbl(con, "games") %>% collect()
+
+next_game_id <- sum(dbGetQuery(con, "SELECT count(*) FROM players"),1)
 
 
 
