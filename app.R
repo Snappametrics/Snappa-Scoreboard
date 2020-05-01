@@ -48,7 +48,7 @@ scores_template = tibble(
 
 games_template = tibble(
   game_id = as.numeric(0),
-  start = as_datetime(today()),
+  start_time = as_datetime(today()),
   player_a1 = as.numeric(0),
   player_a2 = as.numeric(0),
   player_b1 = as.numeric(0),
