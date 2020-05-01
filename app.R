@@ -108,7 +108,8 @@ ui <- fluidPage(
                  fluidRow(
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team A</h1> </center><br>"),
-                          textInput("name_p1", label = "Player 1",placeholder = "A thrower needs a name")),
+                          selectInput('name_p1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), selectize=TRUE),
+                          textInput("new_p1", label = NULL, placeholder = "New Player")),
                    column(2),
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team B</h1> </center><br>"),
@@ -282,6 +283,18 @@ server <- function(input, output, session) {
 # Events ------------------------------------------------------------------
   
   
+  # New Player
+  observeEvent(input$new_p1, {
+    browser()
+    new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1)
+    
+    if(!(input$new_p1 %in% players_tbl$player_name)){
+      players_tbl = bind_rows(players_tbl,
+                              tibble(
+                                player_id = bit64::as.integer64(new_player_id),
+                                player_name = input$new_p1))
+    }
+  }, ignoreInit = T)
 
 
 # Game Start --------------------------------------------------------------
@@ -321,6 +334,8 @@ server <- function(input, output, session) {
     
     
   })
+  
+  
   
   
 
