@@ -42,20 +42,26 @@ x %>%
     
 
 # make a function which can do the last bit of this code
-query_walk <- function(new_vector, dbtable, connection){
-  vars <- colnames(dbtable)
-  table_name <- deparse(substitute(dbtable))
-
-output <- new_vector %>% map_chr(., function(vals) str_c("INSERT INTO ", 
-                                  str_c(table_name, 
+insert_walk <- function(rtable, dbtable, connection){
+  rvars <- colnames(rtable)
+  rtable_name <- deparse(substitute(rtable))
+  dbvars <- colnames(dbtable)
+  dbtable_name <- deparse(substitute(dbtable))
+output <- rtable %>% mutate(combined = str_c("( ",
+                                             sym(str_c(rvars, collapse = " , ")),
+                                             " ) ")) %>%
+                     pull(combined) %>% 
+          map_chr(., function(vals) str_c("INSERT INTO ", 
+                                  str_c(dbtable_name, 
                                   " ( ", 
-                                  str_c(vars, collapse = " , ") ,
+                                  str_c(dbvars, collapse = " , ") ,
                                   " )",
                                   " VALUES ", 
                                   vals)) ) %>%
-          walk(., dbExecute, conn = connection)
+         walk(., dbExecute, conn = connection)
 return(output)
 }
+
 
 # Test with a small scale example
 
@@ -67,9 +73,10 @@ copy_to(con, y , "y",
         )
 
 
-x %>% 
-  mutate(combined = str_c("( ", a , " , '" , b , "' , '" , c, "' )" )) %>% 
-  pull(combined) %>% query_walk(y, con)
+
+
+insert_walk(y, x, con)
+
 
 
 y2 <- tbl(con, "y") %>% collect()
