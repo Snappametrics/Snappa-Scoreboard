@@ -39,16 +39,36 @@ scoreCheck <- function(team, players) {
 }
 
 scores_template = tibble(
-  player = as.character(),
+  game_id = as.numeric(),
+  player_id = as.character(),
   round_num = as.character(),
   points_scored = as.numeric(),
   shooting = as.logical()
 )
 
+games_template = tibble(
+  game_id = as.numeric(0),
+  start = as_datetime(today()),
+  player_a1 = as.numeric(0),
+  player_a2 = as.numeric(0),
+  player_b1 = as.numeric(0),
+  player_b2 = as.numeric(0)
+)
+
+players_template = tibble(
+  player_name = as.character(),
+  player_id = as.numeric()
+)
+
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
-library(shiny)
+
+
+# TODO: Access games table for game_id
+# TODO: Access players table for previous players
+
+
 
 # UI ----------------------------------------------------------------------
 
