@@ -510,12 +510,24 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "switcher", selected = "start_screen")
     vals$scores = slice(scores_tbl, 0)
     vals$shot_num = 1
-    walk(c("name_p1", "name_p2", "name_p3", "name_p4"), 
+    walk(c("name_a1", "name_a2", "name_b1", "name_b2"), 
          function(id) updateTextInput(session, inputId = id, value = "", 
                                       placeholder = "A thrower needs a name"))
     removeModal()
   })
   
+  observeEvent(input$send_to_db, {
+    # Append any new players
+    new_players = vals$players %>% 
+      anti_join(tbl(con, "players") %>% collect(), by = "player_id")
+    
+    dbAppendTable(con, "players", new_players)
+    browser()
+    # Append scores
+    dbAppendTable(con, "scores", vals$scores)
+    # Append game
+    dbAppendTable(con, "scores", vals$games)
+  })
   
 
   
