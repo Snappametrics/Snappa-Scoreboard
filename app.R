@@ -26,6 +26,7 @@ score_check <- function(team, players) {
     numericInput("score", label = "Noice, how many points?",
                  value = 1, min = 1, max = 9,
                  step = 1),
+    checkboxInput("paddle", "Was it a paddle?"),
     
     selectInput("scorer", label = h3("Who scored?"), 
                 choices = players),
@@ -126,13 +127,13 @@ ui <- fluidPage(
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team A</h1> </center><br>"),
                           selectizeInput('name_p1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
-                          ),
+                   ),
                    column(2),
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team B</h1> </center><br>"),
                           selectizeInput('name_p3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
-                          )
-                 ),
+                   )
+                   ),
                  fluidRow(
                    column(5,
                           selectizeInput('name_p2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
@@ -207,6 +208,7 @@ server <- function(input, output, session) {
     # game_id
     game_id = sum(dbGetQuery(con, "SELECT count(*) FROM games"),1),
     new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1),
+    score_id = 0,
     shot_num = 1,
     snappaneers = c(),
 
@@ -343,7 +345,7 @@ server <- function(input, output, session) {
 
     players$team_a = c(input$name_p1, input$name_p2)
     players$team_b = c(input$name_p3, input$name_p4)
-    browser()
+    
     vals$games = bind_rows(vals$games,
                            tibble(
                              game_id = bit64::as.integer64(vals$game_id),
@@ -397,13 +399,22 @@ server <- function(input, output, session) {
       removeModal()
       vals$print <- TRUE
       vals$current_scores$team_a = vals$current_scores$team_a + vals$score
+      
+      vals$score_id = vals$score_id+1
       vals$scores = bind_rows(vals$scores,
                               tibble(
+                                score_id = vals$score_id,
+                                game_id = vals$game_id,
+                                player_id = pull(filter(vals$players, player_name == input$scorer), player_id),
                                 player = input$scorer,
+                                paddle = input$paddle,
                                 round_num = round_num(),
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "A")
                                 ))
+      if(input$paddle){
+        showNotification("That's some hot shit!")
+      }
     } else {
       vals$error_msg <- "You did not input anything."
     }
@@ -417,13 +428,21 @@ server <- function(input, output, session) {
       vals$print <- TRUE
       vals$current_scores$team_b = vals$current_scores$team_b + vals$score
       
+      vals$score_id = vals$score_id+1
       vals$scores = bind_rows(vals$scores,
                               tibble(
+                                score_id = vals$score_id,
+                                game_id = vals$game_id,
+                                player_id = pull(filter(vals$players, player_name == input$scorer), player_id),
                                 player = input$scorer,
+                                paddle = input$paddle,
                                 round_num = round_num(),
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "B")
                               ))
+      if(input$paddle){
+        showNotification("That's some hot shit!")
+      }
     } else {
       vals$error_msg <- "You did not input anything."
     }
@@ -436,7 +455,7 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$finish_game, {
-    
+    browser()
     showModal(
       modalDialog(
         helpText("Are you sure?"),
@@ -486,6 +505,7 @@ server <- function(input, output, session) {
                                       placeholder = "A thrower needs a name"))
     removeModal()
   })
+  
   
 
   
