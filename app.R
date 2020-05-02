@@ -367,7 +367,7 @@ server <- function(input, output, session) {
     vals$games = bind_rows(vals$games,
                            tibble(
                              game_id = bit64::as.integer64(vals$game_id),
-                             start = as_datetime(today()),
+                             start_time = as_datetime(today()),
                              player_a1 = pull(filter(vals$players, player_name == input$name_a1), player_id),
                              player_a2 = pull(filter(vals$players, player_name == input$name_a2), player_id),
                              player_b1 = pull(filter(vals$players, player_name == input$name_b1), player_id),
