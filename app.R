@@ -455,7 +455,6 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$finish_game, {
-    browser()
     showModal(
       modalDialog(
         helpText("Are you sure?"),
@@ -470,7 +469,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$finish_game_sure, {
     showModal(
-      modalDialog(title = "Okay, well full send that data to the SnappaDB!",
+      modalDialog(title = "Okay, well, full send that data to the SnappaDB!",
                   
                   fluidRow(
                     column(width = 3),
@@ -486,6 +485,10 @@ server <- function(input, output, session) {
       )
     )
     
+  })
+  
+  observeEvent(input$send_to_db, {
+    dbAppendTable(conn = )
   })
   
 
