@@ -60,7 +60,7 @@ players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
 games_tbl = tbl(con, "games") %>% collect()
 
-next_game_id <- sum(dbGetQuery(con, "SELECT count(*) FROM games"),1)
+
 
 
 
@@ -190,7 +190,6 @@ ui <- fluidPage(
       )
     )
   )
-  
   
   
   
@@ -378,7 +377,7 @@ server <- function(input, output, session) {
   # When team A's score button is pushed
   observeEvent(input$a_score_button, {
     vals$error_msg <- NULL
-    showModal(score_check("a", players$team_a))
+    showModal(score_check("a", vals$snappaneers))
 
     
   })
@@ -386,7 +385,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$b_score_button, {
     vals$error_msg <- NULL
-    showModal(score_check("b", players$team_b))
+    showModal(score_check("b", vals$snappaneers))
   })
   
   
@@ -480,7 +479,7 @@ server <- function(input, output, session) {
   observeEvent(input$new_game_sure, {
     
     updateTabsetPanel(session, "switcher", selected = "start_screen")
-    vals$scores = scores_template
+    vals$scores = slice(scores_tbl, 0)
     vals$shot_num = 1
     walk(c("name_p1", "name_p2", "name_p3", "name_p4"), 
          function(id) updateTextInput(session, inputId = id, value = "", 
