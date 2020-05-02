@@ -549,6 +549,7 @@ server <- function(input, output, session) {
     dbAppendTable(con, "games", vals$games)
   })
   
+  # Disconnect from the server. Goodbye!
   onStop(dbDisconnect(conn = con))
   
   
