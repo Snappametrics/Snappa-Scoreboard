@@ -76,58 +76,27 @@ copy_to(con, y , "y",
 
 
 
-insert_walk(x, y, con)
+
 
 
 
 ## Alternatively, one could use dbAppend, which is literally designed for this kind of thing. 
-## but what does it do to tables where you don't necessarily want all of them?
 
-x <- x %>% select(-a)
-
-build_sql("INSERT INTO", dbtable, "VALUES", )
+dbAppendTable(con, "y", x)
 
 
 
-
-y2 <- tbl(con, "y") %>% collect()
-
+# So this works. Does this create problems when the database expects a bigserial?
 
 
+players_dummy <- tibble(player_id = c(1,2,3,4,5), player_name = c("Michael", "Dewey", "DeweyDewey", "Mark", "Barrett"))
 
-################ Use dplyr merges to accomplish updating
-
-#### Pipeline:
-# 1. Shiny pulls table information from the database and stores it
-# 2. Shiny collects streaming game data
-# 3. At the end of the game, Shiny creates a joined table and puts
-#   that back into the database, overwriting the old one, then closes
-#   its connection to the database
-
-
-# 1. Pull data (copy_to generates the table in the database:
-# only run it once)
-copy_to(con, nycflights13::flights, "flights",
-        temporary = F,
-        overwrite = T,
-        append = F,
-        indexes = list(
-          c("year", "month", "day",
-            "carrier", "tailnum", "dest")
+copy_to(con, players_dummy, "players", 
+        temporary = F, 
+        overwrite = T
         )
-)
-
-flights_db <- tbl(con, "flights")
-flights_old <- flights_db %>% collect()
 
 
-#The app needs to know particular things in order to get started
-current_game_id <- flights_old %>% pull(year) %>% max() + 1
+new_player <- tibble(player_id = c(6,7,8), player_name = c("Michael", "Dewey", "DeweyDewey"))
 
-
-#2. Data is collected
-
-new_data <- flights_old %>% filter(month < 2)
-
-
-
+dbAppendTable(con, "players", new_player)

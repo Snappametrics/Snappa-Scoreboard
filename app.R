@@ -479,6 +479,7 @@ server <- function(input, output, session) {
   observeEvent(input$new_game_sure, {
     
     updateTabsetPanel(session, "switcher", selected = "start_screen")
+    #TODO: Change this to another scores tibble
     vals$scores = scores_template
     vals$shot_num = 1
     walk(c("name_p1", "name_p2", "name_p3", "name_p4"), 
