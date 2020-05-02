@@ -7,7 +7,7 @@
 library(RPostgres)
 library(tidyverse)
 library(dbplyr)
-
+library(DBI)
 
 # Functions ---------------------------------------------------------------
 
@@ -61,6 +61,12 @@ output <- rtable %>% mutate(combined = str_c("( ",
                                   vals)) ) %>%
          walk(., dbExecute, conn = connection)
 return(output)
+
+
+
+# Alternative way, that probably works, with build_sql()
+
+output <- rtable %>% map_chr(., )
 }
 
 
@@ -77,6 +83,16 @@ copy_to(con, y , "y",
 
 
 insert_walk(x, y, con)
+
+
+
+## Alternatively, one could use dbAppend, which is literally designed for this kind of thing. 
+## but what does it do to tables where you don't necessarily want all of them?
+
+x <- x %>% select(-a)
+
+build_sql("INSERT INTO", dbtable, "VALUES", )
+
 
 
 
