@@ -546,7 +546,7 @@ server <- function(input, output, session) {
     # Append scores
     dbAppendTable(con, "scores", vals$scores)
     # Append game
-    dbAppendTable(con, "scores", vals$games)
+    dbAppendTable(con, "games", vals$games)
   })
   
 
