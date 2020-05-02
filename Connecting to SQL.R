@@ -47,8 +47,9 @@ insert_walk <- function(rtable, dbtable, connection){
   rtable_name <- deparse(substitute(rtable))
   dbvars <- colnames(dbtable)
   dbtable_name <- deparse(substitute(dbtable))
+  browser()
 output <- rtable %>% mutate(combined = str_c("( ",
-                                             sym(str_c(rvars, collapse = " , ")),
+                                            sym(str_c(rvars, collapse = ', "," , ')),
                                              " ) ")) %>%
                      pull(combined) %>% 
           map_chr(., function(vals) str_c("INSERT INTO ", 
@@ -75,7 +76,7 @@ copy_to(con, y , "y",
 
 
 
-insert_walk(y, x, con)
+insert_walk(x, y, con)
 
 
 
