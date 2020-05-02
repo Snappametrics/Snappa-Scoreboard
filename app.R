@@ -125,20 +125,23 @@ ui <- fluidPage(
                  fluidRow(
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team A</h1> </center><br>"),
-                          selectInput('name_p1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), selectize=TRUE),
-                          textInput("new_p1", label = NULL, placeholder = "New Player")),
+                          selectizeInput('name_p1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          ),
                    column(2),
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team B</h1> </center><br>"),
-                          textInput("name_p3", label = "Player 3",placeholder = "A thrower needs a name"))
+                          selectizeInput('name_p3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          )
                  ),
                  fluidRow(
                    column(5,
-                          textInput("name_p2", label = "Player 2",placeholder = "A thrower needs a name")),
+                          selectizeInput('name_p2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          ),
                    column(2),
                    column(5,
-                          textInput("name_p4", label = "Player 4",placeholder = "A thrower needs a name"))
-                 ),
+                          selectizeInput('name_p4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          )
+                   ),
                  # Start Game
                  fluidRow(
                    column(4),
@@ -202,9 +205,12 @@ server <- function(input, output, session) {
   
   # Create object to store reactive values
   vals <- reactiveValues(
+    # game_id
+    game_id = sum(dbGetQuery(con, "SELECT count(*) FROM games"),1),
+    new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1),
     shot_num = 1,
+    snappaneers = c(),
 
-    # Player names
     name_p1 = NULL,
     name_p2 = NULL,
     name_p3 = NULL,
@@ -227,11 +233,10 @@ server <- function(input, output, session) {
     print = FALSE,
     
     # Scores table
-    scores = slice(scores_tbl, 0),
-    # Games table
-    games = slice(games_tbl, 0),
-    # Players template
-    players = slice(players_tbl, 0)
+    players = tbl(con, "players") %>% collect(),
+    scores = tbl(con, "scores") %>% collect() %>% slice(0),
+    games = tbl(con, "games") %>% collect()
+    
 
   )
   
@@ -299,19 +304,6 @@ server <- function(input, output, session) {
 
 # Events ------------------------------------------------------------------
   
-  
-  # New Player
-  observeEvent(input$new_p1, {
-    browser()
-    new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1)
-    
-    if(!(input$new_p1 %in% players_tbl$player_name)){
-      players_tbl = bind_rows(players_tbl,
-                              tibble(
-                                player_id = bit64::as.integer64(new_player_id),
-                                player_name = input$new_p1))
-    }
-  }, ignoreInit = T)
 
 
 # Game Start --------------------------------------------------------------
@@ -320,6 +312,24 @@ server <- function(input, output, session) {
   # When we click "Start Game", switch to the scoreboard
   observeEvent(input$start_game, {
     req(input$name_p1, input$name_p2, input$name_p3, input$name_p4)
+    
+    vals$snappaneers = c(input$name_p1,    input$name_p2,  input$name_p3,  input$name_p4)
+    
+    
+    
+    iwalk(vals$snappaneers, function(die_thrower, index){
+      if(!(die_thrower %in% vals$players$player_name)){
+        
+        vals$players = bind_rows(vals$players,
+                                 tibble(
+                                   player_id = bit64::as.integer64(vals$new_player_id),
+                                   player_name = die_thrower))
+        vals$new_player_id = vals$new_player_id+1
+        
+      } else {
+        invisible()
+      }
+    })
     
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
@@ -331,17 +341,13 @@ server <- function(input, output, session) {
     vals$p4_score = 0
     
     
-    vals$name_p1 = input$name_p1
-    vals$name_p2 = input$name_p2
-    vals$name_p3 = input$name_p3
-    vals$name_p4 = input$name_p4
-    
+
     players$team_a = c(input$name_p1, input$name_p2)
     players$team_b = c(input$name_p3, input$name_p4)
-    
+    browser()
     vals$games = bind_rows(vals$games,
                            tibble(
-                             game_id = max(vals$games$game_id)+1,
+                             game_id = bit64::as.integer64(vals$game_id),
                              start = as_datetime(today()),
                              player_a1 = 1,
                              player_a2 = 2,
