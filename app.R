@@ -8,6 +8,7 @@
 #
 
 library(DBI)
+library(RPostgres)
 library(tidyverse)
 library(shiny)
 library(lubridate)
@@ -100,7 +101,6 @@ ui <- fluidPage(
     # Sidebar ----
     sidebarPanel(
       "So you want to ya some da?",
-      helpText("Note: All players must enter their name before the game can begin"),
       
       actionButton("new_game", "New game"),
       
@@ -125,12 +125,12 @@ ui <- fluidPage(
                  # Enter Player Names
                  fluidRow(
                    column(5,
-                          shiny::HTML("<br><br><center> <h1>Team A</h1> </center><br>"),
+                          h1(strong("Team A"), style = "align: center"),
                           selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
                    ),
                    column(2),
                    column(5,
-                          shiny::HTML("<br><br><center> <h1>Team B</h1> </center><br>"),
+                          h1(strong("Team B"), style = "align: center"),
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
                    )
                    ),
@@ -140,7 +140,8 @@ ui <- fluidPage(
                           ),
                    column(2),
                    column(5,
-                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), 
+                                         options = list(create = TRUE))
                           )
                    ),
                  # Start Game
@@ -148,10 +149,15 @@ ui <- fluidPage(
                    column(4),
                    column(4,
                           actionButton("start_game", "Throw some dice?"),
-                          tags$style(type='text/css', "#start_game { horizontal-align: middle;}")),
+                          uiOutput("validate_start"),
+                          tags$style(type='text/css', "#start_game { horizontal-align: middle; display: block;}")),
                    
                    column(4)
-                 )
+                 ),
+                 fluidRow(
+                   helpText("Note: All players must enter their name before the game can begin", 
+                            style = "text-align:center; display: block")
+                   )
         ),
         
         ## Scoreboard
@@ -313,8 +319,20 @@ server <- function(input, output, session) {
   # When we click "Start Game", switch to the scoreboard
   observeEvent(input$start_game, {
     req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
+    
+    output$validate_start = renderUI({
+      if(all(map_lgl(vals$snappaneers, str_detect, "[A-z]."))){
+        validate(
+          need(length(unique(vals$snappaneers)) == 4, message = "Player names need to be unique")
+        )
+      }
+    })
+    
 
     vals$snappaneers = c(input$name_a1,    input$name_a2,  input$name_b1,  input$name_b2)
+    validate(
+      need(length(unique(vals$snappaneers)) == 4, message = "Players need to be unique")
+    )
     
     
     
@@ -453,7 +471,6 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$finish_game, {
-    browser()
     showModal(
       modalDialog(
         helpText("Are you sure?"),
@@ -510,9 +527,9 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "switcher", selected = "start_screen")
     vals$scores = slice(scores_tbl, 0)
     vals$shot_num = 1
-    walk(c("name_a1", "name_a2", "name_b1", "name_b2"), 
-         function(id) updateTextInput(session, inputId = id, value = "", 
-                                      placeholder = "A thrower needs a name"))
+    walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
+         function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
+                                           options = list(create = TRUE)))
     removeModal()
   })
   
@@ -522,7 +539,6 @@ server <- function(input, output, session) {
       anti_join(tbl(con, "players") %>% collect(), by = "player_id")
     
     dbAppendTable(con, "players", new_players)
-    browser()
     # Append scores
     dbAppendTable(con, "scores", vals$scores)
     # Append game
