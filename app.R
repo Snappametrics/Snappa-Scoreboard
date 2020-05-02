@@ -470,8 +470,20 @@ server <- function(input, output, session) {
   
   observeEvent(input$finish_game_sure, {
     showModal(
-      modalDialog(title = "Okay, well save that data!",
-                  downloadButton("downloadData", "Download"))
+      modalDialog(title = "Okay, well full send that data to the SnappaDB!",
+                  
+                  fluidRow(
+                    column(width = 3),
+                    column(width = 3,
+                           downloadButton("downloadData", "Download")
+                    ),
+                    column(width = 3,
+                           actionButton("send_to_db", "Send to the SnappaDB")
+                    ),
+                    column(width = 3)
+                    
+                  )
+      )
     )
     
   })
