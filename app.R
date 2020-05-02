@@ -126,21 +126,21 @@ ui <- fluidPage(
                  fluidRow(
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team A</h1> </center><br>"),
-                          selectizeInput('name_p1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
                    ),
                    column(2),
                    column(5,
                           shiny::HTML("<br><br><center> <h1>Team B</h1> </center><br>"),
-                          selectizeInput('name_p3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
                    )
                    ),
                  fluidRow(
                    column(5,
-                          selectizeInput('name_p2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
                           ),
                    column(2),
                    column(5,
-                          selectizeInput('name_p4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
                           )
                    ),
                  # Start Game
@@ -212,16 +212,16 @@ server <- function(input, output, session) {
     shot_num = 1,
     snappaneers = c(),
 
-    name_p1 = NULL,
-    name_p2 = NULL,
-    name_p3 = NULL,
-    name_p4 = NULL,
+    name_a1 = NULL,
+    name_a2 = NULL,
+    name_b1 = NULL,
+    name_b2 = NULL,
     
     # Players' scores
-    p1_score = 0,
-    p2_score = 0,
-    p3_score = 0,
-    p4_score = 0,
+    a1_score = 0,
+    a2_score = 0,
+    b1_score = 0,
+    b2_score = 0,
     
     
     # Scores
@@ -312,9 +312,9 @@ server <- function(input, output, session) {
   
   # When we click "Start Game", switch to the scoreboard
   observeEvent(input$start_game, {
-    req(input$name_p1, input$name_p2, input$name_p3, input$name_p4)
-    
-    vals$snappaneers = c(input$name_p1,    input$name_p2,  input$name_p3,  input$name_p4)
+    req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
+
+    vals$snappaneers = c(input$name_a1,    input$name_a2,  input$name_b1,  input$name_b2)
     
     
     
@@ -336,24 +336,24 @@ server <- function(input, output, session) {
     
     vals$current_scores$team_a = 0
     vals$current_scores$team_b = 0
-    vals$p1_score = 0
-    vals$p2_score = 0
-    vals$p3_score = 0
-    vals$p4_score = 0
+    vals$a1_score = 0
+    vals$a2_score = 0
+    vals$b1_score = 0
+    vals$b2_score = 0
     
     
 
-    players$team_a = c(input$name_p1, input$name_p2)
-    players$team_b = c(input$name_p3, input$name_p4)
+    players$team_a = c(input$name_a1, input$name_a2)
+    players$team_b = c(input$name_b1, input$name_b2)
     
     vals$games = bind_rows(vals$games,
                            tibble(
                              game_id = bit64::as.integer64(vals$game_id),
                              start = as_datetime(today()),
-                             player_a1 = 1,
-                             player_a2 = 2,
-                             player_b1 = 3,
-                             player_b2 = 4
+                             player_a1 = pull(filter(vals$players, player_name == input$name_a1), player_id),
+                             player_a2 = pull(filter(vals$players, player_name == input$name_a2), player_id),
+                             player_b1 = pull(filter(vals$players, player_name == input$name_b1), player_id),
+                             player_b2 = pull(filter(vals$players, player_name == input$name_b2), player_id)
                            ))
     
     
