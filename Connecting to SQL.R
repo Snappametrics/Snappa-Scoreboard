@@ -41,7 +41,8 @@ x %>%
   walk(., dbGetQuery, conn = con)
     
 
-# make a function which can do the last bit of this code
+# make a function which can do the last bit of this code. WARNING: does not currently work
+
 insert_walk <- function(rtable, dbtable, connection){
   rvars <- colnames(rtable)
   rtable_name <- deparse(substitute(rtable))
@@ -62,14 +63,7 @@ output <- rtable %>% mutate(combined = str_c("( ",
          walk(., dbExecute, conn = connection)
 return(output)
 
-
-
-# Alternative way, that probably works, with build_sql()
-
-output <- rtable %>% map_chr(., )
 }
-
-
 # Test with a small scale example
 
 y <- tibble(a = c(1,2,3), b = c("like", "and", "subscribe"), c = c("sql", "is", "hard"))
