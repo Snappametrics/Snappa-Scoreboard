@@ -60,7 +60,7 @@ dbListTables(con)
 # Pull db tables for tibble templates
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
-games_tbl = tbl(con, "games") %>% collect()
+game_stat_tbl = tbl(con, "game_stats") %>% collect()
 
 
 
@@ -68,14 +68,6 @@ games_tbl = tbl(con, "games") %>% collect()
 
 
 # Scores doesn't need to be pulled but will be referenced later
-
-
-
-# Updating the db at the end ----------------------------------------------
-# I'd be amazed if this is the correct location for this block 
-# of code. I'm betting it's not.
-
-
 
 
 
@@ -364,7 +356,7 @@ server <- function(input, output, session) {
     players$team_a = c(input$name_a1, input$name_a2)
     players$team_b = c(input$name_b1, input$name_b2)
     
-    vals$games = bind_rows(vals$games,
+    vals$game_stats = bind_rows(vals$game_stats,
                            tibble(
                              game_id = bit64::as.integer64(vals$game_id),
                              start_time = as_datetime(today()),
@@ -546,7 +538,7 @@ server <- function(input, output, session) {
     # Append scores
     dbAppendTable(con, "scores", vals$scores)
     # Append game
-    dbAppendTable(con, "games", vals$games)
+    dbAppendTable(con, "game_stats", vals$game_stats)
   })
   
   # Disconnect from the server. Goodbye!
