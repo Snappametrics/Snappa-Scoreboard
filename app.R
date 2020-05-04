@@ -61,7 +61,7 @@ dbListTables(con)
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
 game_stats_tbl = tbl(con, "game_stats") %>% collect()
-game_history_tbl = tbl(con, "game_history") %>% collect()
+game_history_tabl = tbl(con, "game_history") %>% collect()
 
 
 
@@ -216,7 +216,7 @@ server <- function(input, output, session) {
     shot_num = 1,
     
     # DB Tables
-    games_db = games_tbl,
+    game_history_db = game_history_tbl,
     game_stats_db = game_stats_tbl %>% slice(0),
     players_db = players_tbl,
     scores_db = scores_tbl %>% slice(0),
@@ -363,8 +363,6 @@ server <- function(input, output, session) {
     vals$current_scores$team_a = 0
     vals$current_scores$team_b = 0
     
-    # Create a vector with the id's in this game. Useful because
-    # I need to call it when getting points scored
     
     # Initialize the current game's game_stats table
     vals$game_stats = bind_rows(vals$game_stats,
@@ -375,7 +373,7 @@ server <- function(input, output, session) {
                                   ones = rep(0, vals$num_players),
                                   twos = rep(0, vals$num_players),
                                   threes = rep(0, vals$num_players),
-                                  impossibles = rep(0, vals$num_players),
+                                  impossibles = rep(0, vals$num_players)
                                 ))
 
 
@@ -419,12 +417,19 @@ server <- function(input, output, session) {
   
 
 # Validate scores ---------------------------------------------------------
-
   # Team A
   observeEvent(input$ok_a, {
     validate(
       need(input$score < 8, label = "C'mon, you did not score that many points")
     )
+    # Check that scoring defenders indicated a paddle
+    validate(
+      need(
+        any(str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "A"),
+            str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "B") & input$paddle == F),
+        message = "Defensive players can only score by paddling") 
+      )
+    
     # set score
     vals$score <- input$score
     
@@ -462,6 +467,12 @@ server <- function(input, output, session) {
   observeEvent(input$ok_b, {
     validate(
       need(input$score < 8, label = "C'mon, you did not score that many points")
+    )
+    validate(
+      need(
+        any(str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "B"),
+            str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "A") & input$paddle == F),
+        message = "Defensive players can only score by paddling") 
     )
     vals$score <- input$score
     
