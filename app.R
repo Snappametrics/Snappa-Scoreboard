@@ -422,14 +422,23 @@ server <- function(input, output, session) {
     validate(
       need(input$score < 8, label = "C'mon, you did not score that many points")
     )
-    # Check that scoring defenders indicated a paddle
+    # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
       need(
-        any(str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "A"),
-            str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "B") & input$paddle == F),
-        message = "Defensive players can only score by paddling") 
-      )
-    
+        
+        # Typical Offense
+        any(str_detect(rounds[vals$shot_num], "A") & 
+              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A"),
+            # Typical Paddle
+            str_detect(rounds[vals$shot_num], "B") &
+              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
+              input$paddle == T,
+            # Somebody messed up on the other team
+            str_detect(rounds[vals$shot_num], "A") &
+              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
+              input$paddle == T),
+        message = "That entry doesn't make sense for this round/team combination"      )
+    )  
     # set score
     vals$score <- input$score
     
@@ -453,7 +462,7 @@ server <- function(input, output, session) {
                                 round_num = round_num(),
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "A")
-                                ))
+                              ))
       # Congratulate paddlers
       if(input$paddle){
         showNotification("That's some hot shit!")
@@ -470,10 +479,22 @@ server <- function(input, output, session) {
     )
     validate(
       need(
-        any(str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "B"),
-            str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "A") & input$paddle == F),
-        message = "Defensive players can only score by paddling") 
+        any(
+          # Typical Offense
+          str_detect(rounds[vals$shot_num], "B") & 
+            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B"),
+          # Typical Paddle
+          str_detect(rounds[vals$shot_num], "A") &
+            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
+            input$paddle == T,
+          # Somebody messed up on the other team
+          str_detect(rounds[vals$shot_num], "B") &
+            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
+            input$paddle == T)),
+      message = "That entry doesn't make sense for this round/team combination"
     )
+    
+    #Set Score
     vals$score <- input$score
     
     if (!is.null(vals$score)) {
@@ -504,8 +525,6 @@ server <- function(input, output, session) {
       vals$error_msg <- "You did not input anything."
     }
   })
-  
-    
   
 
 # End of the game ---------------------------------------------------------
