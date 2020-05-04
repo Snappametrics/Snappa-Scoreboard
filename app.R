@@ -401,28 +401,44 @@ server <- function(input, output, session) {
   # When team A's score button is pushed
   observeEvent(input$a_score_button, {
     vals$error_msg <- NULL
-    showModal(score_check("a", vals$snappaneers))
-
-    
+    showModal(
+      score_check(team = "a", 
+                  players = arrange(vals$snappaneers, team) %>% pull(player_name)))
   })
   
   
   observeEvent(input$b_score_button, {
     vals$error_msg <- NULL
-    showModal(score_check("b", vals$snappaneers))
+    showModal(
+      score_check(
+        team = "b", 
+        players = arrange(vals$snappaneers, desc(team)) %>% pull(player_name)))
+    
   })
   
   
-  # Validate submission
+
+# Validate scores ---------------------------------------------------------
+
+  # Team A
   observeEvent(input$ok_a, {
+    validate(
+      need(input$score < 8, label = "C'mon, you did not score that many points")
+    )
+    # set score
     vals$score <- input$score
     
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
+      
+      # Update the team score
       vals$current_scores$team_a = vals$current_scores$team_a + vals$score
       
+      # Increment the score_id
       vals$score_id = vals$score_id+1
+      
+      # Add the score to the scores table
       vals$scores = bind_rows(vals$scores,
                               tibble(
                                 score_id = vals$score_id,
@@ -433,6 +449,7 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "A")
                                 ))
+      # Congratulate paddlers
       if(input$paddle){
         showNotification("That's some hot shit!")
       }
@@ -441,15 +458,23 @@ server <- function(input, output, session) {
     }
   })
   
+  # Team B
   observeEvent(input$ok_b, {
+    validate(
+      need(input$score < 8, label = "C'mon, you did not score that many points")
+    )
     vals$score <- input$score
     
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
+      
       vals$current_scores$team_b = vals$current_scores$team_b + vals$score
       
+      # Increment the score_id
       vals$score_id = vals$score_id+1
+      
+      # Add the score to the scores table
       vals$scores = bind_rows(vals$scores,
                               tibble(
                                 score_id = vals$score_id,
@@ -460,6 +485,7 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "B")
                               ))
+      # Congratulate paddlers
       if(input$paddle){
         showNotification("That's some hot shit!")
       }
