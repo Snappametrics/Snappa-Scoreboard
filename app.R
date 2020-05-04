@@ -209,29 +209,21 @@ server <- function(input, output, session) {
   # Create object to store reactive values
   vals <- reactiveValues(
     # game_id
-    game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1),
+    game_id = bit64::as.integer64(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1)),
     new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1),
+    # DB Tables
+    games_db = games_tbl,
+    game_stats_db = game_stats_tbl %>% slice(0),
+    players = players_tbl,
+
     score_id = 0,
     shot_num = 1,
     snappaneers = c(),
     #TODO: add new player names and ui elements to allow up to 4v4 pa to be recorded
-    name_a1 = NULL,
-    name_a2 = NULL,
-    name_b1 = NULL,
-    name_b2 = NULL,
-    
     
     # Record the total number of players. Useful for later times when we have to 
     # flexibly account for games with variable total players. For now, 4 is enough
     num_players = 4,
-    
-    
-    # Players' scores
-    a1_score = 0,
-    a2_score = 0,
-    b1_score = 0,
-    b2_score = 0,
-    
     
     # Scores
     score_a = 0,
@@ -323,6 +315,8 @@ server <- function(input, output, session) {
   observeEvent(input$start_game, {
     req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
     
+    vals$snappaneers = c(input$name_a1,    input$name_a2,  input$name_b1,  input$name_b2)
+    
     output$validate_start = renderUI({
       if(all(map_lgl(vals$snappaneers, str_detect, "[A-z]."))){
         validate(
@@ -332,7 +326,7 @@ server <- function(input, output, session) {
     })
     
 
-    vals$snappaneers = c(input$name_a1,    input$name_a2,  input$name_b1,  input$name_b2)
+    
     validate(
       need(length(unique(vals$snappaneers)) >= 4, message = "Players need to be unique")
     )
@@ -357,11 +351,7 @@ server <- function(input, output, session) {
     
     vals$current_scores$team_a = 0
     vals$current_scores$team_b = 0
-    vals$a1_score = 0
-    vals$a2_score = 0
-    vals$b1_score = 0
-    vals$b2_score = 0
-    
+
     
 
     players$team_a = c(input$name_a1, input$name_a2)
@@ -372,25 +362,18 @@ server <- function(input, output, session) {
     # I need to call it when getting points scored
     
     vals$id_vector <- map_int(vals$snappaneers, function(x) as.integer(pull(filter(players_tbl, player_name ==  !!quo(x) ), player_id)))
+    
     vals$game_stats = bind_rows(vals$game_stats,
                                 tibble(
-                                  game_id = rep(bit64::as.integer64(vals$game_id), each = vals$num_players),
-                                  player_id = vals$id_vector,
-                                  total_points = map_int(vals$id_vector, function(x) sum(
-                                    pull(
-                                      filter(vals$scores, 
-                                             player_id == x & 
-                                               game_id == vals$game_id ), 
-                                      points_scored)
-                                  )
-                                  ),
-                                  paddle_points = map_int(vals$id_vector, function(x) sum(pull(filter(vals$scores, player_id == x & paddle == T &  game_id == vals$game_id), points_scored))),
-                                  ones = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored == 1 & game_id == vals$game_id), points_scored))),
-                                  twos = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored == 2 &  game_id == vals$game_id), points_scored))),
-                                  threes = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored == 3 &  game_id == vals$game_id), points_scored))),  
-                                  impossibles = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored >= 4 &  game_id == vals$game_id), points_scored)))                           
+                                  game_id = rep(vals$game_id, vals$num_players),
+                                  player_id = filter(vals$players, player_name %in% vals$snappaneers) %>% pull(player_id),
+                                  total_points = rep(0, vals$num_players),
+                                  ones = rep(0, vals$num_players),
+                                  twos = rep(0, vals$num_players),
+                                  threes = rep(0, vals$num_players),
+                                  impossibles = rep(0, vals$num_players),
                                 ))
-    
+
     
     
   })
