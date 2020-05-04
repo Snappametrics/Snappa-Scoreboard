@@ -61,7 +61,7 @@ dbListTables(con)
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
 game_stats_tbl = tbl(con, "game_stats") %>% collect()
-game_history_tabl = tbl(con, "game_history") %>% collect()
+game_history_tbl = tbl(con, "game_history") %>% collect()
 
 
 
@@ -596,18 +596,7 @@ server <- function(input, output, session) {
     removeModal()
   })
   
-  observeEvent(input$send_to_db, {
-    # Append any new players
-    new_players = vals$players %>% 
-      anti_join(tbl(con, "players") %>% collect(), by = "player_id")
-    
-    dbAppendTable(con, "players", new_players)
-    # Append scores
-    dbAppendTable(con, "scores", vals$scores)
-    # Append game
-    dbAppendTable(con, "game_stats", vals$game_stats)
-  })
-  
+
 
   
 }
