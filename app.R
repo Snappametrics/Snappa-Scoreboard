@@ -204,16 +204,22 @@ server <- function(input, output, session) {
   # Create object to store reactive values
   vals <- reactiveValues(
     # game_id
-    game_id = sum(dbGetQuery(con, "SELECT count(*) FROM game_stats"),1),
+    game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1),
     new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1),
     score_id = 0,
     shot_num = 1,
     snappaneers = c(),
-
+    #TODO: add new player names and ui elements to allow up to 4v4 pa to be recorded
     name_a1 = NULL,
     name_a2 = NULL,
     name_b1 = NULL,
     name_b2 = NULL,
+    
+    
+    # Record the total number of players. Useful for later times when we have to 
+    # flexibly account for games with variable total players. For now, 4 is enough
+    num_players = 4,
+    
     
     # Players' scores
     a1_score = 0,
@@ -229,12 +235,8 @@ server <- function(input, output, session) {
     # Values used in scoring events
     score = NULL,
     error_msg = NULL,
-    print = FALSE,
+    print = FALSE
     
-    # Scores table
-    players = tbl(con, "players") %>% collect(),
-    scores = tbl(con, "scores") %>% collect() %>% slice(0),
-    games = tbl(con, "games") %>% collect()
     
 
   )
@@ -250,12 +252,14 @@ server <- function(input, output, session) {
     rounds[vals$shot_num]
   })
   
-  # Rebuttal
+  # Rebuttal. Logic is complete 
   # 1. When either team's score is >=21 and the other team's score is two less (or lesser)
   # rebuttal = reactive({
   #   case_when(
   #     # E
-  #     any((vals$score_a >= 21 & vals$score_b <= 19), (vals$score_b >= 21 & vals$score_a <= 19))
+  #     any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
+  #     (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~
+  #       
   #   )
   # })
   
@@ -323,7 +327,7 @@ server <- function(input, output, session) {
 
     vals$snappaneers = c(input$name_a1,    input$name_a2,  input$name_b1,  input$name_b2)
     validate(
-      need(length(unique(vals$snappaneers)) == 4, message = "Players need to be unique")
+      need(length(unique(vals$snappaneers)) >= 4, message = "Players need to be unique")
     )
     
     
@@ -358,8 +362,8 @@ server <- function(input, output, session) {
     
     vals$game_stats = bind_rows(vals$game_stats,
                            tibble(
-                             game_id = bit64::as.integer64(vals$game_id),
-                             start_time = as_datetime(today()),
+                             game_id = rep(bit64::as.integer64(vals$game_id), each = vals$num_players),
+                             player_id = map_int(pull())
                              player_a1 = pull(filter(vals$players, player_name == input$name_a1), player_id),
                              player_a2 = pull(filter(vals$players, player_name == input$name_a2), player_id),
                              player_b1 = pull(filter(vals$players, player_name == input$name_b1), player_id),
@@ -541,11 +545,10 @@ server <- function(input, output, session) {
     dbAppendTable(con, "game_stats", vals$game_stats)
   })
   
-  # Disconnect from the server. Goodbye!
-  onStop(dbDisconnect(conn = con))
-  
+
   
 }
-
+# Doesn't currently work
+# onSessionEnded(dbDisconnect(conn = con))
 # Run the application 
 shinyApp(ui = ui, server = server)
