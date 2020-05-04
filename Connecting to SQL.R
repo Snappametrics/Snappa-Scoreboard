@@ -78,7 +78,9 @@ copy_to(con, y , "y",
 
 
 
+dbListTables(con)
 
+dbSendQuery(conn = con, "SELECT * FROM scores")
 
 ## Alternatively, one could use dbAppend, which is literally designed for this kind of thing. 
 
