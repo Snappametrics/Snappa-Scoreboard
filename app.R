@@ -425,9 +425,9 @@ server <- function(input, output, session) {
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
       need(
-        
-        # Typical Offense
-        any(str_detect(rounds[vals$shot_num], "A") & 
+        any(
+          # Typical Offense
+            str_detect(rounds[vals$shot_num], "A") & 
               str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A"),
             # Typical Paddle
             str_detect(rounds[vals$shot_num], "B") &
@@ -439,6 +439,7 @@ server <- function(input, output, session) {
               input$paddle == T),
         message = "That entry doesn't make sense for this round/team combination"      )
     )  
+
     # set score
     vals$score <- input$score
     
@@ -478,6 +479,7 @@ server <- function(input, output, session) {
       need(input$score < 8, label = "C'mon, you did not score that many points")
     )
     validate(
+
       need(
         any(
           # Typical Offense
@@ -493,7 +495,6 @@ server <- function(input, output, session) {
             input$paddle == T)),
       message = "That entry doesn't make sense for this round/team combination"
     )
-    
     #Set Score
     vals$score <- input$score
     
