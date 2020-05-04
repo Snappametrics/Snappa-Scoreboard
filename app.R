@@ -425,8 +425,11 @@ server <- function(input, output, session) {
     # Check that scoring defenders indicated a paddle
     validate(
       need(
-        any(str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "A"),
-            str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "B") & input$paddle == F),
+        any((str_detect(vals$round_num, "A") & 
+              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A")),
+            (str_detect(vals$round_num, "A") &
+              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
+              input$paddle == T)),
         message = "Defensive players can only score by paddling") 
       )
     
@@ -469,11 +472,14 @@ server <- function(input, output, session) {
       need(input$score < 8, label = "C'mon, you did not score that many points")
     )
     validate(
-      need(
-        any(str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "B"),
-            str_detect(pull(filter(vals$snappaneers, input$scorer %in% player_name), team), "A") & input$paddle == F),
-        message = "Defensive players can only score by paddling") 
-    )
+      need(any(str_detect(vals$round_num, "B") & 
+            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B"),
+          str_detect(vals$round_num, "A") &
+            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
+            input$paddle == T), 
+          message = "Defensive players can only score by paddling")
+      )
+    #Set Score
     vals$score <- input$score
     
     if (!is.null(vals$score)) {
