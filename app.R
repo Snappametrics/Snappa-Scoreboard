@@ -535,7 +535,24 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$send_to_db, {
-    dbAppendTable(conn = )
+    browser()
+    # Update Players
+    dbAppendTable(
+      conn = con, 
+      name = "players",
+      value = anti_join(players_tbl, vals$players_db))
+    
+    # Update Scores
+    dbAppendTable(
+      conn = con, 
+      name = "scores",
+      value = vals$scores_db)
+    
+    # Update game_stats
+    dbAppendTable(
+      conn = con, 
+      name = "game_stats",
+      value = vals$game_stats_db)
   })
   
 
