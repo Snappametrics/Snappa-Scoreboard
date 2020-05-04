@@ -360,15 +360,20 @@ server <- function(input, output, session) {
     players$team_a = c(input$name_a1, input$name_a2)
     players$team_b = c(input$name_b1, input$name_b2)
     
+    # Create a vector with the id's in this game. Useful because
+    # I need to call it when getting points scored
+    vals$id_vector <- map_int(vals$snappaneers, function(x) pull(filter(players_tbl, player_name ==  x )))
     vals$game_stats = bind_rows(vals$game_stats,
                            tibble(
                              game_id = rep(bit64::as.integer64(vals$game_id), each = vals$num_players),
-                             player_id = map_int(pull())
-                             player_a1 = pull(filter(vals$players, player_name == input$name_a1), player_id),
-                             player_a2 = pull(filter(vals$players, player_name == input$name_a2), player_id),
-                             player_b1 = pull(filter(vals$players, player_name == input$name_b1), player_id),
-                             player_b2 = pull(filter(vals$players, player_name == input$name_b2), player_id)
-                           ))
+                             player_id = vals$id_vector,
+                             points_scored = map_int(vals$id_vector, function(x) sum(pull(filter(vals$scores, player_id == x ), points_scored))),
+                             paddle_points = map_int(vals$id_vector, function(x) sum(pull(filter(vals$scores, player_id == x & paddle == T), points_scored))),
+                             ones = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored == 1), points_scored))),
+                             twos = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored == 2), points_scored))),
+                             threes = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored == 3), points_scored))),  
+                             impossibles = map_int(vals$id_vector, function(x) count(pull(filter(vals$scores, player_id == x & paddle == F & points_scored >= 4), points_scored)))                           
+                             ))
     
     
   })
