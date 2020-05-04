@@ -255,14 +255,14 @@ server <- function(input, output, session) {
   
   # Rebuttal. Logic is complete 
   # 1. When either team's score is >=21 and the other team's score is two less (or lesser)
-  # rebuttal = reactive({
-  #   case_when(
-  #     # E
-  #     any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
-  #     (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~
-  #       
-  #   )
-  # })
+   rebuttal = reactive({
+     case_when(
+       any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
+      (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~ 1,
+      !any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
+      (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~ 0) 
+   })
+
   
 
   
@@ -311,7 +311,7 @@ server <- function(input, output, session) {
 
 # Events ------------------------------------------------------------------
   
-
+  
 
 # Game Start --------------------------------------------------------------
 
