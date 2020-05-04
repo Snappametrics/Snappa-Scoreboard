@@ -180,7 +180,8 @@ ui <- fluidPage(
                           wellPanel(
                             h1("Team B"),
                             h3(textOutput("score_b")),
-                            actionButton("b_score_button", label = "We scored!")
+                            actionButton("b_score_button", label = "We scored!"),
+                            tags$style(type="text/css", "h1, h3, #b_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
                           )
                           
                    )
@@ -301,6 +302,8 @@ server <- function(input, output, session) {
       write.csv(vals$scores, con)
     }
   )
+  
+  
   
   
   
