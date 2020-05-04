@@ -202,6 +202,10 @@ ui <- fluidPage(
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
   
+
+# Reactive Values ---------------------------------------------------------
+
+  
   # Create object to store reactive values
   vals <- reactiveValues(
     # game_id
