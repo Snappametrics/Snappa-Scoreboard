@@ -60,7 +60,8 @@ dbListTables(con)
 # Pull db tables for tibble templates
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
-game_stat_tbl = tbl(con, "game_stats") %>% collect()
+game_stats_tbl = tbl(con, "game_stats") %>% collect()
+game_history_tbl = tbl(con, "game_history") %>% collect()
 
 
 
