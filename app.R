@@ -209,27 +209,36 @@ server <- function(input, output, session) {
   
   # Create object to store reactive values
   vals <- reactiveValues(
-    # game_id
+    # Initialize new game, player, and score IDs, as well as the shot number
     game_id = bit64::as.integer64(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1)),
     new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1),
+    score_id = 0,
+    shot_num = 1,
+    
     # DB Tables
     games_db = games_tbl,
     game_stats_db = game_stats_tbl %>% slice(0),
-    players = players_tbl,
+    players_db = players_tbl,
+    scores_db = scores_tbl %>% slice(0),
 
-    score_id = 0,
-    shot_num = 1,
-    snappaneers = c(),
+    # dataframe of the players and their teams
+    snappaneers = tibble(
+      team = as.character(),
+      player_name = as.character()
+      ),
+    # Current Scores
+    current_scores = tibble(
+      team_a = 0,
+      team_b = 0
+    ),
+    
     #TODO: add new player names and ui elements to allow up to 4v4 pa to be recorded
     
     # Record the total number of players. Useful for later times when we have to 
     # flexibly account for games with variable total players. For now, 4 is enough
     num_players = 4,
     
-    # Scores
-    score_a = 0,
-    score_b = 0,
-    
+
     # Values used in scoring events
     score = NULL,
     error_msg = NULL,
@@ -237,12 +246,6 @@ server <- function(input, output, session) {
     
     
 
-  )
-  
-  #TODO: create list of players and their team
-  players = reactiveValues(
-    team_a = list(NULL, NULL),
-    team_b = list(NULL, NULL)
   )
   
   # Increment round number
