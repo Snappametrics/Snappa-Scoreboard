@@ -274,7 +274,7 @@ server <- function(input, output, session) {
     actionButton("next_round", label = round_labels[vals$shot_num])
   })
   
-  
+  # Output the round number
   output$round_num = renderText({
     round_num()
   })
@@ -294,6 +294,7 @@ server <- function(input, output, session) {
     vals$error_msg
   })
   
+  # Download button
   output$downloadData <- downloadHandler(
     filename = function() {
       paste('data-', Sys.Date(), '.csv', sep='')
@@ -318,32 +319,36 @@ server <- function(input, output, session) {
   # When we click "Start Game", switch to the scoreboard
   observeEvent(input$start_game, {
     req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
+
+    # Fill the snappaneers with the current players and their teams
+    vals$snappaneers = bind_rows(vals$snappaneers,
+      tibble(
+        team = rep(c("A", "B"), each = 2),
+        player_name = c(input$name_a1, input$name_a2,  input$name_b1,  input$name_b2)
+      )
+    )
     
-    vals$snappaneers = c(input$name_a1,    input$name_a2,  input$name_b1,  input$name_b2)
-    
+    # Create a UI output which validates that there are four players and the names are unique
     output$validate_start = renderUI({
-      if(all(map_lgl(vals$snappaneers, str_detect, "[A-z]."))){
+      if(all(map_lgl(vals$snappaneers$player_name, str_detect, "[A-z]."))){
         validate(
-          need(length(unique(vals$snappaneers)) == 4, message = "Player names need to be unique")
+          need(length(unique(vals$snappaneers$player_name)) == 4, message = "Player names need to be unique")
         )
       }
     })
     
-
-    
-    validate(
-      need(length(unique(vals$snappaneers)) >= 4, message = "Players need to be unique")
-    )
-    
-    
-    
-    iwalk(vals$snappaneers, function(die_thrower, index){
+    # Add new players to the players table
+    iwalk(vals$snappaneers$player_name, function(die_thrower, index){
+      # If the player is not in the players table
       if(!(die_thrower %in% vals$players$player_name)){
         
+        # Add a row to the players table with the new player's name and new ID
         vals$players = bind_rows(vals$players,
                                  tibble(
                                    player_id = bit64::as.integer64(vals$new_player_id),
                                    player_name = die_thrower))
+        
+        # Increment the ID for the next new player
         vals$new_player_id = vals$new_player_id+1
         
       } else {
@@ -351,26 +356,21 @@ server <- function(input, output, session) {
       }
     })
     
+    # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
+    # Set the score outputs to 0
     vals$current_scores$team_a = 0
     vals$current_scores$team_b = 0
-
-    
-
-    players$team_a = c(input$name_a1, input$name_a2)
-    players$team_b = c(input$name_b1, input$name_b2)
-    
     
     # Create a vector with the id's in this game. Useful because
     # I need to call it when getting points scored
     
-    vals$id_vector <- map_int(vals$snappaneers, function(x) as.integer(pull(filter(players_tbl, player_name ==  !!quo(x) ), player_id)))
-    
+    # Initialize the current game's game_stats table
     vals$game_stats = bind_rows(vals$game_stats,
                                 tibble(
                                   game_id = rep(vals$game_id, vals$num_players),
-                                  player_id = filter(vals$players, player_name %in% vals$snappaneers) %>% pull(player_id),
+                                  player_id = filter(vals$players, player_name %in% vals$snappaneers$player_name) %>% pull(player_id),
                                   total_points = rep(0, vals$num_players),
                                   ones = rep(0, vals$num_players),
                                   twos = rep(0, vals$num_players),
@@ -378,8 +378,7 @@ server <- function(input, output, session) {
                                   impossibles = rep(0, vals$num_players),
                                 ))
 
-    
-    
+
   })
   
   
@@ -388,7 +387,7 @@ server <- function(input, output, session) {
 
 # Next Round --------------------------------------------------------------
 
-  
+  # When next round button is pushed
   observeEvent(input$next_round, {
     vals$shot_num = vals$shot_num+1
   })
