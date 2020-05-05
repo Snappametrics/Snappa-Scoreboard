@@ -210,13 +210,13 @@ server <- function(input, output, session) {
   # Create object to store reactive values
   vals <- reactiveValues(
     # Initialize new game, player, and score IDs, as well as the shot number
-    game_id = bit64::as.integer64(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1)),
+    game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1, na.rm=T),
     new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1),
     score_id = 0,
     shot_num = 1,
     
     # DB Tables
-    game_history_db = game_history_tbl,
+    game_history_db = game_history_tbl %>% slice(0),
     game_stats_db = game_stats_tbl %>% slice(0),
     players_db = players_tbl,
     scores_db = scores_tbl %>% slice(0),
@@ -283,7 +283,6 @@ server <- function(input, output, session) {
   output$score_a = renderText({
     vals$current_scores$team_a
   })
-  
   # Output Team B's score
   output$score_b = renderText({
     vals$current_scores$team_b
@@ -345,7 +344,7 @@ server <- function(input, output, session) {
         # Add a row to the players table with the new player's name and new ID
         vals$players = bind_rows(vals$players,
                                  tibble(
-                                   player_id = bit64::as.integer64(vals$new_player_id),
+                                   player_id = vals$new_player_id,
                                    player_name = die_thrower))
         
         # Increment the ID for the next new player
@@ -363,6 +362,8 @@ server <- function(input, output, session) {
     vals$current_scores$team_a = 0
     vals$current_scores$team_b = 0
     
+    # Create a vector with the id's in this game. Useful because
+    # I need to call it when getting points scored
     
     # Initialize the current game's game_stats table
     vals$game_stats = bind_rows(vals$game_stats,
@@ -373,7 +374,7 @@ server <- function(input, output, session) {
                                   ones = rep(0, vals$num_players),
                                   twos = rep(0, vals$num_players),
                                   threes = rep(0, vals$num_players),
-                                  impossibles = rep(0, vals$num_players)
+                                  impossibles = rep(0, vals$num_players),
                                 ))
 
 
