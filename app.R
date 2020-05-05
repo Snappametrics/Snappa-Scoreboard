@@ -434,8 +434,7 @@ server <- function(input, output, session) {
               str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
               input$paddle == T,
             # Somebody messed up on the other team
-            str_detect(rounds[vals$shot_num], "A") &
-              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
+            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
               input$paddle == T),
         message = "That entry doesn't make sense for this round/shooter combination")
     )  
@@ -488,9 +487,8 @@ server <- function(input, output, session) {
           str_detect(rounds[vals$shot_num], "A") &
             str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
             input$paddle == T,
-          # Somebody messed up on the other team
-          str_detect(rounds[vals$shot_num], "B") &
-            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
+          # Somebody messed up on the other team (can happen on offense or defense)
+          str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
             input$paddle == T),
       message = "That entry doesn't make sense for this round/shooter combination"
       )
