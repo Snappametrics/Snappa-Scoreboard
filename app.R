@@ -95,7 +95,7 @@ ui <- fluidPage(
     sidebarPanel(
       "So you want to ya some da?",
       
-      actionButton("new_game", "New game"),
+      actionButton("new_game", "Restart game"),
       
       
       actionButton("finish_game", "Finish game")
@@ -595,11 +595,11 @@ server <- function(input, output, session) {
   observeEvent(input$new_game, {
     
     showModal(
-      modalDialog(
+      modalDialog(title = "Restart game",
         helpText("Are you sure?"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("new_game_sure", "OK")
+          actionButton("new_game_sure", "Yup")
         )
       )
     )
