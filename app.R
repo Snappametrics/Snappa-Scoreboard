@@ -464,8 +464,11 @@ server <- function(input, output, session) {
                                 shooting = str_detect(round_num(), "A")
                               ))
       # Congratulate paddlers
-      if(input$paddle){
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") ){
         showNotification("That's some hot shit!")
+      }
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") ){
+        showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
       vals$error_msg <- "You did not input anything."
@@ -516,9 +519,12 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "B")
                               ))
-      # Congratulate paddlers
-      if(input$paddle){
+      # Congratulate paddlers for good offense, chide those who paddled against their own team
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") ){
         showNotification("That's some hot shit!")
+      }
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") ){
+        showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
       vals$error_msg <- "You did not input anything."
