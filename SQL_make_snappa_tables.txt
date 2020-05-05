@@ -1,0 +1,32 @@
+CREATE TABLE players (
+	player_id int CONSTRAINT player_key PRIMARY KEY,
+	player_name varchar(50));
+	
+CREATE TABLE scores (
+	score_id int,
+	game_id int,
+	round_num varchar(3),
+	points_scored int,
+	player_id int,
+	shooting boolean,
+	paddle boolean
+);
+
+CREATE TABLE game_stats (
+	game_id int,
+	player_id int,
+	player_team varchar(1),
+	total_points int,
+	paddle_points int,
+	ones int,
+	twos int,
+	threes int,
+	impossibles int	
+);
+
+CREATE TABLE game_history(
+	game_id int CONSTRAINT game_key PRIMARY KEY,
+	game_date varchar(25), 
+	A_score int,
+	B_score int
+);
