@@ -435,10 +435,9 @@ server <- function(input, output, session) {
               str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
               input$paddle == T,
             # Somebody messed up on the other team
-            str_detect(rounds[vals$shot_num], "A") &
-              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
+            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
               input$paddle == T),
-        message = "That entry doesn't make sense for this round/team combination"      )
+        message = "That entry doesn't make sense for this round/shooter combination")
     )  
 
     # set score
@@ -476,8 +475,11 @@ server <- function(input, output, session) {
                   impossibles = sum((points_scored > 3)))
       
       # Congratulate paddlers
-      if(input$paddle){
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") ){
         showNotification("That's some hot shit!")
+      }
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") ){
+        showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
       vals$error_msg <- "You did not input anything."
@@ -490,7 +492,6 @@ server <- function(input, output, session) {
       need(input$score < 8, label = "C'mon, you did not score that many points")
     )
     validate(
-
       need(
         any(
           # Typical Offense
@@ -500,11 +501,11 @@ server <- function(input, output, session) {
           str_detect(rounds[vals$shot_num], "A") &
             str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
             input$paddle == T,
-          # Somebody messed up on the other team
-          str_detect(rounds[vals$shot_num], "B") &
-            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
-            input$paddle == T)),
-      message = "That entry doesn't make sense for this round/team combination"
+          # Somebody messed up on the other team (can happen on offense or defense)
+          str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
+            input$paddle == T),
+      message = "That entry doesn't make sense for this round/shooter combination"
+      )
     )
     #Set Score
     vals$score <- input$score
@@ -529,7 +530,7 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "B")
                               ))
-      
+
       # Update game stats table
       vals$game_stats = vals$scores %>% 
         group_by(game_id, player_id) %>% 
@@ -539,9 +540,12 @@ server <- function(input, output, session) {
                   threes = sum((points_scored == 3)),
                   impossibles = sum((points_scored > 3)))
       
-      # Congratulate paddlers
-      if(input$paddle){
+      # Congratulate paddlers for good offense, chide those who paddled against their own team
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") ){
         showNotification("That's some hot shit!")
+      }
+      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") ){
+        showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
       vals$error_msg <- "You did not input anything."
