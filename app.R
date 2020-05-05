@@ -464,7 +464,17 @@ server <- function(input, output, session) {
                                 round_num = round_num(),
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "A")
-                              ))
+                                ))
+
+      # Update game stats table
+      vals$game_stats = vals$scores %>% 
+        group_by(game_id, player_id) %>% 
+        summarise(total_points = sum(points_scored),
+                  ones = sum((points_scored == 1)),
+                  twos = sum((points_scored == 2)),
+                  threes = sum((points_scored == 3)),
+                  impossibles = sum((points_scored > 3)))
+      
       # Congratulate paddlers
       if(input$paddle){
         showNotification("That's some hot shit!")
@@ -519,6 +529,16 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "B")
                               ))
+      
+      # Update game stats table
+      vals$game_stats = vals$scores %>% 
+        group_by(game_id, player_id) %>% 
+        summarise(total_points = sum(points_scored),
+                  ones = sum((points_scored == 1)),
+                  twos = sum((points_scored == 2)),
+                  threes = sum((points_scored == 3)),
+                  impossibles = sum((points_scored > 3)))
+      
       # Congratulate paddlers
       if(input$paddle){
         showNotification("That's some hot shit!")
@@ -527,6 +547,8 @@ server <- function(input, output, session) {
       vals$error_msg <- "You did not input anything."
     }
   })
+  
+    
   
 
 # End of the game ---------------------------------------------------------
