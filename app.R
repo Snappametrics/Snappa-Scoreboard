@@ -437,7 +437,7 @@ server <- function(input, output, session) {
             str_detect(rounds[vals$shot_num], "A") &
               str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
               input$paddle == T),
-        message = "That entry doesn't make sense for this round/team combination"      )
+        message = "That entry doesn't make sense for this round/shooter combination")
     )  
 
     # set score
@@ -479,7 +479,6 @@ server <- function(input, output, session) {
       need(input$score < 8, label = "C'mon, you did not score that many points")
     )
     validate(
-
       need(
         any(
           # Typical Offense
@@ -492,8 +491,9 @@ server <- function(input, output, session) {
           # Somebody messed up on the other team
           str_detect(rounds[vals$shot_num], "B") &
             str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
-            input$paddle == T)),
-      message = "That entry doesn't make sense for this round/team combination"
+            input$paddle == T),
+      message = "That entry doesn't make sense for this round/shooter combination"
+      )
     )
     #Set Score
     vals$score <- input$score
