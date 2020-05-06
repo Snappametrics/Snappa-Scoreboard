@@ -359,7 +359,7 @@ server <- function(input, output, session) {
       if(!(die_thrower %in% vals$players$player_name)){
         
         # Add a row to the players table with the new player's name and new ID
-        vals$players = bind_rows(vals$players,
+        vals$players_db = bind_rows(vals$players_db,
                                  tibble(
                                    player_id = vals$new_player_id,
                                    player_name = die_thrower))
@@ -384,7 +384,7 @@ server <- function(input, output, session) {
     vals$game_stats = bind_rows(vals$game_stats,
                                 tibble(
                                   game_id = rep(vals$game_id, vals$num_players),
-                                  player_id = filter(vals$players, player_name %in% vals$snappaneers$player_name) %>% pull(player_id),
+                                  player_id = filter(vals$players_db, player_name %in% vals$snappaneers$player_name) %>% pull(player_id),
                                   total_points = rep(0, vals$num_players),
                                   ones = rep(0, vals$num_players),
                                   twos = rep(0, vals$num_players),
@@ -682,7 +682,7 @@ server <- function(input, output, session) {
     dbAppendTable(
       conn = con, 
       name = "players",
-      value = anti_join(vals$players))
+      value = anti_join(vals$players_db, players_tbl))
     
     # Update Scores
     dbAppendTable(
@@ -735,3 +735,10 @@ server <- function(input, output, session) {
 # onSessionEnded(dbDisconnect(conn = con))
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+
+
+
+
+# Notes -------------------------------------------------------------------
+
