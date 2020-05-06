@@ -682,19 +682,19 @@ server <- function(input, output, session) {
     dbAppendTable(
       conn = con, 
       name = "players",
-      value = anti_join(players_tbl, vals$players_db))
+      value = anti_join(players_tbl, vals$players))
     
     # Update Scores
     dbAppendTable(
       conn = con, 
       name = "scores",
-      value = vals$scores_db)
+      value = vals$scores)
     
     # Update game_stats
     dbAppendTable(
       conn = con, 
       name = "game_stats",
-      value = vals$game_stats_db)
+      value = vals$game_stats)
   })
   
 
