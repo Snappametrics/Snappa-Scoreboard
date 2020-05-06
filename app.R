@@ -678,7 +678,6 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$send_to_db, {
-    browser()
     # Update Players
     dbAppendTable(
       conn = con, 
