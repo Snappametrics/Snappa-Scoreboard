@@ -316,7 +316,7 @@ server <- function(input, output, session) {
       paste('data-', Sys.Date(), '.csv', sep='')
     },
     content = function(con) {
-      write.csv(vals$scores, con)
+      write.csv(vals$scores_db, con)
     }
   )
   
@@ -356,7 +356,7 @@ server <- function(input, output, session) {
     # Add new players to the players table
     iwalk(vals$snappaneers$player_name, function(die_thrower, index){
       # If the player is not in the players table
-      if(!(die_thrower %in% vals$players$player_name)){
+      if(!(die_thrower %in% vals$players_db$player_name)){
         
         # Add a row to the players table with the new player's name and new ID
         vals$players_db = bind_rows(vals$players_db,
@@ -381,7 +381,7 @@ server <- function(input, output, session) {
     
     
     # Initialize the current game's game_stats table
-    vals$game_stats = bind_rows(vals$game_stats,
+    vals$game_stats_db = bind_rows(vals$game_stats_db,
                                 tibble(
                                   game_id = rep(vals$game_id, vals$num_players),
                                   player_id = filter(vals$players_db, player_name %in% vals$snappaneers$player_name) %>% pull(player_id),
@@ -498,18 +498,18 @@ server <- function(input, output, session) {
       vals$score_id = vals$score_id+1
       
       # Add the score to the scores table
-      vals$scores = bind_rows(vals$scores,
+      vals$scores_db = bind_rows(vals$scores_db,
                               tibble(
                                 score_id = vals$score_id,
                                 game_id = vals$game_id,
-                                player_id = pull(filter(vals$players, player_name == input$scorer), player_id),
+                                player_id = pull(filter(vals$players_db, player_name == input$scorer), player_id),
                                 paddle = input$paddle,
                                 round_num = round_num(),
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "A")
                               ))
       
-      vals$game_stats = vals$scores %>% 
+      vals$game_stats_db = vals$scores_db %>% 
         group_by(game_id, player_id) %>% 
         summarise(total_points = sum(points_scored),
                   ones = sum((points_scored == 1)),
@@ -584,18 +584,18 @@ server <- function(input, output, session) {
       vals$score_id = vals$score_id+1
       
       # Add the score to the scores table
-      vals$scores = bind_rows(vals$scores,
+      vals$scores_db = bind_rows(vals$scores_db,
                               tibble(
                                 score_id = vals$score_id,
                                 game_id = vals$game_id,
-                                player_id = pull(filter(vals$players, player_name == input$scorer), player_id),
+                                player_id = pull(filter(vals$players_db, player_name == input$scorer), player_id),
                                 paddle = input$paddle,
                                 round_num = round_num(),
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "B")
                               ))
       
-      vals$game_stats = vals$scores %>% 
+      vals$game_stats_db = vals$scores_db %>% 
         group_by(game_id, player_id) %>% 
         summarise(total_points = sum(points_scored),
                   ones = sum((points_scored == 1)),
@@ -688,13 +688,13 @@ server <- function(input, output, session) {
     dbAppendTable(
       conn = con, 
       name = "scores",
-      value = vals$scores)
+      value = vals$scores_db)
     
     # Update game_stats
     dbAppendTable(
       conn = con, 
       name = "game_stats",
-      value = vals$game_stats)
+      value = vals$game_stats_db)
   })
   
 
@@ -719,7 +719,7 @@ server <- function(input, output, session) {
   observeEvent(input$new_game_sure, {
     
     updateTabsetPanel(session, "switcher", selected = "start_screen")
-    vals$scores = slice(scores_tbl, 0)
+    vals$scores_db = slice(scores_tbl, 0)
     vals$shot_num = 1
     walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
