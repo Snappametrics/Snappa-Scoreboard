@@ -94,7 +94,7 @@ game_history_tbl = tbl(con, "game_history") %>% collect()
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  
+  useShinyjs(),
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
   # Application title
@@ -403,8 +403,8 @@ server <- function(input, output, session) {
 
   # When next round button is pushed
   observeEvent(input$next_round, {
-    vals$rebuttal = rebuttal_check(vals$score_a, 
-                                   vals$score_b,
+    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
+                                   vals$current_scores$team_b,
                                    round_num())
     if (vals$rebuttal_tag == T){
       if (vals$rebuttal == T){
@@ -417,16 +417,16 @@ server <- function(input, output, session) {
     
     vals$shot_num = vals$shot_num+1
 
-    vals$rebuttal = rebuttal_check(vals$score_a, 
-                                   vals$score_b,
-                                   round_num())
-    
+    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
+                                    vals$current_scores$team_b,
+                                    round_num())
+      
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
       showNotification(str_c("Rebuttal: ", "Team ", 
                              str_sub(round_num(), start = -1),
-                             "needs ", str_c(
-                               abs(vals$score_a - vals$score_b) - 1),
+                             " needs ", str_c(
+                               abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
                              " points to bring it back"
                              )
                       ) 
@@ -527,7 +527,28 @@ server <- function(input, output, session) {
     } else {
       vals$error_msg <- "You did not input anything."
     }
+  
+    # If the game is in rebuttal, remind players
+    # of the points needed to bring it back
+    if (!is.null(vals$rebuttal)) {
+      if (vals$rebuttal == T) {
+        showNotification(str_c("Rebuttal: ", "Team ", 
+                               str_sub(round_num(), start = -1),
+                               " needs ", str_c(
+                                 abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                               " points to bring it back"
+        )
+        )
+      } else {
+        
+      }
+    } else {
+      
+    }
+  
   })
+  
+    
   
   # Team B
   observeEvent(input$ok_b, {
@@ -593,7 +614,29 @@ server <- function(input, output, session) {
     } else {
       vals$error_msg <- "You did not input anything."
     }
+    
+    # If the game is in rebuttal, remind players
+    # of the points needed to bring it back
+    
+    if (!is.null(vals$rebuttal)) {
+      if (vals$rebuttal == T) {
+        showNotification(str_c("Rebuttal: ", "Team ", 
+                               str_sub(round_num(), start = -1),
+                               " needs ", str_c(
+                                 abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                               " points to bring it back"
+        )
+        )
+      } else {
+        
+      }
+    } else {
+      
+    }
+    
   })
+  
+  
   
 
 # End of the game ---------------------------------------------------------
@@ -603,10 +646,11 @@ server <- function(input, output, session) {
   observeEvent(input$finish_game, {
     showModal(
       modalDialog(
-        helpText("Are you sure?"),
+        helpText(h2("End Game", align = "center"),
+                 p("Is the game over?", align = "center")),
         footer = tagList(
-          modalButton("Cancel"),
-          actionButton("finish_game_sure", "OK")
+          actionButton("finish_game_sure", "Yes"),
+          modalButton("No")
         )
       )
     )
@@ -634,7 +678,6 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$send_to_db, {
-    browser()
     # Update Players
     dbAppendTable(
       conn = con, 
