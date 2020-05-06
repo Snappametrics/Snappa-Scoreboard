@@ -40,14 +40,18 @@ score_check <- function(team, players) {
   
 }
 
-rebuttal_check <- function(round) {
+rebuttal_check <- function(a ,b ,round) {
+  if (any(is.null(a),is.null(b))){
+    check <- F
+  } else{ 
   check <- case_when(
-      (vals$score_a >= 21 & vals$score_a - vals$score_a >= 2 & str_detect(round, "B")) ~ T, 
-      (vals$score_a >= 21 & vals$score_a - vals$score_a >= 2 & str_detect(round, "A")) ~ T,
-      !any((vals$score_a >= 21 & vals$score_a - vals$score_a >= 2 & str_detect(round, "B")), 
-         (vals$score_a >= 21 & vals$score_a - vals$score_a >= 2 & str_detect(round, "A"))) ~ F)
-  
-  output(check)
+      (a >= 21 & a - b >= 2 & str_detect(round, "B")) ~ T, 
+      (b >= 21 & b - a >= 2 & str_detect(round, "A")) ~ T,
+      !any((a >= 21 & a - b >= 2 & str_detect(round, "B")), 
+         (b >= 21 & b - a >= 2 & str_detect(round, "A"))) ~ F)
+  }
+
+  return(check)
 }
 
 
@@ -242,8 +246,8 @@ server <- function(input, output, session) {
       team_b = 0
     ),
     
-    rebuttal = rebuttal_check(vals$round_num),
-    rebuttal_tag = NULL, 
+    rebuttal = NULL,
+    rebuttal_tag = F, 
     #TODO: add new player names and ui elements to allow up to 4v4 pa to be recorded
     
     # Record the total number of players. Useful for later times when we have to 
@@ -399,6 +403,9 @@ server <- function(input, output, session) {
 
   # When next round button is pushed
   observeEvent(input$next_round, {
+    vals$rebuttal = rebuttal_check(vals$score_a, 
+                                   vals$score_b,
+                                   round_num())
     if (vals$rebuttal_tag == T){
       if (vals$rebuttal == T){
         click("finish_game")
@@ -406,15 +413,24 @@ server <- function(input, output, session) {
         vals$rebuttal_tag = F
       }
     } else{
-      next
     }
     
     vals$shot_num = vals$shot_num+1
+
+    vals$rebuttal = rebuttal_check(vals$score_a, 
+                                   vals$score_b,
+                                   round_num())
     
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
+      showNotification(str_c("Rebuttal: ", "Team ", 
+                             str_sub(round_num(), start = -1),
+                             "needs ", str_c(
+                               abs(vals$score_a - vals$score_b) - 1),
+                             " points to bring it back"
+                             )
+                      ) 
     } else {
-      next
     }
       
     })
