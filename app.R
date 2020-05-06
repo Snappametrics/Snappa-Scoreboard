@@ -403,9 +403,6 @@ server <- function(input, output, session) {
 
   # When next round button is pushed
   observeEvent(input$next_round, {
-    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
-                                   vals$current_scores$team_b,
-                                   round_num())
     if (vals$rebuttal_tag == T){
       if (vals$rebuttal == T){
         click("finish_game")
@@ -530,8 +527,12 @@ server <- function(input, output, session) {
   
     # If the game is in rebuttal, remind players
     # of the points needed to bring it back
-    if (!is.null(vals$rebuttal)) {
-      if (vals$rebuttal == T) {
+    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
+                                   vals$current_scores$team_b,
+                                   round_num())
+    
+#    if (!is.null(vals$rebuttal)) {
+      if (vals$rebuttal == T & vals$rebuttal_tag == T) {
         showNotification(str_c("Rebuttal: ", "Team ", 
                                str_sub(round_num(), start = -1),
                                " needs ", str_c(
@@ -542,9 +543,9 @@ server <- function(input, output, session) {
       } else {
         
       }
-    } else {
+#    } else {
       
-    }
+#    }
   
   })
   
@@ -615,25 +616,27 @@ server <- function(input, output, session) {
       vals$error_msg <- "You did not input anything."
     }
     
-    # If the game is in rebuttal, remind players
+    # If the game is still in rebuttal in rebuttal, remind players
     # of the points needed to bring it back
+    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
+                                   vals$current_scores$team_b,
+                                   round_num())
     
-    if (!is.null(vals$rebuttal)) {
-      if (vals$rebuttal == T) {
-        showNotification(str_c("Rebuttal: ", "Team ", 
-                               str_sub(round_num(), start = -1),
-                               " needs ", str_c(
-                                 abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
-                               " points to bring it back"
-        )
-        )
-      } else {
-        
-      }
+    #    if (!is.null(vals$rebuttal)) {
+    if (vals$rebuttal == T & vals$rebuttal_tag == T) {
+      showNotification(str_c("Rebuttal: ", "Team ", 
+                             str_sub(round_num(), start = -1),
+                             " needs ", str_c(
+                               abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                             " points to bring it back"
+      )
+      )
     } else {
       
     }
+    #    } else {
     
+    #    }    
   })
   
   
