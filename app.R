@@ -42,15 +42,15 @@ score_check <- function(team, players) {
   
 }
 
-rebuttal_check <- function(a ,b ,round) {
+rebuttal_check <- function(a , b , round, points_to_win) {
   if (any(is.null(a),is.null(b))){
     check <- F
   } else{ 
   check <- case_when(
-      (a >= 21 & a - b >= 2 & str_detect(round, "B")) ~ T, 
-      (b >= 21 & b - a >= 2 & str_detect(round, "A")) ~ T,
-      !any((a >= 21 & a - b >= 2 & str_detect(round, "B")), 
-         (b >= 21 & b - a >= 2 & str_detect(round, "A"))) ~ F)
+      (a >= points_to_win & a - b >= 2 & str_detect(round, "B")) ~ T, 
+      (b >= points_to_win & b - a >= 2 & str_detect(round, "A")) ~ T,
+      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "B")), 
+         (b >= points_to_win & b - a >= 2 & str_detect(round, "A"))) ~ F)
   }
 
   return(check)
@@ -122,6 +122,7 @@ ui <- fluidPage(
                           h1(strong("Team A"), style = "align: center"),
                           selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+                          
                    ),
                    column(4),
                    column(4, align = "center",
@@ -131,6 +132,14 @@ ui <- fluidPage(
                                          options = list(create = TRUE))
                    )
                    ),
+                 
+                 fluidRow(
+                   column(4),
+                   column(4, align = "center",
+                          numericInput("play_to", "What score are you playing to?", value = 21, min = 21, max = 40)),
+                   column(4)
+                 ),
+                
                  fluidRow(
                    column(4),
                    column(4,  align = "center",
@@ -181,7 +190,7 @@ ui <- fluidPage(
                           )
                           
                    ), 
-                   tags$style(type = "text/css", "#score_a, #score_b, #round_num {font-size: 120px;}"),
+                   tags$style(type = "text/css", "#score_a, #score_b, #round_num {font-size: 120px;}")
                  ), 
                  fluidRow(
                    column(width = 4, offset = 4, align = "center",
@@ -290,7 +299,8 @@ server <- function(input, output, session) {
   
 
 # Outputs -----------------------------------------------------------------
-
+  
+  
   # Switch between pass the dice and next round
   output$selector_ui <- renderUI({
     fillRow(actionButton("previous_round", label = "Previous Round"),
@@ -368,7 +378,6 @@ server <- function(input, output, session) {
 
 # Game Start --------------------------------------------------------------
   
-
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
     req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
@@ -460,7 +469,7 @@ server <- function(input, output, session) {
 
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
                                     vals$current_scores$team_b,
-                                    round_num())
+                                    round_num(), input$play_to)
       
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
@@ -573,7 +582,7 @@ server <- function(input, output, session) {
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
                                    vals$current_scores$team_b,
-                                   round_num())
+                                   round_num(), input$play_to)
     
 #    if (!is.null(vals$rebuttal)) {
       if (vals$rebuttal == T & vals$rebuttal_tag == T) {
@@ -664,7 +673,7 @@ server <- function(input, output, session) {
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
                                    vals$current_scores$team_b,
-                                   round_num())
+                                   round_num(), input$play_to)
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
