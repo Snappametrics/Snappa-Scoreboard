@@ -121,15 +121,16 @@ ui <- fluidPage(
                    column(4, align = "center",
                           h1(strong("Team A"), style = "align: center"),
                           selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-                          selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
-                          
+                          selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+                          actionButton("extra_player_a3", label = "+ Add Player")
+
                    ),
                    column(4),
                    column(4, align = "center",
                           h1(strong("Team B"), style = "align: center"),
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), 
-                                         options = list(create = TRUE))
+                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+                          actionButton("extra_player_b3", label = "+ Add Player")
                    )
                    ),
                  
@@ -230,14 +231,28 @@ server <- function(input, output, session) {
   
 
 # Reactive Values ---------------------------------------------------------
+
+snappaneers = reactive({
   
-  snappaneers = reactive({
-    tibble(
-      team = rep(c("A", "B"), each = 2),
-      player_name = c(input$name_a1, input$name_a2,  input$name_b1,  input$name_b2)
-    )
+  active_player_inputs = list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
+                              "b1" = input$name_b1, "b2" = input$name_b2, "b3" = input$name_b3, "b4" = input$name_b4) %>% 
+    discard(is_null)
+  
+  
+   tibble(
+     team = str_extract(names(active_player_inputs), ".{1}"),
+     player_name = active_player_inputs %>% flatten_chr()
+     ) %>% 
+     filter(player_name !="")
   })
-  
+
+
+num_players = reactive({
+    
+    nrow(snappaneers())
+  })
+
+
 
   
   # Create object to store reactive values
@@ -300,7 +315,12 @@ server <- function(input, output, session) {
 
 # Outputs -----------------------------------------------------------------
   
-  
+  getInputs <- function(pattern){
+    reactives <- names(reactiveValuesToList(input))
+    reactives[grep(pattern,reactives)]
+  }
+
+
   # Switch between pass the dice and next round
   output$selector_ui <- renderUI({
     fillRow(actionButton("previous_round", label = "Previous Round"),
@@ -381,10 +401,16 @@ server <- function(input, output, session) {
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
     req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
-    validate(
-      need(length(unique(snappaneers()$player_name)) == 4, message = "Player names need to be unique")
-    )
-    shinyjs::enable("start_game")
+    if(length(unique(snappaneers()$player_name)) == num_players()){ 
+      shinyjs::enable("start_game")
+    } 
+    
+    if(length(unique(snappaneers()$player_name)) != num_players()){
+      shinyjs::disable("start_game")
+      }
+              
+      
+
   })
 
   
@@ -485,6 +511,79 @@ server <- function(input, output, session) {
       
     })
   
+
+# New Players -------------------------------------------------------------
+
+  
+  
+  # New Player A3
+  observeEvent(input$extra_player_a3, {
+    vals <- paste0("#",getInputs("extra_player_a3"))
+
+    insertUI(
+      selector = "#extra_player_a3",
+      where = "afterEnd",
+      ui = tagList(
+        selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+        actionButton("extra_player_a4", label = "+ Add Player")
+      )
+    )
+    removeUI(
+      selector = vals,
+      multiple = F
+    )
+  })
+  
+  # New Player A4
+  observeEvent(input$extra_player_a4, {
+    vals <- paste0("#",getInputs("extra_player_a4"))
+    
+    insertUI(
+      selector = "#extra_player_a4",
+      where = "afterEnd",
+      ui = selectizeInput('name_a4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+    )
+    
+    removeUI(
+      selector = vals,
+      multiple = F
+    )
+  })
+  
+  # New Player B3
+  observeEvent(input$extra_player_b3, {
+    vals <- paste0("#",getInputs("extra_player_b3"))
+    
+    insertUI(
+      selector = "#extra_player_b3",
+      where = "afterEnd",
+      ui = tagList(
+        selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+        actionButton("extra_player_b4", label = "+ Add Player")
+      )
+    )
+    removeUI(
+      selector = vals,
+      multiple = F
+    )
+  })
+  
+  # New Player B4
+  observeEvent(input$extra_player_b4, {
+    vals <- paste0("#",getInputs("extra_player_b4"))
+    
+    insertUI(
+      selector = "#extra_player_b4",
+      where = "afterEnd",
+      ui = selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+    )
+    
+    removeUI(
+      selector = vals,
+      multiple = F
+    )
+  })
+    
   
   
 
