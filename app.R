@@ -622,14 +622,14 @@ num_players = reactive({
       need(
         any(
           # Typical Offense
-            str_detect(rounds[vals$shot_num], "A") & 
-              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A"),
+            str_detect(rounds[vals$shot_num], "[Aa]") & 
+              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]"),
             # Typical Paddle
-            str_detect(rounds[vals$shot_num], "B") &
-              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") & 
+            str_detect(rounds[vals$shot_num], "[Bb]") &
+              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
               input$paddle == T,
             # Somebody messed up on the other team
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") & 
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
               input$paddle == T),
         message = "That entry doesn't make sense for this round/shooter combination")
     )  
@@ -656,7 +656,7 @@ num_players = reactive({
                                 paddle = input$paddle,
                                 round_num = round_num(),
                                 points_scored = input$score,
-                                shooting = str_detect(round_num(), "A")
+                                shooting = str_detect(round_num(), "[Aa]")
                               ))
       
       vals$game_stats_db = vals$scores_db %>% 
@@ -668,10 +668,10 @@ num_players = reactive({
                   impossibles = sum((points_scored > 3)))
       
       # Congratulate paddlers
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
         showNotification("That's some hot shit!")
       }
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
@@ -713,14 +713,14 @@ num_players = reactive({
       need(
         any(
           # Typical Offense
-          str_detect(rounds[vals$shot_num], "B") & 
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B"),
+          str_detect(rounds[vals$shot_num], "[Bb]") & 
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]"),
           # Typical Paddle
-          str_detect(rounds[vals$shot_num], "A") &
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") & 
+          str_detect(rounds[vals$shot_num], "[Aa]") &
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
             input$paddle == T,
           # Somebody messed up on the other team (can happen on offense or defense)
-          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") & 
+          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
             input$paddle == T),
       message = "That entry doesn't make sense for this round/shooter combination"
       )
@@ -746,7 +746,7 @@ num_players = reactive({
                                 paddle = input$paddle,
                                 round_num = round_num(),
                                 points_scored = input$score,
-                                shooting = str_detect(round_num(), "B")
+                                shooting = str_detect(round_num(), "[Bb]")
                               ))
       
       vals$game_stats_db = vals$scores_db %>% 
@@ -759,10 +759,10 @@ num_players = reactive({
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         showNotification("That's some hot shit!")
       }
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
