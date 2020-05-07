@@ -843,7 +843,17 @@ num_players = reactive({
   })
   
   observeEvent(input$send_to_db, {
+    browser()
+    # Sanity check: Only submit games which have reached their conclusion
+    validate(need(any(vals$current_scores$team_a >= vals$score_to,
+                      vals$current_scores$team_b >= vals$score_to), 
+                  message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
+                  label = "check_game_over"))
+    
+    
     # Update Players
+    
+    
     dbAppendTable(
       conn = con, 
       name = "players",
