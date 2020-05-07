@@ -152,11 +152,10 @@ ui <- fluidPage(
                                          options = list(create = TRUE))
                           )
                    ),
-                 # Start Game
                  fluidRow(
                    column(4),
                    column(4,
-                          actionButton("start_game", "Throw some dice?"),
+                          disabled(actionButton("start_game", "Throw some dice?")),
                           uiOutput("validate_start"),
                           tags$style(type='text/css', "#start_game { horizontal-align: middle; display: block;}")),
                    
@@ -220,6 +219,14 @@ server <- function(input, output, session) {
   
 
 # Reactive Values ---------------------------------------------------------
+  
+  snappaneers = reactive({
+    tibble(
+      team = rep(c("A", "B"), each = 2),
+      player_name = c(input$name_a1, input$name_a2,  input$name_b1,  input$name_b2)
+    )
+  })
+  
 
   
   # Create object to store reactive values
@@ -331,31 +338,26 @@ server <- function(input, output, session) {
   
 
 # Game Start --------------------------------------------------------------
+  
+
+  # Create a UI output which validates that there are four players and the names are unique
+  output$validate_start = reactive({
+    req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
+    validate(
+      need(length(unique(snappaneers()$player_name)) == 4, message = "Player names need to be unique")
+    )
+    shinyjs::enable("start_game")
+  })
 
   
   # When we click "Start Game", switch to the scoreboard
   observeEvent(input$start_game, {
-    req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
-
     # Fill the snappaneers with the current players and their teams
-    vals$snappaneers = bind_rows(vals$snappaneers,
-      tibble(
-        team = rep(c("A", "B"), each = 2),
-        player_name = c(input$name_a1, input$name_a2,  input$name_b1,  input$name_b2)
-      )
-    )
     
-    # Create a UI output which validates that there are four players and the names are unique
-    output$validate_start = renderUI({
-      if(all(map_lgl(vals$snappaneers$player_name, str_detect, "[A-z]."))){
-        validate(
-          need(length(unique(vals$snappaneers$player_name)) == 4, message = "Player names need to be unique")
-        )
-      }
-    })
     
+
     # Add new players to the players table
-    iwalk(vals$snappaneers$player_name, function(die_thrower, index){
+    iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
       if(!(die_thrower %in% vals$players_db$player_name)){
         
@@ -385,7 +387,7 @@ server <- function(input, output, session) {
     vals$game_stats_db = bind_rows(vals$game_stats_db,
                                 tibble(
                                   game_id = rep(vals$game_id, vals$num_players),
-                                  player_id = filter(vals$players_db, player_name %in% vals$snappaneers$player_name) %>% pull(player_id),
+                                  player_id = filter(vals$players_db, player_name %in% snappaneers()$player_name) %>% pull(player_id),
                                   total_points = rep(0, vals$num_players),
                                   ones = rep(0, vals$num_players),
                                   twos = rep(0, vals$num_players),
@@ -444,7 +446,7 @@ server <- function(input, output, session) {
     vals$error_msg <- NULL
     showModal(
       score_check(team = "a", 
-                  players = arrange(vals$snappaneers, team) %>% pull(player_name)))
+                  players = arrange(snappaneers(), team) %>% pull(player_name)))
   })
   
   
@@ -453,7 +455,7 @@ server <- function(input, output, session) {
     showModal(
       score_check(
         team = "b", 
-        players = arrange(vals$snappaneers, desc(team)) %>% pull(player_name)))
+        players = arrange(snappaneers(), desc(team)) %>% pull(player_name)))
     
   })
   
@@ -471,13 +473,13 @@ server <- function(input, output, session) {
         any(
           # Typical Offense
             str_detect(rounds[vals$shot_num], "A") & 
-              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A"),
+              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A"),
             # Typical Paddle
             str_detect(rounds[vals$shot_num], "B") &
-              str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
+              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") & 
               input$paddle == T,
             # Somebody messed up on the other team
-            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") & 
               input$paddle == T),
         message = "That entry doesn't make sense for this round/shooter combination")
     )  
@@ -516,10 +518,10 @@ server <- function(input, output, session) {
                   impossibles = sum((points_scored > 3)))
       
       # Congratulate paddlers
-      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
         showNotification("That's some hot shit!")
       }
-      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
@@ -562,13 +564,13 @@ server <- function(input, output, session) {
         any(
           # Typical Offense
           str_detect(rounds[vals$shot_num], "B") & 
-            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B"),
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B"),
           # Typical Paddle
           str_detect(rounds[vals$shot_num], "A") &
-            str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") & 
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") & 
             input$paddle == T,
           # Somebody messed up on the other team (can happen on offense or defense)
-          str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") & 
+          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") & 
             input$paddle == T),
       message = "That entry doesn't make sense for this round/shooter combination"
       )
@@ -607,10 +609,10 @@ server <- function(input, output, session) {
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
-      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "B") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") ){
         showNotification("That's some hot shit!")
       }
-      if(input$paddle & str_detect(pull(filter(vals$snappaneers, player_name == input$scorer), team), "A") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
