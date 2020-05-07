@@ -238,7 +238,7 @@ server <- function(input, output, session) {
   vals <- reactiveValues(
     # Initialize new game, player, and score IDs, as well as the shot number
     game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T),
-    new_player_id = sum(dbGetQuery(con, "SELECT count(*) FROM players"),1),
+    new_player_id = sum(dbGetQuery(con, "SELECT MAX(player_id) FROM players"),1),
     score_id = 0,
     shot_num = 1,
     
