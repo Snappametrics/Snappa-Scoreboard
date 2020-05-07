@@ -180,7 +180,8 @@ ui <- fluidPage(
                             # tags$style(type="text/css", "h1, h3, #b_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
                           )
                           
-                   )
+                   ), 
+                   tags$style(type = "text/css", "#score_a, #score_b, #round_num {font-size: 120px;}"),
                  ), 
                  fluidRow(
                    column(width = 4, offset = 4, align = "center",
