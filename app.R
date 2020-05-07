@@ -134,12 +134,7 @@ ui <- fluidPage(
                    )
                    ),
                  
-                 fluidRow(
-                   column(4),
-                   column(4, align = "center",
-                          numericInput("play_to", "What score are you playing to?", value = 21, min = 21, max = 40)),
-                   column(4)
-                 ),
+                 
                 
                  fluidRow(
                    column(4),
@@ -147,10 +142,17 @@ ui <- fluidPage(
                           disabled(actionButton("start_game", "Throw some dice?")),
                           uiOutput("validate_start"),
                           br(),
+                          
+                          radioButtons("play_to", "What score are you playing to?", 
+                                               choices = list("21" = 1, "32" = 2), selected = 1,
+                                               inline = T),
+                          br(),
+                   
                           helpText("Note: All players must enter their name before the game can begin")
-                   ),
+                          ),
                    column(4)
-                 )
+                   )
+                   
         ),
         
 
@@ -288,7 +290,9 @@ num_players = reactive({
     # Values used in scoring events
     score = NULL,
     error_msg = NULL,
-    print = FALSE
+    print = FALSE,
+    
+    score_to = NULL
     
     
 
@@ -417,7 +421,6 @@ num_players = reactive({
   # When we click "Start Game", switch to the scoreboard
   observeEvent(input$start_game, {
     
-    
 
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
@@ -447,6 +450,9 @@ num_players = reactive({
     vals$scores_db = slice(scores_tbl, 0)
     vals$shot_num = 1
     
+    # Record the score we're playing to
+    vals$score_to = case_when(input$play_to == 1 ~ 21,
+                              input$play_to == 2 ~ 32)
     
     
     # Initialize the current game's game_stats table
@@ -495,7 +501,7 @@ num_players = reactive({
 
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
                                     vals$current_scores$team_b,
-                                    round_num(), input$play_to)
+                                    round_num(), vals$score_to)
       
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
@@ -681,7 +687,7 @@ num_players = reactive({
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
                                    vals$current_scores$team_b,
-                                   round_num(), input$play_to)
+                                   round_num(), vals$score_to)
     
 #    if (!is.null(vals$rebuttal)) {
       if (vals$rebuttal == T & vals$rebuttal_tag == T) {
@@ -772,7 +778,7 @@ num_players = reactive({
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
                                    vals$current_scores$team_b,
-                                   round_num(), input$play_to)
+                                   round_num(), vals$score_to)
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
