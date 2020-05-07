@@ -29,7 +29,8 @@ score_check <- function(team, players) {
                  step = 1),
     checkboxInput("paddle", "Was it a paddle?"),
     
-    selectInput("scorer", label = h3("Who scored?"), 
+    radioButtons("scorer", 
+                 label = h3("Who scored?"), 
                 choices = players),
     textOutput("skip_error_msg"),
     footer = tagList(
