@@ -14,6 +14,7 @@ library(shiny)
 library(lubridate)
 library(dbplyr)
 library(shinyjs)
+library(shinyWidgets)
 
 # Prior to app startup ----------------------------------------------------
 
@@ -23,11 +24,11 @@ score_check <- function(team, players) {
   team_scored = paste("ok", team, sep = "_")
   
   # Ask how many points were scored and by whom
-  modalDialog(
+  modalDialog(align = "center", 
     numericInput("score", label = "Noice, how many points?",
                  value = 1, min = 1, max = 9,
                  step = 1),
-    checkboxInput("paddle", "Was it a paddle?"),
+    materialSwitch("paddle", "Was it a paddle?", inline = T, value = F),
     
     radioButtons("scorer", 
                  label = h3("Who scored?"), 
@@ -117,13 +118,13 @@ ui <- fluidPage(
         tabPanel("start_screen", 
                  # Enter Player Names
                  fluidRow(
-                   column(4,
+                   column(4, align = "center",
                           h1(strong("Team A"), style = "align: center"),
                           selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
                    ),
                    column(4),
-                   column(4,
+                   column(4, align = "center",
                           h1(strong("Team B"), style = "align: center"),
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), 
@@ -132,7 +133,7 @@ ui <- fluidPage(
                    ),
                  fluidRow(
                    column(4),
-                   column(4,
+                   column(4,  align = "center",
                           disabled(actionButton("start_game", "Throw some dice?")),
                           uiOutput("validate_start"),
                           br(),
@@ -151,7 +152,7 @@ ui <- fluidPage(
                  # Scoreboard
                  fluidRow(
                    # Team A
-                   column(width = 4,
+                   column(width = 4, align = "center",
                           wellPanel(
                             h1("Team A"),
                             h2(textOutput("score_a")),
@@ -163,14 +164,14 @@ ui <- fluidPage(
                    ),
                    
                    # Round
-                   column(width = 4,
+                   column(width = 4, align = "center",
                           h1("Round"),
                           h3(textOutput("round_num")),
                           uiOutput("selector_ui")
                           # tags$style(type="text/css", "h1, h3, #selector_ui { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
                    ),
                    # Team B
-                   column(width = 4, 
+                   column(width = 4,  align = "center",
                           wellPanel(
                             h1("Team B"),
                             h2(textOutput("score_b")),
@@ -182,17 +183,37 @@ ui <- fluidPage(
                    )
                  ), 
                  fluidRow(
-                   actionButton("new_game", "Restart game"),
-                   
-                   
-                   actionButton("finish_game", "Finish game")
+                   column(width = 4, offset = 4, align = "center",
+                          actionButton("new_game", "Restart game"),
+                          
+                          actionButton("finish_game", "Finish game")
+                          )
+                   )
                  )
+
+              ),
+      fluidRow(
+        column(1, align = "center",
+               h3("players"),
+               tableOutput("db_output_players")
+               ),
+        column(4, align = "center",
+               h3("scores"),
+               tableOutput("db_output_scores")
+        ),
+        column(4, align = "center",
+               h3("game_stats"),
+               tableOutput("db_output_game_stats")
+        ),
+        column(3, align = "center",
+               h3("game_history"),
+               tableOutput("db_output_game_history")
+        )
+        
         )
   )
   
   
-  
-)
 
 
 
@@ -322,6 +343,21 @@ server <- function(input, output, session) {
     }
   )
   
+  # For debugging
+  
+  output$db_output_players = renderTable({
+    vals$players_db
+  })
+  output$db_output_scores = renderTable({
+    vals$scores_db
+  })
+  output$db_output_game_stats = renderTable({
+    vals$game_stats_db
+  })
+  output$db_output_game_history = renderTable({
+    vals$game_history_db
+  })
+  
   
   
   
@@ -346,7 +382,6 @@ server <- function(input, output, session) {
   
   # When we click "Start Game", switch to the scoreboard
   observeEvent(input$start_game, {
-    # Fill the snappaneers with the current players and their teams
     
     
 
@@ -372,22 +407,27 @@ server <- function(input, output, session) {
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
-    # Set the score outputs to 0
+    # Set the score outputs and shot number to 0
     vals$current_scores$team_a = 0
     vals$current_scores$team_b = 0
+    vals$scores_db = slice(scores_tbl, 0)
+    vals$shot_num = 1
+    
     
     
     # Initialize the current game's game_stats table
-    vals$game_stats_db = bind_rows(vals$game_stats_db,
-                                tibble(
-                                  game_id = rep(vals$game_id, vals$num_players),
-                                  player_id = filter(vals$players_db, player_name %in% snappaneers()$player_name) %>% pull(player_id),
-                                  total_points = rep(0, vals$num_players),
-                                  ones = rep(0, vals$num_players),
-                                  twos = rep(0, vals$num_players),
-                                  threes = rep(0, vals$num_players),
-                                  impossibles = rep(0, vals$num_players)
-                                ))
+    vals$game_stats_db = slice(vals$game_stats_db, 0)
+    # Previous code, but might be useful if/when we want to pull in historical data too
+    # bind_rows(vals$game_stats_db,
+    #           tibble(
+    #             game_id = rep(vals$game_id, vals$num_players),
+    #             player_id = filter(vals$players_db, player_name %in% snappaneers()$player_name) %>% pull(player_id),
+    #             total_points = rep(0, vals$num_players),
+    #             ones = rep(0, vals$num_players),
+    #             twos = rep(0, vals$num_players),
+    #             threes = rep(0, vals$num_players),
+    #             impossibles = rep(0, vals$num_players)
+    #           ))
 
 
   })
@@ -717,10 +757,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$new_game_sure, {
-    
+    # On a new game:
     updateTabsetPanel(session, "switcher", selected = "start_screen")
-    vals$scores_db = slice(scores_tbl, 0)
-    vals$shot_num = 1
+    
     walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
                                            options = list(create = TRUE)))
