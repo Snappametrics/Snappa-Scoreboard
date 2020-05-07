@@ -28,7 +28,7 @@ score_check <- function(team, players) {
     numericInput("score", label = "Noice, how many points?",
                  value = 1, min = 1, max = 9,
                  step = 1),
-    materialSwitch("paddle", "Was it a paddle?", inline = T, value = F),
+    materialSwitch("paddle", label = "Was it a paddle?", status = "success", inline=T),
     
     radioButtons("scorer", 
                  label = h3("Who scored?"), 
@@ -193,21 +193,17 @@ ui <- fluidPage(
 
               ),
       fluidRow(
-        column(1, align = "center",
+        column(2, align = "center",
                h3("players"),
                tableOutput("db_output_players")
                ),
-        column(4, align = "center",
+        column(5, align = "center",
                h3("scores"),
                tableOutput("db_output_scores")
         ),
-        column(4, align = "center",
+        column(5, align = "center",
                h3("game_stats"),
                tableOutput("db_output_game_stats")
-        ),
-        column(3, align = "center",
-               h3("game_history"),
-               tableOutput("db_output_game_history")
         )
         
         )
