@@ -232,16 +232,17 @@ server <- function(input, output, session) {
 
 # Reactive Values ---------------------------------------------------------
 
-snappaneers = reactive({
-  
-  active_player_inputs = list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
+  active_player_inputs = reactive({
+    list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
                               "b1" = input$name_b1, "b2" = input$name_b2, "b3" = input$name_b3, "b4" = input$name_b4) %>% 
     discard(is_null)
-  
+  })
+
+snappaneers = reactive({
   
    tibble(
-     team = str_extract(names(active_player_inputs), ".{1}"),
-     player_name = active_player_inputs %>% flatten_chr()
+     team = str_extract(names(active_player_inputs()), ".{1}"),
+     player_name = active_player_inputs() %>% flatten_chr()
      ) %>% 
      filter(player_name !="")
   })
@@ -249,7 +250,7 @@ snappaneers = reactive({
 
 num_players = reactive({
     
-    nrow(snappaneers())
+    length(active_player_inputs())
   })
 
 
