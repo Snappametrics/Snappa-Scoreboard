@@ -292,7 +292,9 @@ server <- function(input, output, session) {
 
   # Switch between pass the dice and next round
   output$selector_ui <- renderUI({
-    actionButton("next_round", label = round_labels[vals$shot_num])
+    fillRow(actionButton("previous_round", label = "Previous Round"),
+            actionButton("next_round", label = round_labels[vals$shot_num]))
+    
   })
   
   # Output the round number
@@ -433,6 +435,14 @@ server <- function(input, output, session) {
   
 
 # Next Round --------------------------------------------------------------
+  
+  # When previous round button is pushed
+  observeEvent(input$previous_round, {
+    validate(
+      need(vals$shot_num > 1, label = "Can't go below 0", message = "It's the first round still")
+    )
+    vals$shot_num = vals$shot_num-1
+  })
 
   # When next round button is pushed
   observeEvent(input$next_round, {
