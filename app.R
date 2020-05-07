@@ -348,7 +348,7 @@ server <- function(input, output, session) {
     output$validate_start = renderUI({
       if(all(map_lgl(vals$snappaneers$player_name, str_detect, "[A-z]."))){
         validate(
-          need(length(unique(vals$snappaneers$player_name)) >= 4, message = "Player names need to be unique")
+          need(length(unique(vals$snappaneers$player_name)) == 4, message = "Player names need to be unique")
         )
       }
     })
