@@ -28,8 +28,12 @@ score_check <- function(team, players) {
     numericInput("score", label = "Noice, how many points?",
                  value = 1, min = 1, max = 9,
                  step = 1),
-    materialSwitch("paddle", label = "Was it a paddle?", status = "success", inline=T),
-    
+    fluidRow(column(4),
+             column(4, align = "left",
+                    materialSwitch("paddle", label = "Was it a paddle?", status = "success", inline=F , width = "400px")
+             ),
+             column(4)
+    ),
     radioButtons("scorer", 
                  label = h3("Who scored?"), 
                 choices = players),
@@ -147,7 +151,6 @@ ui <- fluidPage(
                                                choices = list("21" = 1, "32" = 2), selected = 1,
                                                inline = T),
                           br(),
-                   
                           helpText("Note: All players must enter their name before the game can begin")
                           ),
                    column(4)
