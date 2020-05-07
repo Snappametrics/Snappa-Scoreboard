@@ -95,6 +95,8 @@ game_history_tbl = tbl(con, "game_history") %>% collect()
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+  # includeCSS("www/bootstrap.css"),
+  # includeCSS("www/styles.css"),
   useShinyjs(),
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
@@ -104,24 +106,7 @@ ui <- fluidPage(
   
   
   
-  sidebarLayout(
-
-    # Sidebar ----
-    sidebarPanel(
-      "So you want to ya some da?",
-      
-      actionButton("new_game", "Restart game"),
-      
-      
-      actionButton("finish_game", "Finish game")
-      #TODO: Tip of the day
-    ),
-    
-    
-    
-    mainPanel(
-      
-      tabsetPanel(
+  tabsetPanel(
         # Switching mechanism
         id = "switcher",
         
@@ -132,42 +117,35 @@ ui <- fluidPage(
         tabPanel("start_screen", 
                  # Enter Player Names
                  fluidRow(
-                   column(5,
+                   column(4,
                           h1(strong("Team A"), style = "align: center"),
-                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
-                   ),
-                   column(2),
-                   column(5,
-                          h1(strong("Team B"), style = "align: center"),
-                          selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
-                   )
-                   ),
-                 fluidRow(
-                   column(5,
+                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
-                          ),
-                   column(2),
-                   column(5,
+                   ),
+                   column(4),
+                   column(4,
+                          h1(strong("Team B"), style = "align: center"),
+                          selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), 
                                          options = list(create = TRUE))
-                          )
+                   )
                    ),
                  fluidRow(
                    column(4),
                    column(4,
                           disabled(actionButton("start_game", "Throw some dice?")),
                           uiOutput("validate_start"),
-                          tags$style(type='text/css', "#start_game { horizontal-align: middle; display: block;}")),
-                   
+                          br(),
+                          helpText("Note: All players must enter their name before the game can begin")
+                   ),
                    column(4)
-                 ),
-                 fluidRow(
-                   helpText("Note: All players must enter their name before the game can begin", 
-                            style = "text-align:center; display: block")
-                   )
+                 )
         ),
         
-        ## Scoreboard
+
+# Scoreboard --------------------------------------------------------------
+
+
         tabPanel("scoreboard", 
                  
                  # Scoreboard
@@ -176,9 +154,10 @@ ui <- fluidPage(
                    column(width = 4,
                           wellPanel(
                             h1("Team A"),
-                            h3(textOutput("score_a")),
+                            h2(textOutput("score_a")),
                             actionButton("a_score_button", label = "We scored!"),
-                            tags$style(type="text/css", "h1, h3, #a_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
+                            h3(textOutput("player_names_a"))
+                            # tags$style(type="text/css", "h1, h3, #a_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
                           )
                           
                    ),
@@ -187,23 +166,28 @@ ui <- fluidPage(
                    column(width = 4,
                           h1("Round"),
                           h3(textOutput("round_num")),
-                          uiOutput("selector_ui"),
-                          tags$style(type="text/css", "h1, h3, #selector_ui { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
+                          uiOutput("selector_ui")
+                          # tags$style(type="text/css", "h1, h3, #selector_ui { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
                    ),
                    # Team B
                    column(width = 4, 
                           wellPanel(
                             h1("Team B"),
-                            h3(textOutput("score_b")),
+                            h2(textOutput("score_b")),
                             actionButton("b_score_button", label = "We scored!"),
-                            tags$style(type="text/css", "h1, h3, #b_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
+                            h3(textOutput("player_names_b"))
+                            # tags$style(type="text/css", "h1, h3, #b_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
                           )
                           
                    )
+                 ), 
+                 fluidRow(
+                   actionButton("new_game", "Restart game"),
+                   
+                   
+                   actionButton("finish_game", "Finish game")
                  )
         )
-      )
-    )
   )
   
   
@@ -304,9 +288,23 @@ server <- function(input, output, session) {
     vals$current_scores$team_a
   })
   
+  output$player_names_a = renderText({
+    snappaneers() %>% 
+      filter(team == "A") %>% 
+      pull(player_name) %>% 
+      str_c(., collapse = ", ")
+  })
+  
   # Output Team B's score
   output$score_b = renderText({
     vals$current_scores$team_b
+  })
+  
+  output$player_names_b = renderText({
+    snappaneers() %>% 
+      filter(team == "B") %>% 
+      pull(player_name) %>% 
+      str_c(., collapse = ", ")
   })
   
   # Output error message
