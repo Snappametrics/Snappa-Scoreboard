@@ -244,10 +244,6 @@ server <- function(input, output, session) {
     scores_db = scores_tbl %>% slice(0),
 
     # dataframe of the players and their teams
-    snappaneers = tibble(
-      team = as.character(),
-      player_name = as.character()
-      ),
     # Current Scores
     current_scores = tibble(
       team_a = 0,
