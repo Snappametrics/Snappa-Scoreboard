@@ -540,24 +540,24 @@ num_players = reactive({
   observeEvent(input$extra_player_a3, {
     vals <- paste0("#",getInputs("extra_player_a3"))
 
-    insertUI(
-      selector = "#extra_player_a3",
-      where = "afterEnd",
-      ui = fluidRow(column(1, 
-                           actionBttn(
-                             inputId = "remove_a3",
-                             label = "X",
-                             style = "unite", 
-                             color = "danger"
-                           )), 
-                    column(5, 
-          tagList(
-          selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-          actionButton("extra_player_a4", label = "+ Add Player")
-        )
-      )
-    )
-    )
+    # insertUI(
+    #   selector = "#extra_player_a3",
+    #   where = "afterEnd",
+    #   ui = fluidRow(column(1, 
+    #                        actionBttn(
+    #                          inputId = "remove_a3",
+    #                          label = "X",
+    #                          style = "unite", 
+    #                          color = "danger"
+    #                        )), 
+    #                 column(5, 
+    #       tagList(
+    #       selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+    #       actionButton("extra_player_a4", label = "+ Add Player")
+    #     )
+    #   )
+    # )
+    # )
     removeUI(
       selector = vals,
       multiple = F
