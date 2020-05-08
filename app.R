@@ -16,7 +16,11 @@ library(dbplyr)
 library(shinyjs)
 library(shinyWidgets)
 
-# Prior to app startup ----------------------------------------------------
+
+
+# Functions ---------------------------------------------------------------
+
+
 
 # Create pop-up dialog box when someone scores
 score_check <- function(team, players) {
@@ -73,6 +77,12 @@ rebuttal_check <- function(a , b , round, points_to_win) {
   return(check)
 }
 
+getInputs <- function(pattern){
+  reactives <- names(reactiveValuesToList(input))
+  reactives[grep(pattern,reactives)]
+}
+
+# Prior to app startup ----------------------------------------------------
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
@@ -337,12 +347,6 @@ server <- function(input, output, session) {
 
 # Outputs -----------------------------------------------------------------
   
-  getInputs <- function(pattern){
-    reactives <- names(reactiveValuesToList(input))
-    reactives[grep(pattern,reactives)]
-  }
-
-
   # Switch between pass the dice and next round
   output$selector_ui <- renderUI({
     fillRow(actionButton("previous_round", label = "Previous Round"),
