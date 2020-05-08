@@ -907,6 +907,13 @@ server <- function(input, output, session) {
       conn = con, 
       name = "game_stats",
       value = vals$game_stats_db)
+    
+    # Confirmation that data was sent to db
+    sendSweetAlert(session, 
+                   title = "The die is cast",
+                   text = "Data sent to SnappaDB",
+                   type = "success")
+    
   })
   
 
