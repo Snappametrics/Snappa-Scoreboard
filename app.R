@@ -68,10 +68,10 @@ rebuttal_check <- function(a , b , round, points_to_win) {
     check <- F
   } else{ 
   check <- case_when(
-      (a >= points_to_win & a - b >= 2 & str_detect(round, "B")) ~ T, 
-      (b >= points_to_win & b - a >= 2 & str_detect(round, "A")) ~ T,
-      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "B")), 
-         (b >= points_to_win & b - a >= 2 & str_detect(round, "A"))) ~ F)
+      (a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")) ~ T, 
+      (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]")) ~ T,
+      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")), 
+         (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]"))) ~ F)
   }
 
   return(check)
