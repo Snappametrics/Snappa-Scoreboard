@@ -143,18 +143,26 @@ ui <- fluidPage(
                  # Enter Player Names
                  fluidRow(
                    column(4, align = "center",
-                          h1(strong("Team A"), style = "align: center"),
-                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-                          selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-                          actionButton("extra_player_a3", label = "+ Add Player")
+                          wellPanel(
+                            style = "opacity: 0.92; background: #e26a6a",
+                          h1(strong("Team A"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
+                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
+                          selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
+                          actionButton("extra_player_a3", label = "+ Add Player"), 
+                          tags$style(type = "text/css", "#name_a1, #name_a2 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px;}")
+                          )
 
                    ),
                    column(4),
                    column(4, align = "center",
-                          h1(strong("Team B"), style = "align: center"),
+                          wellPanel(
+                            style = "opacity: 0.92; background: #2574a9",
+                          h1(strong("Team B"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-                          actionButton("extra_player_b3", label = "+ Add Player")
+                          actionButton("extra_player_b3", label = "+ Add Player"),
+                          tags$style(type = "text/css", "#name_b1, #name_b2 {font-size: 700%; color: white; margin-top:30px;margin-bottom:30px;} label.control-label {color: white;}")
+                          )
                    )
                    ),
                  
