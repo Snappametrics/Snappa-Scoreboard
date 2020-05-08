@@ -18,69 +18,6 @@ library(shinyWidgets)
 
 
 
-# Functions ---------------------------------------------------------------
-
-
-
-# Create pop-up dialog box when someone scores
-score_check <- function(team, players) {
-  # Identify which team scored
-  team_scored = paste("ok", team, sep = "_")
-  
-  # Ask how many points were scored and by whom
-  modalDialog(align = "center", 
-    h2(str_c("Team ", str_to_upper(team), " Scored")),
-    numericInput("score", label = "Noice, how many points?",
-                 value = 1, min = 1, max = 9,
-                 step = 1),
-    fluidRow(column(4),
-             column(4, align = "left",
-                    materialSwitch("paddle", label = "Was it a paddle?", status = "success", inline=F , width = "400px")
-             ),
-             column(4)
-    ),
-    
-
-    
-    
-    
-    fluidRow(column(4),
-             column(4, align = "left",
-                  radioButtons("scorer",
-                    label = h3("Who scored?"),
-                    choices = players)
-                  
-             ),
-             column(4)
-    ),
-             
-    textOutput("skip_error_msg"),
-    footer = tagList(
-      modalButton("Cancel"),
-      actionButton(team_scored, "OK")
-    )
-  )
-  
-}
-
-rebuttal_check <- function(a , b , round, points_to_win) {
-  if (any(is.null(a),is.null(b))){
-    check <- F
-  } else{ 
-  check <- case_when(
-      (a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")) ~ T, 
-      (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]")) ~ T,
-      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")), 
-         (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]"))) ~ F)
-  }
-
-  return(check)
-}
-
-getInputs <- function(pattern){
-  reactives <- names(reactiveValuesToList(input))
-  reactives[grep(pattern,reactives)]
-}
 
 # Prior to app startup ----------------------------------------------------
 
@@ -114,6 +51,66 @@ game_history_tbl = tbl(con, "game_history") %>% collect()
 
 
 
+# Functions ---------------------------------------------------------------
+
+
+
+# Create pop-up dialog box when someone scores
+score_check <- function(team, players) {
+  # Identify which team scored
+  team_scored = paste("ok", team, sep = "_")
+  
+  # Ask how many points were scored and by whom
+  modalDialog(align = "center", 
+              h2(str_c("Team ", str_to_upper(team), " Scored")),
+              numericInput("score", label = "Noice, how many points?",
+                           value = 1, min = 1, max = 9,
+                           step = 1, width = "30%"),
+              # Who Scored?
+              # awesomeRadio(
+              #   inputId = "scorer", label = "Who scored?", 
+              #   choices = players, inline=T),
+              prettyCheckbox(
+                inputId = "paddle", label = "Was it a paddle?", icon = icon("check")
+              ),
+              radioGroupButtons(
+                inputId = "scorer",
+                label = "Who scored?",
+                choices = players,
+                individual = T,
+                checkIcon = list(
+                  yes = tags$i(class = "fa fa-check-square"),
+                  no = tags$i(class = "fa fa-square-o")
+                )
+              ),
+
+              textOutput("skip_error_msg"),
+              footer = tagList(
+                modalButton("Cancel"),
+                actionButton(team_scored, "OK")
+              )
+  )
+  
+}
+
+rebuttal_check <- function(a , b , round, points_to_win) {
+  if (any(is.null(a),is.null(b))){
+    check <- F
+  } else{ 
+    check <- case_when(
+      (a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")) ~ T, 
+      (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]")) ~ T,
+      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")), 
+           (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]"))) ~ F)
+  }
+  
+  return(check)
+}
+
+getInputs <- function(pattern){
+  reactives <- names(reactiveValuesToList(input))
+  reactives[grep(pattern,reactives)]
+}
 
 
 
