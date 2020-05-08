@@ -65,7 +65,7 @@ score_check <- function(team, players) {
               h2(str_c("Team ", str_to_upper(team), " Scored")),
               numericInput("score", label = "Noice, how many points?",
                            value = 1, min = 1, max = 9,
-                           step = 1, width = "30%"),
+                           step = 1, width = "30%", width = "10%"),
               # Who Scored?
               # awesomeRadio(
               #   inputId = "scorer", label = "Who scored?", 
