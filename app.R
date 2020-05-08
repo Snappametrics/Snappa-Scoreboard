@@ -20,7 +20,6 @@ library(shinyWidgets)
 
 # Create pop-up dialog box when someone scores
 score_check <- function(team, players) {
-
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
   
