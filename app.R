@@ -125,7 +125,7 @@ ui <- fluidPage(
   # includeCSS("www/bootstrap.css"),
   # includeCSS("www/styles.css"),
   useShinyjs(),
-  tags$style("#start_game, #previous_round, #next_round, #a_score_button, #b_score_button { font-size: 130% }"),
+  tags$style("#start_game, #previous_round, #next_round, #a_score_button, #b_score_button, #scorer, #paddle, #score { font-size: 130% }"),
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
   # Application title
