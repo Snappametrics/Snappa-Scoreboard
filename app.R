@@ -197,7 +197,8 @@ ui <- fluidPage(
                    # Team A
                    column(width = 4, align = "center",
                           wellPanel(
-                            h1("Team A"),
+                            style = "opacity: 0.92; background: #e26a6a",
+                            h1("Team A", style = "color: white;"),
                             h2(textOutput("score_a")),
                             actionButton("a_score_button", label = "We scored!"),
                             h3(textOutput("player_names_a"))
@@ -209,22 +210,21 @@ ui <- fluidPage(
                    # Round
                    column(width = 4, align = "center",
                           h1("Round"),
-                          h3(textOutput("round_num")),
+                          h3(textOutput("round_num"), style = "font-size:120px;"),
                           uiOutput("selector_ui")
-                          # tags$style(type="text/css", "h1, h3, #selector_ui { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
                    ),
                    # Team B
                    column(width = 4,  align = "center",
                           wellPanel(
-                            h1("Team B"),
+                            style = "opacity: 0.92; background: #2574a9",
+                            h1("Team B", style = "color: white;"),
                             h2(textOutput("score_b")),
                             actionButton("b_score_button", label = "We scored!"),
-                            h3(textOutput("player_names_b"))
-                            # tags$style(type="text/css", "h1, h3, #b_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
+                            h3(textOutput("player_names_b")), 
+                            tags$style(type = "text/css", "#score_a, #score_b {font-size: 120px; color: white;}")
                           )
                           
-                   ), 
-                   tags$style(type = "text/css", "#score_a, #score_b, #round_num {font-size: 120px;}")
+                   )
                  ), 
                  fluidRow(
                    column(width = 4, offset = 4, align = "center",
