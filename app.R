@@ -78,7 +78,9 @@ rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
 
-#### Talking to the database ####
+
+# Database connection -----------------------------------------------------
+
 
 con <- dbConnect(RPostgres::Postgres(),
                           user = "postgres",
@@ -247,13 +249,15 @@ server <- function(input, output, session) {
 
 # Reactive Values ---------------------------------------------------------
 
+  # Active input buttons
   active_player_inputs = reactive({
     list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
                               "b1" = input$name_b1, "b2" = input$name_b2, "b3" = input$name_b3, "b4" = input$name_b4) %>% 
     discard(is_null)
   })
-
-snappaneers = reactive({
+  
+  # Snappaneers - | Team | Player name | 
+  snappaneers = reactive({
   
    tibble(
      team = str_extract(names(active_player_inputs()), ".{1}"),
@@ -263,7 +267,7 @@ snappaneers = reactive({
   })
 
 
-num_players = reactive({
+  num_players = reactive({
     
     length(active_player_inputs())
   })
@@ -274,7 +278,7 @@ num_players = reactive({
   # Create object to store reactive values
   vals <- reactiveValues(
     # Initialize new game, player, and score IDs, as well as the shot number
-    game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T),
+    game_id = NULL,
     new_player_id = sum(dbGetQuery(con, "SELECT MAX(player_id) FROM players"),1),
     score_id = 0,
     shot_num = 1,
@@ -419,10 +423,15 @@ num_players = reactive({
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
     req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
+    
+    # If the number of unique snappaneer names is the same as the number of active player inputs
+    #   => enable start button
     if(length(unique(snappaneers()$player_name)) == num_players()){ 
       shinyjs::enable("start_game")
     } 
     
+    # If the number of unique snappaneer names is not the same as the number of active player inputs
+    #   => disable start button
     if(length(unique(snappaneers()$player_name)) != num_players()){
       shinyjs::disable("start_game")
       }
@@ -432,10 +441,15 @@ num_players = reactive({
   })
 
   
-  # When we click "Start Game", switch to the scoreboard
+  # When we click "Start Game", 
+  #   - Add new players to the players table
+  #   - switch to the scoreboard
+  #   - Set the score outputs and shot number to 0
+  #   - Record the score we're playing to
+  #   - Initialize the current game's game_stats table
   observeEvent(input$start_game, {
     
-
+  
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
