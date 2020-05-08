@@ -20,11 +20,13 @@ library(shinyWidgets)
 
 # Create pop-up dialog box when someone scores
 score_check <- function(team, players) {
+
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
   
   # Ask how many points were scored and by whom
   modalDialog(align = "center", 
+    h2(str_c("Team ", str_to_upper(team), " Scored")),
     numericInput("score", label = "Noice, how many points?",
                  value = 1, min = 1, max = 9,
                  step = 1),
@@ -34,9 +36,21 @@ score_check <- function(team, players) {
              ),
              column(4)
     ),
-    radioButtons("scorer", 
-                 label = h3("Who scored?"), 
-                choices = players),
+    
+
+    
+    
+    
+    fluidRow(column(4),
+             column(4, align = "left",
+                  radioButtons("scorer",
+                    label = h3("Who scored?"),
+                    choices = players)
+                  
+             ),
+             column(4)
+    ),
+             
     textOutput("skip_error_msg"),
     footer = tagList(
       modalButton("Cancel"),
@@ -82,9 +96,6 @@ players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
 game_stats_tbl = tbl(con, "game_stats") %>% collect()
 game_history_tbl = tbl(con, "game_history") %>% collect()
-
-
-
 
 
 
@@ -533,10 +544,20 @@ num_players = reactive({
     insertUI(
       selector = "#extra_player_a3",
       where = "afterEnd",
-      ui = tagList(
-        selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-        actionButton("extra_player_a4", label = "+ Add Player")
+      ui = fluidRow(column(1, 
+                           actionBttn(
+                             inputId = "remove_a3",
+                             label = "X",
+                             style = "unite", 
+                             color = "danger"
+                           )), 
+                    column(5, 
+          tagList(
+          selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+          actionButton("extra_player_a4", label = "+ Add Player")
+        )
       )
+    )
     )
     removeUI(
       selector = vals,
