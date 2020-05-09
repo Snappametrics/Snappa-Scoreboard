@@ -107,10 +107,7 @@ rebuttal_check <- function(a , b , round, points_to_win) {
   return(check)
 }
 
-getInputs <- function(pattern){
-  reactives <- names(reactiveValuesToList(input))
-  reactives[grep(pattern,reactives)]
-}
+
 
 
 
@@ -559,30 +556,32 @@ server <- function(input, output, session) {
 
 # New Players -------------------------------------------------------------
 
-  
+  getInputs <- function(pattern){
+    reactives <- names(reactiveValuesToList(input))
+    reactives[grep(pattern,reactives)]
+  }
   
   # New Player A3
   observeEvent(input$extra_player_a3, {
     vals <- paste0("#",getInputs("extra_player_a3"))
 
-    # insertUI(
-    #   selector = "#extra_player_a3",
-    #   where = "afterEnd",
-    #   ui = fluidRow(column(1, 
-    #                        actionBttn(
-    #                          inputId = "remove_a3",
-    #                          label = "X",
-    #                          style = "unite", 
-    #                          color = "danger"
-    #                        )), 
-    #                 column(5, 
-    #       tagList(
-    #       selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-    #       actionButton("extra_player_a4", label = "+ Add Player")
-    #     )
-    #   )
-    # )
-    # )
+    insertUI(
+      selector = "#extra_player_a3",
+      where = "afterEnd",
+      ui = 
+          tagList(
+          selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+          actionButton("extra_player_a4", label = "+ Add Player")
+    )
+    )
+    # fluidRow(column(1,
+    #                 actionBttn(
+    #                   inputId = "remove_a3",
+    #                   label = "X",
+    #                   style = "unite",
+    #                   color = "danger"
+    #                 )),
+    #          column(5,
     removeUI(
       selector = vals,
       multiple = F
