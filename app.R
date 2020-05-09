@@ -161,10 +161,10 @@ ui <- fluidPage(
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
                           actionButton("extra_player_b3", label = "+ Add Player"),
-                          tags$style(type = "text/css", "#name_b1, #name_b2 {font-size: 700%; color: white; margin-top:30px;margin-bottom:30px;} label.control-label {color: white;}")
+                          tags$style(type = "text/css", "#name_b1, #name_b2 {font-size: 700%; color: white; margin-top:30px;margin-bottom:30px;} label.control-label[for^='name_'] {color: white;}")
                           )
                    )
-                   ),
+                   ),#
                  
                  
                 
