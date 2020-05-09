@@ -63,9 +63,9 @@ score_check <- function(team, players) {
   # Ask how many points were scored and by whom
   modalDialog(align = "center", 
               h2(str_c("Team ", str_to_upper(team), " Scored")),
-              numericInput("score", label = "Noice, how many points?",
+              numericInput("score", label = "Points",
                            value = 1, min = 1, max = 9,
-                           step = 1, width = "30%", width = "10%"),
+                           step = 1, width = "10%"),
               # Who Scored?
               # awesomeRadio(
               #   inputId = "scorer", label = "Who scored?", 
