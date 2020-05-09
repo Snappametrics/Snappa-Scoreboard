@@ -146,7 +146,7 @@ ui <- fluidPage(
                           selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           actionButton("extra_player_a3", label = "+ Add Player"), 
-                          tags$style(type = "text/css", "#name_a1, #name_a2 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px;}")
+                          tags$style(type = "text/css", "#name_a1, #name_a2, #name_a3, #name_a4 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px;}")#
                           )
 
                    ),
@@ -154,11 +154,11 @@ ui <- fluidPage(
                    column(4, align = "center",
                           wellPanel(
                             style = "opacity: 0.92; background: #2574a9",
-                          h1(strong("Team B"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
-                          selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
-                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+                          h1(strong("Team B"), style = "align: center; color: white; font-size: 700%; "),#margin-top:30px;margin-bottom:30px;
+                          selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
+                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           actionButton("extra_player_b3", label = "+ Add Player"),
-                          tags$style(type = "text/css", "#name_b1, #name_b2 {font-size: 700%; color: white; margin-top:30px;margin-bottom:30px;} label.control-label[for^='name_'] {color: white;}")
+                          tags$style(type = "text/css", "#name_b1, #name_b2, #name_b3, #name_b4 {font-size: 700%; color: white; margin-top:30px;margin-bottom:30px; } label.control-label[for^='name_'] {color: white;}}")#  
                           )
                    )
                    ),#
@@ -570,7 +570,7 @@ server <- function(input, output, session) {
       where = "afterEnd",
       ui = 
           tagList(
-          selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+          selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
           actionButton("extra_player_a4", label = "+ Add Player")
     )
     )
@@ -595,7 +595,7 @@ server <- function(input, output, session) {
     insertUI(
       selector = "#extra_player_a4",
       where = "afterEnd",
-      ui = selectizeInput('name_a4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+      ui = selectizeInput('name_a4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%")
     )
     
     removeUI(
@@ -607,12 +607,11 @@ server <- function(input, output, session) {
   # New Player B3
   observeEvent(input$extra_player_b3, {
     vals <- paste0("#",getInputs("extra_player_b3"))
-    
     insertUI(
       selector = "#extra_player_b3",
       where = "afterEnd",
       ui = tagList(
-        selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE)),
+        selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
         actionButton("extra_player_b4", label = "+ Add Player")
       )
     )
@@ -629,7 +628,7 @@ server <- function(input, output, session) {
     insertUI(
       selector = "#extra_player_b4",
       where = "afterEnd",
-      ui = selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE))
+      ui = selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%")
     )
     
     removeUI(
