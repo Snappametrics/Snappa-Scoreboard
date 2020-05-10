@@ -710,10 +710,13 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "[Aa]")
                               ))
-      
       vals$game_stats_db = vals$scores_db %>% 
         group_by(game_id, player_id) %>% 
         summarise(total_points = sum(points_scored),
+                  points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
+                                                                     player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
+                                              str_detect(pull(filter(snappaneers(),
+                                                                     player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
                   ones = sum((points_scored == 1)),
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
@@ -729,7 +732,7 @@ server <- function(input, output, session) {
     } else {
       vals$error_msg <- "You did not input anything."
     }
-  
+
     # If the game is in rebuttal, remind players
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
@@ -804,6 +807,11 @@ server <- function(input, output, session) {
       vals$game_stats_db = vals$scores_db %>% 
         group_by(game_id, player_id) %>% 
         summarise(total_points = sum(points_scored),
+                  points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
+                                                                     player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
+                                              str_detect(pull(filter(snappaneers(),
+                                                                     player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
+                  
                   ones = sum((points_scored == 1)),
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
@@ -892,6 +900,22 @@ server <- function(input, output, session) {
                       vals$current_scores$team_b >= vals$score_to), 
                   message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
                   label = "check_game_over"))
+    
+    #update game_stats one more time so that points per shot is accurate
+    vals$game_stats_db = vals$scores_db %>% 
+      group_by(game_id, player_id) %>% 
+      summarise(total_points = sum(points_scored),
+                points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
+                                                                   player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
+                                            str_detect(pull(filter(snappaneers(),
+                                                                   player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
+                ones = sum((points_scored == 1)),
+                twos = sum((points_scored == 2)),
+                threes = sum((points_scored == 3)),
+                impossibles = sum((points_scored > 3)))
+    
+    
+    
     
     
     # Update Players
