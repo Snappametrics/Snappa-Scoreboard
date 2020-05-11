@@ -602,13 +602,7 @@ server <- function(input, output, session) {
     )
     removeUI(selector = "#add_remove_a3",
              multiple = F)
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> afbcde0caf50e757df3bd293b0e2f0eb097dc588
-    
-    
   })
   
   
