@@ -323,9 +323,11 @@ server <- function(input, output, session) {
     error_msg = NULL,
     print = FALSE,
     
-    score_to = NULL
+    score_to = NULL,
     
-    
+    # Holds the trolls (more for simplicity of code
+    # than direct need)
+    trolls <- NULL
 
   )
   
@@ -901,6 +903,8 @@ server <- function(input, output, session) {
                   message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
                   label = "check_game_over"))
     
+    
+    
     #update game_stats one more time so that points per shot is accurate
     vals$game_stats_db = vals$scores_db %>% 
       group_by(game_id, player_id) %>% 
@@ -915,6 +919,24 @@ server <- function(input, output, session) {
                 impossibles = sum((points_scored > 3)))
     
     
+    # Make sure that everyone is in the game_stats table, i.e., 
+    # record the trolls in the dungeon
+    
+    vals$trolls = pull(filter(vals$players_db, player_name %in% snappaneers()$player_name), player_id) %>%
+                  anti_join(vals$game_stats, by = player_id)
+    
+    vals$game_stats_db = bind_rows(vals$game_stats_db, 
+                tibble(
+                  game_id = rep(vals$game_id, times = length(vals$trolls)),
+                  player_id = vals$trolls, 
+                  total_points = rep(0, times = length(vals$trolls)),
+                  points_per_shot = rep(0, times = length(vals$trolls)),
+                  ones = rep(0, times = length(vals$trolls)),
+                  twos = rep(0, times = length(vals$trolls)),
+                  threes = rep(0, times = length(vals$trolls)),
+                  impossibles = rep(0, times = length(vals$trolls))
+                )
+    )
     
     
     
