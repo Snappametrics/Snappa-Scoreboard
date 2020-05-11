@@ -327,7 +327,7 @@ server <- function(input, output, session) {
     
     # Holds the trolls (more for simplicity of code
     # than direct need)
-    trolls <- NULL
+    trolls = NULL
 
   )
   
@@ -896,7 +896,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$send_to_db, {
-    browser()
+    
     # Sanity check: Only submit games which have reached their conclusion
     validate(need(any(vals$current_scores$team_a >= vals$score_to,
                       vals$current_scores$team_b >= vals$score_to), 
@@ -921,14 +921,14 @@ server <- function(input, output, session) {
     
     # Make sure that everyone is in the game_stats table, i.e., 
     # record the trolls in the dungeon
-    
-    vals$trolls = pull(filter(vals$players_db, player_name %in% snappaneers()$player_name), player_id) %>%
-                  anti_join(vals$game_stats, by = player_id)
+    vals$trolls = tibble(
+                  player_id = pull(filter(vals$players_db, player_name %in% snappaneers()$player_name), player_id)) %>%
+                  anti_join(vals$game_stats_db, by = "player_id")
     
     vals$game_stats_db = bind_rows(vals$game_stats_db, 
                 tibble(
                   game_id = rep(vals$game_id, times = length(vals$trolls)),
-                  player_id = vals$trolls, 
+                  player_id = pull(vals$trolls, player_id), 
                   total_points = rep(0, times = length(vals$trolls)),
                   points_per_shot = rep(0, times = length(vals$trolls)),
                   ones = rep(0, times = length(vals$trolls)),
