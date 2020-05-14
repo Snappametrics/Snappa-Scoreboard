@@ -572,6 +572,8 @@ server <- function(input, output, session) {
   }
   
   # New Player A3
+  #   - Add A3 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_a3, {
     vals <- paste0("#",getInputs("extra_player_a3"))
 
@@ -579,21 +581,21 @@ server <- function(input, output, session) {
       selector = "#extra_player_a3",
       where = "afterEnd",
       ui = tags$div(id = "add_remove_a3",
-    fluidRow(column(1,
-                    br(),
-                    actionBttn(
-                      inputId = "remove_a3",
-                      label = "X",
-                      style = "jelly",
-                      color = "danger", 
-                      size = "sm"
-                    )),
-             column(9, 
-               selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "70%"),
-               actionButton("extra_player_a4", label = "+ Add Player")
-                              )
-                    )
-                    )
+                    fluidRow(
+                      tagList(
+                        selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                      ),
+                      actionBttn(
+                        inputId = "remove_a3",
+                        label = "X",
+                        style = "jelly",
+                        color = "danger", 
+                        size = "sm"
+                      ),
+                      tags$style("#add_remove_a3 {position: relative;} #remove_a3 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
+                    ),
+                    actionButton("extra_player_a4", label = "+ Add Player")
+      )
     )
              
     removeUI(
@@ -602,7 +604,9 @@ server <- function(input, output, session) {
     )
   })
   
-  #Remove A3
+  # Remove A3
+  #   - Insert add new player action button
+  #   - Remove A3 player name input
   observeEvent(input$remove_a3, {
     insertUI(selector = "#add_remove_a3",
              where = "afterEnd",
@@ -615,6 +619,8 @@ server <- function(input, output, session) {
   
   
   # New Player A4
+  #   - Add A4 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_a4, {
     vals <- paste0("#",getInputs("extra_player_a4"))
     
@@ -622,22 +628,20 @@ server <- function(input, output, session) {
       selector = "#extra_player_a4",
       where = "afterEnd",
       ui = tags$div(id = "add_remove_a4",
-                    fluidRow(column(1,
-                               br(),
-                               actionBttn(
-                                 inputId = "remove_a4",
-                                 label = "X",
-                                 style = "jelly",
-                                 color = "danger", 
-                                 size = "sm"
-                               )),
-                        column(9, tagList(
-                          selectizeInput('name_a4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "70%")
-                        
-                        )
-                        )
-      )
-    )
+                    fluidRow(
+                      tagList(
+                        selectizeInput('name_a4', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                      ),
+                      actionBttn(
+                        inputId = "remove_a4",
+                        label = "X",
+                        style = "jelly",
+                        color = "danger", 
+                        size = "sm"
+                      ),
+                      tags$style("#add_remove_a4 {position: relative;} #remove_a4 {position: relative; top:-8ch; left:10ch; z-index:1;}")
+                    )
+                    )
     )
         
     removeUI(
@@ -646,6 +650,9 @@ server <- function(input, output, session) {
     )
   })
   
+  # Remove A4
+  #   - Insert add new player action button
+  #   - Remove A4 player name input
   observeEvent(input$remove_a4, {
     insertUI(selector = "#add_remove_a4",
              where = "afterEnd",
@@ -660,6 +667,8 @@ server <- function(input, output, session) {
   
   
   # New Player B3
+  #   - Add B3 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_b3, {
     vals <- paste0("#",getInputs("extra_player_b3"))
     insertUI(
@@ -667,19 +676,17 @@ server <- function(input, output, session) {
       where = "afterEnd",
       ui =  tags$div(id = "add_remove_b3",
                      fluidRow(
-                       column(10,
-                          tagList(
-                            selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "70%")
-                           )),
-                       column(1,
-                               br(),
-                               actionBttn(
+                       tagList(
+                            selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                           ),
+                       actionBttn(
                                  inputId = "remove_b3",
                                  label = "X",
                                  style = "jelly",
                                  color = "danger", 
                                  size = "sm"
-                               ))
+                               ),
+                       tags$style("#add_remove_b3 {position: relative;} #remove_b3 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
                         ),
                      actionButton("extra_player_b4", label = "+ Add Player")
                         
@@ -692,7 +699,12 @@ server <- function(input, output, session) {
     )
   })
 
+  # Remove B3
+  #   - Insert add new player action button
+  #   - Remove B3 player name input
   observeEvent(input$remove_b3, {
+    browser()
+    # Re-insert B3 player input 
     insertUI(selector = "#add_remove_b3",
              where = "afterEnd",
              ui = actionButton("extra_player_b3", label = "+ Add Player")
@@ -705,6 +717,8 @@ server <- function(input, output, session) {
   })
   
   # New Player B4
+  #   - Add B4 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_b4, {
     vals <- paste0("#",getInputs("extra_player_b4"))
     
@@ -713,20 +727,18 @@ server <- function(input, output, session) {
       where = "afterEnd",
       ui =    tags$div(id = "add_remove_b4",
                        fluidRow(
-                        column(9,
-                          tagList(
-                          selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "70%")
-                          )),
-                        column(1,
-                               br(),
-                               actionBttn(
-                                 inputId = "remove_b4",
-                                 label = "X",
-                                 style = "jelly",
-                                 color = "danger", 
-                                 size = "sm"
-                               ))
-                        )
+                         tagList(
+                           selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                         ),
+                         actionBttn(
+                           inputId = "remove_b4",
+                           label = "X",
+                           style = "jelly",
+                           color = "danger", 
+                           size = "sm"
+                         ),
+                         tags$style("#add_remove_b4 {position: relative;} #remove_b4 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
+                       )
             )
     )
     removeUI(
@@ -735,6 +747,9 @@ server <- function(input, output, session) {
     )
   })
   
+  # Remove B4
+  #   - Insert add new player action button
+  #   - Remove B4 player name input
   observeEvent(input$remove_b4, {
     insertUI(selector = "#add_remove_b4",
              where = "afterEnd",
