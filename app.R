@@ -431,7 +431,12 @@ server <- function(input, output, session) {
   
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
-    req(input$name_a1, input$name_a2, input$name_b1, input$name_b2)
+    validate(
+      need(input$name_a1 != "", label = "Player A1"),
+      need(input$name_a2 != "", label = "Player A2"), 
+      need(input$name_b1 != "", label = "Player B1"), 
+      need(input$name_b2 != "", label = "Player B2")
+      )
     
     # If the number of unique snappaneer names is the same as the number of active player inputs
     #   => enable start button
