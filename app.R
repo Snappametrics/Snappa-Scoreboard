@@ -179,9 +179,28 @@ ui <- fluidPage(
                           helpText("Note: All players must enter their name before the game can begin")
                           ),
                    column(4)
-                   )
-                   
+                   ),
+                 
+                 # Try to make Icons work
+                 
+                fluidRow(
+                  column(3, 
+                         actionButton("one_point", label = "Off the Table", 
+                                      style = 
+                                        'img {
+                                        border: 1px solid #ddd;
+                                        border-radius: 50%;
+                                        
+                                        width: 50%;
+                                        height: 100px;
+                                        margin-left: 0px;
+                                        margin-right: 0px;
+                                        
+                                      }'
+                         ))
+                )
         ),
+                
         
 
 # Scoreboard --------------------------------------------------------------
@@ -259,6 +278,13 @@ ui <- fluidPage(
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
   
+  #Change the html of an icon
+  html(id = "one_point", 
+       html = '<img src="off_the_table.png" alt="off_table" class = "center">'
+  )
+  
+  
+    
 
 # Reactive Values ---------------------------------------------------------
 
@@ -339,16 +365,6 @@ server <- function(input, output, session) {
     rounds[vals$shot_num]
   })
   
-  # Rebuttal. Logic is complete 
-  # 1. When either team's score is >=21 and the other team's score is two less (or lesser)
-   # rebuttal = reactive({
-   #   case_when(
-   #     any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
-   #    (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~ 1,
-   #    !any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
-   #    (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~ 0) 
-   # })
-
   
 
   
