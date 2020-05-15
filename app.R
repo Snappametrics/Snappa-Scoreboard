@@ -143,7 +143,7 @@ ui <- fluidPage(
                           wellPanel(
                             style = "opacity: 0.92; background: #e26a6a",
                           h1(strong("Team A"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
-                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
+                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)),  options = list(create = TRUE), width = "50%"),
                           selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           actionButton("extra_player_a3", label = "+ Add Player"), 
                           tags$style(type = "text/css", "#name_a1, #name_a2, #name_a3, #name_a4 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px;}")#
@@ -179,9 +179,28 @@ ui <- fluidPage(
                           helpText("Note: All players must enter their name before the game can begin")
                           ),
                    column(4)
-                   )
-                   
+                   ),
+                 
+                 # Try to make Icons work
+                 
+                fluidRow(
+                  column(3, 
+                         actionButton("one_point", label = "Off the Table", 
+                                      style = 
+                                        'img {
+                                        border: 1px solid #ddd;
+                                        border-radius: 50%;
+                                        
+                                        width: 50%;
+                                        height: 100px;
+                                        margin-left: 0px;
+                                        margin-right: 0px;
+                                        
+                                      }'
+                         ))
+                )
         ),
+                
         
 
 # Scoreboard --------------------------------------------------------------
@@ -259,6 +278,13 @@ ui <- fluidPage(
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
   
+  #Change the html of an icon
+  html(id = "one_point", 
+       html = '<img src="off_the_table.png" alt="off_table" class = "center">'
+  )
+  
+  
+    
 
 # Reactive Values ---------------------------------------------------------
 
@@ -279,13 +305,13 @@ server <- function(input, output, session) {
      player_name = active_player_inputs() %>% flatten_chr()
      ) %>% 
       # Remove empty player inputs
-     filter(player_name !="") %>% 
+     filter(player_name != "") %>% 
       left_join(vals$players_db, by = "player_name")
   })
 
   # Length of active player inputs
   num_players = reactive({
-    length(active_player_inputs())
+    length(active_player_inputs()[active_player_inputs() != ""])
   })
 
 
@@ -314,11 +340,7 @@ server <- function(input, output, session) {
     
     rebuttal = NULL,
     rebuttal_tag = F, 
-    #TODO: add new player names and ui elements to allow up to 4v4 pa to be recorded
     
-    # Record the total number of players. Useful for later times when we have to 
-    # flexibly account for games with variable total players. For now, 4 is enough
-    num_players = 4,
     
 
     # Values used in scoring events
@@ -330,8 +352,17 @@ server <- function(input, output, session) {
     
     # Holds the trolls (more for simplicity of code
     # than direct need)
-    trolls = NULL
-
+    trolls = NULL,
+    
+    
+    
+    #Records when the extra player ui's are open and 
+    # allows the app to pay attention to empty strings
+    # only during select times
+    want_a3 = F,
+    want_a4 = F,
+    want_b3 = F,
+    want_b4 = F
   )
   
   # Increment round number
@@ -339,16 +370,6 @@ server <- function(input, output, session) {
     rounds[vals$shot_num]
   })
   
-  # Rebuttal. Logic is complete 
-  # 1. When either team's score is >=21 and the other team's score is two less (or lesser)
-   # rebuttal = reactive({
-   #   case_when(
-   #     any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
-   #    (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~ 1,
-   #    !any((vals$score_a >= 21 & vals$score_a - vals$score_b >= 2 & str_detect(round_num, "B")), 
-   #    (vals$score_b >= 21 & vals$score_b - vals$score_a >= 2 & str_detect(round_num, "A"))) ~ 0) 
-   # })
-
   
 
   
@@ -434,6 +455,20 @@ server <- function(input, output, session) {
   
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
+    # If one of the first two players on each team
+    # is removed, disable the button again.
+    # This goes above the validate check because 
+    # it needs to be updating before the validate
+    # check is failed, or else the logic isn't
+    # going to pass through
+    
+    if(any(input$name_a1 == "",
+           input$name_a2 == "",
+           input$name_b1 == "",
+           input$name_b2 == "")){
+      shinyjs::disable("start_game")
+    }
+    
     validate(
       need(input$name_a1 != "", label = "Player A1"),
       need(input$name_a2 != "", label = "Player A2"), 
@@ -441,19 +476,39 @@ server <- function(input, output, session) {
       need(input$name_b2 != "", label = "Player B2")
       )
     
+    #Record the players that you need to be looking for
+    # (i.e., which ui elements are open right now?)
+    
+    
     # If the number of unique snappaneer names is the same as the number of active player inputs
     #   => enable start button
-    if(length(unique(snappaneers()$player_name)) == num_players()){ 
+    
+    if(sum(length(unique(snappaneers()$player_name)), 
+           sum(
+             c(isTRUE(active_player_inputs()$a3 == "" & vals$want_a3), 
+             isTRUE(active_player_inputs()$a4 == "" & vals$want_a4), 
+             isTRUE(active_player_inputs()$b3 == "" & vals$want_b3), 
+             isTRUE(active_player_inputs()$b4 == "" & vals$want_b4)) 
+             )
+           ) == num_players()){ 
       shinyjs::enable("start_game")
     } 
     
     # If the number of unique snappaneer names is not the same as the number of active player inputs
     #   => disable start button
-    if(length(unique(snappaneers()$player_name)) != num_players()){
-      shinyjs::disable("start_game")
-      }
-              
+    if(sum(length(unique(snappaneers()$player_name)), 
+           sum(
+             c(isTRUE(active_player_inputs()$a3 == "" & vals$want_a3), 
+                isTRUE(active_player_inputs()$a4 == "" & vals$want_a4), 
+                isTRUE(active_player_inputs()$b3 == "" & vals$want_b3), 
+                isTRUE(active_player_inputs()$b4 == "" & vals$want_b4)
+                ) 
+           )
+    ) != num_players()){ 
       
+    shinyjs::disable("start_game")
+    }
+    
 
   })
 
@@ -575,12 +630,13 @@ server <- function(input, output, session) {
   #   - Add A3 text input
   #   - Remove the add new player action button
   observeEvent(input$extra_player_a3, {
+    vals$want_a3 = T
     vals <- paste0("#",getInputs("extra_player_a3"))
-
     insertUI(
       selector = "#extra_player_a3",
       where = "afterEnd",
       ui = tags$div(id = "add_remove_a3",
+                    # Add A3 text input (inside fluid row)
                     fluidRow(
                       tagList(
                         selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
@@ -594,7 +650,8 @@ server <- function(input, output, session) {
                       ),
                       tags$style("#add_remove_a3 {position: relative;} #remove_a3 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
                     ),
-                    actionButton("extra_player_a4", label = "+ Add Player")
+                    actionButton("extra_player_a4", 
+                                 label = "+ Add Player")
       )
     )
              
@@ -612,9 +669,20 @@ server <- function(input, output, session) {
              where = "afterEnd",
              ui = actionButton("extra_player_a3", label = "+ Add Player")
     )
+  
+    
     removeUI(selector = "#add_remove_a3",
              multiple = F)
-
+    updateSelectizeInput(session, "name_a3", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
+    updateSelectizeInput(session, "name_a4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
+    
+    #Don't consider these elements when looking at
+    # total length of players. Prevents the game
+    # from getting locked out after players have
+    # been added
+    vals$want_a3 = F
+    vals$want_a4 = F
+    
   })
   
   
@@ -623,7 +691,7 @@ server <- function(input, output, session) {
   #   - Remove the add new player action button
   observeEvent(input$extra_player_a4, {
     vals <- paste0("#",getInputs("extra_player_a4"))
-    
+    vals$want_a4 = T
     insertUI(
       selector = "#extra_player_a4",
       where = "afterEnd",
@@ -634,11 +702,8 @@ server <- function(input, output, session) {
                       ),
                       actionBttn(
                         inputId = "remove_a4",
-                        label = "X",
-                        style = "jelly",
-                        color = "danger", 
-                        size = "sm"
-                      ),
+                        label = "X",  style = "jelly", color = "danger",   size = "sm"),
+                      
                       tags$style("#add_remove_a4 {position: relative;} #remove_a4 {position: relative; top:-8ch; left:10ch; z-index:1;}")
                     )
                     )
@@ -660,8 +725,11 @@ server <- function(input, output, session) {
     )
     removeUI(selector = "#add_remove_a4",
              multiple = F)
-    
-    
+    shinyjs::reset("#name_a4")
+    # Tells later checks to not worry about this
+    # empty slot in active_player_names
+    vals$want_a4 = F
+    updateSelectizeInput(session, "name_a4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
     
   })  
   
@@ -671,13 +739,15 @@ server <- function(input, output, session) {
   #   - Remove the add new player action button
   observeEvent(input$extra_player_b3, {
     vals <- paste0("#",getInputs("extra_player_b3"))
+    vals$want_b3 = T
     insertUI(
       selector = "#extra_player_b3",
       where = "afterEnd",
       ui =  tags$div(id = "add_remove_b3",
                      fluidRow(
                        tagList(
-                            selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                            selectizeInput('name_b3', 
+                                           'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
                            ),
                        actionBttn(
                                  inputId = "remove_b3",
@@ -688,7 +758,8 @@ server <- function(input, output, session) {
                                ),
                        tags$style("#add_remove_b3 {position: relative;} #remove_b3 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
                         ),
-                     actionButton("extra_player_b4", label = "+ Add Player")
+                     actionButton("extra_player_b4", 
+                                  label = "+ Add Player")
                         
             )
     )
@@ -712,8 +783,15 @@ server <- function(input, output, session) {
     removeUI(selector = "#add_remove_b3",
              multiple = F)
     
+    shinyjs::reset("#name_b3")
+    shinyjs::reset("#name_b4")
     
-    
+    # Tells later checks to not worry about this
+    # empty slot in active_player_names
+    vals$want_b3 = F
+    vals$want_b4 = F
+    updateSelectizeInput(session, "name_b3", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
+    updateSelectizeInput(session, "name_b4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
   })
   
   # New Player B4
@@ -721,22 +799,21 @@ server <- function(input, output, session) {
   #   - Remove the add new player action button
   observeEvent(input$extra_player_b4, {
     vals <- paste0("#",getInputs("extra_player_b4"))
-    
+    vals$want_b4 = T
     insertUI(
       selector = "#extra_player_b4",
       where = "afterEnd",
       ui =    tags$div(id = "add_remove_b4",
                        fluidRow(
                          tagList(
-                           selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                           selectizeInput('name_b4', 
+                                          'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
                          ),
                          actionBttn(
-                           inputId = "remove_b4",
-                           label = "X",
-                           style = "jelly",
-                           color = "danger", 
-                           size = "sm"
+                           inputId = "remove_b4", 
+                           label = "X",   style = "jelly",   color = "danger",    size = "sm"
                          ),
+                         
                          tags$style("#add_remove_b4 {position: relative;} #remove_b4 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
                        )
             )
@@ -757,9 +834,14 @@ server <- function(input, output, session) {
     )
     removeUI(selector = "#add_remove_b4",
              multiple = F)
+    updateSelectizeInput(session, "name_b4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
     
     
+    shinyjs::reset("#name_b4")
     
+    # Tells later checks to not worry about this
+    # empty slot in active_player_names
+    vals$want_b4 = F
   })  
     
 
