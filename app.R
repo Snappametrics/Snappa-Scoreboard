@@ -839,17 +839,24 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "[Aa]")
                               ))
+
+      # Update game stats table
       vals$game_stats_db = vals$scores_db %>% 
-        group_by(game_id, player_id) %>% 
+        left_join(snappaneers(), by = "player_id") %>% 
+        group_by(game_id, player_id, team) %>% 
         summarise(total_points = sum(points_scored),
-                  points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
-                                              str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
+                  shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
+                                    str_detect(team, "b") ~ floor(vals$shot_num/2)),
                   ones = sum((points_scored == 1)),
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
-                  impossibles = sum((points_scored > 3)))
+                  impossibles = sum((points_scored > 3)),
+                  paddle_points = sum(points_scored*paddle),
+                  points_per_round = total_points / shots,
+                  off_ppr = sum(points_scored*!paddle)/shots,
+                  def_ppr = paddle_points/shots,
+                  toss_efficiency = sum(!paddle)/shots) %>% 
+        ungroup()
       
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
@@ -933,18 +940,23 @@ server <- function(input, output, session) {
                                 shooting = str_detect(round_num(), "[Bb]")
                               ))
       
+      # Update game stats
       vals$game_stats_db = vals$scores_db %>% 
-        group_by(game_id, player_id) %>% 
+        left_join(snappaneers(), by = "player_id") %>% 
+        group_by(game_id, player_id, team) %>% 
         summarise(total_points = sum(points_scored),
-                  points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
-                                              str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
-                  
+                  shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
+                                    str_detect(team, "b") ~ floor(vals$shot_num/2)),
                   ones = sum((points_scored == 1)),
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
-                  impossibles = sum((points_scored > 3)))
+                  impossibles = sum((points_scored > 3)),
+                  paddle_points = sum(points_scored*paddle),
+                  points_per_round = total_points / shots,
+                  off_ppr = sum(points_scored*!paddle)/shots,
+                  def_ppr = paddle_points/shots,
+                  toss_efficiency = sum(!paddle)/shots) %>% 
+        ungroup()
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
@@ -1034,16 +1046,21 @@ server <- function(input, output, session) {
     
     #update game_stats one more time so that points per shot is accurate
     vals$game_stats_db = vals$scores_db %>% 
-      group_by(game_id, player_id) %>% 
+      left_join(snappaneers(), by = "player_id") %>% 
+      group_by(game_id, player_id, team) %>% 
       summarise(total_points = sum(points_scored),
-                points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
-                                                                   player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
-                                            str_detect(pull(filter(snappaneers(),
-                                                                   player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
+                shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
+                                  str_detect(team, "b") ~ floor(vals$shot_num/2)),
                 ones = sum((points_scored == 1)),
                 twos = sum((points_scored == 2)),
                 threes = sum((points_scored == 3)),
-                impossibles = sum((points_scored > 3)))
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored*paddle),
+                points_per_round = total_points / shots,
+                off_ppr = sum(points_scored*!paddle)/shots,
+                def_ppr = paddle_points/shots,
+                toss_efficiency = sum(!paddle)/shots) %>% 
+      ungroup()
     
     
     # Make sure that everyone is in the game_stats table, i.e., 
@@ -1057,13 +1074,18 @@ server <- function(input, output, session) {
                   game_id = rep(vals$game_id, times = length(vals$trolls)),
                   player_id = pull(vals$trolls, player_id), 
                   total_points = rep(0, times = length(vals$trolls)),
-                  points_per_shot = rep(0, times = length(vals$trolls)),
+                  shots = rep(0, times = length(vals$trolls)),
                   ones = rep(0, times = length(vals$trolls)),
                   twos = rep(0, times = length(vals$trolls)),
                   threes = rep(0, times = length(vals$trolls)),
-                  impossibles = rep(0, times = length(vals$trolls))
+                  impossibles = rep(0, times = length(vals$trolls)),
+                  paddle_points = rep(0, times = length(vals$trolls)),
+                  points_per_round = rep(0, times = length(vals$trolls)),
+                  off_ppr = rep(0, times = length(vals$trolls)),
+                  def_ppr = rep(0, times = length(vals$trolls)),
+                  toss_efficiency = rep(0, times = length(vals$trolls))
+                  )
                 )
-    )
     
     
     
