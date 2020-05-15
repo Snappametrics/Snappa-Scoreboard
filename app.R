@@ -158,7 +158,7 @@ ui <- fluidPage(
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           actionButton("extra_player_b3", label = "+ Add Player"),
-                          tags$style(type = "text/css", "#name_b1, #name_b2, #name_b3, #name_b4 {font-size: 700%; color: white; margin-top:30px;margin-bottom:30px; } label.control-label[for^='name_'] {color: white;}}")#  
+                          tags$style(type = "text/css", "#name_b1, #name_b2, #name_b3, #name_b4 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px; } label.control-label[for^='name_'] {color: white;}}")#  
                           )
                    )
                    ),#
@@ -627,6 +627,8 @@ server <- function(input, output, session) {
   }
   
   # New Player A3
+  #   - Add A3 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_a3, {
     vals$want_a3 = T
     vals <- paste0("#",getInputs("extra_player_a3"))
@@ -634,22 +636,23 @@ server <- function(input, output, session) {
       selector = "#extra_player_a3",
       where = "afterEnd",
       ui = tags$div(id = "add_remove_a3",
-    fluidRow(column(1,
-                    br(),
-                    actionBttn(
-                      inputId = "remove_a3",
-                      label = "X",
-                      style = "jelly",
-                      color = "danger", 
-               
-                             size = "sm"
-                    )),
-             column(9, 
-               selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), selected = "", options = list(create = TRUE), width = "70%"),
-               actionButton("extra_player_a4", label = "+ Add Player")
-                              )
-                    )
-                    )
+                    # Add A3 text input (inside fluid row)
+                    fluidRow(
+                      tagList(
+                        selectizeInput('name_a3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                      ),
+                      actionBttn(
+                        inputId = "remove_a3",
+                        label = "X",
+                        style = "jelly",
+                        color = "danger", 
+                        size = "sm"
+                      ),
+                      tags$style("#add_remove_a3 {position: relative;} #remove_a3 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
+                    ),
+                    actionButton("extra_player_a4", 
+                                 label = "+ Add Player")
+      )
     )
              
     removeUI(
@@ -658,7 +661,9 @@ server <- function(input, output, session) {
     )
   })
   
-  #Remove A3
+  # Remove A3
+  #   - Insert add new player action button
+  #   - Remove A3 player name input
   observeEvent(input$remove_a3, {
     insertUI(selector = "#add_remove_a3",
              where = "afterEnd",
@@ -682,37 +687,36 @@ server <- function(input, output, session) {
   
   
   # New Player A4
+  #   - Add A4 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_a4, {
-    vals <- paste0("#",getInputs("extra_player_a4"))
     vals$want_a4 = T
+    vals <- paste0("#",getInputs("extra_player_a4"))
     insertUI(
       selector = "#extra_player_a4",
       where = "afterEnd",
       ui = tags$div(id = "add_remove_a4",
-                    fluidRow(column(1,
-                               br(),
-                               actionBttn(
-                                 inputId = "remove_a4",
-                                 label = "X",
-                                 style = "jelly",
-                                 color = "danger", 
-                                 size = "sm"
-                               )),
-                        column(9, tagList(
-                          selectizeInput('name_a4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), selected = "", options = list(create = TRUE), width = "70%")
-                        
-                        )
-                        )
-      )
+                      tagList(
+                        selectizeInput('name_a4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                      ),
+                      actionBttn(
+                        inputId = "remove_a4",
+                        label = "X",  style = "jelly", color = "danger",   size = "sm"),
+                      
+                      tags$style("#add_remove_a4 {position: relative;} #remove_a4 {position: relative; top:-8ch; left:10ch; z-index:1;}")
+                    )
     )
-    )
-        
+    
+    
     removeUI(
       selector = vals,
-      multiple = F
+      multiple = T
     )
   })
   
+  # Remove A4
+  #   - Insert add new player action button
+  #   - Remove A4 player name input
   observeEvent(input$remove_a4, {
     insertUI(selector = "#add_remove_a4",
              where = "afterEnd",
@@ -730,31 +734,32 @@ server <- function(input, output, session) {
   
   
   # New Player B3
+  #   - Add B3 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_b3, {
-    vals <- paste0("#",getInputs("extra_player_b3"))
     vals$want_b3 = T
+    vals <- paste0("#",getInputs("extra_player_b3"))
     insertUI(
       selector = "#extra_player_b3",
       where = "afterEnd",
-      ui =  tags$div(id = "add_remove_b3",
-                     fluidRow(
-                       column(10,
-                          tagList(
-                            selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), selected = "", options = list(create = TRUE), width = "70%")
-                           )),
-                       column(1,
-                               br(),
-                               actionBttn(
-                                 inputId = "remove_b3",
-                                 label = "X",
-                                 style = "jelly",
-                                 color = "danger", 
-                                 size = "sm"
-                               ))
-                        ),
-                     actionButton("extra_player_b4", label = "+ Add Player")
-                        
-            )
+      ui = tags$div(id = "add_remove_b3",
+                    # Add A3 text input (inside fluid row)
+                    fluidRow(
+                      tagList(
+                        selectizeInput('name_b3', 'Player 3', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                      ),
+                      actionBttn(
+                        inputId = "remove_b3",
+                        label = "X",
+                        style = "jelly",
+                        color = "danger", 
+                        size = "sm"
+                      ),
+                      tags$style("#add_remove_b3 {position: relative;} #remove_b3 {position: relative; top:-8ch; left:10ch; z-index:1;}"),
+                    ),
+                    actionButton("extra_player_b4", 
+                                 label = "+ Add Player")
+      )
     )
     
     removeUI(
@@ -763,56 +768,62 @@ server <- function(input, output, session) {
     )
   })
 
+  # Remove B3
+  #   - Insert add new player action button
+  #   - Remove B3 player name input
   observeEvent(input$remove_b3, {
     insertUI(selector = "#add_remove_b3",
              where = "afterEnd",
              ui = actionButton("extra_player_b3", label = "+ Add Player")
     )
+    
+    
     removeUI(selector = "#add_remove_b3",
              multiple = F)
-    
-    shinyjs::reset("#name_b3")
-    shinyjs::reset("#name_b4")
-    
-    # Tells later checks to not worry about this
-    # empty slot in active_player_names
-    vals$want_b3 = F
-    vals$want_b4 = F
     updateSelectizeInput(session, "name_b3", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
     updateSelectizeInput(session, "name_b4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
+    
+    #Don't consider these elements when looking at
+    # total length of players. Prevents the game
+    # from getting locked out after players have
+    # been added
+    vals$want_b3 = F
+    vals$want_b4 = F
+    
   })
   
   # New Player B4
+  #   - Add B4 text input
+  #   - Remove the add new player action button
   observeEvent(input$extra_player_b4, {
-    vals <- paste0("#",getInputs("extra_player_b4"))
     vals$want_b4 = T
+    vals <- paste0("#",getInputs("extra_player_b4"))
     insertUI(
       selector = "#extra_player_b4",
       where = "afterEnd",
-      ui =    tags$div(id = "add_remove_b4",
-                       fluidRow(
-                        column(9,
-                          tagList(
-                          selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), selected = "", options = list(create = TRUE), width = "70%")
-                          )),
-                        column(1,
-                               br(),
-                               actionBttn(
-                                 inputId = "remove_b4",
-                                 label = "X",
-                                 style = "jelly",
-                                 color = "danger", 
-                                 size = "sm"
-                               ))
-                        )
-            )
+      ui = tags$div(id = "add_remove_b4",
+                    tagList(
+                      selectizeInput('name_b4', 'Player 4', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+                    ),
+                    actionBttn(
+                      inputId = "remove_b4",
+                      label = "X",  style = "jelly", color = "danger",   size = "sm"),
+                    
+                    tags$style("#add_remove_b4 {position: relative;} #remove_b4 {position: relative; top:-8ch; left:10ch; z-index:1;}")
+      )
     )
+    
+    
     removeUI(
       selector = vals,
-      multiple = F
+      multiple = T
     )
   })
   
+
+  # Remove B4
+  #   - Insert add new player action button
+  #   - Remove B4 player name input
   observeEvent(input$remove_b4, {
     insertUI(selector = "#add_remove_b4",
              where = "afterEnd",
@@ -820,14 +831,12 @@ server <- function(input, output, session) {
     )
     removeUI(selector = "#add_remove_b4",
              multiple = F)
-    updateSelectizeInput(session, "name_b4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
-    
-    
     shinyjs::reset("#name_b4")
-    
     # Tells later checks to not worry about this
     # empty slot in active_player_names
     vals$want_b4 = F
+    updateSelectizeInput(session, "name_b4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
+    
   })  
     
 
@@ -907,17 +916,24 @@ server <- function(input, output, session) {
                                 points_scored = input$score,
                                 shooting = str_detect(round_num(), "[Aa]")
                               ))
+
+      # Update game stats table
       vals$game_stats_db = vals$scores_db %>% 
-        group_by(game_id, player_id) %>% 
+        left_join(snappaneers(), by = "player_id") %>% 
+        group_by(game_id, player_id, team) %>% 
         summarise(total_points = sum(points_scored),
-                  points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
-                                              str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
+                  shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
+                                    str_detect(team, "b") ~ floor(vals$shot_num/2)),
                   ones = sum((points_scored == 1)),
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
-                  impossibles = sum((points_scored > 3)))
+                  impossibles = sum((points_scored > 3)),
+                  paddle_points = sum(points_scored*paddle),
+                  points_per_round = total_points / shots,
+                  off_ppr = sum(points_scored*!paddle)/shots,
+                  def_ppr = paddle_points/shots,
+                  toss_efficiency = sum(!paddle)/shots) %>% 
+        ungroup()
       
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
@@ -1001,18 +1017,23 @@ server <- function(input, output, session) {
                                 shooting = str_detect(round_num(), "[Bb]")
                               ))
       
+      # Update game stats
       vals$game_stats_db = vals$scores_db %>% 
-        group_by(game_id, player_id) %>% 
+        left_join(snappaneers(), by = "player_id") %>% 
+        group_by(game_id, player_id, team) %>% 
         summarise(total_points = sum(points_scored),
-                  points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
-                                              str_detect(pull(filter(snappaneers(),
-                                                                     player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
-                  
+                  shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
+                                    str_detect(team, "b") ~ floor(vals$shot_num/2)),
                   ones = sum((points_scored == 1)),
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
-                  impossibles = sum((points_scored > 3)))
+                  impossibles = sum((points_scored > 3)),
+                  paddle_points = sum(points_scored*paddle),
+                  points_per_round = total_points / shots,
+                  off_ppr = sum(points_scored*!paddle)/shots,
+                  def_ppr = paddle_points/shots,
+                  toss_efficiency = sum(!paddle)/shots) %>% 
+        ungroup()
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
@@ -1102,16 +1123,21 @@ server <- function(input, output, session) {
     
     #update game_stats one more time so that points per shot is accurate
     vals$game_stats_db = vals$scores_db %>% 
-      group_by(game_id, player_id) %>% 
+      left_join(snappaneers(), by = "player_id") %>% 
+      group_by(game_id, player_id, team) %>% 
       summarise(total_points = sum(points_scored),
-                points_per_shot = case_when(str_detect(pull(filter(snappaneers(),
-                                                                   player_name == input$scorer), team), "a") ~ sum(points_scored) / ceiling(vals$shot_num/2),
-                                            str_detect(pull(filter(snappaneers(),
-                                                                   player_name == input$scorer), team), "b") ~ sum(points_scored) / floor(vals$shot_num/2)),
+                shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
+                                  str_detect(team, "b") ~ floor(vals$shot_num/2)),
                 ones = sum((points_scored == 1)),
                 twos = sum((points_scored == 2)),
                 threes = sum((points_scored == 3)),
-                impossibles = sum((points_scored > 3)))
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored*paddle),
+                points_per_round = total_points / shots,
+                off_ppr = sum(points_scored*!paddle)/shots,
+                def_ppr = paddle_points/shots,
+                toss_efficiency = sum(!paddle)/shots) %>% 
+      ungroup()
     
     
     # Make sure that everyone is in the game_stats table, i.e., 
@@ -1125,13 +1151,18 @@ server <- function(input, output, session) {
                   game_id = rep(vals$game_id, times = length(vals$trolls)),
                   player_id = pull(vals$trolls, player_id), 
                   total_points = rep(0, times = length(vals$trolls)),
-                  points_per_shot = rep(0, times = length(vals$trolls)),
+                  shots = rep(0, times = length(vals$trolls)),
                   ones = rep(0, times = length(vals$trolls)),
                   twos = rep(0, times = length(vals$trolls)),
                   threes = rep(0, times = length(vals$trolls)),
-                  impossibles = rep(0, times = length(vals$trolls))
+                  impossibles = rep(0, times = length(vals$trolls)),
+                  paddle_points = rep(0, times = length(vals$trolls)),
+                  points_per_round = rep(0, times = length(vals$trolls)),
+                  off_ppr = rep(0, times = length(vals$trolls)),
+                  def_ppr = rep(0, times = length(vals$trolls)),
+                  toss_efficiency = rep(0, times = length(vals$trolls))
+                  )
                 )
-    )
     
     
     
