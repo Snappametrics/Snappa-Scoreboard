@@ -154,7 +154,7 @@ ui <- fluidPage(
                    column(4, align = "center",
                           wellPanel(
                             style = "opacity: 0.92; background: #2574a9",
-                          h1(strong("Team B"), style = "align: center; color: white; font-size: 700%; "),#margin-top:30px;margin-bottom:30px;
+                          h1(strong("Team B"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           actionButton("extra_player_b3", label = "+ Add Player"),
