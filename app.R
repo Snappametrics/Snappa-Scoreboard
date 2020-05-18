@@ -849,8 +849,10 @@ server <- function(input, output, session) {
 
 # Scoring -----------------------------------------------------------------
 
+
+# Team A ------------------------------------------------------------------
+
   
-  # When team A's score button is pushed
   observeEvent(input$a_score_button, {
     vals$error_msg <- NULL
     showModal(
@@ -858,19 +860,6 @@ server <- function(input, output, session) {
                   players = arrange(snappaneers(), team) %>% pull(player_name)))
   })
   
-  
-  observeEvent(input$b_score_button, {
-    vals$error_msg <- NULL
-    showModal(
-      score_check(
-        team = "b", 
-        players = arrange(snappaneers(), desc(team)) %>% pull(player_name)))
-    
-  })
-  
-  
-
-# Validate scores ---------------------------------------------------------
   # Team A
   observeEvent(input$ok_a, {
     validate(
@@ -881,18 +870,18 @@ server <- function(input, output, session) {
       need(
         any(
           # Typical Offense
-            str_detect(rounds[vals$shot_num], "[Aa]") & 
-              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]"),
-            # Typical Paddle
-            str_detect(rounds[vals$shot_num], "[Bb]") &
-              str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
-              input$paddle == T,
-            # Somebody messed up on the other team
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
-              input$paddle == T),
+          str_detect(rounds[vals$shot_num], "[Aa]") & 
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]"),
+          # Typical Paddle
+          str_detect(rounds[vals$shot_num], "[Bb]") &
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
+            input$paddle == T,
+          # Somebody messed up on the other team
+          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
+            input$paddle == T),
         message = "That entry doesn't make sense for this round/shooter combination")
     )  
-
+    
     # set score
     vals$score <- input$score
     
@@ -908,15 +897,15 @@ server <- function(input, output, session) {
       
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
-                              tibble(
-                                score_id = vals$score_id,
-                                game_id = vals$game_id,
-                                player_id = pull(filter(vals$players_db, player_name == input$scorer), player_id),
-                                paddle = input$paddle,
-                                round_num = round_num(),
-                                points_scored = input$score,
-                                shooting = str_detect(round_num(), "[Aa]")
-                              ))
+                                 tibble(
+                                   score_id = vals$score_id,
+                                   game_id = vals$game_id,
+                                   player_id = pull(filter(vals$players_db, player_name == input$scorer), player_id),
+                                   paddle = input$paddle,
+                                   round_num = round_num(),
+                                   points_scored = input$score,
+                                   shooting = str_detect(round_num(), "[Aa]")
+                                 ))
       
       # Update game stats table
       vals$game_stats_db = vals$scores_db %>% 
@@ -946,34 +935,44 @@ server <- function(input, output, session) {
     } else {
       vals$error_msg <- "You did not input anything."
     }
-
+    
     # If the game is in rebuttal, remind players
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
                                    vals$current_scores$team_b,
                                    round_num(), vals$score_to)
     
-#    if (!is.null(vals$rebuttal)) {
-      if (vals$rebuttal == T & vals$rebuttal_tag == T) {
-        showNotification(str_c("Rebuttal: ", "Team ", 
-                               str_sub(round_num(), start = -1),
-                               " needs ", str_c(
-                                 abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
-                               " points to bring it back"
-        )
-        )
-      } else {
-        
-      }
-#    } else {
+    #    if (!is.null(vals$rebuttal)) {
+    if (vals$rebuttal == T & vals$rebuttal_tag == T) {
+      showNotification(str_c("Rebuttal: ", "Team ", 
+                             str_sub(round_num(), start = -1),
+                             " needs ", str_c(
+                               abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                             " points to bring it back"
+      )
+      )
+    } else {
       
-#    }
-  
+    }
+    #    } else {
+    
+    #    }
+    
   })
   
-    
+  # Team B ---------------------------------------------------------
   
-  # Team B
+  
+  observeEvent(input$b_score_button, {
+    vals$error_msg <- NULL
+    showModal(
+      score_check(
+        team = "b", 
+        players = arrange(snappaneers(), desc(team)) %>% pull(player_name)))
+    
+  })
+  
+  # Score validation
   observeEvent(input$ok_b, {
     validate(
       need(input$score < 8, label = "C'mon, you did not score that many points")
