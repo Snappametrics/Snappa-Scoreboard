@@ -895,16 +895,24 @@ server <- function(input, output, session) {
       # Increment the score_id
       vals$score_id = vals$score_id+1
       
+      ## Identify scoring characteristics
+      # Player ID
+      scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
+      # Were they shooting?
+      scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team)
+      shooting_team_lgl = all(str_detect(round_num(), "[Aa]"), scorers_team == "a")
+      
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
                                  tibble(
                                    score_id = vals$score_id,
+                                   scoring_team = "a",
                                    game_id = vals$game_id,
-                                   player_id = pull(filter(vals$players_db, player_name == input$scorer), player_id),
+                                   player_id = scorer_pid,
                                    paddle = input$paddle,
                                    round_num = round_num(),
-                                   points_scored = input$score,
-                                   shooting = str_detect(round_num(), "[Aa]")
+                                   points_scored = score,
+                                   shooting = shooting_team_lgl
                                  ))
       
       # Update game stats table
@@ -994,27 +1002,37 @@ server <- function(input, output, session) {
       )
     )
     #Set Score
-    vals$score <- input$score
+    score = as.numeric(input$score)
+    vals$score <- score
     
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
       
+      # Update Team B's score
       vals$current_scores$team_b = vals$current_scores$team_b + vals$score
       
       # Increment the score_id
       vals$score_id = vals$score_id+1
       
+      ## Identify scoring characteristics
+      # Player ID
+      scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
+      # Were they shooting?
+      scorers_team = pull(filter(snappaneers(), player_name == "Shaunt"), team)
+      shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "b")
+      
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
                               tibble(
                                 score_id = vals$score_id,
+                                scoring_team = "b",
                                 game_id = vals$game_id,
-                                player_id = pull(filter(vals$players_db, player_name == input$scorer), player_id),
+                                player_id = scorer_pid,
                                 paddle = input$paddle,
                                 round_num = round_num(),
-                                points_scored = input$score,
-                                shooting = str_detect(round_num(), "[Bb]")
+                                points_scored = score,
+                                shooting = shooting_team_lgl
                               ))
       
       # Update game stats
