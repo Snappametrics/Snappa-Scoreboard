@@ -59,29 +59,39 @@ game_history_tbl = tbl(con, "game_history") %>% collect()
 score_check <- function(team, players) {
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
+  team_colour = if_else(team_scored == "ok_a", "#e26a6a", "#2574a9")
   
   # Ask how many points were scored and by whom
   modalDialog(align = "center", 
               h2(str_c("Team ", str_to_upper(team), " Scored")),
-              numericInput("score", label = "Points",
-                           value = 1, min = 1, max = 9,
-                           step = 1, width = "10%"),
+              # numericInput("score", label = "Points",
+              #              value = 1, min = 1, max = 9,
+              #              step = 1, width = "10%"),
+              radioGroupButtons(
+                inputId = "score",
+                label = "Points",
+                choices = c(1, 2, 3, 4, 5, 6, 7),
+                size = "lg"
+              ),
               # Who Scored?
               # awesomeRadio(
               #   inputId = "scorer", label = "Who scored?", 
               #   choices = players, inline=T),
-              prettyCheckbox(
-                inputId = "paddle", label = "Was it a paddle?", icon = icon("check")
+              awesomeCheckbox(
+                inputId = "paddle", 
+                label = "Was it a paddle?",
+                status = "warning"
               ),
               radioGroupButtons(
                 inputId = "scorer",
                 label = "Who scored?",
                 choices = players,
+                direction = "horizontal",
                 individual = T,
+                size = "lg",
                 checkIcon = list(
-                  yes = tags$i(class = "fa fa-check-square"),
-                  no = tags$i(class = "fa fa-square-o")
-                )
+                  yes = tags$i(class = "fa fa-dice", 
+                               style = paste("color:", team_colour)))
               ),
 
               textOutput("skip_error_msg"),
