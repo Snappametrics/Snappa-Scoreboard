@@ -123,7 +123,7 @@ extra_player_ui = function(player){
              ),
              actionBttn(
                inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
-             tags$style(paste0("#add_remove_", player, " {position: relative;} #remove_", player, " {position: relative; top:-8ch; left:10ch; z-index:1;}")),
+             tags$style(paste0("#add_remove_", player, " {position: relative;} #remove_", player, " {position: relative; top:-8ch; left:10em; z-index:1;}")),
            ),
            if(player_num < 4){
              actionButton(paste0("extra_player_", player_team, player_num+1), 
