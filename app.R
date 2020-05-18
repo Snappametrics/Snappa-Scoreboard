@@ -107,6 +107,34 @@ rebuttal_check <- function(a , b , round, points_to_win) {
   return(check)
 }
 
+extra_player_ui = function(player){
+  
+  player_team = str_extract(player, "[A-z]")
+  player_num = as.numeric(str_extract(player, "[0-9]"))
+  div_id = paste0("add_remove_", player)
+  
+  
+  tags$div(id = div_id,
+           # Add extra player text input (inside fluid row)
+           fluidRow(
+             tagList(
+               selectizeInput(inputId = paste0("name_", player), 
+                              label = paste('Player', player_num), c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
+             ),
+             actionBttn(
+               inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
+             tags$style(paste0("#add_remove_", player, " {position: relative;} #remove_", player, " {position: relative; top:-8ch; left:10ch; z-index:1;}")),
+           ),
+           if(player_num < 4){
+             actionButton(paste0("extra_player_", player_team, player_num+1), 
+                          label = "+ Add Player")
+           } else{
+             invisible()
+           }
+           
+  )
+}
+
 
 
 
