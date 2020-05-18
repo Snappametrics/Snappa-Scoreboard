@@ -173,7 +173,7 @@ ui <- fluidPage(
                           h1(strong("Team A"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
                           selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)),  options = list(create = TRUE), width = "50%"),
                           selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
-                          actionButton("extra_player_a3", label = "+ Add Player"), 
+                          actionBttn("extra_player_a3", label = "+ Add Player", style = "unite", color = "danger"), 
                           tags$style(type = "text/css", "#name_a1, #name_a2, #name_a3, #name_a4 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px;}")#
                           )
 
@@ -185,7 +185,7 @@ ui <- fluidPage(
                           h1(strong("Team B"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
                           selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
                           selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
-                          actionButton("extra_player_b3", label = "+ Add Player"),
+                          actionBttn("extra_player_b3", label = "+ Add Player", style = "unite", color = "primary"),
                           tags$style(type = "text/css", "#name_b1, #name_b2, #name_b3, #name_b4 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px; } label.control-label[for^='name_'] {color: white;}}")#  
                           )
                    )
@@ -196,13 +196,15 @@ ui <- fluidPage(
                  fluidRow(
                    column(4),
                    column(4,  align = "center",
-                          disabled(actionButton("start_game", "Throw some dice?")),
+                          disabled(actionBttn("start_game", 
+                                              label = "Throw some dice?", style = "pill", color = "primary")),
                           uiOutput("validate_start"),
                           br(),
                           
-                          radioButtons("play_to", "What score are you playing to?", 
-                                               choices = list("21" = 1, "32" = 2), selected = 1,
-                                               inline = T),
+                          awesomeRadio(inputId = "play_to", 
+                                       label = "What score are you playing to?", 
+                                       choices = list("21" = 1, "32" = 2), 
+                                       selected = 1, inline = T),
                           br(),
                           helpText("Note: All players must enter their name before the game can begin")
                           ),
@@ -211,22 +213,22 @@ ui <- fluidPage(
                  
                  # Try to make Icons work
                  
-                fluidRow(
-                  column(3, 
-                         actionButton("one_point", label = "Off the Table", 
-                                      style = 
-                                        'img {
-                                        border: 1px solid #ddd;
-                                        border-radius: 50%;
-                                        
-                                        width: 50%;
-                                        height: 100px;
-                                        margin-left: 0px;
-                                        margin-right: 0px;
-                                        
-                                      }'
-                         ))
-                )
+                # fluidRow(
+                #   column(3, 
+                #          actionButton("one_point", label = "Off the Table", 
+                #                       style = 
+                #                         'img {
+                #                         border: 1px solid #ddd;
+                #                         border-radius: 50%;
+                #                         
+                #                         width: 50%;
+                #                         height: 100px;
+                #                         margin-left: 0px;
+                #                         margin-right: 0px;
+                #                         
+                #                       }'
+                #          ))
+                # )
         ),
                 
         
@@ -242,11 +244,19 @@ ui <- fluidPage(
                    column(width = 4, align = "center",
                           wellPanel(
                             style = "opacity: 0.92; background: #e26a6a",
+                            # uiOutput("active_die_a"),
                             h1("Team A", style = "color: white;"),
                             h2(textOutput("score_a")),
-                            actionButton("a_score_button", label = "We scored!"),
+                            actionBttn("a_score_button", 
+                                       label = "We scored!", color = "danger",
+                                       size = "lg"),
+                            br(),
+                            actionBttn(
+                              inputId = "undo_score_a",
+                              label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "xs"
+                            ),
                             h3(textOutput("player_names_a"))
-                            # tags$style(type="text/css", "h1, h3, #a_score_button { height: 50px; width: 100%; text-align:center; font-size: 20px; display: block;}")
+                            # tags$style(type="text/css", "h1, h3, #a_score_button { height: 50px; width: 100%; text-align:center; font-size: 200%; display: block;}")
                           )
                           
                    ),
@@ -254,7 +264,7 @@ ui <- fluidPage(
                    # Round
                    column(width = 4, align = "center",
                           h1("Round"),
-                          h3(textOutput("round_num"), style = "font-size:120px;"),
+                          h3(textOutput("round_num"), style = "font-size:800%;"),
                           uiOutput("selector_ui")
                    ),
                    # Team B
@@ -263,18 +273,24 @@ ui <- fluidPage(
                             style = "opacity: 0.92; background: #2574a9",
                             h1("Team B", style = "color: white;"),
                             h2(textOutput("score_b")),
-                            actionButton("b_score_button", label = "We scored!"),
+                            actionBttn("b_score_button", label = "We scored!",
+                                       size = "lg"),
+                            br(),
+                            actionBttn(
+                              inputId = "undo_score_b",
+                              label = "Undo", style = "unite", color = "primary", icon = icon("undo"), size = "xs"
+                            ),
                             h3(textOutput("player_names_b")), 
-                            tags$style(type = "text/css", "#score_a, #score_b {font-size: 120px; color: white;}")
+                            tags$style(type = "text/css", "#score_a, #score_b {font-size: 400%; color: white;} #a_score_button, #b_score_button {font-size: 200%;} #undo_score_a, #undo_score_b {margin-top:2em}")
                           )
                           
                    )
                  ), 
                  fluidRow(
                    column(width = 4, offset = 4, align = "center",
-                          actionButton("new_game", "Restart game"),
+                          actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
                           
-                          actionButton("finish_game", "Finish game")
+                          actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
                           )
                    )
                  )
@@ -406,10 +422,24 @@ server <- function(input, output, session) {
   
   # Switch between pass the dice and next round
   output$selector_ui <- renderUI({
-    fillRow(actionButton("previous_round", label = "Previous Round"),
-            actionButton("next_round", label = round_labels[vals$shot_num]))
+    fillRow(actionBttn("previous_round", 
+                       label = "Previous Round", style = "minimal", icon = icon("arrow-left"), color = "primary", size = "lg"),
+            actionBttn("next_round", 
+                       label = round_labels[vals$shot_num], style = "minimal", icon = icon("arrow-right"), color = "primary", size = "lg"))
     
   })
+  
+  # output$active_die_a = renderUI({
+  #   icon("dice-d6")
+  #   
+  #   if(str_detect(round_num(), "A")){
+  #     die_col = "#fffff"
+  #   } else {
+  #     die_col = "#e26a6a"
+  #   }
+  #   tags$i(class = "fa fa-dice-d6", 
+  #          style = paste("color:", die_col))
+  # })
   
   # Output the round number
   output$round_num = renderText({
@@ -684,7 +714,7 @@ server <- function(input, output, session) {
   observeEvent(input$remove_a3, {
     insertUI(selector = "#add_remove_a3",
              where = "afterEnd",
-             ui = actionButton("extra_player_a3", label = "+ Add Player")
+             ui = actionBttn("extra_player_a3", label = "+ Add Player", style = "unite", color = "danger")
     )
   
     
@@ -734,7 +764,7 @@ server <- function(input, output, session) {
     # Insert add player button
     insertUI(selector = "#add_remove_a4",
              where = "afterEnd",
-             ui = actionButton("extra_player_a4", label = "+ Add Player")
+             ui = actionBttn("extra_player_a4", label = "+ Add Player", style = "unite", color = "danger")
     )
     # Remove player text input
     removeUI(selector = "#add_remove_a4",
@@ -779,7 +809,7 @@ server <- function(input, output, session) {
   observeEvent(input$remove_b3, {
     insertUI(selector = "#add_remove_b3",
              where = "afterEnd",
-             ui = actionButton("extra_player_b3", label = "+ Add Player")
+             ui = actionBttn("extra_player_b3", label = "+ Add Player", style = "unite", color = "primary")
     )
     
     
@@ -828,7 +858,7 @@ server <- function(input, output, session) {
   observeEvent(input$remove_b4, {
     insertUI(selector = "#add_remove_b4",
              where = "afterEnd",
-             ui = actionButton("extra_player_b4", label = "+ Add Player")
+             ui = actionBttn("extra_player_b4", label = "+ Add Player", style = "unite", color = "primary")
     )
     removeUI(selector = "#add_remove_b4",
              multiple = F)
@@ -862,9 +892,9 @@ server <- function(input, output, session) {
   
   # Team A
   observeEvent(input$ok_a, {
-    validate(
-      need(input$score < 8, label = "C'mon, you did not score that many points")
-    )
+    # validate(
+    #   need(input$score < 8, label = "C'mon, you did not score that many points")
+    # )
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
       need(
@@ -881,9 +911,10 @@ server <- function(input, output, session) {
             input$paddle == T),
         message = "That entry doesn't make sense for this round/shooter combination")
     )  
-    
+
     # set score
-    vals$score <- input$score
+    score = as.numeric(input$score)
+    vals$score <- score
     
     if (!is.null(vals$score)) {
       removeModal()
@@ -967,6 +998,26 @@ server <- function(input, output, session) {
     #    }
     
   })
+  # Undo score
+  observeEvent(input$undo_score_a, {
+    validate(
+      need(vals$current_scores$team_a > 0, label = "Team A hasn't scored yet!")
+    )
+
+    # Select the ID which is the max on Team A
+    last_score = filter(vals$scores_db, scoring_team == "a") %>% 
+      pull(score_id) %>% max()
+    
+    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
+      pull(points_scored)
+    
+    vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
+      mutate(score_id = if_else(score_id > last_score, score_id-1, score_id))
+    
+    vals$current_scores$team_a = vals$current_scores$team_a - last_score_pts
+    vals$score_id = vals$score_id-1
+  })
+  
   
   # Team B ---------------------------------------------------------
   
@@ -982,9 +1033,9 @@ server <- function(input, output, session) {
   
   # Score validation
   observeEvent(input$ok_b, {
-    validate(
-      need(input$score < 8, label = "C'mon, you did not score that many points")
-    )
+    # validate(
+    #   need(input$score < 8, label = "C'mon, you did not score that many points")
+    # )
     validate(
       need(
         any(
@@ -1088,6 +1139,26 @@ server <- function(input, output, session) {
     #    }    
   })
   
+  # Undo score
+  observeEvent(input$undo_score_b, {
+    validate(
+      need(vals$current_scores$team_b > 0, label = "Team B hasn't scored yet!")
+    )
+
+    # Select the ID which is the max on Team B
+    last_score = filter(vals$scores_db, scoring_team == "b") %>% 
+      pull(score_id) %>% max()
+    
+    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
+      pull(points_scored)
+    
+    vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
+      mutate(score_id = if_else(score_id > last_score, score_id-1, score_id))
+    
+    vals$current_scores$team_b = vals$current_scores$team_b - last_score_pts
+    vals$score_id = vals$score_id-1
+  })
+  
   
   
 
@@ -1101,7 +1172,7 @@ server <- function(input, output, session) {
         helpText(h2("End Game", align = "center"),
                  p("Is the game over?", align = "center")),
         footer = tagList(
-          actionButton("finish_game_sure", "Yes"),
+          actionBttn("finish_game_sure", "Yes", style = "bordered", color = "warning"),
           modalButton("No")
         )
       )
@@ -1119,7 +1190,7 @@ server <- function(input, output, session) {
                            downloadButton("downloadData", "Download")
                     ),
                     column(width = 3,
-                           actionButton("send_to_db", "Send to the SnappaDB")
+                           actionBttn("send_to_db", "Send to the SnappaDB", style = "bordered", color = "success")
                     ),
                     column(width = 3)
                     
@@ -1224,7 +1295,7 @@ server <- function(input, output, session) {
         helpText("Are you sure?"),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("new_game_sure", "Yup")
+          actionBttn("new_game_sure", "Yup", style = "unite", color = "warning")
         )
       )
     )
