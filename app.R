@@ -60,9 +60,10 @@ score_check <- function(team, players) {
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
   team_colour = if_else(team_scored == "ok_a", "#e26a6a", "#2574a9")
+  score_val = paste(team, "score_val", sep = "_")
   
   # Ask how many points were scored and by whom
-  modalDialog(align = "center", 
+  modalDialog(align = "center", easyClose = T,
               h2(str_c("Team ", str_to_upper(team), " Scored")),
               # numericInput("score", label = "Points",
               #              value = 1, min = 1, max = 9,
@@ -96,8 +97,7 @@ score_check <- function(team, players) {
 
               textOutput("skip_error_msg"),
               footer = tagList(
-                modalButton("Cancel"),
-                actionButton(team_scored, "OK")
+                  uiOutput(score_val)
               )
   )
   
@@ -437,6 +437,47 @@ server <- function(input, output, session) {
             actionBttn("next_round", 
                        label = round_labels[vals$shot_num], style = "minimal", icon = icon("arrow-right"), color = "primary", size = "lg"))
     
+  })
+  
+  output$a_score_val = renderUI({
+    # Check that the round/shooter combination makes sense / indicated a paddle
+    validate(
+      need(
+        any(
+          # Typical Offense
+          str_detect(rounds[vals$shot_num], "[Aa]") & 
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]"),
+          # Typical Paddle
+          str_detect(rounds[vals$shot_num], "[Bb]") &
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
+            input$paddle == T,
+          # Somebody messed up on the other team
+          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
+            input$paddle == T),
+        message = "That entry doesn't make sense for this round/shooter combination")
+    )
+    actionButton("ok_a", "OK")
+  })
+  
+  output$b_score_val = renderUI({
+    validate(
+      need(
+        any(
+          # Typical Offense
+          str_detect(rounds[vals$shot_num], "[Bb]") & 
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]"),
+          # Typical Paddle
+          str_detect(rounds[vals$shot_num], "[Aa]") &
+            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
+            input$paddle == T,
+          # Somebody messed up on the other team (can happen on offense or defense)
+          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
+            input$paddle == T),
+        message = "That entry doesn't make sense for this round/shooter combination"
+      )
+    )
+    
+      actionButton("ok_b", "OK")
   })
   
   # output$active_die_a = renderUI({
