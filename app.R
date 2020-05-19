@@ -767,7 +767,7 @@ server <- function(input, output, session) {
              where = "afterEnd",
              ui = actionBttn("extra_player_a3", label = "+ Add Player", style = "unite", color = "danger")
     )
-  
+
     
     removeUI(selector = "#add_remove_a3",
              multiple = F)
