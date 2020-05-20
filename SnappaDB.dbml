@@ -1,0 +1,57 @@
+// SnappaDB table design.
+Table players as P {
+  id int [pk]
+  name varchar
+}
+
+Table games as G {  
+game_id int [pk]
+game_start varchar
+game_end varchar
+}
+
+Table scores as S{
+  score_id int [pk, increment]
+  game_id int [ref: > G.game_id]
+  round_num varchar 
+  scoring_team varchar
+  points_scored int
+  player_id int [ref: > P.id]
+  shooting bool
+  paddle bool
+}
+
+Table game_stats_players as gs {
+  game_id int [pk, ref: > G.game_id]
+  player_id int [ref: - P.id]
+  player_team varchar
+  total_points int
+  paddle_points int
+  ones int
+  twos int
+  threes int 
+  impossibles int
+  shots int
+  points_per_round double
+  off_ppr double
+  def_ppr double
+  toss_efficiency double
+  
+}
+
+Table game_stats as gh {  
+  game_id int [pk, ref: - G.game_id]
+  num_players int 
+  night_dice bool
+  points_a int
+  points_b int
+  total_points int
+  total_shots int
+  ones int
+  twos int
+  threes int
+  impossibles int
+  
+}
+
+
