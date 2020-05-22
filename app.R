@@ -42,8 +42,8 @@ dbListTables(con)
 # Pull db tables for tibble templates
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
-game_stats_tbl = tbl(con, "game_stats") %>% collect()
-game_history_tbl = tbl(con, "game_history") %>% collect()
+game_stats_tbl = tbl(con, "game_stats_players") %>% collect()
+game_history_tbl = tbl(con, "games") %>% collect()
 
 
 
@@ -658,7 +658,14 @@ server <- function(input, output, session) {
     vals$current_scores$team_b = 0
     vals$scores_db = slice(scores_tbl, 0)
     vals$shot_num = 1
-    vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T)
+    vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats_players"),1 , na.rm = T)
+    
+    vals$game_history_db = bind_rows(vals$game_history_db,
+              tibble(
+                game_id = vals$game_id,
+                game_start = as.character(now()),
+                game_end = NA_character_
+              ))
     
     # Record the score we're playing to
     vals$score_to = case_when(input$play_to == 1 ~ 21,
@@ -1306,8 +1313,14 @@ server <- function(input, output, session) {
     
     
     
-    # Update Players
+    # Update Game History
+    vals$game_history_db = vals$game_history_db %>% 
+      replace_na(list(game_end = as.character(now())))
     
+    dbAppendTable(
+      conn = con, 
+      name = "games",
+      value = vals$game_history_db)
     
     dbAppendTable(
       conn = con, 
@@ -1320,10 +1333,10 @@ server <- function(input, output, session) {
       name = "scores",
       value = vals$scores_db)
     
-    # Update game_stats
+    # Update game_stats_players
     dbAppendTable(
       conn = con, 
-      name = "game_stats",
+      name = "game_stats_players",
       value = vals$game_stats_db)
     
     # Confirmation that data was sent to db
