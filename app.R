@@ -117,24 +117,88 @@ rebuttal_check <- function(a , b , round, points_to_win) {
   return(check)
 }
 
+team_input_ui = function(team){
+  
+  players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
+  player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
+  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
+
+  column(4, align = "center",
+         
+         wellPanel(
+           style = paste("opacity: 0.92; background:", team_colour),
+           # Header
+           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
+           # Player 1
+           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)),  options = list(create = TRUE), width = "60%"),
+           # Player 2
+           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "60%"),
+           # Add Player 3 button
+           actionBttn(paste0("extra_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
+           
+           # CSS: Increase font size, change color to white, add top and bottom margins
+           tags$style(type = "text/css", paste(players, "{font-size: 150%; color: white; margin-top:30px;margin-bottom:30px;}",
+                                               player_inputs, "{font-size: 150%; color: white; margin-top:30px;margin-bottom:30px;}"))
+         )
+  )
+}
+
+team_scoreboard_ui = function(team){
+  
+  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
+  
+  column(width = 4, align = "center",
+         
+         wellPanel(
+           style = paste("opacity: 0.92; background:", team_colour),
+           # uiOutput("active_die_a"),
+           # Header
+           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
+           # Score
+           h2(textOutput(paste0("score_", team))),
+           # Score button
+           actionBttn(paste0(team, "_score_button"), 
+                      label = "We scored!", color = "danger",
+                      size = "lg"),
+           br(),
+           actionBttn(
+             inputId = paste0("undo_score_", team),
+             label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "xs"
+           ),
+           h3(textOutput(paste0("player_names_", team)))
+         )
+         
+  )
+}
+
+# Function for producing extra player UI inputs
 extra_player_ui = function(player){
   
+  # Get the player's team
   player_team = str_extract(player, "[A-z]")
+  
+  # Get the player number
   player_num = as.numeric(str_extract(player, "[0-9]"))
   div_id = paste0("add_remove_", player)
   
-  
+  # Create a div
   tags$div(id = div_id,
-           # Add extra player text input (inside fluid row)
+           # Fluid row
            fluidRow(
              tagList(
+               # Add extra player text input 
                selectizeInput(inputId = paste0("name_", player), 
                               label = paste('Player', player_num), c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
              ),
+             # Add remove player button outside fluid row
              actionBttn(
                inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
+             
+             # CSS
              tags$style(paste0("#add_remove_", player, " {position: relative;} #remove_", player, " {position: relative; top:-8ch; left:10em; z-index:1;}")),
            ),
+           
+           # If the extra player is not the fourth on a team yet, add another add player button
            if(player_num < 4){
              actionButton(paste0("extra_player_", player_team, player_num+1), 
                           label = "+ Add Player")
@@ -154,18 +218,27 @@ extra_player_ui = function(player){
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  # includeCSS("www/bootstrap.css"),
-  # includeCSS("www/styles.css"),
   useShinyjs(),
-  tags$style("#start_game, #previous_round, #next_round, #a_score_button, #b_score_button, #scorer, #paddle, #score { font-size: 130% }"),
+  
+  # Increase font size:
+  #   - Start game button
+  #   - Previous round button
+  #   - Next round button
+  #   - Score buttons
+  #   - Score pop-up buttons
+  tags$style(paste("#start_game, #previous_round, #next_round, #a_score_button, #b_score_button, #scorer, #paddle, #score", 
+                   "{ font-size: 190% }", 
+                   "label.control-label[for^='name_']", 
+                   "{font-size: 150%; color: white;}",
+                   ".selectize-input {font-size: 150% !important}")), 
+  
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
+  
   # Application title
   titlePanel("Snappa Scoreboard"),
   
-  
-  
-  
+
   tabsetPanel(
         # Switching mechanism
         id = "switcher",
@@ -175,36 +248,25 @@ ui <- fluidPage(
 
         
         tabPanel("start_screen", 
-                 # Enter Player Names
+                 # Fluid Row - 3 columns
                  fluidRow(
-                   column(4, align = "center",
-                          wellPanel(
-                            style = "opacity: 0.92; background: #e26a6a",
-                          h1(strong("Team A"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
-                          selectizeInput('name_a1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)),  options = list(create = TRUE), width = "50%"),
-                          selectizeInput('name_a2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
-                          actionBttn("extra_player_a3", label = "+ Add Player", style = "unite", color = "danger"), 
-                          tags$style(type = "text/css", "#name_a1, #name_a2, #name_a3, #name_a4 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px;}")#
-                          )
-
+                   team_input_ui("a"),
+                   
+                   # Column 2 - empty
+                   column(4),
+                   
+                   # Column 3 - Team B
+                   team_input_ui("b")
                    ),
-                   column(4),
-                   column(4, align = "center",
-                          wellPanel(
-                            style = "opacity: 0.92; background: #2574a9",
-                          h1(strong("Team B"), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
-                          selectizeInput('name_b1', 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
-                          selectizeInput('name_b2', 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "50%"),
-                          actionBttn("extra_player_b3", label = "+ Add Player", style = "unite", color = "primary"),
-                          tags$style(type = "text/css", "#name_b1, #name_b2, #name_b3, #name_b4 {font-size: 120px; color: white; margin-top:30px;margin-bottom:30px; } label.control-label[for^='name_'] {color: white;}}")#  
-                          )
-                   )
-                   ),#
                  
                  
-                
+                # Second row - 3 columns
                  fluidRow(
+                   # Column 1 - empty
                    column(4),
+                   # Column 2
+                   #    - Start game button
+                   #    - Score to play to
                    column(4,  align = "center",
                           disabled(actionBttn("start_game", 
                                               label = "Throw some dice?", style = "pill", color = "primary")),
@@ -248,58 +310,24 @@ ui <- fluidPage(
 
         tabPanel("scoreboard", 
                  
-                 # Scoreboard
+                 # Scoreboard - 3 columns
                  fluidRow(
-                   # Team A
-                   column(width = 4, align = "center",
-                          wellPanel(
-                            style = "opacity: 0.92; background: #e26a6a",
-                            # uiOutput("active_die_a"),
-                            h1("Team A", style = "color: white;"),
-                            h2(textOutput("score_a")),
-                            actionBttn("a_score_button", 
-                                       label = "We scored!", color = "danger",
-                                       size = "lg"),
-                            br(),
-                            actionBttn(
-                              inputId = "undo_score_a",
-                              label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "xs"
-                            ),
-                            h3(textOutput("player_names_a"))
-                            # tags$style(type="text/css", "h1, h3, #a_score_button { height: 50px; width: 100%; text-align:center; font-size: 200%; display: block;}")
-                          )
-                          
-                   ),
+                   # Column 1 - Team A
+                   team_scoreboard_ui("a"),
                    
                    # Round
                    column(width = 4, align = "center",
-                          h1("Round"),
-                          h3(textOutput("round_num"), style = "font-size:800%;"),
+                          h1("Round", style = "font-size: 600%;"),
+                          h3(textOutput("round_num"), style = "font-size:800%; margin-top: 15%; margin-bottom: 15%;"),
                           uiOutput("selector_ui")
                    ),
                    # Team B
-                   column(width = 4,  align = "center",
-                          wellPanel(
-                            style = "opacity: 0.92; background: #2574a9",
-                            h1("Team B", style = "color: white;"),
-                            h2(textOutput("score_b")),
-                            actionBttn("b_score_button", label = "We scored!",
-                                       size = "lg"),
-                            br(),
-                            actionBttn(
-                              inputId = "undo_score_b",
-                              label = "Undo", style = "unite", color = "primary", icon = icon("undo"), size = "xs"
-                            ),
-                            h3(textOutput("player_names_b")), 
-                            tags$style(type = "text/css", "#score_a, #score_b {font-size: 400%; color: white;} #a_score_button, #b_score_button {font-size: 200%;} #undo_score_a, #undo_score_b {margin-top:2em}")
-                          )
-                          
-                   )
+                   team_scoreboard_ui("b"),
+                   tags$style(type = "text/css", "#score_a, #score_b {font-size: 700%; color: white;} #a_score_button, #b_score_button {font-size: 200%;} #undo_score_a, #undo_score_b {margin-top:2em}")
                  ), 
-                 fluidRow(
+                 fillRow(
                    column(width = 4, offset = 4, align = "center",
                           actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
-                          
                           actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
                           )
                    )
