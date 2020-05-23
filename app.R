@@ -55,53 +55,7 @@ game_history_tbl = tbl(con, "games") %>% collect()
 
 
 
-# Create pop-up dialog box when someone scores
-score_check <- function(team, players) {
-  # Identify which team scored
-  team_scored = paste("ok", team, sep = "_")
-  team_colour = if_else(team_scored == "ok_a", "#e26a6a", "#2574a9")
-  score_val = paste(team, "score_val", sep = "_")
-  
-  # Ask how many points were scored and by whom
-  modalDialog(align = "center", easyClose = T,
-              h2(str_c("Team ", str_to_upper(team), " Scored")),
-              # numericInput("score", label = "Points",
-              #              value = 1, min = 1, max = 9,
-              #              step = 1, width = "10%"),
-              radioGroupButtons(
-                inputId = "score",
-                label = "Points",
-                choices = c(1, 2, 3, 4, 5, 6, 7),
-                size = "lg"
-              ),
-              # Who Scored?
-              # awesomeRadio(
-              #   inputId = "scorer", label = "Who scored?", 
-              #   choices = players, inline=T),
-              awesomeCheckbox(
-                inputId = "paddle", 
-                label = "Was it a paddle?",
-                status = "warning"
-              ),
-              radioGroupButtons(
-                inputId = "scorer",
-                label = "Who scored?",
-                choices = players,
-                direction = "horizontal",
-                individual = T,
-                size = "lg",
-                checkIcon = list(
-                  yes = tags$i(class = "fa fa-dice", 
-                               style = paste("color:", team_colour)))
-              ),
 
-              textOutput("skip_error_msg"),
-              footer = tagList(
-                  uiOutput(score_val)
-              )
-  )
-  
-}
 
 rebuttal_check <- function(a , b , round, points_to_win) {
   if (any(is.null(a),is.null(b))){
@@ -117,97 +71,10 @@ rebuttal_check <- function(a , b , round, points_to_win) {
   return(check)
 }
 
-team_input_ui = function(team){
-  
-  players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
-  player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
-  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
 
-  column(4, align = "center",
-         
-         wellPanel(
-           style = paste("opacity: 0.92; background:", team_colour),
-           # Header
-           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
-           # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', pull(players_tbl, player_name)),  options = list(create = TRUE), width = "60%"),
-           # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "60%"),
-           # Add Player 3 button
-           actionBttn(paste0("extra_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
-           
-           # CSS: Increase font size, change color to white, add top and bottom margins
-           tags$style(type = "text/css", paste(players, "{font-size: 150%; color: white; margin-top:30px;margin-bottom:30px;}",
-                                               player_inputs, "{font-size: 150%; color: white; margin-top:30px;margin-bottom:30px;}"))
-         )
-  )
-}
 
-team_scoreboard_ui = function(team){
-  
-  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
-  
-  column(width = 4, align = "center",
-         
-         wellPanel(
-           style = paste("opacity: 0.92; background:", team_colour),
-           # uiOutput("active_die_a"),
-           # Header
-           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 700%; margin-top:30px;margin-bottom:30px;"),
-           # Score
-           h2(textOutput(paste0("score_", team))),
-           # Score button
-           actionBttn(paste0(team, "_score_button"), 
-                      label = "We scored!", color = "danger",
-                      size = "lg"),
-           br(),
-           actionBttn(
-             inputId = paste0("undo_score_", team),
-             label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "xs"
-           ),
-           h3(textOutput(paste0("player_names_", team)))
-         )
-         
-  )
-}
 
-# Function for producing extra player UI inputs
-extra_player_ui = function(player){
-  
-  # Get the player's team
-  player_team = str_extract(player, "[A-z]")
-  
-  # Get the player number
-  player_num = as.numeric(str_extract(player, "[0-9]"))
-  div_id = paste0("add_remove_", player)
-  
-  # Create a div
-  tags$div(id = div_id,
-           # Fluid row
-           fluidRow(
-             tagList(
-               # Add extra player text input 
-               selectizeInput(inputId = paste0("name_", player), 
-                              label = paste('Player', player_num), c(`Player Name`='', pull(players_tbl, player_name)), options = list(create = TRUE), width = "46%")
-             ),
-             # Add remove player button outside fluid row
-             actionBttn(
-               inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
-             
-             # CSS
-             tags$style(paste0("#add_remove_", player, " {position: relative;} #remove_", player, " {position: relative; top:-8ch; left:10em; z-index:1;}")),
-           ),
-           
-           # If the extra player is not the fourth on a team yet, add another add player button
-           if(player_num < 4){
-             actionButton(paste0("extra_player_", player_team, player_num+1), 
-                          label = "+ Add Player")
-           } else{
-             invisible()
-           }
-           
-  )
-}
+
 
 
 
@@ -217,7 +84,7 @@ extra_player_ui = function(player){
 # UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- fluidPage(theme = "front-end/app.css",
   useShinyjs(),
   
   # Increase font size:
@@ -226,12 +93,36 @@ ui <- fluidPage(
   #   - Next round button
   #   - Score buttons
   #   - Score pop-up buttons
-  tags$style(paste("#start_game, #previous_round, #next_round, #a_score_button, #b_score_button, #scorer, #paddle, #score", 
-                   "{ font-size: 190% }", 
+  tags$style(paste("#start_game, #previous_round, #next_round, #scorer, #paddle, #score", 
+                   "{ font-size: 170%; }",
+                   # Round number
+                   "#round_num", "{font-size:800%; margin-top: 15%; margin-bottom: 15%;}",
+                   ".bttn-unite.bttn-md", "{font-size: 200%;}",
+                   # Score number
+                   "#score_a, #score_b",  "{font-size: 700%; color: white;}",
+                   # We scored button padding
+                   ".bttn-unite.bttn-lg", "{padding: 1rem 4rem;}",
+                   # Score button
+                   "#a_score_button, #b_score_button", "{font-size: 220%;}",
+                   # Name input labels
                    "label.control-label[for^='name_']", 
-                   "{font-size: 150%; color: white;}",
-                   ".selectize-input {font-size: 150% !important}")), 
-  
+                   "{font-size: large; color: white;}",
+                   ".btn-group .btn-group-toggle .btn-group-lg", "{font-size:100%;}",
+                   # Scorer input labels
+                   "label.control-label[for^='score']", 
+                   "{font-size: x-large;}",
+                   # Paddle input label
+                   "label[for='paddle']", 
+                   "{font-size: x-large; font-weight:inherit;}",
+                   # Name input font size
+                   ".selectize-input {font-size: 150% !important}",
+                   # Other part of name input font size
+                   ".form-control", "{font-size: 2rem;}",
+                   # Name input options font size
+                   ".selectize-dropdown-content",
+                   "{font-size: 3rem;}",
+                   # Once more unto the name input font size dear friends
+                   ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
   
@@ -250,13 +141,13 @@ ui <- fluidPage(
         tabPanel("start_screen", 
                  # Fluid Row - 3 columns
                  fluidRow(
-                   team_input_ui("a"),
+                   team_input_ui("a", pull(players_tbl, player_name)),
                    
                    # Column 2 - empty
                    column(4),
                    
                    # Column 3 - Team B
-                   team_input_ui("b")
+                   team_input_ui("b", pull(players_tbl, player_name))
                    ),
                  
                  
@@ -779,36 +670,16 @@ server <- function(input, output, session) {
     
     # Get add player button inputs
     vals <- paste0("#",getInputs("extra_player_a3"))
+    add_player_input(vals, "a", 3, current_choices(), session)
     
-    # Insert extra player UI
-    insertUI(
-      selector = "#extra_player_a3",
-      where = "afterEnd",
-      ui = extra_player_ui("a3")
-    )
-      
-    # Remove add player button       
-    removeUI(
-      selector = vals,
-      multiple = F
-    )
   })
   
   # Remove A3
   #   - Insert add new player action button
   #   - Remove A3 player name input
   observeEvent(input$remove_a3, {
-    insertUI(selector = "#add_remove_a3",
-             where = "afterEnd",
-             ui = actionBttn("extra_player_a3", label = "+ Add Player", style = "unite", color = "danger")
-    )
+    remove_p3_input("a", session)
 
-    
-    removeUI(selector = "#add_remove_a3",
-             multiple = F)
-    updateSelectizeInput(session, "name_a3", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
-    updateSelectizeInput(session, "name_a4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
-    
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
     # from getting locked out after players have
@@ -829,37 +700,17 @@ server <- function(input, output, session) {
     # Get UI inputs for extra player button
     vals <- paste0("#",getInputs("extra_player_a4"))
     
-    # Insert extra player UI
-    insertUI(
-      selector = "#extra_player_a4",
-      where = "afterEnd",
-      ui = extra_player_ui("a4")
-    )
+    add_player_input(vals, "a", 4, current_choices(), session)
     
-    # Remove add player button
-    removeUI(
-      selector = vals,
-      multiple = T
-    )
   })
   
   # Remove A4
   #   - Insert add new player action button
   #   - Remove A4 player name input
   observeEvent(input$remove_a4, {
-    # Insert add player button
-    insertUI(selector = "#add_remove_a4",
-             where = "afterEnd",
-             ui = actionBttn("extra_player_a4", label = "+ Add Player", style = "unite", color = "danger")
-    )
-    # Remove player text input
-    removeUI(selector = "#add_remove_a4",
-             multiple = F)
-
-    # Tells later checks to not worry about this
-    # empty slot in active_player_names
+    remove_p4_input("a", session)
+    
     vals$want_a4 = F
-    updateSelectizeInput(session, "name_a4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
     
   })  
   
@@ -875,34 +726,14 @@ server <- function(input, output, session) {
     # Get inputs for add player button
     vals <- paste0("#",getInputs("extra_player_b3"))
     
-    # Insert extra player UI
-    insertUI(
-      selector = "#extra_player_b3",
-      where = "afterEnd",
-      ui = extra_player_ui("b3")
-    )
-    
-    # Remove add player button
-    removeUI(
-      selector = vals,
-      multiple = F
-    )
+    add_player_input(vals, "b", 3, current_choices(), session)
   })
 
   # Remove B3
   #   - Insert add new player action button
   #   - Remove B3 player name input
   observeEvent(input$remove_b3, {
-    insertUI(selector = "#add_remove_b3",
-             where = "afterEnd",
-             ui = actionBttn("extra_player_b3", label = "+ Add Player", style = "unite", color = "primary")
-    )
-    
-    
-    removeUI(selector = "#add_remove_b3",
-             multiple = F)
-    updateSelectizeInput(session, "name_b3", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
-    updateSelectizeInput(session, "name_b4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
+    remove_p3_input("b", session)
     
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
@@ -923,18 +754,7 @@ server <- function(input, output, session) {
     # Get add player button inputs
     vals <- paste0("#",getInputs("extra_player_b4"))
     
-    # Insert playertext input
-    insertUI(
-      selector = "#extra_player_b4",
-      where = "afterEnd",
-      ui = extra_player_ui("b4")
-    )
-    
-    # Remove add player button
-    removeUI(
-      selector = vals,
-      multiple = T
-    )
+    add_player_input(vals, "b", 4, current_choices(), session)
   })
   
 
@@ -942,18 +762,11 @@ server <- function(input, output, session) {
   #   - Insert add new player action button
   #   - Remove B4 player name input
   observeEvent(input$remove_b4, {
-    insertUI(selector = "#add_remove_b4",
-             where = "afterEnd",
-             ui = actionBttn("extra_player_b4", label = "+ Add Player", style = "unite", color = "primary")
-    )
-    removeUI(selector = "#add_remove_b4",
-             multiple = F)
-    shinyjs::reset("#name_b4")
+    remove_p4_input("b", session)
     # Tells later checks to not worry about this
     # empty slot in active_player_names
     vals$want_b4 = F
-    updateSelectizeInput(session, "name_b4", choices = c(`Player Name`='', pull(players_tbl, player_name)), selected = character(0))
-    
+
   })  
     
 
