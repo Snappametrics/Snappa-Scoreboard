@@ -16,28 +16,16 @@ library(dbplyr)
 library(shinyjs)
 library(shinyWidgets)
 
-
-
+source("dbconnect.R")
+source("ui_functions.R")
 
 # Prior to app startup ----------------------------------------------------
 
+# Round numbers and labels
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
 
-
-# Database connection -----------------------------------------------------
-
-
-con <- dbConnect(RPostgres::Postgres(),
-                          user = "postgres",
-                          password = rstudioapi::askForPassword("connection password"),
-                          host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
-                          port = 5432,
-                          dbname = "Snappa Scoreboard"
-       )
-
-dbListTables(con)
 
 # Pull db tables for tibble templates
 players_tbl = tbl(con, "players") %>% collect()
@@ -280,6 +268,11 @@ server <- function(input, output, session) {
       # Remove empty player inputs
      filter(player_name != "") %>% 
       left_join(vals$players_db, by = "player_name")
+  })
+  
+  current_choices = reactive({
+    anti_join(players_tbl, snappaneers(), by = "player_name") %>% 
+      pull(player_name)
   })
 
   # Length of active player inputs
