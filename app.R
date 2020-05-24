@@ -102,6 +102,8 @@ ui <- fluidPage(theme = "front-end/app.css",
                    # Paddle input label
                    "label[for='paddle']", 
                    "{font-size: x-large; font-weight:inherit;}",
+                   # OK Score button
+                   "#ok_a, #ok_b {font-size:x-large;}",
                    # Name input font size
                    ".selectize-input {font-size: 150% !important}",
                    # Other part of name input font size
@@ -197,12 +199,12 @@ ui <- fluidPage(theme = "front-end/app.css",
                    # Round
                    column(width = 4, align = "center",
                           h1("Round", style = "font-size: 600%;"),
-                          h3(textOutput("round_num"), style = "font-size:800%; margin-top: 15%; margin-bottom: 15%;"),
+                          h3(textOutput("round_num")),
                           uiOutput("selector_ui")
                    ),
                    # Team B
                    team_scoreboard_ui("b"),
-                   tags$style(type = "text/css", "#score_a, #score_b {font-size: 700%; color: white;} #a_score_button, #b_score_button {font-size: 200%;} #undo_score_a, #undo_score_b {margin-top:2em}")
+                   tags$style(type = "text/css", " #undo_score_a, #undo_score_b {margin-top:2em}")
                  ), 
                  fillRow(
                    column(width = 4, offset = 4, align = "center",
@@ -213,21 +215,26 @@ ui <- fluidPage(theme = "front-end/app.css",
                  )
 
               ),
-      fluidRow(
-        column(2, align = "center",
-               h3("players"),
-               tableOutput("db_output_players")
-               ),
-        column(5, align = "center",
-               h3("scores"),
-               tableOutput("db_output_scores")
-        ),
-        column(5, align = "center",
-               h3("game_stats"),
-               tableOutput("db_output_game_stats")
-        )
-        
-        )
+
+
+# Debugging ---------------------------------------------------------------
+
+
+      # fluidRow(
+      #   column(2, align = "center",
+      #          h3("players"),
+      #          tableOutput("db_output_players")
+      #          ),
+      #   column(5, align = "center",
+      #          h3("scores"),
+      #          tableOutput("db_output_scores")
+      #   ),
+      #   column(5, align = "center",
+      #          h3("game_stats"),
+      #          tableOutput("db_output_game_stats")
+      #   )
+      #   
+      #   )
   )
   
   
@@ -240,9 +247,9 @@ ui <- fluidPage(theme = "front-end/app.css",
 server <- function(input, output, session) {
   
   #Change the html of an icon
-  html(id = "one_point", 
-       html = '<img src="off_the_table.png" alt="off_table" class = "center">'
-  )
+  # html(id = "one_point", 
+  #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
+  # )
   
   
     
@@ -345,9 +352,9 @@ server <- function(input, output, session) {
   # Switch between pass the dice and next round
   output$selector_ui <- renderUI({
     fillRow(actionBttn("previous_round", 
-                       label = "Previous Round", style = "minimal", icon = icon("arrow-left"), color = "primary", size = "lg"),
+                       label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
             actionBttn("next_round", 
-                       label = round_labels[vals$shot_num], style = "minimal", icon = icon("arrow-right"), color = "primary", size = "lg"))
+                       label = round_labels[vals$shot_num], style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg"))
     
   })
   
@@ -782,11 +789,13 @@ server <- function(input, output, session) {
                   players = arrange(snappaneers(), team) %>% pull(player_name)))
   })
   
-  # Team A
+  # Team A presses score button
   observeEvent(input$ok_a, {
     # validate(
     #   need(input$score < 8, label = "C'mon, you did not score that many points")
     # )
+    
+    
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
       need(
@@ -808,6 +817,8 @@ server <- function(input, output, session) {
     score = as.numeric(input$score)
     vals$score <- score
     
+    
+    # Check score i not null, remove the dialog box
     if (!is.null(vals$score)) {
       removeModal()
       vals$print <- TRUE
@@ -822,8 +833,8 @@ server <- function(input, output, session) {
       # Player ID
       scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
       # Were they shooting?
-      scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team)
-      shooting_team_lgl = all(str_detect(round_num(), "[Aa]"), scorers_team == "a")
+      scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
+      shooting_team_lgl = all(str_detect(round_num(), "[Aa]"), scorers_team == "a") # Are they on team A & did they score for team A?
       
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
@@ -840,10 +851,14 @@ server <- function(input, output, session) {
       
       # Update game stats table
       vals$game_stats_db = vals$scores_db %>% 
+        # Join scores to snappaneers to get each player's team
         left_join(snappaneers(), by = "player_id") %>% 
+        # Count the  number of shots depending on whether they are on team A or B
         mutate(shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
                                  str_detect(team, "b") ~ floor(vals$shot_num/2))) %>% 
+        # Group by game and player, (team and shots are held consistent)
         group_by(game_id, player_id, team, shots) %>% 
+        # Calculate summary stats
         summarise(total_points = sum(points_scored),
                   ones = sum((points_scored == 1)),
                   twos = sum((points_scored == 2)),
@@ -1060,12 +1075,11 @@ server <- function(input, output, session) {
   
   observeEvent(input$finish_game, {
     showModal(
-      modalDialog(
+      modalDialog(easyClose = T,
         helpText(h2("End Game", align = "center"),
                  p("Is the game over?", align = "center")),
         footer = tagList(
           actionBttn("finish_game_sure", "Yes", style = "bordered", color = "warning"),
-          modalButton("No")
         )
       )
     )
@@ -1074,17 +1088,18 @@ server <- function(input, output, session) {
   
   observeEvent(input$finish_game_sure, {
     showModal(
-      modalDialog(title = "Okay, well, full send that data to the SnappaDB!",
+      modalDialog(
+                  h2("Well full send that data to the SnappaDB!"),
                   
                   fluidRow(
-                    column(width = 3),
-                    column(width = 3,
-                           downloadButton("downloadData", "Download")
+                    column(width = 4,
+                           downloadBttn("downloadData", "Download", style = "unite", color = "warning")
                     ),
-                    column(width = 3,
-                           actionBttn("send_to_db", "Send to the SnappaDB", style = "bordered", color = "success")
-                    ),
-                    column(width = 3)
+                    column(3),
+                    column(width = 4,
+                           actionBttn("send_to_db", "Send to the SnappaDB", style = "unite", color = "warning",
+                                      icon = icon("cloud-upload-alt"))
+                    )
                     
                   )
       )
@@ -1093,6 +1108,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$send_to_db, {
+   
     
     # Sanity check: Only submit games which have reached their conclusion
     validate(need(any(vals$current_scores$team_a >= vals$score_to,
@@ -1148,6 +1164,8 @@ server <- function(input, output, session) {
     
     
     # Update Game History
+    
+
     vals$game_history_db = vals$game_history_db %>% 
       replace_na(list(game_end = as.character(now())))
     
@@ -1189,10 +1207,9 @@ server <- function(input, output, session) {
   observeEvent(input$new_game, {
     
     showModal(
-      modalDialog( title = "Restart game", 
+      modalDialog( title = "Restart game", easyClose = T,
         helpText("Are you sure?"),
         footer = tagList(
-          modalButton("Cancel"),
           actionBttn("new_game_sure", "Yup", style = "unite", color = "warning")
         )
       )
