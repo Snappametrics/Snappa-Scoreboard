@@ -1224,7 +1224,14 @@ server <- function(input, output, session) {
     walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
                                            options = list(create = TRUE)))
+    vals$game_history_db = game_history_tbl %>% slice(0)
+    vals$game_stats_db = game_stats_tbl %>% slice(0)
+    vals$players_db = tbl(con, "players") %>% collect()
+    vals$scores_db = scores_tbl %>% slice(0)
+    
     removeModal()
+    
+    
   })
   
 
