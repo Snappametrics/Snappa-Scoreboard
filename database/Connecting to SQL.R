@@ -13,13 +13,7 @@ library(DBI)
 
 
 # Connecting ------------------------------------
-con <- dbConnect(RPostgres::Postgres(),
-                 user = "postgres",
-                 password = rstudioapi::askForPassword("connection password"),
-                 host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
-                 port = 5432,
-                 dbname = "Snappa Scoreboard"
-                 )
+source("../dbconnect.R")
 
 
 
@@ -48,7 +42,6 @@ insert_walk <- function(rtable, dbtable, connection){
   rtable_name <- deparse(substitute(rtable))
   dbvars <- colnames(dbtable)
   dbtable_name <- deparse(substitute(dbtable))
-  browser()
 output <- rtable %>% mutate(combined = str_c("( ",
                                             sym(str_c(rvars, collapse = ', "," , ')),
                                              " ) ")) %>%
