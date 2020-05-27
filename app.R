@@ -1096,18 +1096,11 @@ server <- function(input, output, session) {
     showModal(
       modalDialog(
                   h2("Well full send that data to the SnappaDB!"),
-                  
-                  fluidRow(
-                    column(width = 4,
-                           downloadBttn("downloadData", "Download", style = "unite", color = "warning")
-                    ),
-                    column(3),
-                    column(width = 4,
-                           actionBttn("send_to_db", "Send to the SnappaDB", style = "unite", color = "warning",
-                                      icon = icon("cloud-upload-alt"))
-                    )
-                    
-                  )
+                  # Download to csv
+                  downloadBttn("downloadData", "Download", style = "unite", color = "warning"),
+                  # Send to DB
+                  actionBttn("send_to_db", "Send to the SnappaDB", style = "unite", color = "warning",
+                             icon = icon("cloud-upload-alt"))
       )
     )
     
