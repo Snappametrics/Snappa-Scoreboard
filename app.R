@@ -251,6 +251,15 @@ server <- function(input, output, session) {
   #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
   # )
   
+  add_shot_count = function(df){
+    
+    add_count(df, .data$team, name = "n_players") %>% 
+      mutate(baseline_shots = case_when(str_detect(.data$team, "a") ~ ceiling(vals$shot_num/2),
+                                        str_detect(.data$team, "b") ~ floor(vals$shot_num/2)),
+             shots = .data$baseline_shots*max(.data$n_players)/.data$n_players) %>% 
+      select(-baseline_shots, -n_players)
+  }
+  
   
     
 
@@ -274,7 +283,9 @@ server <- function(input, output, session) {
      ) %>% 
       # Remove empty player inputs
      filter(player_name != "") %>% 
-      left_join(vals$players_db, by = "player_name")
+      left_join(vals$players_db, by = "player_name") %>% 
+      # Add shot count
+      add_shot_count()
   })
   
   current_choices = reactive({
@@ -853,9 +864,6 @@ server <- function(input, output, session) {
       vals$game_stats_db = vals$scores_db %>% 
         # Join scores to snappaneers to get each player's team
         left_join(snappaneers(), by = "player_id") %>% 
-        # Count the  number of shots depending on whether they are on team A or B
-        mutate(shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
-                                 str_detect(team, "b") ~ floor(vals$shot_num/2))) %>% 
         # Group by game and player, (team and shots are held consistent)
         group_by(game_id, player_id, team, shots) %>% 
         # Calculate summary stats
@@ -996,8 +1004,6 @@ server <- function(input, output, session) {
       # Update game stats
       vals$game_stats_db = vals$scores_db %>% 
         left_join(snappaneers(), by = "player_id") %>% 
-        mutate(shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
-                                 str_detect(team, "b") ~ floor(vals$shot_num/2))) %>% 
         group_by(game_id, player_id, team, shots) %>% 
         summarise(total_points = sum(points_scored),
                   ones = sum((points_scored == 1)),
@@ -1121,8 +1127,6 @@ server <- function(input, output, session) {
     #update game_stats one more time so that points per shot is accurate
     vals$game_stats_db = vals$scores_db %>% 
       left_join(snappaneers(), by = "player_id") %>% 
-      mutate(shots = case_when(str_detect(team, "a") ~ ceiling(vals$shot_num/2),
-                               str_detect(team, "b") ~ floor(vals$shot_num/2))) %>% 
       group_by(game_id, player_id, team, shots) %>% 
       summarise(total_points = sum(points_scored),
                 ones = sum((points_scored == 1)),
