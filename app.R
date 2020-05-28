@@ -1256,13 +1256,15 @@ server <- function(input, output, session) {
     
     
   })
-  
 
+# Disconnect from the server at the end  
+  onStop(function() {
+    dbDisconnect(conn = con)
+  })
 
   
 }
-# Doesn't currently work
-# onSessionEnded(dbDisconnect(conn = con))
+
 # Run the application 
 shinyApp(ui = ui, server = server)
 
