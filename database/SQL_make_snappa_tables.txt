@@ -5,29 +5,57 @@ CREATE TABLE players (
 CREATE TABLE scores (
 	score_id int,
 	game_id int,
+	player_id int, 
+	scoring_team varchar(1),
 	round_num varchar(3),
 	points_scored int,
-	player_id int,
 	shooting boolean,
 	paddle boolean
 );
 
-CREATE TABLE game_stats (
+CREATE TABLE game_stats_players (
 	game_id int,
 	player_id int,
-	player_team varchar(1),
+	team varchar(1),
 	total_points int,
 	paddle_points int,
-	points_per_shot real;
 	ones int,
 	twos int,
 	threes int,
-	impossibles int	
+	impossibles int,
+	points_per_round real;
+	shots double precision
+	off_ppr double precision,
+	def_ppr double precision,
+	toss_efficiency double precision
+		   	
 );
 
-CREATE TABLE game_history(
+CREATE TABLE games(
 	game_id int CONSTRAINT game_key PRIMARY KEY,
-	game_date varchar(25), 
+	game_start varchar(25),
+	game_end varchar(25), 
 	A_score int,
 	B_score int
 );
+
+CREATE TABLE career_stats (
+	player_id int CONSTRAINT snappaneer_key PRIMARY KEY,
+	player_name varchar(50),
+	career_points int,
+	career_offense int,
+	career_defense int;
+
+CREATE TABLE game_stats (
+	game_id int,
+	num_players int,
+	night_dice boolean,
+	points_a int,
+	points_b int,
+	total_points int,
+	total_shots int,
+	ones int,
+	twos int,
+	threes int,
+	impossibles int
+);	
