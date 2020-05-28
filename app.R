@@ -327,8 +327,6 @@ server <- function(input, output, session) {
     # than direct need)
     trolls = NULL,
     
-    
-    
     #Records when the extra player ui's are open and 
     # allows the app to pay attention to empty strings
     # only during select times
@@ -373,13 +371,21 @@ server <- function(input, output, session) {
           # Somebody messed up on the other team
           str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
             input$paddle == T),
-        message = "That entry doesn't make sense for this round/shooter combination")
+        message = "That entry doesn't make sense for this round/shooter combination"),
+      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
+          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+        need(input$paddle == T,
+             message = "That person has already scored a non paddle point this round")
+        
+      }
     )
+
     actionButton("ok_a", "OK")
   })
   
   output$b_score_val = renderUI({
     validate(
+      # General needs for typical shooting
       need(
         any(
           # Typical Offense
@@ -393,9 +399,15 @@ server <- function(input, output, session) {
           str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
             input$paddle == T),
         message = "That entry doesn't make sense for this round/shooter combination"
-      )
+      ),
+      # Make sure that the last person to score in this round on offense can't paddle
+      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
+          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+        need(input$paddle == T,
+             message = "That person has already scored a non paddle point this round")
+        
+      } 
     )
-    
       actionButton("ok_b", "OK")
   })
   
@@ -794,8 +806,6 @@ server <- function(input, output, session) {
     # validate(
     #   need(input$score < 8, label = "C'mon, you did not score that many points")
     # )
-    
-    
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
       need(
@@ -808,9 +818,16 @@ server <- function(input, output, session) {
             str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
             input$paddle == T,
           # Somebody messed up on the other team
+          str_detect(rounds[vals$shot_num], "[Aa]") &
           str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
             input$paddle == T),
-        message = "That entry doesn't make sense for this round/shooter combination")
+        message = "That entry doesn't make sense for this round/shooter combination"),
+      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
+          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+        need(input$paddle == T,
+             message = "That person has already scored a non paddle point this round")
+        
+      }
     )  
 
     # set score
@@ -954,10 +971,16 @@ server <- function(input, output, session) {
             str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
             input$paddle == T,
           # Somebody messed up on the other team (can happen on offense or defense)
+          str_detect(rounds[vals$shot_num], "[Bb]") &
           str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
             input$paddle == T),
-      message = "That entry doesn't make sense for this round/shooter combination"
-      )
+        message = "That entry doesn't make sense for this round/shooter combination"),
+      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
+          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+        need(input$paddle == T,
+             message = "That person has already scored a non paddle point this round")
+        
+      }
     )
     #Set Score
     score = as.numeric(input$score)
