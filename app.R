@@ -480,6 +480,9 @@ server <- function(input, output, session) {
   output$db_output_game_history = renderTable({
     vals$game_history_db
   })
+  output$snappaneers = renderTable({
+    snappaneers()
+  })
   
   
   
