@@ -928,10 +928,16 @@ server <- function(input, output, session) {
     } else {
       
     }
-    #    } else {
+    validate(
+      need((vals$current_scores$team_a == 18 && vals$current_scores$team_b == 12) || (vals$current_scores$team_a == 12 && vals$current_scores$team_b == 18), label = "eighteen_twelve")
+    )
     
-    #    }
     
+    sendSweetAlert(session, 
+                   title = "1812",
+                   text = "Everyone roll a die, lowest roll takes a shot.",
+                   type = "warning")
+
   })
   # Undo score
   observeEvent(input$undo_score_a, {
@@ -1073,9 +1079,16 @@ server <- function(input, output, session) {
     } else {
       
     }
-    #    } else {
     
-    #    }    
+    validate(
+      need((vals$current_scores$team_a == 18 && vals$current_scores$team_b == 12) || (vals$current_scores$team_a == 12 && vals$current_scores$team_b == 18), label = "eighteen_twelve")
+    )
+    
+    
+    sendSweetAlert(session, 
+                   title = "1812",
+                   text = "Everyone roll a die, lowest roll takes a shot.",
+                   type = "warning")
   })
   
   # Undo score
