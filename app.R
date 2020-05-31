@@ -31,7 +31,7 @@ round_labels = rep(c("Pass the dice", "Next round"),100)
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
 game_stats_tbl = tbl(con, "game_stats_players") %>% collect()
-game_history_tbl = tbl(con, "games") %>% collect()
+games_tbl = tbl(con, "games") %>% collect()
 
 
 
@@ -310,7 +310,7 @@ server <- function(input, output, session) {
     shot_num = 1,
     
     # DB Tables
-    game_history_db = game_history_tbl %>% slice(0),
+    games_db = games_tbl %>% slice(0),
     game_stats_db = game_stats_tbl %>% slice(0),
     players_db = players_tbl,
     scores_db = scores_tbl %>% slice(0),
@@ -490,7 +490,7 @@ server <- function(input, output, session) {
     vals$game_stats_db
   })
   output$db_output_game_history = renderTable({
-    vals$game_history_db
+    vals$games_db
   })
   output$snappaneers = renderTable({
     snappaneers()
@@ -605,7 +605,7 @@ server <- function(input, output, session) {
     vals$shot_num = 1
     vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM games"),1 , na.rm = T)
     
-    vals$game_history_db = bind_rows(vals$game_history_db,
+    vals$games_db = bind_rows(vals$games_db,
               tibble(
                 game_id = vals$game_id,
                 game_start = as.character(now()),
@@ -1207,13 +1207,13 @@ server <- function(input, output, session) {
     # Update Game History
     
 
-    vals$game_history_db = vals$game_history_db %>% 
+    vals$games_db = vals$games_db %>% 
       replace_na(list(game_end = as.character(now())))
     
     dbAppendTable(
       conn = con, 
       name = "games",
-      value = vals$game_history_db)
+      value = vals$games_db)
     
     dbAppendTable(
       conn = con, 
@@ -1265,7 +1265,7 @@ server <- function(input, output, session) {
     walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
                                            options = list(create = TRUE)))
-    vals$game_history_db = game_history_tbl %>% slice(0)
+    vals$games_db = games_tbl %>% slice(0)
     vals$game_stats_db = game_stats_tbl %>% slice(0)
     vals$players_db = tbl(con, "players") %>% collect()
     vals$scores_db = scores_tbl %>% slice(0)
