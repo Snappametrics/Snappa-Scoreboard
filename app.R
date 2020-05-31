@@ -1132,6 +1132,11 @@ server <- function(input, output, session) {
     
   })
   
+
+# Send to DB --------------------------------------------------------------
+
+  
+  
   observeEvent(input$send_to_db, {
    
     
