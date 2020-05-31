@@ -603,7 +603,7 @@ server <- function(input, output, session) {
     vals$current_scores$team_b = 0
     vals$scores_db = slice(scores_tbl, 0)
     vals$shot_num = 1
-    vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats_players"),1 , na.rm = T)
+    vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM games"),1 , na.rm = T)
     
     vals$game_history_db = bind_rows(vals$game_history_db,
               tibble(
