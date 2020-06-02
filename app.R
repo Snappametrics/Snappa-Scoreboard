@@ -803,6 +803,8 @@ server <- function(input, output, session) {
   
 
 # Scoring -----------------------------------------------------------------
+  
+  #TODO: Fix score_id, game_id, and num_points_scored in scores_db in vals: change from dbl to int
 
 
 # Team A ------------------------------------------------------------------
