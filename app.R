@@ -306,11 +306,11 @@ server <- function(input, output, session) {
     # Initialize new game, player, and score IDs, as well as the shot number
     game_id = NULL,
     new_player_id = sum(dbGetQuery(con, "SELECT MAX(player_id) FROM players"),1),
-    score_id = 0,
-    shot_num = 1,
+    score_id = as.integer(0),
+    shot_num = as.integer(1),
     
     # DB Tables
-    game_stats_db = game_stats_tbl %>% slice(0),
+    game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5),
     player_stats_db = player_stats_tbl %>% slice(0),
     players_db = players_tbl,
     scores_db = scores_tbl %>% slice(0),
@@ -603,14 +603,24 @@ server <- function(input, output, session) {
     vals$current_scores$team_b = 0
     vals$scores_db = slice(scores_tbl, 0)
     vals$shot_num = 1
-    vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T)
+    vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
     
     vals$game_stats_db = bind_rows(vals$game_stats_db,
               tibble(
                 game_id = vals$game_id,
                 num_players = nrow(snappaneers()),
                 game_start = as.character(now()),
-                game_end = NA_character_
+                game_end = NA_character_,
+                night_dice = NA#,
+                # points_a = NA_integer_,
+                # points_b = NA_integer_,
+                # rounds = NA_integer_,
+                # ones = NA_integer_,
+                # twos = NA_integer_,
+                # threes = NA_integer_,
+                # impossibles = NA_integer_,
+                # paddle_points = NA_integer_,
+                # clink_points = NA_integer_
               ))
     
     # Record the score we're playing to
@@ -848,7 +858,7 @@ server <- function(input, output, session) {
     )  
 
     # set score
-    score = as.numeric(input$score)
+    score = as.integer(input$score)
     vals$score <- score
     
     
@@ -861,7 +871,7 @@ server <- function(input, output, session) {
       vals$current_scores$team_a = vals$current_scores$team_a + vals$score
       
       # Increment the score_id
-      vals$score_id = vals$score_id+1
+      vals$score_id = as.integer(vals$score_id+1)
       
       ## Identify scoring characteristics
       # Player ID
@@ -952,16 +962,21 @@ server <- function(input, output, session) {
 
     # Select the ID which is the max on Team A
     last_score = filter(vals$scores_db, scoring_team == "a") %>% 
-      pull(score_id) %>% max()
+      pull(score_id) %>% 
+      max()
     
+    # Pull the number of points the last score was worth
     last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
       pull(points_scored)
     
+    # Reduce the score ID for any scores which have happened since the score which is being removed
+    # Note that score undo-ing is team specific
     vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
-      mutate(score_id = if_else(score_id > last_score, score_id-1, score_id))
+      mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
     
+    # Reduce the team's score and score_id
     vals$current_scores$team_a = vals$current_scores$team_a - last_score_pts
-    vals$score_id = vals$score_id-1
+    vals$score_id = as.integer(vals$score_id-1)
   })
   
   
@@ -1005,7 +1020,7 @@ server <- function(input, output, session) {
       }
     )
     #Set Score
-    score = as.numeric(input$score)
+    score = as.integer(input$score)
     vals$score <- score
     
     if (!is.null(vals$score)) {
@@ -1016,7 +1031,7 @@ server <- function(input, output, session) {
       vals$current_scores$team_b = vals$current_scores$team_b + vals$score
       
       # Increment the score_id
-      vals$score_id = vals$score_id+1
+      vals$score_id = as.integer(vals$score_id+1)
       
       ## Identify scoring characteristics
       # Player ID
@@ -1106,16 +1121,19 @@ server <- function(input, output, session) {
 
     # Select the ID which is the max on Team B
     last_score = filter(vals$scores_db, scoring_team == "b") %>% 
-      pull(score_id) %>% max()
+      pull(score_id) %>% 
+      max()
     
+    # Pull the number of points the last score was worth
     last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
       pull(points_scored)
     
+    # Reset any scores which have happened since the score being erased
     vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
-      mutate(score_id = if_else(score_id > last_score, score_id-1, score_id))
+      mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
     
     vals$current_scores$team_b = vals$current_scores$team_b - last_score_pts
-    vals$score_id = vals$score_id-1
+    vals$score_id = as.integer(vals$score_id-1)
   })
   
   
