@@ -40,6 +40,12 @@ score_check <- function(team, players) {
                 label = "Was it a paddle?",
                 status = "warning"
               ),
+              # Was it a paddle?
+              awesomeCheckbox(
+                inputId = "clink", 
+                label = "Was it a clink?",
+                status = "warning"
+              ),
               
               
               textOutput("skip_error_msg"),

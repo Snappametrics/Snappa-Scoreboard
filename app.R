@@ -30,8 +30,8 @@ round_labels = rep(c("Pass the dice", "Next round"),100)
 # Pull db tables for tibble templates
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
-game_stats_tbl = tbl(con, "game_stats_players") %>% collect()
-games_tbl = tbl(con, "games") %>% collect()
+player_stats_tbl = tbl(con, "player_stats") %>% collect()
+game_stats_tbl = tbl(con, "game_stats") %>% collect()
 
 
 
@@ -230,8 +230,8 @@ ui <- fluidPage(theme = "front-end/app.css",
       #          tableOutput("db_output_scores")
       #   ),
       #   column(5, align = "center",
-      #          h3("game_stats"),
-      #          tableOutput("db_output_game_stats")
+      #          h3("player_stats"),
+      #          tableOutput("db_output_player_stats")
       #   )
       #   
       #   )
@@ -310,8 +310,8 @@ server <- function(input, output, session) {
     shot_num = 1,
     
     # DB Tables
-    games_db = games_tbl %>% slice(0),
     game_stats_db = game_stats_tbl %>% slice(0),
+    player_stats_db = player_stats_tbl %>% slice(0),
     players_db = players_tbl,
     scores_db = scores_tbl %>% slice(0),
 
@@ -486,11 +486,11 @@ server <- function(input, output, session) {
   output$db_output_scores = renderTable({
     vals$scores_db
   })
-  output$db_output_game_stats = renderTable({
-    vals$game_stats_db
+  output$db_output_player_stats = renderTable({
+    vals$player_stats_db
   })
   output$db_output_game_history = renderTable({
-    vals$games_db
+    vals$game_stats_db
   })
   output$snappaneers = renderTable({
     snappaneers()
@@ -572,7 +572,7 @@ server <- function(input, output, session) {
   #   - switch to the scoreboard
   #   - Set the score outputs and shot number to 0
   #   - Record the score we're playing to
-  #   - Initialize the current game's game_stats table
+  #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
     
   
@@ -603,11 +603,12 @@ server <- function(input, output, session) {
     vals$current_scores$team_b = 0
     vals$scores_db = slice(scores_tbl, 0)
     vals$shot_num = 1
-    vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM games"),1 , na.rm = T)
+    vals$game_id = sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T)
     
-    vals$games_db = bind_rows(vals$games_db,
+    vals$game_stats_db = bind_rows(vals$game_stats_db,
               tibble(
                 game_id = vals$game_id,
+                num_players = nrow(snappaneers()),
                 game_start = as.character(now()),
                 game_end = NA_character_
               ))
@@ -617,10 +618,10 @@ server <- function(input, output, session) {
                               input$play_to == 2 ~ 32)
     
     
-    # Initialize the current game's game_stats table
-    vals$game_stats_db = slice(vals$game_stats_db, 0)
+    # Initialize the current game's player_stats table
+    vals$player_stats_db = slice(vals$player_stats_db, 0)
     # Previous code, but might be useful if/when we want to pull in historical data too
-    # bind_rows(vals$game_stats_db,
+    # bind_rows(vals$player_stats_db,
     #           tibble(
     #             game_id = rep(vals$game_id, vals$num_players),
     #             player_id = filter(vals$players_db, player_name %in% snappaneers()$player_name) %>% pull(player_id),
@@ -873,17 +874,18 @@ server <- function(input, output, session) {
       vals$scores_db = bind_rows(vals$scores_db,
                                  tibble(
                                    score_id = vals$score_id,
-                                   scoring_team = "a",
                                    game_id = vals$game_id,
                                    player_id = scorer_pid,
-                                   paddle = input$paddle,
+                                   scoring_team = "a",
                                    round_num = round_num(),
                                    points_scored = score,
-                                   shooting = shooting_team_lgl
+                                   shooting = shooting_team_lgl,
+                                   paddle = input$paddle,
+                                   clink = input$clink
                                  ))
       
       # Update game stats table
-      vals$game_stats_db = vals$scores_db %>% 
+      vals$player_stats_db = vals$scores_db %>% 
         # Join scores to snappaneers to get each player's team
         left_join(snappaneers(), by = "player_id") %>% 
         # Group by game and player, (team and shots are held consistent)
@@ -895,6 +897,7 @@ server <- function(input, output, session) {
                   threes = sum((points_scored == 3)),
                   impossibles = sum((points_scored > 3)),
                   paddle_points = sum(points_scored*paddle),
+                  clinks = sum(clink),
                   points_per_round = total_points / last(shots),
                   off_ppr = sum(points_scored*!paddle)/ last(shots),
                   def_ppr = paddle_points/last(shots),
@@ -1026,17 +1029,18 @@ server <- function(input, output, session) {
       vals$scores_db = bind_rows(vals$scores_db,
                               tibble(
                                 score_id = vals$score_id,
-                                scoring_team = "b",
                                 game_id = vals$game_id,
                                 player_id = scorer_pid,
-                                paddle = input$paddle,
+                                scoring_team = "b",
                                 round_num = round_num(),
                                 points_scored = score,
-                                shooting = shooting_team_lgl
+                                shooting = shooting_team_lgl,
+                                paddle = input$paddle,
+                                clink = input$clink
                               ))
       
       # Update game stats
-      vals$game_stats_db = vals$scores_db %>% 
+      vals$player_stats_db = vals$scores_db %>% 
         left_join(snappaneers(), by = "player_id") %>% 
         group_by(game_id, player_id, team, shots) %>% 
         summarise(total_points = sum(points_scored),
@@ -1045,6 +1049,7 @@ server <- function(input, output, session) {
                   threes = sum((points_scored == 3)),
                   impossibles = sum((points_scored > 3)),
                   paddle_points = sum(points_scored*paddle),
+                  clinks = sum(clink),
                   points_per_round = total_points / last(shots),
                   off_ppr = sum(points_scored*!paddle)/ last(shots),
                   def_ppr = paddle_points/last(shots),
@@ -1163,8 +1168,8 @@ server <- function(input, output, session) {
     
     
     
-    #update game_stats one more time so that points per shot is accurate
-    vals$game_stats_db = vals$scores_db %>% 
+    #update player_stats one more time so that points per shot is accurate
+    vals$player_stats_db = vals$scores_db %>% 
       left_join(snappaneers(), by = "player_id") %>% 
       group_by(game_id, player_id, team, shots) %>% 
       summarise(total_points = sum(points_scored),
@@ -1173,6 +1178,7 @@ server <- function(input, output, session) {
                 threes = sum((points_scored == 3)),
                 impossibles = sum((points_scored > 3)),
                 paddle_points = sum(points_scored*paddle),
+                clinks = sum(clink),
                 points_per_round = total_points / last(shots),
                 off_ppr = sum(points_scored*!paddle)/ last(shots),
                 def_ppr = paddle_points/last(shots),
@@ -1180,13 +1186,13 @@ server <- function(input, output, session) {
       ungroup()
     
     
-    # Make sure that everyone is in the game_stats table, i.e., 
+    # Make sure that everyone is in the player_stats table, i.e., 
     # record the trolls in the dungeon
     vals$trolls = tibble(
                   player_id = pull(filter(vals$players_db, player_name %in% snappaneers()$player_name), player_id)) %>%
-                  anti_join(vals$game_stats_db, by = "player_id")
+                  anti_join(vals$player_stats_db, by = "player_id")
     
-    vals$game_stats_db = bind_rows(vals$game_stats_db, 
+    vals$player_stats_db = bind_rows(vals$player_stats_db, 
                 tibble(
                   game_id = rep(vals$game_id, times = length(vals$trolls)),
                   player_id = pull(vals$trolls, player_id), 
@@ -1197,6 +1203,7 @@ server <- function(input, output, session) {
                   threes = rep(0, times = length(vals$trolls)),
                   impossibles = rep(0, times = length(vals$trolls)),
                   paddle_points = rep(0, times = length(vals$trolls)),
+                  clinks = rep(0, times = length(vals$trolls)),
                   points_per_round = rep(0, times = length(vals$trolls)),
                   off_ppr = rep(0, times = length(vals$trolls)),
                   def_ppr = rep(0, times = length(vals$trolls)),
@@ -1207,15 +1214,27 @@ server <- function(input, output, session) {
     
     
     # Update Game History
-    
+    # Calculate game-level stats from game stats players
+    game_stats = vals$player_stats_db %>% 
+      group_by(game_id) %>% 
+      summarise(points_a = sum((team == "a")*total_points),
+                points_b = sum((team == "b")*total_points),
+                ones = sum(ones),
+                twos = sum(twos),
+                threes = sum(threes),
+                impossibles = sum(impossibles),
+                paddle_points = sum(paddle_points),
+                clinks = sum(clinks))
 
-    vals$games_db = vals$games_db %>% 
-      replace_na(list(game_end = as.character(now())))
+    vals$game_stats_db = vals$game_stats_db %>% 
+      replace_na(list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
+      mutate(night_dice = if_else(now(tzone = "America/Los_Angeles") %>% hour() > 20, T, F)) %>% 
+      left_join(game_stats, by = "game_id")
     
     dbAppendTable(
       conn = con, 
-      name = "games",
-      value = vals$games_db)
+      name = "game_stats",
+      value = vals$game_stats_db)
     
     dbAppendTable(
       conn = con, 
@@ -1228,11 +1247,11 @@ server <- function(input, output, session) {
       name = "scores",
       value = vals$scores_db)
     
-    # Update game_stats_players
+    # Update player_stats
     dbAppendTable(
       conn = con, 
       name = "game_stats_players",
-      value = vals$game_stats_db)
+      value = vals$player_stats_db)
     
     # Confirmation that data was sent to db
     sendSweetAlert(session, 
@@ -1267,8 +1286,8 @@ server <- function(input, output, session) {
     walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
                                            options = list(create = TRUE)))
-    vals$games_db = games_tbl %>% slice(0)
     vals$game_stats_db = game_stats_tbl %>% slice(0)
+    vals$player_stats_db = player_stats_tbl %>% slice(0)
     vals$players_db = tbl(con, "players") %>% collect()
     vals$scores_db = scores_tbl %>% slice(0)
     
