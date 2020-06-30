@@ -873,13 +873,14 @@ server <- function(input, output, session) {
       vals$scores_db = bind_rows(vals$scores_db,
                                  tibble(
                                    score_id = vals$score_id,
-                                   scoring_team = "a",
                                    game_id = vals$game_id,
                                    player_id = scorer_pid,
-                                   paddle = input$paddle,
+                                   scoring_team = "a",
                                    round_num = round_num(),
                                    points_scored = score,
-                                   shooting = shooting_team_lgl
+                                   shooting = shooting_team_lgl,
+                                   paddle = input$paddle,
+                                   clink = input$clink
                                  ))
       
       # Update game stats table
@@ -1026,13 +1027,14 @@ server <- function(input, output, session) {
       vals$scores_db = bind_rows(vals$scores_db,
                               tibble(
                                 score_id = vals$score_id,
-                                scoring_team = "b",
                                 game_id = vals$game_id,
                                 player_id = scorer_pid,
-                                paddle = input$paddle,
+                                scoring_team = "b",
                                 round_num = round_num(),
                                 points_scored = score,
-                                shooting = shooting_team_lgl
+                                shooting = shooting_team_lgl,
+                                paddle = input$paddle,
+                                clink = input$clink
                               ))
       
       # Update game stats
