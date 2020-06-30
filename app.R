@@ -253,9 +253,12 @@ server <- function(input, output, session) {
   
   add_shot_count = function(df){
     
-    add_count(df, .data$team, name = "n_players") %>% 
+    add_count(df, .data$team, name = "n_players") %>% # Count the number of rows for each team
+      # Calculate the number of shots for each player by diving the team shots by 2
+      # Team shots calculated using ceiling/floor because A always goes first
       mutate(baseline_shots = case_when(str_detect(.data$team, "a") ~ ceiling(vals$shot_num/2),
                                         str_detect(.data$team, "b") ~ floor(vals$shot_num/2)),
+             # In cases where teams are uneven, we calculate the average shots a player had
              shots = .data$baseline_shots*max(.data$n_players)/.data$n_players) %>% 
       select(-baseline_shots, -n_players)
   }
