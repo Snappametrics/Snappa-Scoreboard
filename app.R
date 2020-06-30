@@ -1268,7 +1268,7 @@ server <- function(input, output, session) {
     # Update player_stats
     dbAppendTable(
       conn = con, 
-      name = "game_stats_players",
+      name = "player_stats",
       value = vals$player_stats_db)
     
     # Confirmation that data was sent to db
@@ -1304,7 +1304,7 @@ server <- function(input, output, session) {
     walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
                                            options = list(create = TRUE)))
-    vals$game_stats_db = game_stats_tbl %>% slice(0)
+    vals$game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5)
     vals$player_stats_db = player_stats_tbl %>% slice(0)
     vals$players_db = tbl(con, "players") %>% collect()
     vals$scores_db = scores_tbl %>% slice(0)
