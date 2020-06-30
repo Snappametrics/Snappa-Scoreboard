@@ -1,3 +1,7 @@
 2020-06-30
 - Changed game_stats.points_per_round from real to double precision
 - Added column game_stats.clink_points as integer
+- Added game_id, score_id Primary Key constraint to scores table
+- Added game_id, player_id Primary Key constraint to player_stats
+- Removed Unique constraints from scores and game_stats because apparently a Primary Key constraint automatically does this?
+https://www.postgresqltutorial.com/postgresql-primary-key/#:~:text=Technically%2C%20a%20primary%20key%20constraint,and%20only%20one%20primary%20key.&text=When%20you%20add%20a%20primary,to%20define%20the%20primary%20key.
