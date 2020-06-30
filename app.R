@@ -907,7 +907,7 @@ server <- function(input, output, session) {
                   threes = sum((points_scored == 3)),
                   impossibles = sum((points_scored > 3)),
                   paddle_points = sum(points_scored*paddle),
-                  clinks = sum(clink),
+                  clink_points = sum(points_scored*clink),
                   points_per_round = total_points / last(shots),
                   off_ppr = sum(points_scored*!paddle)/ last(shots),
                   def_ppr = paddle_points/last(shots),
@@ -1054,7 +1054,7 @@ server <- function(input, output, session) {
                                 clink = input$clink
                               ))
       
-      # Update game stats
+      # Update player stats
       vals$player_stats_db = vals$scores_db %>% 
         left_join(snappaneers(), by = "player_id") %>% 
         group_by(game_id, player_id, team, shots) %>% 
@@ -1064,7 +1064,7 @@ server <- function(input, output, session) {
                   threes = sum((points_scored == 3)),
                   impossibles = sum((points_scored > 3)),
                   paddle_points = sum(points_scored*paddle),
-                  clinks = sum(clink),
+                  clink_points = sum(points_scored*clink),
                   points_per_round = total_points / last(shots),
                   off_ppr = sum(points_scored*!paddle)/ last(shots),
                   def_ppr = paddle_points/last(shots),
@@ -1196,7 +1196,7 @@ server <- function(input, output, session) {
                 threes = sum((points_scored == 3)),
                 impossibles = sum((points_scored > 3)),
                 paddle_points = sum(points_scored*paddle),
-                clinks = sum(clink),
+                clink_points = sum(points_scored*clink),
                 points_per_round = total_points / last(shots),
                 off_ppr = sum(points_scored*!paddle)/ last(shots),
                 def_ppr = paddle_points/last(shots),
@@ -1206,26 +1206,26 @@ server <- function(input, output, session) {
     
     # Make sure that everyone is in the player_stats table, i.e., 
     # record the trolls in the dungeon
-    vals$trolls = tibble(
-                  player_id = pull(filter(vals$players_db, player_name %in% snappaneers()$player_name), player_id)) %>%
+    vals$trolls = snappaneers() %>%
                   anti_join(vals$player_stats_db, by = "player_id")
     
     vals$player_stats_db = bind_rows(vals$player_stats_db, 
                 tibble(
-                  game_id = rep(vals$game_id, times = length(vals$trolls)),
+                  game_id = rep(vals$game_id, times = nrow(vals$trolls)),
                   player_id = pull(vals$trolls, player_id), 
-                  total_points = rep(0, times = length(vals$trolls)),
-                  shots = rep(0, times = length(vals$trolls)),
-                  ones = rep(0, times = length(vals$trolls)),
-                  twos = rep(0, times = length(vals$trolls)),
-                  threes = rep(0, times = length(vals$trolls)),
-                  impossibles = rep(0, times = length(vals$trolls)),
-                  paddle_points = rep(0, times = length(vals$trolls)),
-                  clinks = rep(0, times = length(vals$trolls)),
-                  points_per_round = rep(0, times = length(vals$trolls)),
-                  off_ppr = rep(0, times = length(vals$trolls)),
-                  def_ppr = rep(0, times = length(vals$trolls)),
-                  toss_efficiency = rep(0, times = length(vals$trolls))
+                  team = pull(vals$trolls, team), 
+                  total_points = rep(integer(1), times = nrow(vals$trolls)), # Weirdly enough, integer(1) is a 0 integer vector of length 1
+                  shots = pull(vals$trolls, shots),
+                  ones = rep(integer(1), times = nrow(vals$trolls)),
+                  twos = rep(integer(1), times = nrow(vals$trolls)),
+                  threes = rep(integer(1), times = nrow(vals$trolls)),
+                  impossibles = rep(integer(1), times = nrow(vals$trolls)),
+                  paddle_points = rep(integer(1), times = nrow(vals$trolls)),
+                  clink_points = rep(integer(1), times = nrow(vals$trolls)),
+                  points_per_round = rep(integer(1), times = nrow(vals$trolls)),
+                  off_ppr = rep(integer(1), times = nrow(vals$trolls)),
+                  def_ppr = rep(integer(1), times = nrow(vals$trolls)),
+                  toss_efficiency = rep(integer(1), times = nrow(vals$trolls))
                   )
                 )
     
@@ -1242,7 +1242,7 @@ server <- function(input, output, session) {
                 threes = sum(threes),
                 impossibles = sum(impossibles),
                 paddle_points = sum(paddle_points),
-                clinks = sum(clinks))
+                clink_points = sum(clink_points))
 
     vals$game_stats_db = vals$game_stats_db %>% 
       replace_na(list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
