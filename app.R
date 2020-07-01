@@ -1240,6 +1240,7 @@ server <- function(input, output, session) {
       group_by(game_id) %>% 
       summarise(points_a = sum((team == "a")*total_points),
                 points_b = sum((team == "b")*total_points),
+                rounds = as.integer(vals$shot_num-1),
                 ones = sum(ones),
                 twos = sum(twos),
                 threes = sum(threes),
