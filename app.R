@@ -605,7 +605,6 @@ server <- function(input, output, session) {
     vals$current_scores$team_a = 0
     vals$current_scores$team_b = 0
     vals$scores_db = slice(scores_tbl, 0)
-    vals$shot_num = 1
     vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
     
     vals$game_stats_db = bind_rows(vals$game_stats_db,
@@ -1303,15 +1302,23 @@ server <- function(input, output, session) {
   
   observeEvent(input$new_game_sure, {
     # On a new game:
+    # 1. Switch to start screen
     updateTabsetPanel(session, "switcher", selected = "start_screen")
     
+    # 2. Reset player inputs
     walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
                                            options = list(create = TRUE)))
+    
+    # 3. Reset reactive values
     vals$game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5)
     vals$player_stats_db = player_stats_tbl %>% slice(0)
     vals$players_db = tbl(con, "players") %>% collect()
     vals$scores_db = scores_tbl %>% slice(0)
+    vals$score_id = as.integer(0)
+    vals$shot_num = as.integer(1)
+    
+
     
     removeModal()
     
