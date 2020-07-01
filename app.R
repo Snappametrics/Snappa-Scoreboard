@@ -266,41 +266,7 @@ server <- function(input, output, session) {
   
     
 
-# Reactive Values ---------------------------------------------------------
-
-  # Active input buttons
-  #   - List of player inputs which are not null
-  active_player_inputs = reactive({
-    list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
-         "b1" = input$name_b1, "b2" = input$name_b2, "b3" = input$name_b3, "b4" = input$name_b4) %>% 
-    discard(is_null)
-  })
-  
-  # Snappaneers - | Team | Player name | Player ID  |
-  snappaneers = reactive({
-  
-   tibble(
-     # Team pulls the first letter from their input name
-     team = str_extract(names(active_player_inputs()), ".{1}"),
-     player_name = active_player_inputs() %>% flatten_chr()
-     ) %>% 
-      # Remove empty player inputs
-     filter(player_name != "") %>% 
-      left_join(vals$players_db, by = "player_name") %>% 
-      # Add shot count
-      add_shot_count()
-  })
-  
-  current_choices = reactive({
-    anti_join(players_tbl, snappaneers(), by = "player_name") %>% 
-      pull(player_name)
-  })
-
-  # Length of active player inputs
-  num_players = reactive({
-    length(active_player_inputs()[active_player_inputs() != ""])
-  })
-
+# Reactive Values Object ---------------------------------------------------------
 
 
   
@@ -350,10 +316,54 @@ server <- function(input, output, session) {
     want_b4 = F
   )
   
+  
+  
+
+# Player Inputs, Snappaneers, Other Reactives --------------------------------------
+
+  
+  
   # Increment round number
   round_num = reactive({
     rounds[vals$shot_num]
   })
+  
+  # Active input buttons
+  #   - List of player inputs which are not null
+  active_player_inputs = reactive({
+    list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
+         "b1" = input$name_b1, "b2" = input$name_b2, "b3" = input$name_b3, "b4" = input$name_b4) %>% 
+      discard(is_null)
+  })
+  
+  # Snappaneers - | Team | Player name | Player ID  |
+  snappaneers = reactive({
+    
+    tibble(
+      # Team pulls the first letter from their input name
+      team = str_extract(names(active_player_inputs()), ".{1}"),
+      player_name = active_player_inputs() %>% flatten_chr()
+    ) %>% 
+      # Remove empty player inputs
+      filter(player_name != "") %>% 
+      left_join(vals$players_db, by = "player_name") %>% 
+      # Add shot count
+      add_shot_count()
+  })
+  
+  # Vector of players, with current players removed
+  current_choices = reactive({
+    anti_join(players_tbl, snappaneers(), by = "player_name") %>% 
+      pull(player_name)
+  })
+  
+  # Length of active player inputs
+  num_players = reactive({
+    length(active_player_inputs()[active_player_inputs() != ""])
+  })
+  
+  
+  
   
   
 
