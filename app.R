@@ -1247,6 +1247,8 @@ server <- function(input, output, session) {
                   toss_efficiency = sum(!paddle)/last(shots)) %>% 
         ungroup()
       
+      #Update the DB
+      
       vals$player_stats_db = troll_check(snappaneers = snappaneers(),
                                          player_stats = vals$player_stats_db,
                                          game_id = vals$game_id)
