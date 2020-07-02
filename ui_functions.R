@@ -218,3 +218,5 @@ recent_score_sentence = function(scores_data){
                                      na.omit(if_else(paddle, str_c(" And it was a", na.omit(if_else(foot, "foot", NA_character_)), " paddle!"), NA_character_))))) %>% 
     ungroup() %>% 
     select(-score_id)
+  
+}
