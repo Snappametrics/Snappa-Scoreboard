@@ -911,7 +911,8 @@ server <- function(input, output, session) {
                                    points_scored = score,
                                    shooting = shooting_team_lgl,
                                    paddle = input$paddle,
-                                   clink = input$clink
+                                   clink = input$clink,
+                                   foot = input$foot
                                  ))
       
       # Update game stats table
@@ -1071,7 +1072,8 @@ server <- function(input, output, session) {
                                 points_scored = score,
                                 shooting = shooting_team_lgl,
                                 paddle = input$paddle,
-                                clink = input$clink
+                                clink = input$clink,
+                                foot = input$foot
                               ))
       
       # Update player stats
