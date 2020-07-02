@@ -948,6 +948,10 @@ server <- function(input, output, session) {
                                    clink = input$clink,
                                    foot = input$foot
                                  ))
+      #Update the server with the new score
+  
+      dbAppendTable(con, "scores", anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+      
       
       # Update game stats table
       vals$player_stats_db = vals$scores_db %>% 
@@ -968,6 +972,7 @@ server <- function(input, output, session) {
                   def_ppr = paddle_points/last(shots),
                   toss_efficiency = sum(!paddle)/last(shots)) %>% 
         ungroup()
+      browser()
       
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
@@ -1109,6 +1114,10 @@ server <- function(input, output, session) {
                                 clink = input$clink,
                                 foot = input$foot
                               ))
+      #Update the server with the new score
+      dbAppendTable(con, "scores", 
+                    anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+      
       
       # Update player stats
       vals$player_stats_db = vals$scores_db %>% 
