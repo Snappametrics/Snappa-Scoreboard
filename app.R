@@ -203,7 +203,22 @@ ui <- fluidPage(theme = "front-end/app.css",
                    column(width = 4, align = "center",
                           h1("Round", style = "font-size: 600%;"),
                           h3(textOutput("round_num")),
-                          uiOutput("selector_ui")
+                          fillRow(actionBttn("previous_round", 
+                                             label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
+                                  actionBttn("next_round", 
+                                             label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
+                          # Recent Scores
+                          # dropdown(
+                          #   gt_output("recent_scores"),
+                          #   style = "unite",
+                          #   size = "lg",
+                          #   label = "Recent Scores",
+                          #   icon = icon("backward"),
+                          #   animate = animateOptions(
+                          #     enter = animations$fading_entrances$fadeInUp,
+                          #     exit = animations$fading_exits$fadeOutDown
+                          #   )
+                          # ),
                    ),
                    # Team B
                    team_scoreboard_ui("b"),
