@@ -37,16 +37,21 @@ score_check <- function(team, players) {
               # Was it a paddle?
               awesomeCheckbox(
                 inputId = "paddle", 
-                label = "Was it a paddle?",
+                label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
                 status = "warning"
               ),
-              # Was it a paddle?
+              # Was it a clink?
               awesomeCheckbox(
                 inputId = "clink", 
-                label = "Was it a clink?",
+                label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
                 status = "warning"
               ),
-              
+              # feet?
+              awesomeCheckbox(
+                inputId = "foot", 
+                label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
+                status = "warning"
+              ),
               
               textOutput("skip_error_msg"),
               # Use score_val output to only show score button on valid scoring combinations

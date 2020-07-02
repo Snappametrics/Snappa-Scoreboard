@@ -104,7 +104,13 @@ ui <- fluidPage(theme = "front-end/app.css",
                    "{font-size: x-large;}",
                    # Paddle input label
                    "label[for='paddle']", 
-                   "{font-size: x-large; font-weight:inherit;}",
+                   "{font-size: 1.75rem; font-weight:inherit;}",
+                   # Clink input label
+                   "label[for='clink']", 
+                   "{font-size: 1.75rem;}",
+                   # Foot input label
+                   "label[for='foot']", 
+                   "{font-size: 1.75rem;}",
                    # OK Score button
                    "#ok_a, #ok_b {font-size:x-large;}",
                    # Name input font size
