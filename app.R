@@ -653,37 +653,72 @@ server <- function(input, output, session) {
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
-    # Set the score outputs and shot number to 0
-    vals$current_scores$team_a = 0
-    vals$current_scores$team_b = 0
-    vals$scores_db = slice(scores_tbl, 0)
-    vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
+    if(tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.character()){
+      
+      # Set the score outputs and shot number to 0
+      vals$current_scores$team_a = 0
+      vals$current_scores$team_b = 0
+      vals$scores_db = slice(scores_tbl, 0)
+      vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
+      
+      vals$game_stats_db = bind_rows(vals$game_stats_db,
+                                     tibble(
+                                       game_id = vals$game_id,
+                                       num_players = nrow(snappaneers()),
+                                       game_start = as.character(now()),
+                                       game_end = NA_character_,
+                                       night_dice = NA#,
+                                       # points_a = NA_integer_,
+                                       # points_b = NA_integer_,
+                                       # rounds = NA_integer_,
+                                       # ones = NA_integer_,
+                                       # twos = NA_integer_,
+                                       # threes = NA_integer_,
+                                       # impossibles = NA_integer_,
+                                       # paddle_points = NA_integer_,
+                                       # clink_points = NA_integer_
+                                     ))
+      
+      # Initialize the current game's player_stats table
+      vals$player_stats_db = slice(vals$player_stats_db, 0)
+      
+      dbAppendTable(
+        conn = con, 
+        name = "game_stats",
+        value = vals$game_stats_db
+      )
+      
+    } else {
+      
+      lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+      
+      lost_game_stats = tbl(con, "game_stats") %>% filter(game_id == lost_game)
+      
+      lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+      
+      lost_game_scores = list(team_a = lost_game_stats)
+      
+      # Set the score outputs and shot number to 0
+      vals$current_scores$team_a = lost_game_stats$points_a
+      vals$current_scores$team_b = lost_game_stats$points_b
+      vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
+      vals$game_id = lost_game
+      
+      vals$game_stats_db = collect(lost_game_stats)
+      
+      # Initialize the current game's player_stats table
+      vals$player_stats_db = collect(lost_player_stats)
+      
+    }
     
-    vals$game_stats_db = bind_rows(vals$game_stats_db,
-              tibble(
-                game_id = vals$game_id,
-                num_players = nrow(snappaneers()),
-                game_start = as.character(now()),
-                game_end = NA_character_,
-                night_dice = NA#,
-                # points_a = NA_integer_,
-                # points_b = NA_integer_,
-                # rounds = NA_integer_,
-                # ones = NA_integer_,
-                # twos = NA_integer_,
-                # threes = NA_integer_,
-                # impossibles = NA_integer_,
-                # paddle_points = NA_integer_,
-                # clink_points = NA_integer_
-              ))
+    
     
     # Record the score we're playing to
     vals$score_to = case_when(input$play_to == 1 ~ 21,
                               input$play_to == 2 ~ 32)
     
     
-    # Initialize the current game's player_stats table
-    vals$player_stats_db = slice(vals$player_stats_db, 0)
+    
     # Previous code, but might be useful if/when we want to pull in historical data too
     # bind_rows(vals$player_stats_db,
     #           tibble(
