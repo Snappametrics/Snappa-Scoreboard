@@ -679,6 +679,7 @@ server <- function(input, output, session) {
                                        # clink_points = NA_integer_
                                      ))
       
+      
       # Initialize the current game's player_stats table
       vals$player_stats_db = slice(vals$player_stats_db, 0)
       
@@ -708,7 +709,7 @@ server <- function(input, output, session) {
       
       # Initialize the current game's player_stats table
       vals$player_stats_db = collect(lost_player_stats)
-      
+    
     }
     
     
@@ -1007,7 +1008,9 @@ server <- function(input, output, session) {
                   def_ppr = paddle_points/last(shots),
                   toss_efficiency = sum(!paddle)/last(shots)) %>% 
         ungroup()
-      browser()
+
+      
+      
       
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
@@ -1072,6 +1075,36 @@ server <- function(input, output, session) {
     # Reduce the team's score and score_id
     vals$current_scores$team_a = vals$current_scores$team_a - last_score_pts
     vals$score_id = as.integer(vals$score_id-1)
+    
+    #Remove the value from the snappaDB
+    dbSendQuery(con,
+      str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id)
+    )
+    
+    ##TODO: Update player_stats here too
+    # Update player stats table
+    vals$player_stats_db = vals$scores_db %>% 
+      # Join scores to snappaneers to get each player's team
+      left_join(snappaneers(), by = "player_id") %>% 
+      # Group by game and player, (team and shots are held consistent)
+      group_by(game_id, player_id, team, shots) %>% 
+      # Calculate summary stats
+      summarise(total_points = sum(points_scored),
+                ones = sum((points_scored == 1)),
+                twos = sum((points_scored == 2)),
+                threes = sum((points_scored == 3)),
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored*paddle),
+                clink_points = sum(points_scored*clink),
+                points_per_round = total_points / last(shots),
+                off_ppr = sum(points_scored*!paddle)/ last(shots),
+                def_ppr = paddle_points/last(shots),
+                toss_efficiency = sum(!paddle)/last(shots)) %>% 
+      ungroup()
+
+   #Update the DB with the new player_stats
+    update_player_stats_row(vals$player_stats_db)
+    
   })
   
   
@@ -1234,6 +1267,36 @@ server <- function(input, output, session) {
     
     vals$current_scores$team_b = vals$current_scores$team_b - last_score_pts
     vals$score_id = as.integer(vals$score_id-1)
+    
+    
+    #Remove the value from the snappaDB
+    dbSendQuery(con,
+                str_c("DELETE FROM scores WHERE score_id = ", last_score, 
+                      " AND game_id = ", vals$game_id)
+    )
+    
+    vals$player_stats_db = vals$scores_db %>% 
+      # Join scores to snappaneers to get each player's team
+      left_join(snappaneers(), by = "player_id") %>% 
+      # Group by game and player, (team and shots are held consistent)
+      group_by(game_id, player_id, team, shots) %>% 
+      # Calculate summary stats
+      summarise(total_points = sum(points_scored),
+                ones = sum((points_scored == 1)),
+                twos = sum((points_scored == 2)),
+                threes = sum((points_scored == 3)),
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored*paddle),
+                clink_points = sum(points_scored*clink),
+                points_per_round = total_points / last(shots),
+                off_ppr = sum(points_scored*!paddle)/ last(shots),
+                def_ppr = paddle_points/last(shots),
+                toss_efficiency = sum(!paddle)/last(shots)) %>% 
+      ungroup()
+    
+    #Update the DB with the new player_stats
+    update_player_stats_row(vals$player_stats_db)
+
   })
   
   
