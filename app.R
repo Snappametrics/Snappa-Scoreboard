@@ -15,6 +15,7 @@ library(lubridate)
 library(dbplyr)
 library(shinyjs)
 library(shinyWidgets)
+library(gt)
 
 source("dbconnect.R")
 source("ui_functions.R")
@@ -209,22 +210,23 @@ ui <- fluidPage(theme = "front-end/app.css",
                    column(width = 4, align = "center",
                           h1("Round", style = "font-size: 600%;"),
                           h3(textOutput("round_num")),
-                          fillRow(actionBttn("previous_round", 
+                          fluidRow(actionBttn("previous_round", 
                                              label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
                                   actionBttn("next_round", 
                                              label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
+                          br(),
                           # Recent Scores
-                          # dropdown(
-                          #   gt_output("recent_scores"),
-                          #   style = "unite",
-                          #   size = "lg",
-                          #   label = "Recent Scores",
-                          #   icon = icon("backward"),
-                          #   animate = animateOptions(
-                          #     enter = animations$fading_entrances$fadeInUp,
-                          #     exit = animations$fading_exits$fadeOutDown
-                          #   )
-                          # ),
+                          dropdown(
+                            gt_output("recent_scores"),
+                            style = "unite",
+                            size = "lg",
+                            label = "Recent Scores",
+                            icon = icon("backward"),
+                            animate = animateOptions(
+                              enter = animations$fading_entrances$fadeInUp,
+                              exit = animations$fading_exits$fadeOutDown
+                            )
+                          ),
                    ),
                    # Team B
                    team_scoreboard_ui("b"),
@@ -498,6 +500,17 @@ server <- function(input, output, session) {
       filter(team == "B") %>% 
       pull(player_name) %>% 
       str_c(., collapse = ", ")
+  })
+  
+  # Recent Scores
+  output$recent_scores = render_gt({
+    
+    top_n(vals$scores_db, 5, score_id) %>% 
+      arrange(-score_id) %>% 
+      left_join(select(snappaneers(), player_id, player_name)) %>% 
+      recent_score_sentence() %>% 
+      gt() %>% 
+      tab_options(column_labels.hidden = T)
   })
   
   # Output error message
