@@ -65,7 +65,43 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 
 
+troll_check = function(session, snappaneers, player_stats, game_id){
+  browser()
+  
+  trolls = snappaneers %>%
+    anti_join(player_stats, by = "player_id")
+  
+  bind_rows(player_stats, 
+            tibble(
+                   game_id = rep(game_id, times = nrow(trolls)),
+                   player_id = pull(trolls, player_id), 
+                   team = pull(trolls, team), 
+                   total_points = rep(integer(1), times = nrow(trolls)), # Weirdly enough, integer(1) is a 0 integer vector of length 1
+                   shots = pull(trolls, shots),
+                   ones = rep(integer(1), times = nrow(trolls)),
+                   twos = rep(integer(1), times = nrow(trolls)),
+                   threes = rep(integer(1), times = nrow(trolls)),
+                   impossibles = rep(integer(1), times = nrow(trolls)),
+                   paddle_points = rep(integer(1), times = nrow(trolls)),
+                   clink_points = rep(integer(1), times = nrow(trolls)),
+                   points_per_round = rep(double(1), times = nrow(trolls)),
+                   off_ppr = rep(double(1), times = nrow(trolls)),
+                   def_ppr = rep(double(1), times = nrow(trolls)),
+                   toss_efficiency = rep(double(1), times = nrow(trolls))
+                 )
+  )
+  
+}
 
+update_player_stats_rows = function(player_stats){
+  current_game = unique(player_stats$game_id)
+  del_rows = sql(str_c("DELETE FROM player_stats 
+                 WHERE game_id = ", current_game, ";"))
+  
+  dbExecute(con, del_rows)
+  
+  dbAppendTable(con, "player_stats", player_stats)
+}
 
 
 
@@ -989,7 +1025,7 @@ server <- function(input, output, session) {
       dbAppendTable(con, "scores", anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
       
       
-      # Update game stats table
+      # Update player stats table
       vals$player_stats_db = vals$scores_db %>% 
         # Join scores to snappaneers to get each player's team
         left_join(snappaneers(), by = "player_id") %>% 
@@ -1009,9 +1045,12 @@ server <- function(input, output, session) {
                   toss_efficiency = sum(!paddle)/last(shots)) %>% 
         ungroup()
 
+      vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                         player_stats = vals$player_stats_db,
+                                         game_id = vals$game_id)
       
-      
-      
+      update_player_stats_rows(vals$player_stats_db)
+
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
         showNotification("That's some hot shit!")
@@ -1081,7 +1120,7 @@ server <- function(input, output, session) {
       str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id)
     )
     
-    ##TODO: Update player_stats here too
+    
     # Update player stats table
     vals$player_stats_db = vals$scores_db %>% 
       # Join scores to snappaneers to get each player's team
@@ -1101,9 +1140,13 @@ server <- function(input, output, session) {
                 def_ppr = paddle_points/last(shots),
                 toss_efficiency = sum(!paddle)/last(shots)) %>% 
       ungroup()
-
+    
+    vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                       player_stats = vals$player_stats_db,
+                                       game_id = vals$game_id)
+    
    #Update the DB with the new player_stats
-    update_player_stats_row(vals$player_stats_db)
+    update_player_stats_rows(vals$player_stats_db)
     
   })
   
@@ -1204,6 +1247,14 @@ server <- function(input, output, session) {
                   toss_efficiency = sum(!paddle)/last(shots)) %>% 
         ungroup()
       
+      vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                         player_stats = vals$player_stats_db,
+                                         game_id = vals$game_id)
+      
+      #Update the DB with the new player_stats
+      update_player_stats_row(vals$player_stats_db)
+      
+      
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
@@ -1273,8 +1324,8 @@ server <- function(input, output, session) {
     dbSendQuery(con,
                 str_c("DELETE FROM scores WHERE score_id = ", last_score, 
                       " AND game_id = ", vals$game_id)
-    )
-    
+    )    
+    # Update player_stats 
     vals$player_stats_db = vals$scores_db %>% 
       # Join scores to snappaneers to get each player's team
       left_join(snappaneers(), by = "player_id") %>% 
@@ -1294,9 +1345,13 @@ server <- function(input, output, session) {
                 toss_efficiency = sum(!paddle)/last(shots)) %>% 
       ungroup()
     
+    vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                       player_stats = vals$player_stats_db,
+                                       game_id = vals$game_id)
+    
     #Update the DB with the new player_stats
-    update_player_stats_row(vals$player_stats_db)
-
+    update_player_stats_rows(vals$player_stats_db)
+    
   })
   
   
