@@ -27,6 +27,9 @@ round_labels = rep(c("Pass the dice", "Next round"),100)
 
 
 
+# DB Tables ---------------------------------------------------------------
+
+
 # Pull db tables for tibble templates
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
@@ -518,7 +521,11 @@ server <- function(input, output, session) {
   
   
 
-# Game Start --------------------------------------------------------------
+  
+
+# Game Start Validation ---------------------------------------------------
+
+  
   
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
@@ -578,7 +585,8 @@ server <- function(input, output, session) {
     
 
   })
-
+  # Game Start --------------------------------------------------------------
+  
   
   # When we click "Start Game", 
   #   - Add new players to the players table
