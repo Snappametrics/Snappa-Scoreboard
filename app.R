@@ -952,7 +952,7 @@ server <- function(input, output, session) {
                                    clink = input$clink,
                                    foot = input$foot
                                  ))
-      browser()
+      
       # Update game stats table
       vals$player_stats_db = vals$scores_db %>% 
         # Join scores to snappaneers to get each player's team
