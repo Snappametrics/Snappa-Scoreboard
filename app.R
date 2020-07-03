@@ -7,6 +7,10 @@
 #    http://shiny.rstudio.com/
 #
 
+
+
+
+
 library(DBI)
 library(RPostgres)
 library(tidyverse)
@@ -259,7 +263,7 @@ ui <- fluidPage(theme = "front-end/app.css",
       #          h3("player_stats"),
       #          tableOutput("db_output_player_stats")
       #   )
-      #   
+      # 
       #   )
   )
   
@@ -948,7 +952,7 @@ server <- function(input, output, session) {
                                    clink = input$clink,
                                    foot = input$foot
                                  ))
-      
+      browser()
       # Update game stats table
       vals$player_stats_db = vals$scores_db %>% 
         # Join scores to snappaneers to get each player's team
@@ -961,12 +965,12 @@ server <- function(input, output, session) {
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
                   impossibles = sum((points_scored > 3)),
-                  paddle_points = sum(points_scored*paddle),
+                  paddle_points = sum(points_scored* (paddle | foot)),
                   clink_points = sum(points_scored*clink),
                   points_per_round = total_points / last(shots),
-                  off_ppr = sum(points_scored*!paddle)/ last(shots),
+                  off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
                   def_ppr = paddle_points/last(shots),
-                  toss_efficiency = sum(!paddle)/last(shots)) %>% 
+                  toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
         ungroup()
       
       # Congratulate paddlers
@@ -1119,12 +1123,12 @@ server <- function(input, output, session) {
                   twos = sum((points_scored == 2)),
                   threes = sum((points_scored == 3)),
                   impossibles = sum((points_scored > 3)),
-                  paddle_points = sum(points_scored*paddle),
+                  paddle_points = sum(points_scored*(paddle | foot)),
                   clink_points = sum(points_scored*clink),
                   points_per_round = total_points / last(shots),
-                  off_ppr = sum(points_scored*!paddle)/ last(shots),
+                  off_ppr = sum(points_scored*!(paddle | foot))/ last(shots),
                   def_ppr = paddle_points/last(shots),
-                  toss_efficiency = sum(!paddle)/last(shots)) %>% 
+                  toss_efficiency = sum(!(paddle | foot))/last(shots)) %>% 
         ungroup()
       
       
