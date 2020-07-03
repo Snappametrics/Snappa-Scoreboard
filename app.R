@@ -26,6 +26,8 @@ source("ui_functions.R")
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
+lost_game_bool = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.character()
+
 
 
 # DB Tables ---------------------------------------------------------------
