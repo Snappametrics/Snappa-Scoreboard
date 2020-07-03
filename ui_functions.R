@@ -208,14 +208,14 @@ remove_p4_input = function(team, session){
 recent_score_sentence = function(scores_data){
   scores_data %>% 
     group_by(score_id) %>% 
-    transmute(score_sentence = md(str_c("**",player_name, "**",
+    transmute(score_sentence = str_c(player_name, 
                                      " scored ",
                                      points_scored,
                                      " point(s)", 
                                      na.omit(if_else(clink, " with a clink", NA_character_)),  
                                      " for Team ", toupper(scoring_team),
                                      " in round ", round_num, ".",
-                                     na.omit(if_else(paddle, str_c(" And it was a", na.omit(if_else(foot, "foot", NA_character_)), " paddle!"), NA_character_))))) %>% 
+                                     na.omit(if_else(paddle, str_c(" And it was a", na.omit(if_else(foot, " foot", NA_character_)), " paddle!"), NA_character_)))) %>% 
     ungroup() %>% 
     select(-score_id)
 }
