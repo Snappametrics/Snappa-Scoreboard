@@ -667,7 +667,7 @@ server <- function(input, output, session) {
               tibble(
                 game_id = vals$game_id,
                 num_players = nrow(snappaneers()),
-                game_start = as.character(now()),
+                game_start = as.character(now(tzone = "America/Los_Angeles")),
                 game_end = NA_character_,
                 night_dice = NA#,
                 # points_a = NA_integer_,
