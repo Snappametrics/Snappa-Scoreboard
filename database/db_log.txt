@@ -5,3 +5,8 @@
 - Added game_id, player_id Primary Key constraint to player_stats
 - Removed Unique constraints from scores and game_stats because apparently a Primary Key constraint automatically does this?
 https://www.postgresqltutorial.com/postgresql-primary-key/#:~:text=Technically%2C%20a%20primary%20key%20constraint,and%20only%20one%20primary%20key.&text=When%20you%20add%20a%20primary,to%20define%20the%20primary%20key.
+
+2020-07-06
+- Added foreign key to player stats game_id (from game_stats), using delete on CASCADE
+- Updated foreign key in scores game_id column (from game_stats), using delete on CASCADE
+- Updated the game_start value in games from UTC times to PST times (-7 hrs)
