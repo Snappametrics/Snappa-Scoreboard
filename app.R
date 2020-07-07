@@ -944,22 +944,15 @@ server <- function(input, output, session) {
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
       need(
-        any(
-          # Typical Offense
-          str_detect(rounds[vals$shot_num], "[Aa]") & 
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]"),
-          # Typical Paddle
-          str_detect(rounds[vals$shot_num], "[Bb]") &
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
-            input$paddle == T,
-          # Somebody messed up on the other team
-          str_detect(rounds[vals$shot_num], "[Aa]") &
-          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
-            input$paddle == T),
+        validate_scores(player = input$scorer,
+                        shot = vals$shot_num, 
+                        snappaneers = snappaneers(), 
+                        paddle = any(input$paddle, input$foot), 
+                        scores_table = vals$scores_db),
         message = "That entry doesn't make sense for this round/shooter combination"),
       if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
           pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
-        need(input$paddle == T,
+        need(any(input$paddle, input$foot),
              message = "That person has already scored a non paddle point this round")
         
       }
