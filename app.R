@@ -948,11 +948,12 @@ server <- function(input, output, session) {
                                    round_num = round_num(),
                                    points_scored = score,
                                    shooting = shooting_team_lgl,
-                                   paddle = input$paddle,
+                                   paddle = any(input$foot, input$paddle),
                                    clink = input$clink,
                                    foot = input$foot
                                  ))
       
+
       # Update game stats table
       vals$player_stats_db = vals$scores_db %>% 
         # Join scores to snappaneers to get each player's team
@@ -1109,7 +1110,7 @@ server <- function(input, output, session) {
                                 round_num = round_num(),
                                 points_scored = score,
                                 shooting = shooting_team_lgl,
-                                paddle = input$paddle,
+                                paddle = any(input$paddle, input$foot),
                                 clink = input$clink,
                                 foot = input$foot
                               ))
