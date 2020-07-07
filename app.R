@@ -730,9 +730,8 @@ server <- function(input, output, session) {
     
     vals$shot_num = vals$shot_num+1
 
-    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
-                                    vals$current_scores$team_b,
-                                    round_num(), vals$score_to)
+    vals$rebuttal = rebuttal_check(a = vals$current_scores$team_a, b = vals$current_scores$team_b,
+                                   round = round_num(), points_to_win = vals$score_to)
       
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
