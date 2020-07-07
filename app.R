@@ -70,8 +70,9 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 validate_scores = function(player, shot, snappaneers, paddle, scores_table, round_vector = rounds){
   
-  browser()
   players_team = pull(filter(snappaneers, player_name == player), team) %>% toupper()
+  scorer_id = pull(filter(snappaneers, player_name == player), player_id)
+  
   # Typical Offense
   typical_offense = str_detect(round_vector[shot], players_team)
   
@@ -79,21 +80,17 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
   typical_paddle = all(str_detect(round_vector[shot], players_team, negate = T), 
                        paddle == T)
   
+  # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
+  # Players can only score once on a non-paddle shot
+  not_already_scored = !(scorer_id %in% pull(filter(scores_table, round_num == round_vector[shot], paddle == F), player_id))
+  
   # If teams are even
   if(nrow(distinct(count(snappaneers, team), n)) == 1){
     
-    scorer_id = pull(filter(snappaneers, player_name == player), player_id)
     
-    # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
-    # Players can only score once on a non-paddle shot
-    players_already_scored = pull(filter(scores_table, round_num == round_vector[shot], paddle == F), player_id)
-    
-    # Scorer has not scored already
-    scorer_not_already_scored = !(scorer_id %in% players_already_scored)
-    
-    valid_score = all(scorer_not_already_scored,
-                      any(typical_offense,
-                          typical_paddle))
+    valid_score = any(paddle,
+                      all(typical_offense,
+                          not_already_scored))
     
   } else { # If teams are uneven:
     
@@ -102,15 +99,21 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
     other_team_players = nrow(filter(snappaneers, team != players_team))
     
     if(scorer_team_players < other_team_players){ # If their team has fewer players:
+      
+      # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
+      # Players can only score once on a non-paddle shot
+      scored_twice = nrow(filter(scores_table, round_num == round_vector[shot], paddle == F, player_id == scorer_id)) > 1
+      
       # Then they can have scored already
-      valid_score = any(typical_offense,
-                        typical_paddle)
+      valid_score = any(all(typical_offense,
+                            !scored_twice),
+                        paddle)
       
     } else { # If they have the larger team:
       # They cannot have scored already
-      valid_score = any(typical_offense,
-                        typical_paddle,
-                        scorer_not_already_scored)
+      valid_score = any(all(typical_offense,
+                            not_already_scored),
+                        paddle)
       
     }
     
