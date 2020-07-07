@@ -939,25 +939,6 @@ server <- function(input, output, session) {
   
   # Team A presses score button
   observeEvent(input$ok_A, {
-    # validate(
-    #   need(input$score < 8, label = "C'mon, you did not score that many points")
-    # )
-    # Check that the round/shooter combination makes sense / indicated a paddle
-    # validate(
-    #   need(
-    #     validate_scores(player = input$scorer,
-    #                     shot = vals$shot_num, 
-    #                     snappaneers = snappaneers(), 
-    #                     paddle = any(input$paddle, input$foot), 
-    #                     scores_table = vals$scores_db),
-    #     message = "That entry doesn't make sense for this round/shooter combination"),
-    #   if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
-    #       pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
-    #     need(any(input$paddle, input$foot),
-    #          message = "That person has already scored a non paddle point this round")
-    #     
-    #   }
-    # )  
 
     # set score
     score = as.integer(input$score)
@@ -1098,31 +1079,6 @@ server <- function(input, output, session) {
   
   # Score validation
   observeEvent(input$ok_B, {
-    # validate(
-    #   need(input$score < 8, label = "C'mon, you did not score that many points")
-    # )
-    # validate(
-    #   need(
-    #     any(
-    #       # Typical Offense
-    #       str_detect(rounds[vals$shot_num], "B") & 
-    #         str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B"),
-    #       # Typical Paddle
-    #       str_detect(rounds[vals$shot_num], "A") &
-    #         str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") & 
-    #         input$paddle == T,
-    #       # Somebody messed up on the other team (can happen on offense or defense)
-    #       str_detect(rounds[vals$shot_num], "B") &
-    #       str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") & 
-    #         input$paddle == T),
-    #     message = "That entry doesn't make sense for this round/shooter combination"),
-    #   if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
-    #       pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
-    #     need(input$paddle == T,
-    #          message = "That person has already scored a non paddle point this round")
-    #     
-    #   }
-    # )
     #Set Score
     score = as.integer(input$score)
     vals$score <- score
