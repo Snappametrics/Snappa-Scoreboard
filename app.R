@@ -146,11 +146,11 @@ ui <- fluidPage(theme = "front-end/app.css",
                    "#round_num", "{font-size:800%; margin-top: 15%; margin-bottom: 15%;}",
                    ".bttn-unite.bttn-md", "{font-size: 200%;}",
                    # Score number
-                   "#score_a, #score_b",  "{font-size: 700%; color: white;}",
+                   "#score_A, #score_B",  "{font-size: 700%; color: white;}",
                    # We scored button padding
                    ".bttn-unite.bttn-lg", "{padding: 1rem 4rem;}",
                    # Score button
-                   "#a_score_button, #b_score_button", "{font-size: 220%;}",
+                   "#A_score_button, #B_score_button", "{font-size: 220%;}",
                    # Name input labels
                    "label.control-label[for^='name_']", 
                    "{font-size: large; color: white;}",
@@ -168,7 +168,7 @@ ui <- fluidPage(theme = "front-end/app.css",
                    "label[for='foot']", 
                    "{font-size: 1.75rem;}",
                    # OK Score button
-                   "#ok_a, #ok_b {font-size:x-large;}",
+                   "#ok_A, #ok_B {font-size:x-large;}",
                    # Name input font size
                    ".selectize-input {font-size: 150% !important}",
                    # Other part of name input font size
@@ -196,13 +196,13 @@ ui <- fluidPage(theme = "front-end/app.css",
         tabPanel("start_screen", 
                  # Fluid Row - 3 columns
                  fluidRow(
-                   team_input_ui("a", pull(players_tbl, player_name)),
+                   team_input_ui("A", pull(players_tbl, player_name)),
                    
                    # Column 2 - empty
                    column(4),
                    
                    # Column 3 - Team B
-                   team_input_ui("b", pull(players_tbl, player_name))
+                   team_input_ui("B", pull(players_tbl, player_name))
                    ),
                  
                  
@@ -259,7 +259,7 @@ ui <- fluidPage(theme = "front-end/app.css",
                  # Scoreboard - 3 columns
                  fluidRow(
                    # Column 1 - Team A
-                   team_scoreboard_ui("a"),
+                   team_scoreboard_ui("A"),
                    
                    # Round
                    column(width = 4, align = "center",
@@ -284,8 +284,8 @@ ui <- fluidPage(theme = "front-end/app.css",
                           ),
                    ),
                    # Team B
-                   team_scoreboard_ui("b"),
-                   tags$style(type = "text/css", " #undo_score_a, #undo_score_b {margin-top:2em}")
+                   team_scoreboard_ui("B"),
+                   tags$style(type = "text/css", " #undo_score_A, #undo_score_B {margin-top:2em}")
                  ), 
                  fillRow(
                    column(width = 4, offset = 4, align = "center",
@@ -337,8 +337,8 @@ server <- function(input, output, session) {
     add_count(df, .data$team, name = "n_players") %>% # Count the number of rows for each team
       # Calculate the number of shots for each player by diving the team shots by 2
       # Team shots calculated using ceiling/floor because A always goes first
-      mutate(baseline_shots = case_when(str_detect(.data$team, "a") ~ ceiling(vals$shot_num/2),
-                                        str_detect(.data$team, "b") ~ floor(vals$shot_num/2)),
+      mutate(baseline_shots = case_when(str_detect(.data$team, "A") ~ ceiling(vals$shot_num/2),
+                                        str_detect(.data$team, "B") ~ floor(vals$shot_num/2)),
              # In cases where teams are uneven, we calculate the average shots a player had
              shots = .data$baseline_shots*max(.data$n_players)/.data$n_players) %>% 
       select(-baseline_shots, -n_players)
@@ -368,8 +368,8 @@ server <- function(input, output, session) {
     # dataframe of the players and their teams
     # Current Scores
     current_scores = tibble(
-      team_a = 0,
-      team_b = 0
+      team_A = 0,
+      team_B = 0
     ),
     
     rebuttal = NULL,
@@ -391,10 +391,10 @@ server <- function(input, output, session) {
     #Records when the extra player ui's are open and 
     # allows the app to pay attention to empty strings
     # only during select times
-    want_a3 = F,
-    want_a4 = F,
-    want_b3 = F,
-    want_b4 = F
+    want_A3 = F,
+    want_A4 = F,
+    want_B3 = F,
+    want_B4 = F
   )
   
   
@@ -412,8 +412,8 @@ server <- function(input, output, session) {
   # Active input buttons
   #   - List of player inputs which are not null
   active_player_inputs = reactive({
-    list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
-         "b1" = input$name_b1, "b2" = input$name_b2, "b3" = input$name_b3, "b4" = input$name_b4) %>% 
+    list("A1" = input$name_A1, "A2" = input$name_A2, "A3" = input$name_A3, "A4" = input$name_A4, 
+         "B1" = input$name_B1, "B2" = input$name_B2, "B3" = input$name_B3, "B4" = input$name_B4) %>% 
       discard(is_null)
   })
   
@@ -534,11 +534,11 @@ server <- function(input, output, session) {
   })
   
   # Output Team A's score
-  output$score_a = renderText({
-    vals$current_scores$team_a
+  output$score_A = renderText({
+    vals$current_scores$team_A
   })
   
-  output$player_names_a = renderText({
+  output$player_names_A = renderText({
     snappaneers() %>% 
       filter(team == "A") %>% 
       pull(player_name) %>% 
@@ -546,11 +546,11 @@ server <- function(input, output, session) {
   })
   
   # Output Team B's score
-  output$score_b = renderText({
-    vals$current_scores$team_b
+  output$score_B = renderText({
+    vals$current_scores$team_B
   })
   
-  output$player_names_b = renderText({
+  output$player_names_B = renderText({
     snappaneers() %>% 
       filter(team == "B") %>% 
       pull(player_name) %>% 
@@ -625,18 +625,18 @@ server <- function(input, output, session) {
     # check is failed, or else the logic isn't
     # going to pass through
     
-    if(any(input$name_a1 == "",
-           input$name_a2 == "",
-           input$name_b1 == "",
-           input$name_b2 == "")){
+    if(any(input$name_A1 == "",
+           input$name_A2 == "",
+           input$name_B1 == "",
+           input$name_B2 == "")){
       shinyjs::disable("start_game")
     }
     
     validate(
-      need(input$name_a1 != "", label = "Player A1"),
-      need(input$name_a2 != "", label = "Player A2"), 
-      need(input$name_b1 != "", label = "Player B1"), 
-      need(input$name_b2 != "", label = "Player B2")
+      need(input$name_A1 != "", label = "Player A1"),
+      need(input$name_A2 != "", label = "Player A2"), 
+      need(input$name_B1 != "", label = "Player B1"), 
+      need(input$name_B2 != "", label = "Player B2")
       )
     
     #Record the players that you need to be looking for
@@ -648,10 +648,10 @@ server <- function(input, output, session) {
     
     if(sum(length(unique(snappaneers()$player_name)), 
            sum(
-             c(isTRUE(active_player_inputs()$a3 == "" & vals$want_a3), 
-             isTRUE(active_player_inputs()$a4 == "" & vals$want_a4), 
-             isTRUE(active_player_inputs()$b3 == "" & vals$want_b3), 
-             isTRUE(active_player_inputs()$b4 == "" & vals$want_b4)) 
+             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
+             isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
+             isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
+             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)) 
              )
            ) == num_players()){ 
       shinyjs::enable("start_game")
@@ -661,10 +661,10 @@ server <- function(input, output, session) {
     #   => disable start button
     if(sum(length(unique(snappaneers()$player_name)), 
            sum(
-             c(isTRUE(active_player_inputs()$a3 == "" & vals$want_a3), 
-                isTRUE(active_player_inputs()$a4 == "" & vals$want_a4), 
-                isTRUE(active_player_inputs()$b3 == "" & vals$want_b3), 
-                isTRUE(active_player_inputs()$b4 == "" & vals$want_b4)
+             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
+                isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
+                isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
+                isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
                 ) 
            )
     ) != num_players()){ 
@@ -709,8 +709,8 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     
     # Set the score outputs and shot number to 0
-    vals$current_scores$team_a = 0
-    vals$current_scores$team_b = 0
+    vals$current_scores$team_A = 0
+    vals$current_scores$team_B = 0
     vals$scores_db = slice(scores_tbl, 0)
     vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
     
@@ -781,7 +781,7 @@ server <- function(input, output, session) {
     
     vals$shot_num = vals$shot_num+1
 
-    vals$rebuttal = rebuttal_check(a = vals$current_scores$team_a, b = vals$current_scores$team_b,
+    vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
                                    round = round_num(), points_to_win = vals$score_to)
       
     if (vals$rebuttal == T) {
@@ -789,7 +789,7 @@ server <- function(input, output, session) {
       showNotification(str_c("Rebuttal: ", "Team ", 
                              str_sub(round_num(), start = -1),
                              " needs ", str_c(
-                               abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                               abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
                              " points to bring it back"
                              )
                       ) 
@@ -809,28 +809,28 @@ server <- function(input, output, session) {
   # New Player A3
   #   - Add A3 text input
   #   - Remove the add new player action button
-  observeEvent(input$extra_player_a3, {
+  observeEvent(input$extra_player_A3, {
     # Set input want to true
-    vals$want_a3 = T
+    vals$want_A3 = T
     
     # Get add player button inputs
-    vals <- paste0("#",getInputs("extra_player_a3"))
-    add_player_input(vals, "a", 3, current_choices(), session)
+    vals <- paste0("#",getInputs("extra_player_A3"))
+    add_player_input(vals, "A", 3, current_choices(), session)
     
   })
   
   # Remove A3
   #   - Insert add new player action button
   #   - Remove A3 player name input
-  observeEvent(input$remove_a3, {
-    remove_p3_input("a", session)
+  observeEvent(input$remove_A3, {
+    remove_p3_input("A", session)
 
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
     # from getting locked out after players have
     # been added
-    vals$want_a3 = F
-    vals$want_a4 = F
+    vals$want_A3 = F
+    vals$want_A4 = F
     
   })
   
@@ -838,24 +838,24 @@ server <- function(input, output, session) {
   # New Player A4
   #   - Add A4 text input
   #   - Remove the add new player action button
-  observeEvent(input$extra_player_a4, {
+  observeEvent(input$extra_player_A4, {
     # Set input want to true
-    vals$want_a4 = T
+    vals$want_A4 = T
     
     # Get UI inputs for extra player button
-    vals <- paste0("#",getInputs("extra_player_a4"))
+    vals <- paste0("#",getInputs("extra_player_A4"))
     
-    add_player_input(vals, "a", 4, current_choices(), session)
+    add_player_input(vals, "A", 4, current_choices(), session)
     
   })
   
   # Remove A4
   #   - Insert add new player action button
   #   - Remove A4 player name input
-  observeEvent(input$remove_a4, {
-    remove_p4_input("a", session)
+  observeEvent(input$remove_A4, {
+    remove_p4_input("A", session)
     
-    vals$want_a4 = F
+    vals$want_A4 = F
     
   })  
   
@@ -863,54 +863,54 @@ server <- function(input, output, session) {
   # New Player B3
   #   - Add B3 text input
   #   - Remove the add new player action button
-  observeEvent(input$extra_player_b3, {
+  observeEvent(input$extra_player_B3, {
     
     # Set want check to true
-    vals$want_b3 = T
+    vals$want_B3 = T
     
     # Get inputs for add player button
-    vals <- paste0("#",getInputs("extra_player_b3"))
+    vals <- paste0("#",getInputs("extra_player_B3"))
     
-    add_player_input(vals, "b", 3, current_choices(), session)
+    add_player_input(vals, "B", 3, current_choices(), session)
   })
 
   # Remove B3
   #   - Insert add new player action button
   #   - Remove B3 player name input
-  observeEvent(input$remove_b3, {
-    remove_p3_input("b", session)
+  observeEvent(input$remove_B3, {
+    remove_p3_input("B", session)
     
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
     # from getting locked out after players have
     # been added
-    vals$want_b3 = F
-    vals$want_b4 = F
+    vals$want_B3 = F
+    vals$want_B4 = F
     
   })
   
   # New Player B4
   #   - Add B4 text input
   #   - Remove the add new player action button
-  observeEvent(input$extra_player_b4, {
+  observeEvent(input$extra_player_B4, {
     # Set want check to true
-    vals$want_b4 = T
+    vals$want_B4 = T
     
     # Get add player button inputs
-    vals <- paste0("#",getInputs("extra_player_b4"))
+    vals <- paste0("#",getInputs("extra_player_B4"))
     
-    add_player_input(vals, "b", 4, current_choices(), session)
+    add_player_input(vals, "B", 4, current_choices(), session)
   })
   
 
   # Remove B4
   #   - Insert add new player action button
   #   - Remove B4 player name input
-  observeEvent(input$remove_b4, {
-    remove_p4_input("b", session)
+  observeEvent(input$remove_B4, {
+    remove_p4_input("B", session)
     # Tells later checks to not worry about this
     # empty slot in active_player_names
-    vals$want_b4 = F
+    vals$want_B4 = F
 
   })  
     
@@ -969,7 +969,7 @@ server <- function(input, output, session) {
       vals$print <- TRUE
       
       # Update the team score
-      vals$current_scores$team_a = vals$current_scores$team_a + vals$score
+      vals$current_scores$team_A = vals$current_scores$team_A + vals$score
       
       # Increment the score_id
       vals$score_id = as.integer(vals$score_id+1)
@@ -979,7 +979,7 @@ server <- function(input, output, session) {
       scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
-      shooting_team_lgl = all(str_detect(round_num(), "[Aa]"), scorers_team == "a") # Are they on team A & did they score for team A?
+      shooting_team_lgl = all(str_detect(round_num(), "A"), scorers_team == "A") # Are they on team A & did they score for team A?
       
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
@@ -987,7 +987,7 @@ server <- function(input, output, session) {
                                    score_id = vals$score_id,
                                    game_id = vals$game_id,
                                    player_id = scorer_pid,
-                                   scoring_team = "a",
+                                   scoring_team = "A",
                                    round_num = round_num(),
                                    points_scored = score,
                                    shooting = shooting_team_lgl,
@@ -1030,8 +1030,8 @@ server <- function(input, output, session) {
     
     # If the game is in rebuttal, remind players
     # of the points needed to bring it back
-    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
-                                   vals$current_scores$team_b,
+    vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
+                                   vals$current_scores$team_B,
                                    round_num(), vals$score_to)
     
     #    if (!is.null(vals$rebuttal)) {
@@ -1039,7 +1039,7 @@ server <- function(input, output, session) {
       showNotification(str_c("Rebuttal: ", "Team ", 
                              str_sub(round_num(), start = -1),
                              " needs ", str_c(
-                               abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                               abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
                              " points to bring it back"
       )
       )
@@ -1047,7 +1047,7 @@ server <- function(input, output, session) {
       
     }
     validate(
-      need((vals$current_scores$team_a == 18 && vals$current_scores$team_b == 12) || (vals$current_scores$team_a == 12 && vals$current_scores$team_b == 18), label = "eighteen_twelve")
+      need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
     )
     
     
@@ -1058,13 +1058,13 @@ server <- function(input, output, session) {
 
   })
   # Undo score
-  observeEvent(input$undo_score_a, {
+  observeEvent(input$undo_score_A, {
     validate(
-      need(vals$current_scores$team_a > 0, label = "Team A hasn't scored yet!")
+      need(vals$current_scores$team_A > 0, label = "Team A hasn't scored yet!")
     )
 
     # Select the ID which is the max on Team A
-    last_score = filter(vals$scores_db, scoring_team == "a") %>% 
+    last_score = filter(vals$scores_db, scoring_team == "A") %>% 
       pull(score_id) %>% 
       max()
     
@@ -1078,7 +1078,7 @@ server <- function(input, output, session) {
       mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
     
     # Reduce the team's score and score_id
-    vals$current_scores$team_a = vals$current_scores$team_a - last_score_pts
+    vals$current_scores$team_A = vals$current_scores$team_A - last_score_pts
     vals$score_id = as.integer(vals$score_id-1)
   })
   
@@ -1086,42 +1086,42 @@ server <- function(input, output, session) {
   # Team B ---------------------------------------------------------
   
   
-  observeEvent(input$b_score_button, {
+  observeEvent(input$B_score_button, {
     vals$error_msg <- NULL
     showModal(
       score_check(
-        team = "b", 
+        team = "B", 
         players = arrange(snappaneers(), desc(team)) %>% pull(player_name)))
     
   })
   
   # Score validation
-  observeEvent(input$ok_b, {
+  observeEvent(input$ok_B, {
     # validate(
     #   need(input$score < 8, label = "C'mon, you did not score that many points")
     # )
-    validate(
-      need(
-        any(
-          # Typical Offense
-          str_detect(rounds[vals$shot_num], "[Bb]") & 
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]"),
-          # Typical Paddle
-          str_detect(rounds[vals$shot_num], "[Aa]") &
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
-            input$paddle == T,
-          # Somebody messed up on the other team (can happen on offense or defense)
-          str_detect(rounds[vals$shot_num], "[Bb]") &
-          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
-            input$paddle == T),
-        message = "That entry doesn't make sense for this round/shooter combination"),
-      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
-          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
-        need(input$paddle == T,
-             message = "That person has already scored a non paddle point this round")
-        
-      }
-    )
+    # validate(
+    #   need(
+    #     any(
+    #       # Typical Offense
+    #       str_detect(rounds[vals$shot_num], "B") & 
+    #         str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B"),
+    #       # Typical Paddle
+    #       str_detect(rounds[vals$shot_num], "A") &
+    #         str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "B") & 
+    #         input$paddle == T,
+    #       # Somebody messed up on the other team (can happen on offense or defense)
+    #       str_detect(rounds[vals$shot_num], "B") &
+    #       str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") & 
+    #         input$paddle == T),
+    #     message = "That entry doesn't make sense for this round/shooter combination"),
+    #   if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
+    #       pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+    #     need(input$paddle == T,
+    #          message = "That person has already scored a non paddle point this round")
+    #     
+    #   }
+    # )
     #Set Score
     score = as.integer(input$score)
     vals$score <- score
@@ -1131,7 +1131,7 @@ server <- function(input, output, session) {
       vals$print <- TRUE
       
       # Update Team B's score
-      vals$current_scores$team_b = vals$current_scores$team_b + vals$score
+      vals$current_scores$team_B = vals$current_scores$team_B + vals$score
       
       # Increment the score_id
       vals$score_id = as.integer(vals$score_id+1)
@@ -1189,8 +1189,8 @@ server <- function(input, output, session) {
     
     # If the game is still in rebuttal in rebuttal, remind players
     # of the points needed to bring it back
-    vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
-                                   vals$current_scores$team_b,
+    vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
+                                   vals$current_scores$team_B,
                                    round_num(), vals$score_to)
     
     #    if (!is.null(vals$rebuttal)) {
@@ -1198,7 +1198,7 @@ server <- function(input, output, session) {
       showNotification(str_c("Rebuttal: ", "Team ", 
                              str_sub(round_num(), start = -1),
                              " needs ", str_c(
-                               abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                               abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
                              " points to bring it back"
       )
       )
@@ -1207,7 +1207,7 @@ server <- function(input, output, session) {
     }
     
     validate(
-      need((vals$current_scores$team_a == 18 && vals$current_scores$team_b == 12) || (vals$current_scores$team_a == 12 && vals$current_scores$team_b == 18), label = "eighteen_twelve")
+      need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
     )
     
     
@@ -1218,9 +1218,9 @@ server <- function(input, output, session) {
   })
   
   # Undo score
-  observeEvent(input$undo_score_b, {
+  observeEvent(input$undo_score_B, {
     validate(
-      need(vals$current_scores$team_b > 0, label = "Team B hasn't scored yet!")
+      need(vals$current_scores$team_B > 0, label = "Team B hasn't scored yet!")
     )
 
     # Select the ID which is the max on Team B
@@ -1236,7 +1236,7 @@ server <- function(input, output, session) {
     vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
       mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
     
-    vals$current_scores$team_b = vals$current_scores$team_b - last_score_pts
+    vals$current_scores$team_B = vals$current_scores$team_B - last_score_pts
     vals$score_id = as.integer(vals$score_id-1)
   })
   
@@ -1283,8 +1283,8 @@ server <- function(input, output, session) {
    
     
     # Sanity check: Only submit games which have reached their conclusion
-    validate(need(any(vals$current_scores$team_a >= vals$score_to,
-                      vals$current_scores$team_b >= vals$score_to), 
+    validate(need(any(vals$current_scores$team_A >= vals$score_to,
+                      vals$current_scores$team_B >= vals$score_to), 
                   message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
                   label = "check_game_over"))
     
@@ -1339,8 +1339,8 @@ server <- function(input, output, session) {
     # Calculate game-level stats from game stats players
     game_stats = vals$player_stats_db %>% 
       group_by(game_id) %>% 
-      summarise(points_a = sum((team == "a")*total_points),
-                points_b = sum((team == "b")*total_points),
+      summarise(points_a = sum((team == "A")*total_points),
+                points_b = sum((team == "B")*total_points),
                 rounds = as.integer(vals$shot_num-1),
                 ones = sum(ones),
                 twos = sum(twos),
@@ -1408,7 +1408,7 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "switcher", selected = "start_screen")
     
     # 2. Reset player inputs
-    walk2(c("name_a1", "name_a2", "name_b1", "name_b2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
+    walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
          function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
                                            options = list(create = TRUE)))
     

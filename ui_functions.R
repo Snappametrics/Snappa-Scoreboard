@@ -7,13 +7,13 @@
 score_check <- function(team, players) {
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
-  team_colour = if_else(team_scored == "ok_a", "#e26a6a", "#2574a9")
+  team_colour = if_else(team_scored == "ok_A", "#e26a6a", "#2574a9")
   score_val = paste(team, "score_val", sep = "_")
   
   # Ask how many points were scored and by whom
   modalDialog(align = "center", easyClose = T, size = "l",
               # Header
-              h2(str_c("Team ", str_to_upper(team), " Scored"), style = paste("color:", team_colour)),
+              h1(str_c("Team ", team, " Scored"), style = paste("color:", team_colour)),
               # Who Scored?
               radioGroupButtons(
                 inputId = "scorer",
@@ -68,7 +68,7 @@ team_input_ui = function(team, player_choices){
   
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
-  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
+  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
   column(4, align = "center",
          
@@ -92,7 +92,7 @@ team_input_ui = function(team, player_choices){
 
 team_scoreboard_ui = function(team){
   
-  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
+  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
   column(width = 4, align = "center",
          
