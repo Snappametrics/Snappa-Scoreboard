@@ -166,6 +166,8 @@ ui <- fluidPage(theme = "front-end/app.css",
                    ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
+  includeScript(path = "update_input.js"),
+    
   
   # Application title
   titlePanel("Snappa Scoreboard"),
@@ -717,8 +719,20 @@ observe({
                                    player_id = vals$new_player_id,
                                    player_name = die_thrower))
         
+        # Update the players database right here with the player name
+        
+        dbAppendTable(con, "players", 
+          tibble(
+            player_id = vals$new_player_id,
+            player_name = die_thrower
+          )
+        )
+        
         # Increment the ID for the next new player
         vals$new_player_id = vals$new_player_id+1
+        
+        
+        
         
       } else {
         invisible()
@@ -811,7 +825,52 @@ observe({
 
   })
   
+
   
+# Restart a game after indicating you would like to do so
+observeEvent(input$resume_yes, {
+  
+  lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+  
+  lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+  
+  players = tbl(con, "players")
+  
+  lost_players = lost_player_stats %>%
+    left_join(players) %>%
+    select(player_name, team) %>% collect()
+  
+  #a1 = lost_players$player_name[1]
+  
+  browser()
+  #updateSelectizeInput(session, inputId = "name_a1", selected = a1)
+  
+  #Update the inputs for the snappaneers
+  walk2(lost_players$player_name, lost_players$team,
+       function(player_name, team){
+         browser()
+         increment_a = 1
+         increment_b = 1
+          if (team == "A"){
+             session$sendCustomMessage(
+                str_c("name_", team, increment_a),
+                noquote(paste0("'", player_name, "'"))
+             )
+             increment_a = increment_a + 1}
+         if (team == "B") {
+           session$sendCustomMessage(
+             str_c("name_", team, increment_b),
+             player_name
+           )
+            increment_b = increment_b + 1
+          }
+        }
+       )
+  
+})
+  
+  
+
   
   
 
@@ -1515,10 +1574,13 @@ observe({
       name = "game_stats",
       value = vals$game_stats_db)
     
-    dbAppendTable(
-      conn = con, 
-      name = "players",
-      value = anti_join(vals$players_db, players_tbl))
+    # Should be made unnecessary by adding
+    # players immediately 
+    
+    # dbAppendTable(
+    #   conn = con, 
+    #   name = "players",
+    #   value = anti_join(vals$players_db, players_tbl))
     
     # Update Scores
     dbAppendTable(
