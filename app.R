@@ -7,6 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 
+
+##TODO: Pop-up indicating an unfinished previous game
+##TODO: Insert players back into snappaneers when a game is reset
+
+
 library(DBI)
 library(RPostgres)
 library(tidyverse)
@@ -282,21 +287,21 @@ ui <- fluidPage(theme = "front-end/app.css",
 # Debugging ---------------------------------------------------------------
 
 
-      # fluidRow(
-      #   column(2, align = "center",
-      #          h3("players"),
-      #          tableOutput("db_output_players")
-      #          ),
-      #   column(5, align = "center",
-      #          h3("scores"),
-      #          tableOutput("db_output_scores")
-      #   ),
-      #   column(5, align = "center",
-      #          h3("player_stats"),
-      #          tableOutput("db_output_player_stats")
-      #   )
-      #   
-      #   )
+      fluidRow(
+        column(2, align = "center",
+               h3("players"),
+               tableOutput("db_output_players")
+               ),
+        column(5, align = "center",
+               h3("scores"),
+               tableOutput("db_output_scores")
+        ),
+        column(5, align = "center",
+               h3("player_stats"),
+               tableOutput("db_output_player_stats")
+        )
+
+        )
   )
   
   
@@ -588,8 +593,42 @@ server <- function(input, output, session) {
   
 
 # Events ------------------------------------------------------------------
+
+# Very start of game: display a popup message
+# if the previous game is incomplete
+  
+observe({
+  browser()
+  validate(
+    need(
+      tbl(con, "game_stats") %>% 
+                  filter(game_id == max(game_id)) %>% 
+                  pull(game_end) %>% 
+                  is.na(),
+      message = FALSE
+      )
+  )
+  showModal(
+    modalDialog(
+      helpText(h2("Incomplete Game", align = "center"),
+      p("There's an unfinished game in the SnappaDB, would you like to resume it?",
+        align = "center")),
+      footer = tagList(
+                fluidRow(
+                  modalButton("No"),
+                  actionBttn("resume_yes",
+                             label = "Yes",
+                             style = "unite", 
+                             color = "warning")
+                )
+              ),
+      easyClose = T
+    )
+      
+  )
   
   
+})
 
   
 
@@ -688,6 +727,7 @@ server <- function(input, output, session) {
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
+    browser()
     
     if(tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.character()){
       
@@ -1254,7 +1294,7 @@ server <- function(input, output, session) {
                                          game_id = vals$game_id)
       
       #Update the DB with the new player_stats
-      update_player_stats_row(vals$player_stats_db)
+      update_player_stats_rows(vals$player_stats_db)
       
       
       
