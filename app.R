@@ -71,7 +71,7 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 
 troll_check = function(session, snappaneers, player_stats, game_id){
-  browser()
+  
   
   trolls = snappaneers %>%
     anti_join(player_stats, by = "player_id")
@@ -166,6 +166,8 @@ ui <- fluidPage(theme = "front-end/app.css",
                    ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
+  includeScript(path = "update_input.js"),
+    
   
   # Application title
   titlePanel("Snappa Scoreboard"),
@@ -598,7 +600,6 @@ server <- function(input, output, session) {
 # if the previous game is incomplete
   
 observe({
-  browser()
   validate(
     need(
       tbl(con, "game_stats") %>% 
@@ -717,8 +718,20 @@ observe({
                                    player_id = vals$new_player_id,
                                    player_name = die_thrower))
         
+        # Update the players database right here with the player name
+        
+        dbAppendTable(con, "players", 
+          tibble(
+            player_id = vals$new_player_id,
+            player_name = die_thrower
+          )
+        )
+        
         # Increment the ID for the next new player
         vals$new_player_id = vals$new_player_id+1
+        
+        
+        
         
       } else {
         invisible()
@@ -727,7 +740,6 @@ observe({
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
-    browser()
     
     if(tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.character()){
       
@@ -811,7 +823,39 @@ observe({
 
   })
   
+
   
+# Restart a game after indicating you would like to do so
+  observeEvent(input$resume_yes, {
+    
+    lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+    
+    lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+    
+    players = tbl(con, "players")
+    
+    lost_players = lost_player_stats %>%
+      left_join(players) %>%
+      select(player_name, team) %>% 
+      group_by(team) %>% 
+      mutate(player_input = str_c("name_", team, row_number())) %>% 
+      ungroup() %>% 
+      collect()
+    
+    input_list = lost_players %>%
+      select(player_input, player_name) %>% 
+      deframe()
+    
+    iwalk(input_list, function(name, id){
+      updateSelectizeInput(session, inputId = id, selected = name)
+    
+    })
+    
+    shinyjs::click("start_game")
+  })
+  
+  
+
   
   
 
@@ -1515,10 +1559,13 @@ observe({
       name = "game_stats",
       value = vals$game_stats_db)
     
-    dbAppendTable(
-      conn = con, 
-      name = "players",
-      value = anti_join(vals$players_db, players_tbl))
+    # Should be made unnecessary by adding
+    # players immediately 
+    
+    # dbAppendTable(
+    #   conn = con, 
+    #   name = "players",
+    #   value = anti_join(vals$players_db, players_tbl))
     
     # Update Scores
     dbAppendTable(
