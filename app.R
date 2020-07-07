@@ -464,59 +464,57 @@ server <- function(input, output, session) {
     
   })
   
-  output$a_score_val = renderUI({
+  output$A_score_val = renderUI({
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
       need(
-        any(
-          # Typical Offense
-          str_detect(rounds[vals$shot_num], "[Aa]") & 
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]"),
-          # Typical Paddle
-          str_detect(rounds[vals$shot_num], "[Bb]") &
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
-            input$paddle == T,
-          # Somebody messed up on the other team
-          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
-            input$paddle == T),
+        validate_scores(player = input$scorer,
+                        shot = vals$shot_num, 
+                        snappaneers = snappaneers(), 
+                        paddle = any(input$paddle, input$foot), 
+                        scores_table = vals$scores_db),
         message = "That entry doesn't make sense for this round/shooter combination"),
       if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
           pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
-        need(input$paddle == T,
+        need(
+           validate_scores(player = input$scorer,
+                               shot = vals$shot_num, 
+                               snappaneers = snappaneers(), 
+                               paddle = any(input$paddle, input$foot), 
+                               scores_table = vals$scores_db),
              message = "That person has already scored a non paddle point this round")
         
       }
     )
 
-    actionButton("ok_a", "OK")
+    actionButton("ok_A", "OK")
   })
   
-  output$b_score_val = renderUI({
+  output$B_score_val = renderUI({
     validate(
       # General needs for typical shooting
       need(
-        any(
-          # Typical Offense
-          str_detect(rounds[vals$shot_num], "[Bb]") & 
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]"),
-          # Typical Paddle
-          str_detect(rounds[vals$shot_num], "[Aa]") &
-            str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
-            input$paddle == T,
-          # Somebody messed up on the other team (can happen on offense or defense)
-          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
-            input$paddle == T),
+        validate_scores(player = input$scorer,
+                        shot = vals$shot_num, 
+                        snappaneers = snappaneers(), 
+                        paddle = any(input$paddle, input$foot), 
+                        scores_table = vals$scores_db),
         message = "That entry doesn't make sense for this round/shooter combination"
       ),
       # Make sure that the last person to score in this round on offense can't paddle
       if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
           pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
-        need(input$paddle == T,
+        need(
+          validate_scores(player = input$scorer,
+                            shot = vals$shot_num, 
+                            snappaneers = snappaneers(), 
+                            paddle = any(input$paddle, input$foot), 
+                            scores_table = vals$scores_db),
              message = "That person has already scored a non paddle point this round")
         
       } 
     )
-      actionButton("ok_b", "OK")
+      actionButton("ok_B", "OK")
   })
   
   # output$active_die_a = renderUI({
@@ -932,34 +930,34 @@ server <- function(input, output, session) {
 # Team A ------------------------------------------------------------------
 
   
-  observeEvent(input$a_score_button, {
+  observeEvent(input$A_score_button, {
     vals$error_msg <- NULL
     showModal(
-      score_check(team = "a", 
+      score_check(team = "A", 
                   players = arrange(snappaneers(), team) %>% pull(player_name)))
   })
   
   # Team A presses score button
-  observeEvent(input$ok_a, {
+  observeEvent(input$ok_A, {
     # validate(
     #   need(input$score < 8, label = "C'mon, you did not score that many points")
     # )
     # Check that the round/shooter combination makes sense / indicated a paddle
-    validate(
-      need(
-        validate_scores(player = input$scorer,
-                        shot = vals$shot_num, 
-                        snappaneers = snappaneers(), 
-                        paddle = any(input$paddle, input$foot), 
-                        scores_table = vals$scores_db),
-        message = "That entry doesn't make sense for this round/shooter combination"),
-      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
-          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
-        need(any(input$paddle, input$foot),
-             message = "That person has already scored a non paddle point this round")
-        
-      }
-    )  
+    # validate(
+    #   need(
+    #     validate_scores(player = input$scorer,
+    #                     shot = vals$shot_num, 
+    #                     snappaneers = snappaneers(), 
+    #                     paddle = any(input$paddle, input$foot), 
+    #                     scores_table = vals$scores_db),
+    #     message = "That entry doesn't make sense for this round/shooter combination"),
+    #   if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
+    #       pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+    #     need(any(input$paddle, input$foot),
+    #          message = "That person has already scored a non paddle point this round")
+    #     
+    #   }
+    # )  
 
     # set score
     score = as.integer(input$score)
