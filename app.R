@@ -7,6 +7,11 @@
 #    http://shiny.rstudio.com/
 #
 
+
+##TODO: Pop-up indicating an unfinished previous game
+##TODO: Insert players back into snappaneers when a game is reset
+
+
 library(DBI)
 library(RPostgres)
 library(tidyverse)
@@ -163,6 +168,8 @@ ui <- fluidPage(theme = "front-end/app.css",
                    ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
+  includeScript(path = "update_input.js"),
+    
   
   # Application title
   titlePanel("Snappa Scoreboard"),
@@ -284,21 +291,21 @@ ui <- fluidPage(theme = "front-end/app.css",
 # Debugging ---------------------------------------------------------------
 
 
-      # fluidRow(
-      #   column(2, align = "center",
-      #          h3("players"),
-      #          tableOutput("db_output_players")
-      #          ),
-      #   column(5, align = "center",
-      #          h3("scores"),
-      #          tableOutput("db_output_scores")
-      #   ),
-      #   column(5, align = "center",
-      #          h3("player_stats"),
-      #          tableOutput("db_output_player_stats")
-      #   )
-      #   
-      #   )
+      fluidRow(
+        column(2, align = "center",
+               h3("players"),
+               tableOutput("db_output_players")
+               ),
+        column(5, align = "center",
+               h3("scores"),
+               tableOutput("db_output_scores")
+        ),
+        column(5, align = "center",
+               h3("player_stats"),
+               tableOutput("db_output_player_stats")
+        )
+
+        )
   )
   
   
@@ -604,8 +611,42 @@ server <- function(input, output, session) {
   
 
 # Events ------------------------------------------------------------------
+
+# Very start of game: display a popup message
+# if the previous game is incomplete
+  
+observe({
+  browser()
+  validate(
+    need(
+      tbl(con, "game_stats") %>% 
+                  filter(game_id == max(game_id)) %>% 
+                  pull(game_end) %>% 
+                  is.na(),
+      message = FALSE
+      )
+  )
+  showModal(
+    modalDialog(
+      helpText(h2("Incomplete Game", align = "center"),
+      p("There's an unfinished game in the SnappaDB, would you like to resume it?",
+        align = "center")),
+      footer = tagList(
+                fluidRow(
+                  modalButton("No"),
+                  actionBttn("resume_yes",
+                             label = "Yes",
+                             style = "unite", 
+                             color = "warning")
+                )
+              ),
+      easyClose = T
+    )
+      
+  )
   
   
+})
 
   
 
@@ -694,8 +735,20 @@ server <- function(input, output, session) {
                                    player_id = vals$new_player_id,
                                    player_name = die_thrower))
         
+        # Update the players database right here with the player name
+        
+        dbAppendTable(con, "players", 
+          tibble(
+            player_id = vals$new_player_id,
+            player_name = die_thrower
+          )
+        )
+        
         # Increment the ID for the next new player
         vals$new_player_id = vals$new_player_id+1
+        
+        
+        
         
       } else {
         invisible()
@@ -704,6 +757,7 @@ server <- function(input, output, session) {
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
+    browser()
     
     if(tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.character()){
       
@@ -730,6 +784,7 @@ server <- function(input, output, session) {
                                        # paddle_points = NA_integer_,
                                        # clink_points = NA_integer_
                                      ))
+      
       
       # Initialize the current game's player_stats table
       vals$player_stats_db = slice(vals$player_stats_db, 0)
@@ -760,7 +815,7 @@ server <- function(input, output, session) {
       
       # Initialize the current game's player_stats table
       vals$player_stats_db = collect(lost_player_stats)
-      
+    
     }
     
     
@@ -786,7 +841,52 @@ server <- function(input, output, session) {
 
   })
   
+
   
+# Restart a game after indicating you would like to do so
+observeEvent(input$resume_yes, {
+  
+  lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+  
+  lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+  
+  players = tbl(con, "players")
+  
+  lost_players = lost_player_stats %>%
+    left_join(players) %>%
+    select(player_name, team) %>% collect()
+  
+  #a1 = lost_players$player_name[1]
+  
+  browser()
+  #updateSelectizeInput(session, inputId = "name_a1", selected = a1)
+  
+  #Update the inputs for the snappaneers
+  walk2(lost_players$player_name, lost_players$team,
+       function(player_name, team){
+         browser()
+         increment_a = 1
+         increment_b = 1
+          if (team == "A"){
+             session$sendCustomMessage(
+                str_c("name_", team, increment_a),
+                noquote(paste0("'", player_name, "'"))
+             )
+             increment_a = increment_a + 1}
+         if (team == "B") {
+           session$sendCustomMessage(
+             str_c("name_", team, increment_b),
+             player_name
+           )
+            increment_b = increment_b + 1
+          }
+        }
+       )
+  
+})
+  
+  
+
   
   
 
@@ -1040,7 +1140,7 @@ server <- function(input, output, session) {
       dbAppendTable(con, "scores", anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
       
       
-      # Update game stats table
+      # Update player stats table
       vals$player_stats_db = vals$scores_db %>% 
         # Join scores to snappaneers to get each player's team
         left_join(snappaneers(), by = "player_id") %>% 
@@ -1059,14 +1159,13 @@ server <- function(input, output, session) {
                   def_ppr = paddle_points/last(shots),
                   toss_efficiency = sum(!paddle)/last(shots)) %>% 
         ungroup()
-      
+
       vals$player_stats_db = troll_check(snappaneers = snappaneers(),
                                          player_stats = vals$player_stats_db,
                                          game_id = vals$game_id)
       
       update_player_stats_rows(vals$player_stats_db)
-      
-      
+
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
         showNotification("That's some hot shit!")
@@ -1130,6 +1229,40 @@ server <- function(input, output, session) {
     # Reduce the team's score and score_id
     vals$current_scores$team_a = vals$current_scores$team_a - last_score_pts
     vals$score_id = as.integer(vals$score_id-1)
+    
+    #Remove the value from the snappaDB
+    dbSendQuery(con,
+      str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id)
+    )
+    
+    
+    # Update player stats table
+    vals$player_stats_db = vals$scores_db %>% 
+      # Join scores to snappaneers to get each player's team
+      left_join(snappaneers(), by = "player_id") %>% 
+      # Group by game and player, (team and shots are held consistent)
+      group_by(game_id, player_id, team, shots) %>% 
+      # Calculate summary stats
+      summarise(total_points = sum(points_scored),
+                ones = sum((points_scored == 1)),
+                twos = sum((points_scored == 2)),
+                threes = sum((points_scored == 3)),
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored*paddle),
+                clink_points = sum(points_scored*clink),
+                points_per_round = total_points / last(shots),
+                off_ppr = sum(points_scored*!paddle)/ last(shots),
+                def_ppr = paddle_points/last(shots),
+                toss_efficiency = sum(!paddle)/last(shots)) %>% 
+      ungroup()
+    
+    vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                       player_stats = vals$player_stats_db,
+                                       game_id = vals$game_id)
+    
+   #Update the DB with the new player_stats
+    update_player_stats_rows(vals$player_stats_db)
+    
   })
   
   
@@ -1229,6 +1362,16 @@ server <- function(input, output, session) {
                   toss_efficiency = sum(!paddle)/last(shots)) %>% 
         ungroup()
       
+      #Update the DB
+      
+      vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                         player_stats = vals$player_stats_db,
+                                         game_id = vals$game_id)
+      
+      #Update the DB with the new player_stats
+      update_player_stats_rows(vals$player_stats_db)
+      
+      
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
@@ -1292,6 +1435,40 @@ server <- function(input, output, session) {
     
     vals$current_scores$team_b = vals$current_scores$team_b - last_score_pts
     vals$score_id = as.integer(vals$score_id-1)
+    
+    
+    #Remove the value from the snappaDB
+    dbSendQuery(con,
+                str_c("DELETE FROM scores WHERE score_id = ", last_score, 
+                      " AND game_id = ", vals$game_id)
+    )    
+    # Update player_stats 
+    vals$player_stats_db = vals$scores_db %>% 
+      # Join scores to snappaneers to get each player's team
+      left_join(snappaneers(), by = "player_id") %>% 
+      # Group by game and player, (team and shots are held consistent)
+      group_by(game_id, player_id, team, shots) %>% 
+      # Calculate summary stats
+      summarise(total_points = sum(points_scored),
+                ones = sum((points_scored == 1)),
+                twos = sum((points_scored == 2)),
+                threes = sum((points_scored == 3)),
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored*paddle),
+                clink_points = sum(points_scored*clink),
+                points_per_round = total_points / last(shots),
+                off_ppr = sum(points_scored*!paddle)/ last(shots),
+                def_ppr = paddle_points/last(shots),
+                toss_efficiency = sum(!paddle)/last(shots)) %>% 
+      ungroup()
+    
+    vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                       player_stats = vals$player_stats_db,
+                                       game_id = vals$game_id)
+    
+    #Update the DB with the new player_stats
+    update_player_stats_rows(vals$player_stats_db)
+    
   })
   
   
@@ -1413,10 +1590,13 @@ server <- function(input, output, session) {
       name = "game_stats",
       value = vals$game_stats_db)
     
-    dbAppendTable(
-      conn = con, 
-      name = "players",
-      value = anti_join(vals$players_db, players_tbl))
+    # Should be made unnecessary by adding
+    # players immediately 
+    
+    # dbAppendTable(
+    #   conn = con, 
+    #   name = "players",
+    #   value = anti_join(vals$players_db, players_tbl))
     
     # Update Scores
     dbAppendTable(
