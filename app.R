@@ -824,6 +824,7 @@ observe({
   })
   
 
+
   
 # Restart a game after indicating you would like to do so
   observeEvent(input$resume_yes, {
@@ -853,6 +854,7 @@ observe({
     
     shinyjs::click("start_game")
   })
+
   
   
 
