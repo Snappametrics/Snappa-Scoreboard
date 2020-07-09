@@ -625,9 +625,9 @@ observe({
               ),
       easyClose = T
     )
-      
+   
   )
-  
+   
   
 })
 
@@ -740,8 +740,50 @@ observe({
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
+    if (tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.na()){
+      lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+      
+      lost_game_stats = tbl(con, "game_stats") %>% filter(game_id == lost_game)
+      
+      lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+      
+      lost_game_scores = list(team_a = lost_game_stats)
+      
+      # Set the score outputs and shot number to the values from the last game
+      vals$current_scores$team_a = lost_player_stats %>% 
+        filter(team == "a" & game_id == lost_game) %>%
+        pull(total_points) %>%
+        sum()
+      
+      vals$current_scores$team_b = lost_player_stats %>% 
+        filter(team == "b" & game_id == lost_game) %>%
+        pull(total_points) %>%
+        sum()
+      browser()
+      vals$score_id = tbl(con, "scores") %>% 
+        filter(game_id == lost_game) %>%
+        pull(score_id) %>%
+        max()
+      
+      lost_round = vals$score %>% 
+        select(game_id == lost_game) %>% 
+        pull(round_num) %>% order( decreasing =  T)
+      vals$shot_num =
+        
+        
+      vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
+      vals$game_id = lost_game
+      
+      vals$game_stats_db = collect(lost_game_stats)
+      
+      # Initialize the current game's player_stats table
+      vals$player_stats_db = collect(lost_player_stats)
+      
     
-    if(tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.character()){
+      
+    
+      
+    } else {
       
       # Set the score outputs and shot number to 0
       vals$current_scores$team_a = 0
@@ -776,28 +818,6 @@ observe({
         name = "game_stats",
         value = vals$game_stats_db
       )
-      
-    } else {
-      
-      lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
-      
-      lost_game_stats = tbl(con, "game_stats") %>% filter(game_id == lost_game)
-      
-      lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
-      
-      lost_game_scores = list(team_a = lost_game_stats)
-      
-      # Set the score outputs and shot number to 0
-      vals$current_scores$team_a = lost_game_stats$points_a
-      vals$current_scores$team_b = lost_game_stats$points_b
-      vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
-      vals$game_id = lost_game
-      
-      vals$game_stats_db = collect(lost_game_stats)
-      
-      # Initialize the current game's player_stats table
-      vals$player_stats_db = collect(lost_player_stats)
-    
     }
     
     
@@ -829,6 +849,7 @@ observe({
 # Restart a game after indicating you would like to do so
   observeEvent(input$resume_yes, {
     
+  
     lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
     
     lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
@@ -847,12 +868,14 @@ observe({
       select(player_input, player_name) %>% 
       deframe()
     
+
     iwalk(input_list, function(name, id){
       updateSelectizeInput(session, inputId = id, selected = name)
     
     })
+    removeModal()
+    delay(3000, shinyjs::click("start_game"))
     
-    shinyjs::click("start_game")
   })
 
   
