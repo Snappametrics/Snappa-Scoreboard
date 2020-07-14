@@ -187,56 +187,14 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
                 #                       }'
                 #          ))
                 # )
-        ),
+        )
                 
         
 
 # Scoreboard --------------------------------------------------------------
 
 
-        tabPanel("scoreboard", 
-                 
-                 # Scoreboard - 3 columns
-                 fluidRow(
-                   # Column 1 - Team A
-                   team_scoreboard_ui("a"),
-                   
-                   # Round
-                   column(width = 4, align = "center",
-                          h1("Round", style = "font-size: 600%;"),
-                          h3(textOutput("round_num")),
-                          fluidRow(actionBttn("previous_round", 
-                                             label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
-                                  actionBttn("next_round", 
-                                             label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
-                          br(),
-                          # Recent Scores
-                          dropdown(
-                            gt_output("recent_scores"),
-                            style = "unite",
-                            size = "lg",
-                            label = "Recent Scores",
-                            icon = icon("backward"),
-                            animate = animateOptions(
-                              enter = animations$fading_entrances$fadeInUp,
-                              exit = animations$fading_exits$fadeOutDown
-                            )
-                          ),
-                   ),
-                   # Team B
-                   team_scoreboard_ui("b"),
-                   tags$style(type = "text/css", " #undo_score_a, #undo_score_b {margin-top:2em}")
-                 ), 
-                 fillRow(
-                   column(width = 4, offset = 4, align = "center",
-                          actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
-                          actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
-                          )
-                   )
-                 )
-
-              ),
-
+        
 
 # Debugging ---------------------------------------------------------------
 
@@ -624,6 +582,52 @@ server <- function(input, output, session) {
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
+    
+
+# Add Scoreboard ----------------------------------------------------------
+
+    scoreboard_tab = tabPanel("Scoreboard", 
+                              
+                              # Scoreboard - 3 columns
+                              fluidRow(
+                                # Column 1 - Team A
+                                team_scoreboard_ui("a"),
+                                
+                                # Round
+                                column(width = 4, align = "center",
+                                       h1("Round", style = "font-size: 600%;"),
+                                       h3(textOutput("round_num")),
+                                       fluidRow(actionBttn("previous_round", 
+                                                           label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
+                                                actionBttn("next_round", 
+                                                           label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
+                                       br(),
+                                       # Recent Scores
+                                       dropdown(
+                                         gt_output("recent_scores"),
+                                         style = "unite",
+                                         size = "lg",
+                                         label = "Recent Scores",
+                                         icon = icon("backward"),
+                                         animate = animateOptions(
+                                           enter = animations$fading_entrances$fadeInUp,
+                                           exit = animations$fading_exits$fadeOutDown
+                                         )
+                                       ),
+                                ),
+                                # Team B
+                                team_scoreboard_ui("b"),
+                                tags$style(type = "text/css", " #undo_score_a, #undo_score_b {margin-top:2em}")
+                              ), 
+                              fillRow(
+                                column(width = 4, offset = 4, align = "center",
+                                       actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
+                                       actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                                )
+                              )
+    )
+    appendTab("navbar", scoreboard_tab, "Player Input")  
+    hideTab("navbar", "Player Input")
     
   
     # Add new players to the players table
