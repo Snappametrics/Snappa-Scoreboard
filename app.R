@@ -160,8 +160,8 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
                       gt_output("career_stats_table")
                     )
                     ),
-             column(2),
-             column(4,
+             column(1),
+             column(5,
                     wellPanel(
                       plotOutput("scoring_heatmap")
                     )
