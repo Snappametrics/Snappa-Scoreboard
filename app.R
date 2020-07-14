@@ -20,6 +20,8 @@ library(dbplyr)
 library(shinyjs)
 library(shinyWidgets)
 library(gt)
+library(extrafont)
+
 
 source("dbconnect.R")
 source("ui_functions.R")
