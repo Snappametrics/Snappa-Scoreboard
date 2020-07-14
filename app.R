@@ -43,7 +43,7 @@ scores_tbl = tbl(con, "scores") %>% collect()
 player_stats_tbl = tbl(con, "player_stats") %>% collect()
 game_stats_tbl = tbl(con, "game_stats") %>% collect()
 
-
+source("stats_output.R")
 
 # Scores doesn't need to be pulled but will be referenced later
 
@@ -146,11 +146,29 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
                 #                       }'
                 #          ))
                 # )
-        )
+        ),
                 
         
 
-# Scoreboard --------------------------------------------------------------
+# Stats Pane --------------------------------------------------------------
+
+  tabPanel("Career Stats",
+           fluidRow(
+             column(6,
+                    
+                    wellPanel(
+                      gt_output("career_stats_table")
+                    )
+                    ),
+             column(2),
+             column(4,
+                    wellPanel(
+                      plotOutput("scoring_heatmap")
+                    )
+             )
+           )
+
+           )
 
 
         
@@ -318,6 +336,10 @@ server <- function(input, output, session) {
     
   })
   
+
+# Score Validation --------------------------------------------------------
+
+
   output$a_score_val = renderUI({
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
@@ -439,6 +461,17 @@ server <- function(input, output, session) {
       write.csv(vals$scores_db, con)
     }
   )
+  
+
+# Stats Pane --------------------------------------------------------------
+
+  output$career_stats_table = render_gt({
+    top_scorers_plot
+  })
+  
+  output$scoring_heatmap = renderPlot({
+    score_prog_plot
+  })
   
   # For debugging
   
