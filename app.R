@@ -765,11 +765,13 @@ observe({
         pull(score_id) %>%
         max()
       
+
       lost_round = tbl(con, "scores") %>% 
         filter(game_id == lost_game) %>% 
         pull(round_num) %>% 
         str_sort(numeric = T) %>%
         last()
+
       vals$shot_num =
         
         
@@ -780,10 +782,6 @@ observe({
       
       # Initialize the current game's player_stats table
       vals$player_stats_db = collect(lost_player_stats)
-      
-    
-      
-    
       
     } else {
       
