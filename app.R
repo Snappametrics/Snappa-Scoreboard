@@ -68,7 +68,7 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 }
 
 
-validate_scores = function(player, shot, snappaneers, paddle, scores_table, round_vector = rounds){
+validate_scores = function(player, shot, snappaneers, paddle, scores_table, round_vector = rounds, rebuttal = F){
   
   players_team = pull(filter(snappaneers, player_name == player), team) %>% toupper()
   scorer_id = pull(filter(snappaneers, player_name == player), player_id)
@@ -84,6 +84,7 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
   # Players can only score once on a non-paddle shot
   not_already_scored = !(scorer_id %in% pull(filter(scores_table, round_num == round_vector[shot], paddle == F), player_id))
   
+
   # If teams are even
   if(nrow(distinct(count(snappaneers, team), n)) == 1){
     
@@ -92,22 +93,30 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
                       all(typical_offense,
                           not_already_scored))
     
+    if(not_already_scored){
+      valid_score_message = "That entry doesn't make sense for this round/shooter combination"
+    }
+    
   } else { # If teams are uneven:
     
     # Check if the scorer is on the team with fewer players (i.e. can score multiple non-paddle points)
     scorer_team_players = nrow(filter(snappaneers, team == players_team))
     other_team_players = nrow(filter(snappaneers, team != players_team))
     
-    if(scorer_team_players < other_team_players){ # If their team has fewer players:
+    if((scorer_team_players < other_team_players)|rebuttal){ # If their team has fewer players OR Rebuttal:
       
       # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
       # Players can only score once on a non-paddle shot
-      scored_twice = nrow(filter(scores_table, round_num == round_vector[shot], paddle == F, player_id == scorer_id)) > 1
+      scored_already = (nrow(filter(scores_table, round_num == round_vector[shot], paddle == F, player_id == scorer_id)) > 1)
       
       # Then they can have scored already
       valid_score = any(all(typical_offense,
-                            !scored_twice),
+                            !scored_already),
+                        rebuttal,
                         paddle)
+      
+      # Score message if invalid
+      valid_score_message = "That player scored a non-paddle point already!"
       
     } else { # If they have the larger team:
       # They cannot have scored already
@@ -115,11 +124,18 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
                             not_already_scored),
                         paddle)
       
+      valid_score_message = "That player scored a non-paddle point already!"
+      
     }
     
   }
   
-  return(valid_score)
+  # Validate all valid scores
+  if(valid_score){
+    valid_score_message = "valid"
+  }
+  
+  return(valid_score_message)
   
 }
 
@@ -472,7 +488,8 @@ server <- function(input, output, session) {
                         shot = vals$shot_num, 
                         snappaneers = snappaneers(), 
                         paddle = any(input$paddle, input$foot), 
-                        scores_table = vals$scores_db),
+                        scores_table = vals$scores_db,
+                        rebuttal = vals$rebuttal_tag) == "valid",
         message = "That entry doesn't make sense for this round/shooter combination"),
       if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
           pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
@@ -481,7 +498,8 @@ server <- function(input, output, session) {
                                shot = vals$shot_num, 
                                snappaneers = snappaneers(), 
                                paddle = any(input$paddle, input$foot), 
-                               scores_table = vals$scores_db),
+                               scores_table = vals$scores_db,
+                           rebuttal = vals$rebuttal_tag) == "valid",
              message = "That person has already scored a non paddle point this round")
         
       }
@@ -498,7 +516,8 @@ server <- function(input, output, session) {
                         shot = vals$shot_num, 
                         snappaneers = snappaneers(), 
                         paddle = any(input$paddle, input$foot), 
-                        scores_table = vals$scores_db),
+                        scores_table = vals$scores_db,
+                        rebuttal = vals$rebuttal_tag) == "valid",
         message = "That entry doesn't make sense for this round/shooter combination"
       ),
       # Make sure that the last person to score in this round on offense can't paddle
@@ -509,7 +528,8 @@ server <- function(input, output, session) {
                             shot = vals$shot_num, 
                             snappaneers = snappaneers(), 
                             paddle = any(input$paddle, input$foot), 
-                            scores_table = vals$scores_db),
+                            scores_table = vals$scores_db,
+                          rebuttal = vals$rebuttal_tag) == "valid",
              message = "That person has already scored a non paddle point this round")
         
       } 
