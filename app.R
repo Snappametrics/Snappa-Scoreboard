@@ -80,7 +80,8 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 # UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(theme = "front-end/app.css",
+ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player Input",
+  theme = "front-end/app.css",
   useShinyjs(),
   
   # Increase font size:
@@ -127,22 +128,12 @@ ui <- fluidPage(theme = "front-end/app.css",
                    "{font-size: 3rem;}",
                    # Once more unto the name input font size dear friends
                    ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
-  # Switching mechanism
-  tags$style("#switcher { display:none; }"),
-  
-  # Application title
-  titlePanel("Snappa Scoreboard"),
-  
 
-  tabsetPanel(
-        # Switching mechanism
-        id = "switcher",
-        
 
 # Start Screen ------------------------------------------------------------
 
         
-        tabPanel("start_screen", 
+        tabPanel("Player Input", 
                  # Fluid Row - 3 columns
                  fluidRow(
                    team_input_ui("a", pull(players_tbl, player_name)),
