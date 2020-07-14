@@ -81,7 +81,7 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 # Define UI for application that draws a histogram
 ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player Input",
-  theme = "front-end/app.css",
+  theme = "app.css",
   useShinyjs(),
   
   # Increase font size:
@@ -90,44 +90,44 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
   #   - Next round button
   #   - Score buttons
   #   - Score pop-up buttons
-  tags$style(paste("#start_game, #previous_round, #next_round, #scorer, #paddle, #score", 
-                   "{ font-size: 170%; }",
-                   # Round number
-                   "#round_num", "{font-size:800%; margin-top: 15%; margin-bottom: 15%;}",
-                   ".bttn-unite.bttn-md", "{font-size: 200%;}",
-                   # Score number
-                   "#score_a, #score_b",  "{font-size: 700%; color: white;}",
-                   # We scored button padding
-                   ".bttn-unite.bttn-lg", "{padding: 1rem 4rem;}",
-                   # Score button
-                   "#a_score_button, #b_score_button", "{font-size: 220%;}",
-                   # Name input labels
-                   "label.control-label[for^='name_']", 
-                   "{font-size: large; color: white;}",
-                   ".btn-group .btn-group-toggle .btn-group-lg", "{font-size:100%;}",
-                   # Scorer input labels
-                   "label.control-label[for^='score']", 
-                   "{font-size: x-large;}",
-                   # Paddle input label
-                   "label[for='paddle']", 
-                   "{font-size: 1.75rem; font-weight:inherit;}",
-                   # Clink input label
-                   "label[for='clink']", 
-                   "{font-size: 1.75rem;}",
-                   # Foot input label
-                   "label[for='foot']", 
-                   "{font-size: 1.75rem;}",
-                   # OK Score button
-                   "#ok_a, #ok_b {font-size:x-large;}",
-                   # Name input font size
-                   ".selectize-input {font-size: 150% !important}",
-                   # Other part of name input font size
-                   ".form-control", "{font-size: 2rem;}",
-                   # Name input options font size
-                   ".selectize-dropdown-content",
-                   "{font-size: 3rem;}",
-                   # Once more unto the name input font size dear friends
-                   ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
+  # tags$style(paste("#start_game, #previous_round, #next_round, #scorer, #paddle, #score", 
+  #                  "{ font-size: 170%; }",
+  #                  # Round number
+  #                  "#round_num", "{font-size:800%; margin-top: 15%; margin-bottom: 15%;}",
+  #                  ".bttn-unite.bttn-md", "{font-size: 200%;}",
+  #                  # Score number
+  #                  "#score_a, #score_b",  "{font-size: 700%; color: white;}",
+  #                  # We scored button padding
+  #                  ".bttn-unite.bttn-lg", "{padding: 1rem 4rem;}",
+  #                  # Score button
+  #                  "#a_score_button, #b_score_button", "{font-size: 220%;}",
+  #                  # Name input labels
+  #                  "label.control-label[for^='name_']", 
+  #                  "{font-size: large; color: white;}",
+  #                  ".btn-group .btn-group-toggle .btn-group-lg", "{font-size:100%;}",
+  #                  # Scorer input labels
+  #                  "label.control-label[for^='score']", 
+  #                  "{font-size: x-large;}",
+  #                  # Paddle input label
+  #                  "label[for='paddle']", 
+  #                  "{font-size: 1.75rem; font-weight:inherit;}",
+  #                  # Clink input label
+  #                  "label[for='clink']", 
+  #                  "{font-size: 1.75rem;}",
+  #                  # Foot input label
+  #                  "label[for='foot']", 
+  #                  "{font-size: 1.75rem;}",
+  #                  # OK Score button
+  #                  "#ok_a, #ok_b {font-size:x-large;}",
+  #                  # Name input font size
+  #                  ".selectize-input {font-size: 150% !important}",
+  #                  # Other part of name input font size
+  #                  ".form-control", "{font-size: 2rem;}",
+  #                  # Name input options font size
+  #                  ".selectize-dropdown-content",
+  #                  "{font-size: 3rem;}",
+  #                  # Once more unto the name input font size dear friends
+  #                  ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
 
 
 # Start Screen ------------------------------------------------------------

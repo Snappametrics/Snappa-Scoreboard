@@ -23,6 +23,105 @@
     --gray-2: rgba(8, 0, 26, 0.03);
 }
 
+/* My CSS */
+#start_game, #previous_round, #next_round, #scorer, #paddle, #score {
+    font-size: 170%; 
+}
+
+#round_num {
+    font-size:800%; margin-top: 15%; margin-bottom: 15%;
+    
+}
+
+.bttn-unite.bttn-md { 
+    font-size: 200%;
+}
+
+#score_a, #score_b {
+    font-size: 700%; color: white;
+    
+}
+
+.bttn-unite.bttn-lg {
+    padding: 1rem 4rem;
+    
+}
+
+#a_score_button, #b_score_button {
+    font-size: 220%;
+    
+}
+
+label.control-label[for^='name_'] {
+    font-size: 4rem; 
+    color: white;
+    
+}
+
+.btn-group .btn-group-toggle .btn-group-lg {
+    font-size:100%;
+    
+}
+
+label .control-label[for^='score'] {
+    font-size: x-large;
+    
+}
+
+label[for='paddle'] {
+    font-size: 2.5rem; 
+    font-weight:inherit;
+    
+}
+
+label[for='clink'] {
+    font-size: 2.5rem;
+    
+}
+
+label[for='foot'] {
+    font-size: 2.5rem;
+    
+}
+
+#ok_a, #ok_b {font-size:x-large;}
+
+.selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
+    font-size: 2.75rem;
+}
+
+
+.selectize-dropdown-content {font-size: 3rem;}
+
+.selectize-input.items.has-options.full.has-items {line-height: normal;}
+
+.form-control.selectize-control {
+    font-size:5rem;
+}
+
+.btn-group {
+    padding: 0 0.1rem;
+}
+
+.form-group {
+    display: block;
+    font-size: 2rem;
+}
+
+.radio-btn-icon-yes {
+    padding-right: 1rem;
+}
+
+.label {
+    font-size: 2rem;
+}
+
+.checkbox-bs input[type="checkbox"] {
+    transform: scale(2);
+}
+
+/* End my CSS */
+
 body{
     background-color: #ffffff;
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232051e5' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
