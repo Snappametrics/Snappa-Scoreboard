@@ -203,7 +203,8 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
              column(1),
              column(5,
                     wellPanel(
-                      plotOutput("scoring_heatmap")
+                      plotOutput("scoring_heatmap", hover = "heat_hover"),
+                      uiOutput("heatmap_info")
                     )
              )
            )
@@ -511,6 +512,15 @@ server <- function(input, output, session) {
   
   output$scoring_heatmap = renderPlot({
     score_prog_plot
+  })
+  
+  output$heatmap_info <- renderUI({
+    req(input$heat_hover)
+    x <- round(input$heat_hover$x, 0)
+    y <- round(input$heat_hover$y, 0)
+    
+    HTML(str_c("<h3>Score</h3>",
+          "<p>Team A: ", x, "  ", "Team B: ", y, "</p>"))
   })
   
   # For debugging
