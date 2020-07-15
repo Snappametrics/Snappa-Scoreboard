@@ -97,6 +97,8 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
       valid_score_message = "That entry doesn't make sense for this round/shooter combination"
     }
     
+    valid_score_message = "That player scored a non-paddle point already!"
+    
   } else { # If teams are uneven:
     
     # Check if the scorer is on the team with fewer players (i.e. can score multiple non-paddle points)
