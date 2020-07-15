@@ -849,7 +849,7 @@ observe({
 # Restart a game after indicating you would like to do so
   observeEvent(input$resume_yes, {
     
-  
+    browser()
     lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
     
     lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
@@ -874,7 +874,7 @@ observe({
     
     })
     removeModal()
-    delay(3000, shinyjs::click("start_game"))
+    delay(2000, shinyjs::click("start_game"))
     
   })
 
@@ -1599,11 +1599,10 @@ observe({
       value = vals$scores_db)
     
     # Update player_stats
-    dbAppendTable(
-      conn = con, 
-      name = "player_stats",
-      value = vals$player_stats_db)
-    
+    # dbAppendTable(
+    #   conn = con, 
+    #   name = "player_stats",
+    #   value = vals$player_stats_db)
     # Confirmation that data was sent to db
     sendSweetAlert(session, 
                    title = "The die is cast",
