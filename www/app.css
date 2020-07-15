@@ -25,6 +25,18 @@
 }
 
 /* My CSS */
+
+#leaderboard .gt_right {
+    border-radius: 100px;
+}
+
+.navbar-default, .navbar-brand, .navbar-nav>li>a {
+    color: white !important;
+    background-color: #e26a6a !important;
+}
+
+
+
 #start_game, #previous_round, #next_round, #scorer, #paddle, #score {
     font-size: 170%; 
 }

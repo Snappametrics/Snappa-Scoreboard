@@ -43,10 +43,9 @@ scores_tbl = tbl(con, "scores") %>% collect()
 player_stats_tbl = tbl(con, "player_stats") %>% collect()
 game_stats_tbl = tbl(con, "game_stats") %>% collect()
 
-source("stats_output.R")
+
 
 # Scores doesn't need to be pulled but will be referenced later
-
 
 
 # Functions ---------------------------------------------------------------
@@ -74,6 +73,47 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 
 
+# Career Stats ------------------------------------------------------------
+
+top_scorers_tab = left_join(players_tbl, player_stats_tbl, by = "player_id") %>%
+  select(-player_id) %>% 
+  # Calculate leaderboard
+  group_by(player_name) %>% 
+  summarise(
+    total_points = sum(total_points),
+    offensive_points = sum(off_ppr*shots),
+    defensive_points = sum(def_ppr*shots),
+    ones = sum(ones),
+    twos = sum(twos),
+    threes = sum(threes),
+    paddle_points = sum(paddle_points),
+    clink_points = sum(clink_points),
+    total_shots = sum(shots),
+    points_per_round = weighted.mean(points_per_round, w = shots),
+    off_ppr = weighted.mean(off_ppr, w = shots),
+    def_ppr = weighted.mean(def_ppr, w = shots),
+    toss_efficiency = weighted.mean(toss_efficiency, w = shots)
+  ) %>% 
+  ungroup() %>% 
+  filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
+  mutate(rank = rank(-total_points)) %>% 
+  select(rank, everything(), -offensive_points:-clink_points) %>% 
+  arrange(rank) %>% 
+  leaderboard_table()
+
+
+
+score_progression = scores_tbl %>% 
+  arrange(game_id, score_id) %>% 
+  group_by(game_id) %>% 
+  mutate(
+    score_a = cumsum((scoring_team=="a")*points_scored),
+    score_b = cumsum((scoring_team=="b")*points_scored)
+  ) %>% 
+  ungroup() %>% 
+  count(score_a, score_b)
+
+score_prog_plot = score_heatmap(score_progression)
 
 
 
@@ -466,7 +506,7 @@ server <- function(input, output, session) {
 # Stats Pane --------------------------------------------------------------
 
   output$career_stats_table = render_gt({
-    top_scorers_plot
+    top_scorers_tab
   })
   
   output$scoring_heatmap = renderPlot({

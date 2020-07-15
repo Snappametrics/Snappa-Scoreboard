@@ -219,3 +219,114 @@ recent_score_sentence = function(scores_data){
     ungroup() %>% 
     select(-score_id)
 }
+
+
+# Stats Output ------------------------------------------------------------
+
+theme_snappa = function(){
+  theme_minimal(
+    base_family = "Inter",
+    base_size = 14
+  ) %+replace%
+    theme(
+      title = element_text(family = "Inter")
+    )
+}
+
+leaderboard_table = function(df){
+  gt(df, id = "leaderboard") %>% 
+    tab_header(title = "Snappa Leaderboard") %>% 
+    # Column names
+    cols_label(
+      rank = "", 
+      player_name = "Player",
+      total_points = "Points",
+      total_shots = "Shots Taken",
+      points_per_round = "Points per Round\n(PPR)",
+      off_ppr = "Offensive PPR",
+      def_ppr = "Defensive PPR",
+      toss_efficiency = "Toss Efficiency"
+    ) %>% 
+    # Format integers
+    fmt_number(
+      columns = vars(rank, total_points, total_shots),
+      decimals = 0
+    ) %>% 
+    # Format doubles
+    fmt_number(
+      columns = vars(points_per_round, off_ppr, def_ppr),
+      decimals = 2
+    ) %>% 
+    # Format percentages
+    fmt_percent(
+      columns = vars(toss_efficiency),
+      decimals = 1
+    ) %>% 
+    tab_footnote(
+      footnote = "Defensive points are scored from paddles.",
+      locations = cells_column_labels(columns = vars(def_ppr))
+    ) %>% 
+    tab_footnote(
+      footnote = "% of tosses which are successful.",
+      locations = cells_column_labels(columns = vars(toss_efficiency))
+    ) %>%
+    opt_footnote_marks(marks = "letters") %>% 
+    # Styling
+    # Title
+    tab_style(
+      style = list(cell_text(color = "white", weight = "bold", align = "center", size = "x-large", v_align = "middle"), cell_fill(color = "#e26a6a")),
+      locations = cells_title(groups = "title")
+    ) %>%
+    # Rank column
+    tab_style(
+      style = list(cell_text(color = "white", weight = "bold", align = "center"), cell_fill(color = "#2574a9", alpha = .9)),
+      locations = cells_body(
+        columns = vars(rank)
+      )
+    ) %>% 
+    # Column header alignment
+    tab_style(
+      style = cell_text(weight = "bold", align = "center"),
+      locations = cells_column_labels(columns = vars(total_points, total_shots, points_per_round, off_ppr, def_ppr, toss_efficiency))
+    ) %>% 
+    # Column widths
+    cols_width(
+      vars(rank) ~ px(30),
+      vars(player_name, points_per_round) ~ px(110),
+      vars(total_points, total_shots) ~ px(60),
+      vars(off_ppr, def_ppr, toss_efficiency) ~ px(95)
+    ) %>% 
+    tab_style(
+      style = list(cell_text(weight = "bold", decorate = "underline")),
+      locations = cells_body(
+        columns = vars(total_points),
+        rows = total_points == max(total_points)
+      )
+    ) %>% 
+    tab_style(
+      style = list(cell_text(weight = "bold", decorate = "underline")),
+      locations = cells_body(
+        columns = vars(total_points),
+        rows = total_points == max(total_points)
+      )
+    )
+  
+}
+
+score_heatmap = function(df){
+  max_score = summarise_at(df, vars(starts_with("score")), max) %>% 
+    pull() %>% 
+    max()
+  
+  df %>% 
+    ggplot(aes(x = score_b, y = score_a))+
+    geom_bin2d(binwidth = c(1,1))+
+    scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20")+
+    labs(x = "Team B",
+         y = "Team A",
+         title = "Scoring Heatmap")+
+    scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 5))+
+    scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 5))+
+    theme_snappa()
+}
+
