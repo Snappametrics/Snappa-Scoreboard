@@ -759,7 +759,7 @@ observe({
         filter(team == "b" & game_id == lost_game) %>%
         pull(total_points) %>%
         sum()
-      browser()
+      
       vals$score_id = tbl(con, "scores") %>% 
         filter(game_id == lost_game) %>%
         pull(score_id) %>%
@@ -769,10 +769,9 @@ observe({
       lost_round = tbl(con, "scores") %>% 
         filter(game_id == lost_game) %>% 
         pull(round_num) %>% 
-        str_sort(numeric = T) %>%
-        last()
+        max()
 
-      vals$shot_num =
+      vals$shot_num = which(rounds == lost_round)
         
         
       vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
@@ -849,7 +848,7 @@ observe({
 # Restart a game after indicating you would like to do so
   observeEvent(input$resume_yes, {
     
-    browser()
+    
     lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
     
     lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
@@ -1506,7 +1505,7 @@ observe({
   
   observeEvent(input$send_to_db, {
    
-    
+
     # Sanity check: Only submit games which have reached their conclusion
     validate(need(any(vals$current_scores$team_a >= vals$score_to,
                       vals$current_scores$team_b >= vals$score_to), 
@@ -1562,6 +1561,8 @@ observe({
     
     # Update Game History
     # Calculate game-level stats from game stats players
+    
+
     game_stats = vals$player_stats_db %>% 
       group_by(game_id) %>% 
       summarise(points_a = sum((team == "a")*total_points),
@@ -1573,12 +1574,23 @@ observe({
                 impossibles = sum(impossibles),
                 paddle_points = sum(paddle_points),
                 clink_points = sum(clink_points))
-
+    
+    # This uses select because the column names were no longer matching the DB ones after joining
     vals$game_stats_db = vals$game_stats_db %>% 
       replace_na(list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
       mutate(night_dice = if_else(now(tzone = "America/Los_Angeles") %>% hour() > 20, T, F)) %>% 
-      left_join(game_stats, by = "game_id")
+      left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
+      select(-contains("_old", ignore.case = F))
     
+    
+    # As with player_stats, I perform the update by deleting the relevant row in the DB table and reinserting the
+    # one that we need
+    
+    del_game_row = sql(str_c("DELETE FROM game_stats 
+                 WHERE game_id = ", vals$game_id, ";"))
+    
+    dbExecute(con, del_game_row)
+  
     dbAppendTable(
       conn = con, 
       name = "game_stats",
