@@ -31,9 +31,6 @@ source("ui_functions.R")
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
-lost_game_bool = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.character()
-
-
 
 # DB Tables ---------------------------------------------------------------
 
@@ -442,20 +439,7 @@ server <- function(input, output, session) {
 
 # Outputs -----------------------------------------------------------------
   
-  output$lost_game = renderUI({
-    
-    validate(
-      need(lost_game_bool, message= "All good")
-    )
-    
-    modalDialog(
-      title = "Recover a lost game?"
-      
-    )
-  }
-    
-  )
-  
+
   # Switch between pass the dice and next round
   output$selector_ui <- renderUI({
     fillRow(actionBttn("previous_round", 
