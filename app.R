@@ -165,8 +165,7 @@ ui <- fluidPage(theme = "front-end/app.css",
                    ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
   # Switching mechanism
   tags$style("#switcher { display:none; }"),
-  includeScript(path = "update_input.js"),
-    
+
   
   # Application title
   titlePanel("Snappa Scoreboard"),
