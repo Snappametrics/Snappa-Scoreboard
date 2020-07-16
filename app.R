@@ -739,7 +739,6 @@ observe({
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
-    browser()
     if (all(
         # Previous game hasn't ended
         tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_end) %>% is.na(),
