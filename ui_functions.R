@@ -286,10 +286,12 @@ recent_score_sentence = function(scores_data){
 theme_snappa = function(){
   theme_minimal(
     base_family = "Inter",
-    base_size = 14
+    base_size = 16
   ) %+replace%
     theme(
-      title = element_text(family = "Inter")
+      plot.title = element_text(face = "bold", size = rel(1.25)), 
+      panel.grid.major = element_line(colour = "grey"),
+      plot.background = element_rect(fill = "#f5f5f5", colour = "transparent")
     )
 }
 
@@ -300,11 +302,12 @@ leaderboard_table = function(df){
     cols_label(
       rank = "", 
       player_name = "Player",
-      total_points = "Points",
-      total_shots = "Shots Taken",
-      points_per_round = "Points per Round\n(PPR)",
-      off_ppr = "Offensive PPR",
-      def_ppr = "Defensive PPR",
+      games_played = "Games Played",
+      points_per_game = "Points per Game\n(PPG)",
+      total_points = "Total Points",
+      total_shots = "Total Shots",
+      off_ppg = "Offensive PPG",
+      def_ppg = "Defensive PPG",
       toss_efficiency = "Toss Efficiency"
     ) %>% 
     # Format integers
@@ -314,7 +317,7 @@ leaderboard_table = function(df){
     ) %>% 
     # Format doubles
     fmt_number(
-      columns = vars(points_per_round, off_ppr, def_ppr),
+      columns = vars(points_per_game, off_ppg, def_ppg),
       decimals = 2
     ) %>% 
     # Format percentages
@@ -324,7 +327,7 @@ leaderboard_table = function(df){
     ) %>% 
     tab_footnote(
       footnote = "Defensive points are scored from paddles.",
-      locations = cells_column_labels(columns = vars(def_ppr))
+      locations = cells_column_labels(columns = vars(def_ppg))
     ) %>% 
     tab_footnote(
       footnote = "% of tosses which are successful.",
@@ -339,37 +342,56 @@ leaderboard_table = function(df){
     ) %>%
     # Rank column
     tab_style(
-      style = list(cell_text(color = "white", weight = "bold", align = "center"), cell_fill(color = "#2574a9", alpha = .9)),
+      style = list(cell_text(color = "white", weight = "bold", align = "center"), cell_fill(color = "#2574a9", alpha = .8)),
       locations = cells_body(
         columns = vars(rank)
       )
     ) %>% 
     # Column header alignment
     tab_style(
-      style = cell_text(weight = "bold", align = "center"),
-      locations = cells_column_labels(columns = vars(total_points, total_shots, points_per_round, off_ppr, def_ppr, toss_efficiency))
+      style = cell_text(align = "center", v_align = "middle"),
+      locations = cells_column_labels(columns = everything())
     ) %>% 
     # Column widths
     cols_width(
       vars(rank) ~ px(30),
-      vars(player_name, points_per_round) ~ px(110),
-      vars(total_points, total_shots) ~ px(60),
-      vars(off_ppr, def_ppr, toss_efficiency) ~ px(95)
+      vars(player_name, points_per_game) ~ px(110),
+      vars(total_points, games_played, total_shots) ~ px(60),
+      vars(off_ppg, def_ppg, toss_efficiency) ~ px(95)
     ) %>% 
+    # Underline dope shit
     tab_style(
-      style = list(cell_text(weight = "bold", decorate = "underline")),
-      locations = cells_body(
-        columns = vars(total_points),
-        rows = total_points == max(total_points)
+      style = list(cell_text(weight = "bold"), cell_fill(color = "#FFD600", alpha = .9)),
+      locations = list(
+        # Most points
+        cells_body(
+          columns = vars(total_points),
+          rows = total_points == max(total_points)
+          ),
+        # Highest ppg
+        cells_body(
+          columns = vars(points_per_game),
+          rows = points_per_game == max(points_per_game)
+        ),
+        # Highest off ppg
+        cells_body(
+          columns = vars(off_ppg),
+          rows = off_ppg == max(off_ppg)
+        ),
+        # Highest def ppg
+        cells_body(
+          columns = vars(def_ppg),
+          rows = def_ppg == max(def_ppg)
+        )
       )
     ) %>% 
-    tab_style(
-      style = list(cell_text(weight = "bold", decorate = "underline")),
-      locations = cells_body(
-        columns = vars(total_points),
-        rows = total_points == max(total_points)
-      )
-    )
+    tab_options(heading.border.lr.style = "none",
+                heading.border.bottom.style = "none",
+                table.border.top.style = "none",
+                table.border.right.style = "none",
+                table.border.left.style = "none",
+                table.border.bottom.style = "none",
+                column_labels.font.weight = "600")
   
 }
 
@@ -380,11 +402,11 @@ score_heatmap = function(df){
   
   df %>% 
     ggplot(aes(x = score_b, y = score_a))+
-    geom_bin2d(binwidth = c(1,1))+
+    geom_tile(aes(fill = n))+
     scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20")+
     labs(x = "Team B",
          y = "Team A",
-         title = "Scoring Heatmap")+
+         title = "Heatmap of scores in Snappa")+
     scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 5))+
     scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 5))+
     theme_snappa()

@@ -75,11 +75,13 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 # Career Stats ------------------------------------------------------------
 
-top_scorers_tab = left_join(players_tbl, player_stats_tbl, by = "player_id") %>%
+top_scorers_tab = inner_join(players_tbl, player_stats_tbl, by = "player_id") %>%
   select(-player_id) %>% 
   # Calculate leaderboard
   group_by(player_name) %>% 
   summarise(
+    games_played = n(),
+    points_per_game = mean(total_points),
     total_points = sum(total_points),
     offensive_points = sum(off_ppr*shots),
     defensive_points = sum(def_ppr*shots),
@@ -89,9 +91,8 @@ top_scorers_tab = left_join(players_tbl, player_stats_tbl, by = "player_id") %>%
     paddle_points = sum(paddle_points),
     clink_points = sum(clink_points),
     total_shots = sum(shots),
-    points_per_round = weighted.mean(points_per_round, w = shots),
-    off_ppr = weighted.mean(off_ppr, w = shots),
-    def_ppr = weighted.mean(def_ppr, w = shots),
+    off_ppg = mean(off_ppr*shots),
+    def_ppg = mean(def_ppr*shots),
     toss_efficiency = weighted.mean(toss_efficiency, w = shots)
   ) %>% 
   ungroup() %>% 
