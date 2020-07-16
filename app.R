@@ -312,7 +312,9 @@ server <- function(input, output, session) {
     want_a3 = F,
     want_a4 = F,
     want_b3 = F,
-    want_b4 = F
+    want_b4 = F,
+    
+    switch_counter = 1
   )
   
   
@@ -556,10 +558,27 @@ server <- function(input, output, session) {
   
   
 
-  
 
 # Game Start Validation ---------------------------------------------------
 
+  
+  observeEvent(input$switch_sides, {
+    
+    vals$switch_counter = vals$switch_counter+1
+    
+    switch_is_even = (vals$switch_counter %% 2 == 0)
+    
+    
+    if(switch_is_even){
+      removeTab("navbar", target = "Scoreboard", session)
+      insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
+    } else {
+      removeTab("navbar", target = "Scoreboard", session)
+      insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
+    }
+    
+
+  })
   
   
   # Create a UI output which validates that there are four players and the names are unique
