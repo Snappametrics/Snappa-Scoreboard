@@ -169,7 +169,7 @@ ui <- fluidPage(theme = "front-end/app.css",
   
   # Application title
   titlePanel("Snappa Scoreboard"),
-  
+
 
   tabsetPanel(
         # Switching mechanism
