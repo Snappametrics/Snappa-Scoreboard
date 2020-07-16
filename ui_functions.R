@@ -90,31 +90,91 @@ team_input_ui = function(team, player_choices){
   )
 }
 
-team_scoreboard_ui = function(team){
+team_scoreboard_ui = function(left_team = "a", right_team = "b"){
   
-  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
+  team_colours = list("a" = "#e26a6a", "b" = "#2574a9")
   
-  column(width = 4, align = "center",
-         
-         wellPanel(
-           style = paste("opacity: 0.92; background:", team_colour),
-           # uiOutput("active_die_a"),
-           # Header
-           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
-           # Score
-           h2(textOutput(paste0("score_", team))),
-           # Score button
-           actionBttn(paste0(team, "_score_button"), 
-                      label = "We scored!", color = "danger",
-                      size = "lg"),
-           br(),
-           actionBttn(
-             inputId = paste0("undo_score_", team),
-             label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-           ),
-           h3(textOutput(paste0("player_names_", team)))
-         )
-         
+  tabPanel("Scoreboard", icon = icon("window-maximize"),
+           
+           fluidRow(
+             # Left Team
+             column(width = 4, align = "center",
+                     
+                     wellPanel(
+                       style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
+                       # uiOutput("active_die_a"),
+                       # Header
+                       h1(strong(paste("Team", toupper(left_team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
+                       # Score
+                       h2(textOutput(paste0("score_", left_team))),
+                       # Score button
+                       actionBttn(paste0(left_team, "_score_button"), 
+                                  label = "We scored!", color = "danger",
+                                  size = "lg"),
+                       br(),
+                       actionBttn(
+                         inputId = paste0("undo_score_", left_team),
+                         label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                       ),
+                       h3(textOutput(paste0("player_names_", left_team)))
+                     )
+              ), 
+              # Round
+              column(width = 4, align = "center",
+                     # materialSwitch(
+                     #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
+                     # ),
+                     actionBttn("switch_sides", "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm"), 
+                     h1("Round", style = "font-size: 600%;"),
+                     h3(textOutput("round_num")),
+                     fluidRow(actionBttn("previous_round", 
+                                         label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
+                              actionBttn("next_round", 
+                                         label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
+                     br(),
+                     # Recent Scores
+                     dropdown(
+                       gt_output("recent_scores"),
+                       style = "unite",
+                       size = "lg",
+                       label = "Recent Scores",
+                       icon = icon("backward"),
+                       animate = animateOptions(
+                         enter = animations$fading_entrances$fadeInUp,
+                         exit = animations$fading_exits$fadeOutDown
+                       )
+                     ),
+              ),
+              # Team B
+             column(width = 4, align = "center",
+                    
+                    wellPanel(
+                      style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
+                      # uiOutput("active_die_a"),
+                      # Header
+                      h1(strong(paste("Team", toupper(right_team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
+                      # Score
+                      h2(textOutput(paste0("score_", right_team))),
+                      # Score button
+                      actionBttn(paste0(right_team, "_score_button"), 
+                                 label = "We scored!", color = "danger",
+                                 size = "lg"),
+                      br(),
+                      actionBttn(
+                        inputId = paste0("undo_score_", right_team),
+                        label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                      ),
+                      h3(textOutput(paste0("player_names_", right_team)))
+                    )
+             ),
+              tags$style(type = "text/css", " #undo_score_a, #undo_score_b {margin-top:2em}")
+              ), 
+              fillRow(
+                column(width = 4, offset = 4, align = "center",
+                       actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
+                       actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                       )
+                )
   )
 }
 
