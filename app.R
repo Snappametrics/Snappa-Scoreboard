@@ -37,9 +37,9 @@ round_labels = rep(c("Pass the dice", "Next round"),100)
 
 # Pull db tables for tibble templates
 players_tbl = tbl(con, "players") %>% collect()
-scores_tbl = tbl(con, "scores") %>% collect()
-player_stats_tbl = tbl(con, "player_stats") %>% collect()
-game_stats_tbl = tbl(con, "game_stats") %>% collect()
+scores_tbl = tbl(con, "test_scores") %>% collect()
+player_stats_tbl = tbl(con, "test_player_stats") %>% collect()
+game_stats_tbl = tbl(con, "test_game_stats") %>% collect()
 
 
 
@@ -99,12 +99,12 @@ troll_check = function(session, snappaneers, player_stats, game_id){
 
 update_player_stats_rows = function(player_stats){
   current_game = unique(player_stats$game_id)
-  del_rows = sql(str_c("DELETE FROM player_stats 
+  del_rows = sql(str_c("DELETE FROM test_player_stats 
                  WHERE game_id = ", current_game, ";"))
   
   dbExecute(con, del_rows)
   
-  dbAppendTable(con, "player_stats", player_stats)
+  dbAppendTable(con, "test_player_stats", player_stats)
 }
 
 
@@ -293,11 +293,11 @@ ui <- fluidPage(theme = "front-end/app.css",
       #          tableOutput("db_output_players")
       #          ),
       #   column(5, align = "center",
-      #          h3("scores"),
+      #          h3("test_scores"),
       #          tableOutput("db_output_scores")
       #   ),
       #   column(5, align = "center",
-      #          h3("player_stats"),
+      #          h3("test_player_stats"),
       #          tableOutput("db_output_player_stats")
       #   )
       # 
@@ -601,7 +601,7 @@ server <- function(input, output, session) {
 observe({
   validate(
     need(
-      tbl(con, "game_stats") %>% 
+      tbl(con, "test_game_stats") %>% 
                   filter(game_id == max(game_id)) %>% 
                   pull(game_end) %>% 
                   is.na(),
@@ -739,55 +739,62 @@ observe({
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
-    if (tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.na()){
-      lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+    browser()
+    if (all(
+        # Previous game hasn't ended
+        tbl(con, "test_game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_end) %>% is.na(),
+        # Avoid the case where there are no entries in the table and this if statement fails
+        !(tbl(con, "test_game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_end) %>% identical(character(0)))
+        )){
+        
+        lost_game = tbl(con, "test_game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_id)
       
-      lost_game_stats = tbl(con, "game_stats") %>% filter(game_id == lost_game)
+        lost_game_stats = tbl(con, "test_game_stats") %>% filter(game_id == lost_game)
       
-      lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+        lost_player_stats = tbl(con, "test_player_stats") %>% filter(game_id == lost_game)
       
-      lost_game_scores = list(team_a = lost_game_stats)
+        lost_game_scores = list(team_a = lost_game_stats)
       
       # Set the score outputs and shot number to the values from the last game
-      vals$current_scores$team_a = lost_player_stats %>% 
-        filter(team == "a" & game_id == lost_game) %>%
-        pull(total_points) %>%
-        sum()
-      
-      vals$current_scores$team_b = lost_player_stats %>% 
-        filter(team == "b" & game_id == lost_game) %>%
-        pull(total_points) %>%
-        sum()
-      
-      vals$score_id = tbl(con, "scores") %>% 
-        filter(game_id == lost_game) %>%
-        pull(score_id) %>%
-        max()
-      
-
-      lost_round = tbl(con, "scores") %>% 
-        filter(game_id == lost_game) %>% 
-        pull(round_num) %>% 
-        max()
-
-      vals$shot_num = which(rounds == lost_round)
+        vals$current_scores$team_a = lost_player_stats %>% 
+          filter(team == "a" & game_id == lost_game) %>%
+          pull(total_points) %>%
+          sum()
         
+        vals$current_scores$team_b = lost_player_stats %>% 
+          filter(team == "b" & game_id == lost_game) %>%
+          pull(total_points) %>%
+          sum()
         
-      vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
-      vals$game_id = lost_game
-      
-      vals$game_stats_db = collect(lost_game_stats)
-      
-      # Initialize the current game's player_stats table
-      vals$player_stats_db = collect(lost_player_stats)
-      
+        vals$score_id = tbl(con, "test_scores") %>% 
+          filter(game_id == lost_game) %>%
+          pull(score_id) %>%
+          max()
+        
+  
+        lost_round = tbl(con, "test_scores") %>% 
+          filter(game_id == lost_game) %>% 
+          pull(round_num) %>% 
+          max()
+  
+        vals$shot_num = which(rounds == lost_round)
+          
+          
+        vals$scores_db = tbl(con, "test_scores") %>% filter(game_id == lost_game) %>% collect()
+        vals$game_id = lost_game
+        
+        vals$game_stats_db = collect(lost_game_stats)
+        
+        # Initialize the current game's player_stats table
+        vals$player_stats_db = collect(lost_player_stats)
+        
     } else {
       
       # Set the score outputs and shot number to 0
       vals$current_scores$team_a = 0
       vals$current_scores$team_b = 0
       vals$scores_db = slice(scores_tbl, 0)
-      vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
+      vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM test_game_stats"),1 , na.rm = T))
       
       vals$game_stats_db = bind_rows(vals$game_stats_db,
                                      tibble(
@@ -813,7 +820,7 @@ observe({
       
       dbAppendTable(
         conn = con, 
-        name = "game_stats",
+        name = "test_game_stats",
         value = vals$game_stats_db
       )
     }
@@ -848,9 +855,9 @@ observe({
   observeEvent(input$resume_yes, {
     
     
-    lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+    lost_game = tbl(con, "test_game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
     
-    lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+    lost_player_stats = tbl(con, "test_player_stats") %>% filter(game_id == lost_game)
     
     players = tbl(con, "players")
     
@@ -1129,7 +1136,7 @@ observe({
                                  ))
       #Update the server with the new score
   
-      dbAppendTable(con, "scores", anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+      dbAppendTable(con, "test_scores", anti_join(vals$scores_db, tbl(con, "test_scores") %>% collect()))
       
       
       # Update player stats table
@@ -1224,7 +1231,7 @@ observe({
     
     #Remove the value from the snappaDB
     dbSendQuery(con,
-      str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id)
+      str_c("DELETE FROM test_scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id, ";")
     )
     
     
@@ -1333,8 +1340,8 @@ observe({
                                 foot = input$foot
                               ))
       #Update the server with the new score
-      dbAppendTable(con, "scores", 
-                    anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+      dbAppendTable(con, "test_scores", 
+                    anti_join(vals$scores_db, tbl(con, "test_scores") %>% collect()))
       
       
       # Update player stats
@@ -1431,7 +1438,7 @@ observe({
     
     #Remove the value from the snappaDB
     dbSendQuery(con,
-                str_c("DELETE FROM scores WHERE score_id = ", last_score, 
+                str_c("DELETE FROM test_scores WHERE score_id = ", last_score, 
                       " AND game_id = ", vals$game_id)
     )    
     # Update player_stats 
@@ -1585,14 +1592,14 @@ observe({
     # As with player_stats, I perform the update by deleting the relevant row in the DB table and reinserting the
     # one that we need
     
-    del_game_row = sql(str_c("DELETE FROM game_stats 
+    del_game_row = sql(str_c("DELETE FROM test_game_stats 
                  WHERE game_id = ", vals$game_id, ";"))
     
     dbExecute(con, del_game_row)
   
     dbAppendTable(
       conn = con, 
-      name = "game_stats",
+      name = "test_game_stats",
       value = vals$game_stats_db)
     
     # Should be made unnecessary by adding
@@ -1604,15 +1611,15 @@ observe({
     #   value = anti_join(vals$players_db, players_tbl))
     
     # Update Scores
-    dbAppendTable(
-      conn = con, 
-      name = "scores",
-      value = vals$scores_db)
+    # dbAppendTable(
+    #   conn = con, 
+    #   name = "test_scores",
+    #   value = vals$scores_db)
     
     # Update player_stats
     # dbAppendTable(
     #   conn = con, 
-    #   name = "player_stats",
+    #   name = "test_player_stats",
     #   value = vals$player_stats_db)
     # Confirmation that data was sent to db
     sendSweetAlert(session, 
