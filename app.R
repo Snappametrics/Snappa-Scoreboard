@@ -739,48 +739,55 @@ observe({
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
-    if (tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_end) %>% is.na()){
-      lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+    browser()
+    if (all(
+        # Previous game hasn't ended
+        tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_end) %>% is.na(),
+        # Avoid the case where there are no entries in the table and this if statement fails
+        !(tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_end) %>% identical(character(0)))
+        )){
+        
+        lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_id)
       
-      lost_game_stats = tbl(con, "game_stats") %>% filter(game_id == lost_game)
+        lost_game_stats = tbl(con, "game_stats") %>% filter(game_id == lost_game)
       
-      lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+        lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
       
-      lost_game_scores = list(team_a = lost_game_stats)
+        lost_game_scores = list(team_a = lost_game_stats)
       
       # Set the score outputs and shot number to the values from the last game
-      vals$current_scores$team_a = lost_player_stats %>% 
-        filter(team == "a" & game_id == lost_game) %>%
-        pull(total_points) %>%
-        sum()
-      
-      vals$current_scores$team_b = lost_player_stats %>% 
-        filter(team == "b" & game_id == lost_game) %>%
-        pull(total_points) %>%
-        sum()
-      
-      vals$score_id = tbl(con, "scores") %>% 
-        filter(game_id == lost_game) %>%
-        pull(score_id) %>%
-        max()
-      
-
-      lost_round = tbl(con, "scores") %>% 
-        filter(game_id == lost_game) %>% 
-        pull(round_num) %>% 
-        max()
-
-      vals$shot_num = which(rounds == lost_round)
+        vals$current_scores$team_a = lost_player_stats %>% 
+          filter(team == "a" & game_id == lost_game) %>%
+          pull(total_points) %>%
+          sum()
         
+        vals$current_scores$team_b = lost_player_stats %>% 
+          filter(team == "b" & game_id == lost_game) %>%
+          pull(total_points) %>%
+          sum()
         
-      vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
-      vals$game_id = lost_game
-      
-      vals$game_stats_db = collect(lost_game_stats)
-      
-      # Initialize the current game's player_stats table
-      vals$player_stats_db = collect(lost_player_stats)
-      
+        vals$score_id = tbl(con, "scores") %>% 
+          filter(game_id == lost_game) %>%
+          pull(score_id) %>%
+          max()
+        
+  
+        lost_round = tbl(con, "scores") %>% 
+          filter(game_id == lost_game) %>% 
+          pull(round_num) %>% 
+          max()
+  
+        vals$shot_num = which(rounds == lost_round)
+          
+          
+        vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
+        vals$game_id = lost_game
+        
+        vals$game_stats_db = collect(lost_game_stats)
+        
+        # Initialize the current game's player_stats table
+        vals$player_stats_db = collect(lost_player_stats)
+        
     } else {
       
       # Set the score outputs and shot number to 0
@@ -1224,7 +1231,7 @@ observe({
     
     #Remove the value from the snappaDB
     dbSendQuery(con,
-      str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id)
+      str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id, ";")
     )
     
     
@@ -1604,10 +1611,10 @@ observe({
     #   value = anti_join(vals$players_db, players_tbl))
     
     # Update Scores
-    dbAppendTable(
-      conn = con, 
-      name = "scores",
-      value = vals$scores_db)
+    # dbAppendTable(
+    #   conn = con, 
+    #   name = "scores",
+    #   value = vals$scores_db)
     
     # Update player_stats
     # dbAppendTable(
