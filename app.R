@@ -133,7 +133,7 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
 # Start Screen ------------------------------------------------------------
 
         
-        tabPanel("Player Input", 
+        tabPanel("Player Input", icon = icon("users"),
                  # Fluid Row - 3 columns
                  fluidRow(
                    team_input_ui("a", pull(players_tbl, player_name)),
@@ -193,18 +193,19 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
 
 # Stats Pane --------------------------------------------------------------
 
-  tabPanel("Career Stats",
+  tabPanel("Career Stats", icon = icon("bar-chart"),
            fluidRow(
              column(6,
                     
-                    wellPanel(
+                    wellPanel(style = "height: 600px;",
                       gt_output("career_stats_table")
                     )
                     ),
              column(1),
              column(5,
-                    wellPanel(
-                      plotOutput("scoring_heatmap", hover = "heat_hover"),
+                    wellPanel(style = "height: 750px;",
+                      plotOutput("scoring_heatmap", height = "600px", width = "auto",
+                                 hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
                       uiOutput("heatmap_info")
                     )
              )
@@ -520,8 +521,12 @@ server <- function(input, output, session) {
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
+    freq = filter(score_progression, score_a == y, score_b == x) %>% 
+      pull(n)
+    
     HTML(str_c("<h3>Score</h3>",
-          "<p>Team A: ", x, "  ", "Team B: ", y, "</p>"))
+          "<p><span style='font-weight:500'>Team A</span>: ", x, "  ", "<span style='font-weight:500'>Team B</span>: ", y, "</p>",
+          "<p><span style='font-weight:500'>Frequency</span>: ", freq))
   })
   
   # For debugging
@@ -974,7 +979,7 @@ server <- function(input, output, session) {
       
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
-        showNotification("That's some hot shit!")
+        showNotification("That's some hot shit!", id = "paddle")
       }
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
