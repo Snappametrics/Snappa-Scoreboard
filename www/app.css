@@ -26,14 +26,41 @@
 
 /* My CSS */
 
-#leaderboard .gt_right {
+#shiny-notification-panel {
+    background-color: #3d2b73;
+    width: 17%;
+    height: 7%;
+    opacity: .8;
+    
+}
+
+.shiny-notification {
+    background-color: #3d2b73;
+    color: #fff;
+    margin: 5px;
+    font-size: 2.5rem;
+    border: none;
+}
+
+
+.gt_right, .gt_left, .gt_center {
     border-radius: 100px;
 }
 
 .navbar-default, .navbar-brand, .navbar-nav>li>a {
     color: white !important;
     background-color: #e26a6a !important;
+    font-weight: 500;
 }
+
+.navbar-nav>li>a:hover {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-offset: -2px;
+    z-index: 1;
+    font-weight: 600;
+}
+
 
 
 
@@ -143,7 +170,6 @@ body{
     font-size: 16px;
     margin: 0;
     padding: 0;
-    padding-top: 64px;
 }
 
 header {
