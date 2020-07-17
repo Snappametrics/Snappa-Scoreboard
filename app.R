@@ -102,7 +102,14 @@ top_scorers_tab = inner_join(players_tbl, player_stats_tbl, by = "player_id") %>
   arrange(rank) %>% 
   leaderboard_table()
 
+#Before defining score progression, define the number of games which
+# have been recorded up until this point. This allows me to insert the
+# pseudo-value for the score pairing (0,0) in the heatmap. 
+# num_games is defined according to the count of games, rather than the 
+# max, because there may be cases in which games are deleted intentionally
+# or accidentally 
 
+num_games = tbl(con, "game_stats") %>% filter(game_end != "") %>% pull(game_id) %>% length()
 
 score_progression = scores_tbl %>% 
   arrange(game_id, score_id) %>% 
@@ -112,7 +119,8 @@ score_progression = scores_tbl %>%
     score_b = cumsum((scoring_team=="b")*points_scored)
   ) %>% 
   ungroup() %>% 
-  count(score_a, score_b)
+  count(score_a, score_b) %>%
+  bind_rows( tibble(score_a = 0, score_b = 0, n = num_games))
 
 score_prog_plot = score_heatmap(score_progression)
 
@@ -641,7 +649,6 @@ server <- function(input, output, session) {
   })
   # Game Start --------------------------------------------------------------
   
-  
   # When we click "Start Game", 
   #   - Add new players to the players table
   #   - switch to the scoreboard
@@ -649,7 +656,6 @@ server <- function(input, output, session) {
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
-  
 
 # Add Scoreboard ----------------------------------------------------------
 
