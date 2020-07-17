@@ -94,7 +94,7 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
   
   team_colours = list("a" = "#e26a6a", "b" = "#2574a9")
   
-  tabPanel("Scoreboard", icon = icon("window-maximize"),
+  div(id = "ScoreboardUI", 
            
            fluidRow(
              # Left Team
@@ -104,7 +104,7 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
                        style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
-                       h1(strong(paste("Team", toupper(left_team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
+                       h1(paste("Team", toupper(left_team)), style = "align: center; color: white; font-size: 550%;"),
                        # Score
                        h2(textOutput(paste0("score_", left_team))),
                        # Score button
@@ -124,7 +124,7 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
                      # materialSwitch(
                      #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
                      # ),
-                     actionBttn("switch_sides", "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm"), 
+                     
                      h1("Round", style = "font-size: 600%;"),
                      h3(textOutput("round_num")),
                      fluidRow(actionBttn("previous_round", 

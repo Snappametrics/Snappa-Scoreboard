@@ -578,11 +578,15 @@ server <- function(input, output, session) {
     
     
     if(switch_is_even){
-      removeTab("navbar", target = "Scoreboard", session)
-      insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
+      removeUI("#ScoreboardUI", immediate=T)
+      insertUI(selector = "#scoreboardrow", ui = team_scoreboard_ui("b", "a"), where = "afterEnd")
+      # removeTab("navbar", target = "Scoreboard", session)
+      # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
     } else {
-      removeTab("navbar", target = "Scoreboard", session)
-      insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
+      removeUI("#ScoreboardUI", immediate = T)
+      insertUI(selector = "#scoreboardrow", ui = team_scoreboard_ui(), where = "afterEnd")
+      # removeTab("navbar", target = "Scoreboard", session)
+      # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
     }
     
 
@@ -659,7 +663,16 @@ server <- function(input, output, session) {
 
 # Add Scoreboard ----------------------------------------------------------
 
-    scoreboard_tab = team_scoreboard_ui()
+    scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
+                              div(
+                                fluidRow(id = "scoreboardrow", column(4), 
+                                         column(4, align = "center", 
+                                                actionBttn("switch_sides", 
+                                                           "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
+                                         column(4)),
+                                team_scoreboard_ui()
+                                )
+                              )
     appendTab("navbar", scoreboard_tab, "Player Input")  
     hideTab("navbar", "Player Input")
     
