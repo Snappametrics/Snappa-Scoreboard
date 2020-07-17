@@ -290,9 +290,10 @@ theme_snappa = function(){
   ) %+replace%
     theme(
       plot.title = element_text(face = "bold", size = rel(1.25)), 
-      panel.grid.major = element_line(colour = "grey"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_line(color = "grey", size = 0.1),
       plot.background = element_rect(fill = "#f5f5f5", colour = "transparent")
-    )
+    ) 
 }
 
 leaderboard_table = function(df){
@@ -411,8 +412,12 @@ score_heatmap = function(df){
     labs(x = "Team B",
          y = "Team A",
          title = "Heatmap of scores in Snappa")+
-    scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 5))+
-    scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 5))+
+    coord_cartesian(xlim = c(1, max_score - 1),
+                    ylim = c(1, max_score - 1)) + 
+    scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 1))+
+    scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 1))+
     theme_snappa()
+  
+  
 }
 

@@ -649,7 +649,7 @@ server <- function(input, output, session) {
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
-    
+  
 
 # Add Scoreboard ----------------------------------------------------------
 
