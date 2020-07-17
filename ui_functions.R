@@ -359,9 +359,13 @@ leaderboard_table = function(df){
       vars(total_points, games_played, total_shots) ~ px(60),
       vars(off_ppg, def_ppg, toss_efficiency) ~ px(95)
     ) %>% 
+    # Cell alignment in each column
+    cols_align(
+      align = "center"
+    ) %>%
     # Underline dope shit
     tab_style(
-      style = list(cell_text(weight = "bold"), cell_fill(color = "#FFD600", alpha = .9)),
+      style = list(cell_text(weight = "bold", align = "center"), cell_fill(color = "#FFD600", alpha = .9)),
       locations = list(
         # Most points
         cells_body(
