@@ -128,6 +128,13 @@ label[for='foot'] {
     left: 80rem !important;
 }
 
+#undo_score_a {
+    right: 21vh
+}
+#undo_score_b {
+    left: 21vh
+}
+
 .selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
     font-size: 2.75rem;
 }
