@@ -665,15 +665,34 @@ server <- function(input, output, session) {
 
     scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
                               div(
-                                fluidRow(id = "scoreboardrow", column(4), 
+                                fluidRow(id = "scoreboardrow", 
+                                         column(4, align = "left"#, 
+                                                # # Potentially useful button later
+                                                # dropdown(
+                                                #   gt_output("stats_a"),
+                                                #   style = "unite",
+                                                #   size = "lg", 
+                                                #   label = "Stats",
+                                                #   icon = icon("dice"),
+                                                #   animate = animateOptions(
+                                                #     enter = animations$fading_entrances$fadeInLeft,
+                                                #     exit = animations$fading_exits$fadeOutLeft
+                                                #   ))
+                                                ), 
                                          column(4, align = "center", 
                                                 actionBttn("switch_sides", 
                                                            "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
                                          column(4)),
-                                team_scoreboard_ui()
+                                team_scoreboard_ui(), 
+                                fluidRow(
+                                  column(width = 4, offset = 4, align = "center",
+                                         actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
+                                         actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                                  )
+                                )
                                 )
                               )
-    appendTab("navbar", scoreboard_tab, "Player Input")  
+    insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
     hideTab("navbar", "Player Input")
     
   

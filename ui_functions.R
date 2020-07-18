@@ -168,13 +168,7 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
                     )
              ),
               tags$style(type = "text/css", " #undo_score_a, #undo_score_b {margin-top:2em}")
-              ), 
-              fillRow(
-                column(width = 4, offset = 4, align = "center",
-                       actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
-                       actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
-                       )
-                )
+              )
   )
 }
 
