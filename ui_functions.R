@@ -144,19 +144,6 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
                               actionBttn("next_round", 
                                          label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
                      br(),
-                     # Recent Scores
-                     dropdown(
-                       gt_output("recent_scores"),
-                       style = "unite",
-                       size = "lg", 
-                       up = T,
-                       label = "Recent Scores",
-                       icon = icon("backward"),
-                       animate = animateOptions(
-                         enter = animations$fading_entrances$fadeInUp,
-                         exit = animations$fading_exits$fadeOutDown
-                       )
-                     ),
               ),
               # Team B
              column(width = 4, align = "center",

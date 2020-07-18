@@ -570,12 +570,12 @@ server <- function(input, output, session) {
     
     if(switch_is_even){
       removeUI("#ScoreboardUI", immediate=T)
-      insertUI(selector = "#scoreboardrow", ui = team_scoreboard_ui("b", "a"), where = "afterEnd")
+      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui("b", "a"), where = "beforeBegin")
       # removeTab("navbar", target = "Scoreboard", session)
       # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
     } else {
       removeUI("#ScoreboardUI", immediate = T)
-      insertUI(selector = "#scoreboardrow", ui = team_scoreboard_ui(), where = "afterEnd")
+      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui(), where = "beforeBegin")
       # removeTab("navbar", target = "Scoreboard", session)
       # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
     }
@@ -675,12 +675,33 @@ server <- function(input, output, session) {
                                                            "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
                                          column(4)),
                                 team_scoreboard_ui(), 
-                                fluidRow(
-                                  column(width = 4, offset = 4, align = "center",
-                                         actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
-                                         actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
-                                  )
-                                )
+                                div(id = "bottom_buttons",
+                                    fluidRow(
+                                      column(width =4, offset = 4, align = "center",
+                                             # Recent Scores
+                                             dropdown(
+                                               inputId = "recent_scores",
+                                               gt_output("recent_scores"),
+                                               style = "unite",
+                                               size = "lg", 
+                                               up = T,
+                                               label = "Recent Scores",
+                                               icon = icon("backward"),
+                                               animate = animateOptions(
+                                                 enter = animations$fading_entrances$fadeInUp,
+                                                 exit = animations$fading_exits$fadeOutDown
+                                               )
+                                             ))
+                                      
+                                    ),
+                                    fluidRow(
+                                      column(width = 4, offset = 4, align = "center",
+                                             actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
+                                             actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                                      )
+                                    )
+                                    )
+                                
                                 )
                               )
     insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
