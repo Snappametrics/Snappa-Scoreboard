@@ -43,9 +43,7 @@
 }
 
 
-.gt_right, .gt_left, .gt_center {
-    border-radius: 100px;
-}
+
 
 .navbar-default, .navbar-brand, .navbar-nav>li>a {
     color: white !important;
