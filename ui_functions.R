@@ -333,35 +333,32 @@ leaderboard_table = function(df){
     # Styling
     # Title
     tab_style(
-      style = list(cell_text(color = "white", weight = "bold", align = "center", size = "x-large", v_align = "middle"), cell_fill(color = "#e26a6a")),
+      style = list(cell_text(weight = "bold", size = "x-large")),
       locations = cells_title(groups = "title")
     ) %>%
+    tab_style(style = cell_text(align = "left", v_align = "bottom"),
+              locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
     # Rank column
     tab_style(
-      style = list(cell_text(color = "white", weight = "bold", align = "center"), cell_fill(color = "#2574a9", alpha = .8)),
+      style = list(cell_text(weight = "bold")),
       locations = cells_body(
         columns = vars(rank)
       )
     ) %>% 
-    # Column header alignment
-    tab_style(
-      style = cell_text(align = "center", v_align = "middle"),
-      locations = cells_column_labels(columns = everything())
-    ) %>% 
+    cols_align(align = "right") %>% 
+    cols_align(align = "left", columns = c("player_name", "rank")) %>% 
+    # Left Align Player and Rank
     # Column widths
     cols_width(
       vars(rank) ~ px(30),
-      vars(player_name, points_per_game) ~ px(110),
+      vars(player_name) ~ px(220),
+      vars(points_per_game) ~ px(110),
       vars(total_points, games_played, total_shots) ~ px(60),
       vars(off_ppg, def_ppg, toss_efficiency) ~ px(95)
     ) %>% 
-    # Cell alignment in each column
-    cols_align(
-      align = "center"
-    ) %>%
     # Underline dope shit
     tab_style(
-      style = list(cell_text(weight = "bold", align = "center"), cell_fill(color = "#FFD600", alpha = .9)),
+      style = list(cell_text(weight = "bold"), cell_fill(color = "#FFD600", alpha = .8)),
       locations = list(
         # Most points
         cells_body(
@@ -387,6 +384,11 @@ leaderboard_table = function(df){
     ) %>% 
     tab_options(heading.border.lr.style = "none",
                 heading.border.bottom.style = "none",
+                column_labels.border.top.style = "none",
+                column_labels.border.bottom.style = "solid",
+                column_labels.border.bottom.color = "#7c7c7c",
+                column_labels.border.bottom.width = "3px",
+                column_labels.border.lr.style = "none",
                 table.border.top.style = "none",
                 table.border.right.style = "none",
                 table.border.left.style = "none",
