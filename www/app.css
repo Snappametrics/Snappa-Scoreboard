@@ -124,7 +124,11 @@ label[for='foot'] {
     
 }
 
-#ok_a, #ok_b {font-size:x-large;}
+#ok_a, #ok_b {
+    font-size: x-large;
+    position: relative !important;
+    left: 80rem !important;
+}
 
 .selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
     font-size: 2.75rem;
