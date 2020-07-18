@@ -205,7 +205,7 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
            fluidRow(
              column(6,
                     
-                    wellPanel(style = "height: 600px;",
+                    wellPanel(style = "height: 600px; background-color: #fff",
                       gt_output("career_stats_table")
                     )
                     ),
