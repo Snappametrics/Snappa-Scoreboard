@@ -1096,10 +1096,15 @@ server <- function(input, output, session) {
   
   observeEvent(input$b_score_button, {
     vals$error_msg <- NULL
+    
+    eligible_shooters = filter(snappaneers(), team == "a") %>% 
+      pull(player_name) %>% 
+      sample()
+    
     showModal(
       score_check(
         team = "b", 
-        players = arrange(snappaneers(), desc(team)) %>% pull(player_name)))
+        players = eligible_shooters))
     
   })
   
