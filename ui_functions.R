@@ -40,7 +40,7 @@ score_check <- function(team, players) {
                 column(4, 
                        wellPanel(
                          align = "center",
-                         h3("Anything cool happen?"),
+                         h3("Anything cool happen?", style = "font-weight:700; font-size: 2rem;"),
                          # Was it a paddle?
                          awesomeCheckbox(
                            inputId = "paddle", 
