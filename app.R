@@ -1097,7 +1097,7 @@ server <- function(input, output, session) {
   observeEvent(input$b_score_button, {
     vals$error_msg <- NULL
     
-    eligible_shooters = filter(snappaneers(), team == "a") %>% 
+    eligible_shooters = filter(snappaneers(), team == "b") %>% 
       pull(player_name) %>% 
       sample()
     
