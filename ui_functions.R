@@ -75,7 +75,7 @@ team_input_ui = function(team, player_choices){
          wellPanel(
            style = paste("opacity: 0.92; background:", team_colour),
            # Header
-           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
+           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 600%;"),
            # Player 1
            selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  options = list(create = TRUE), width = "60%"),
            # Player 2
@@ -152,7 +152,7 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
                       style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
                       # uiOutput("active_die_a"),
                       # Header
-                      h1(strong(paste("Team", toupper(right_team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
+                      h1(paste("Team", toupper(right_team)), style = "align: center; color: white; font-size: 550%;"),
                       # Score
                       h2(textOutput(paste0("score_", right_team))),
                       # Score button
