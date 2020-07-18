@@ -167,8 +167,7 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
                       ),
                       h3(textOutput(paste0("player_names_", right_team)))
                     )
-             ),
-              tags$style(type = "text/css", " #undo_score_a, #undo_score_b {margin-top:2em}")
+             )
               )
   )
 }

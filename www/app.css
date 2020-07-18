@@ -59,15 +59,29 @@
     font-weight: 600;
 }
 
+#previous_round, #next_round {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+}
 
+#switch_sides {
+    font-size: 2.25rem;
+}
 
+#new_game, #finish_game {
+    margin-top: 3rem;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
 
-#start_game, #previous_round, #next_round, #scorer, #paddle, #score {
+#start_game, #scorer, #paddle, #score {
     font-size: 170%; 
 }
 
 #round_num {
-    font-size:800%; margin-top: 15%; margin-bottom: 15%;
+    font-size:800%; 
+    margin-top: 15%; 
+    margin-bottom: 15%;
     
 }
 
@@ -76,7 +90,8 @@
 }
 
 #score_a, #score_b {
-    font-size: 700%; color: white;
+    font-size: 700%; 
+    color: white;
     
 }
 
@@ -114,11 +129,13 @@ label[for='paddle'] {
 
 label[for='clink'] {
     font-size: 2.5rem;
+    font-weight:inherit;
     
 }
 
 label[for='foot'] {
     font-size: 2.5rem;
+    font-weight:inherit;
     
 }
 
