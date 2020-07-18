@@ -136,7 +136,8 @@ team_scoreboard_ui = function(left_team = "a", right_team = "b"){
                      dropdown(
                        gt_output("recent_scores"),
                        style = "unite",
-                       size = "lg",
+                       size = "lg", 
+                       up = T,
                        label = "Recent Scores",
                        icon = icon("backward"),
                        animate = animateOptions(
