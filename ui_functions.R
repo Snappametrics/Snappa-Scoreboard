@@ -281,27 +281,30 @@ recent_score_sentence = function(scores_data){
 theme_snappa = function(){
   theme_minimal(
     base_family = "Inter",
-    base_size = 16
+    base_size = 18
   ) %+replace%
     theme(
-      plot.title = element_text(face = "bold", size = rel(1.25)), 
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_line(color = "grey", size = 0.1),
-      plot.background = element_rect(fill = "#f5f5f5", colour = "transparent")
+      plot.title = element_text(size = rel(1.25), margin = margin(b = 20)), 
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey", size = 0.1),
+      plot.background = element_rect(fill = "#f5f5f5", colour = "#f5f5f5")
     ) 
 }
 
 leaderboard_table = function(df){
-  gt(df, id = "leaderboard") %>% 
-    tab_header(title = "Snappa Leaderboard") %>% 
+  df %>% 
+    select(rank, player_name, games_played, total_points, total_shots, points_per_game, off_ppg, def_ppg, toss_efficiency) %>% 
+    gt(., id = "leaderboard") %>% 
+    tab_header(title = "Snappaneers Leaderboard", 
+               subtitle = "The Deadliest Die-throwers in all the land.") %>% 
     # Column names
     cols_label(
       rank = "", 
       player_name = "Player",
       games_played = "Games Played",
-      points_per_game = "Points per Game\n(PPG)",
       total_points = "Total Points",
       total_shots = "Total Shots",
+      points_per_game = "Points per Game\n(PPG)",
       off_ppg = "Offensive PPG",
       def_ppg = "Defensive PPG",
       toss_efficiency = "Toss Efficiency"
