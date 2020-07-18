@@ -29,7 +29,7 @@
 #shiny-notification-panel {
     background-color: #3d2b73;
     width: 17%;
-    height: 7%;
+    height: 2rem;
     opacity: .8;
     
 }
@@ -116,25 +116,29 @@ label.control-label[for^='name_'] {
     
 }
 
-label .control-label[for^='score'] {
-    font-size: x-large;
+label.control-label[for='score'] {
+    font-size: 3rem;
+    
+}
+label.control-label[for='scorer'] {
+    font-size: 3rem;
     
 }
 
 label[for='paddle'] {
-    font-size: 2.5rem; 
+    font-size: 2.25rem; 
     font-weight:inherit;
     
 }
 
 label[for='clink'] {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight:inherit;
     
 }
 
 label[for='foot'] {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
     font-weight:inherit;
     
 }
