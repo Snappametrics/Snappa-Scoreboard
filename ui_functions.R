@@ -14,44 +14,56 @@ score_check <- function(team, players) {
   modalDialog(align = "center", easyClose = T, size = "l",
               # Header
               h2(str_c("Team ", str_to_upper(team), " Scored"), style = paste("color:", team_colour)),
-              # Who Scored?
-              radioGroupButtons(
-                inputId = "scorer",
-                label = "Who scored?",
-                choices = players,
-                direction = "horizontal",
-                individual = T,
-                size = "lg",
-                checkIcon = list(
-                  yes = tags$i(class = "fa fa-dice", 
-                               style = paste("color:", team_colour)))
-              ),
-              # Number of points
-              radioGroupButtons(
-                inputId = "score",
-                label = "Points",
-                choices = c(1, 2, 3, 4, 5, 6, 7),
-                size = "lg"
-              ),
               
-              # Was it a paddle?
-              awesomeCheckbox(
-                inputId = "paddle", 
-                label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
-                status = "warning"
-              ),
-              # Was it a clink?
-              awesomeCheckbox(
-                inputId = "clink", 
-                label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
-                status = "warning"
-              ),
-              # feet?
-              awesomeCheckbox(
-                inputId = "foot", 
-                label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
-                status = "warning"
-              ),
+              fluidRow(
+                column(8,
+                       # Who Scored?
+                       radioGroupButtons(
+                         inputId = "scorer",
+                         label = "Who scored?",
+                         choices = players,
+                         direction = "horizontal",
+                         individual = T,
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-dice", 
+                                        style = paste("color:", team_colour)))
+                       ),
+                       # Number of points
+                       radioGroupButtons(
+                         inputId = "score",
+                         label = "Points",
+                         choices = c(1, 2, 3, 4, 5, 6, 7),
+                         size = "lg"
+                       )
+                       ),
+                column(4, 
+                       wellPanel(
+                         align = "center",
+                         h3("Anything cool happen?"),
+                         # Was it a paddle?
+                         awesomeCheckbox(
+                           inputId = "paddle", 
+                           label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
+                           status = "warning"
+                         ),
+                         # Was it a clink?
+                         awesomeCheckbox(
+                           inputId = "clink", 
+                           label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
+                           status = "warning"
+                         ),
+                         # feet?
+                         awesomeCheckbox(
+                           inputId = "foot", 
+                           label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
+                           status = "warning"
+                         )
+                       )
+                       
+                       )
+              )
+              ,
               
               textOutput("skip_error_msg"),
               # Use score_val output to only show score button on valid scoring combinations
