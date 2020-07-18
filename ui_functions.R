@@ -405,12 +405,12 @@ score_heatmap = function(df){
     geom_tile(aes(fill = n), color = "black")+
     # Record the 45 degree line for visual reference
     geom_abline(mapping = NULL, data = NULL, slope = 1, intercept = 0) + 
-    scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20")+
+    scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20", na.value = "grey")+
     labs(x = "Team B",
          y = "Team A",
          title = "Heatmap of scores in Snappa")+
     coord_cartesian(xlim = c(0.75, max_score - 0.75),
-                    ylim = c(0.75, max_score - 0.75)) + 
+                    ylim = c(0.75, max_score - 0.75)) +
     scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 1)) +
     scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 1)) +
     theme_snappa()
