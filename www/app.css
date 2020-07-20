@@ -150,10 +150,12 @@ label[for='foot'] {
 }
 
 #undo_score_a {
-    right: 21vh
+    right: 19vh;
+    margin-top: 5vh;
 }
 #undo_score_b {
-    left: 21vh
+    left: 21vh;
+    margin-top: 5vh;
 }
 
 .selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
