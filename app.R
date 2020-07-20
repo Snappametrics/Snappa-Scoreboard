@@ -531,7 +531,7 @@ server <- function(input, output, session) {
       pull(n)
     
     HTML(str_c("<h3>Score</h3>",
-          "<p><span style='font-weight:500'>Team A</span>: ", x, "  ", "<span style='font-weight:500'>Team B</span>: ", y, "</p>",
+          "<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
           "<p><span style='font-weight:500'>Frequency</span>: ", freq))
   })
   

@@ -283,8 +283,8 @@ theme_snappa = function(){
   ) %+replace%
     theme(
       plot.title = element_text(size = rel(1.25), margin = margin(b = 20)), 
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_line(color = "grey", size = 0.1),
+      panel.grid.minor = element_line(color = "grey", size = 0.05),
+      panel.grid.major = element_blank(),
       plot.background = element_rect(fill = "#f5f5f5", colour = "#f5f5f5")
     ) 
 }
@@ -403,6 +403,12 @@ score_heatmap = function(df){
     pull() %>% 
     max()
   
+  score_labels = seq_len(max_score + 1) - 1 
+  score_labels[score_labels %% 2 == 0] = ""
+  score_labels = score_labels %>% as.character()
+  # Create helpers for the labels in the scale
+  
+  
   df %>% 
     ggplot(aes(x = score_b, y = score_a))+
     geom_tile(aes(fill = n), color = "black")+
@@ -412,10 +418,10 @@ score_heatmap = function(df){
     labs(x = "Team B",
          y = "Team A",
          title = "Heatmap of scores in Snappa")+
-    coord_cartesian(xlim = c(0.75, max_score - 0.75),
-                    ylim = c(0.75, max_score - 0.75)) +
-    scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 1)) +
-    scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 1)) +
+    coord_cartesian(xlim = c(1, max_score - 1),
+                    ylim = c(1, max_score - 1)) +
+    scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 1), labels = score_labels) +
+    scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 1), labels = score_labels) +
     theme_snappa()
   
   
