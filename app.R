@@ -22,7 +22,7 @@ library(gt)
 library(extrafont)
 
 
-source("dbconnect.R")
+source("test_dbconnect.R")
 source("ui_functions.R")
 
 # Prior to app startup ----------------------------------------------------
@@ -176,6 +176,71 @@ update_player_stats_rows = function(player_stats){
   dbExecute(con, del_rows)
   
   dbAppendTable(con, "player_stats", player_stats)
+}
+
+# For use with restarting a lost game: First extract the table
+# with the teams and the number of players for each team for the given
+# game_id. This function isn't all that necesary in its own right, but
+# I think it helps for readability
+extract_team_sizes = function(g.id = vals$game_id){
+  output = tbl(con, "player_stats") %>% collect() %>% 
+    filter(game_id == g.id) %>%
+    count(team)
+  return(output)
+}
+
+generate_round_num = function(df, g.id = vals$game_id){
+  # Generate the possible sequences for assignment
+  shot_nums = rep(1:200, each = 1)
+  A_geq = rep(1:100, each = 2)
+  B_geq = c(0, A_geq[-200])
+
+  # The values of the shot nums from each team also
+  # need to be recorded. Unique works in this case because
+  # we update shot number for every team member simultaneously
+  A_shots = tbl(con, "player_stats") %>% 
+    filter(game_id == g.id & team == "A") %>% 
+    pull(shots) %>%
+    unique()
+  B_shots = tbl(con, "player_stats") %>% 
+    filter(game_id == g.id & team == "B") %>% 
+    pull(shots) %>%
+    unique()
+    
+  # I generate a multiplier which expresses the difference
+  # between A's players and B's players. For the if's,
+  # I could either reason on the number of players on each 
+  # team or the multiplier. Each of these has their own
+  # drawbacks, but I'll take mathematical complication as the
+  # downside if the gain is having a simple "if" statement. 
+  multiplier = df %>% filter(team == "A") %>% pull(n) / 
+    df %>% filter(team == "B") %>% pull(n) 
+  
+  
+  # Reason on the possible sequence of shots according
+  # to the multiplier
+  if(multiplier > 1) {
+    A_seq = A_geq
+    B_seq = c(0, seq(from = 1, to = (100 * multiplier - multiplier), by = multiplier))
+  } else if (multiplier == 1){
+    A_seq = A_geq
+    B_seq = B_geq
+  } else {
+    A_seq = seq(from = 1, to = (100 / multiplier), by = (1/multiplier))
+    B_seq = B_geq
+  }
+  
+  # Now build the table for checking the round number
+  check_table = tibble(shots = shot_nums, 
+                       A = A_seq,
+                       B = B_seq)
+
+  # Finally, pull the value from shots when A and B meet
+  # the conditions
+  value = check_table %>% 
+    filter(A == A_shots, B == B_shots) %>%
+    pull(shots)
+  return(value)
 }
 
 
@@ -415,7 +480,7 @@ server <- function(input, output, session) {
       discard(is_null)
   })
   
-  # Snappaneers - | Team | Player name | Player ID  |
+  # Snappaneers - | Team | Player name | Player ID  | Shots
   snappaneers = reactive({
     
     tibble(
@@ -922,17 +987,10 @@ observe({
           pull(score_id) %>%
           max()
         
-  
-        lost_round = tbl(con, "scores") %>% 
-          filter(game_id == lost_game) %>% 
-          pull(round_num) %>% 
-          max()
-  
-        vals$shot_num = which(rounds == lost_round)
-          
-          
+
         vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
         vals$game_id = lost_game
+        vals$shot_num = extract_team_sizes() %>% generate_round_num()
         
         vals$game_stats_db = collect(lost_game_stats)
         
@@ -1044,14 +1102,26 @@ observe({
   
   # When previous round button is pushed
   observeEvent(input$previous_round, {
+    browser()
     validate(
       need(vals$shot_num > 1, label = "Can't go below 0", message = "It's the first round still")
     )
     vals$shot_num = vals$shot_num-1
+    # Solve to-do #1 by updating player_stats with rounds at this point
+    
+    # I will update player_stats with this information just after the 
+    # shot_num has been altered (thus meaning that snappanners has updated).
+    # The tricky thing will be checking to see if 
+    
+    
   })
+  
 
+  
+  
   # When next round button is pushed
   observeEvent(input$next_round, {
+    browser()
     if (vals$rebuttal_tag == T){
       if (vals$rebuttal == T){
         click("finish_game")
@@ -1225,7 +1295,6 @@ observe({
   
   # Team A presses score button
   observeEvent(input$ok_A, {
-
     # set score
     score = as.integer(input$score)
     vals$score <- score
@@ -1263,7 +1332,7 @@ observe({
                                    clink = input$clink,
                                    foot = input$foot
                                  ))
-      #Update the server with the new score
+      #Update the db with the new score
   
       dbAppendTable(con, "scores", anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
       
