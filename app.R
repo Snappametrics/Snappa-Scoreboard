@@ -172,10 +172,11 @@ troll_check = function(session, snappaneers, player_stats, game_id){
 # writes player_stats_db off of scores. This should only require
 # a scores table to be passed on, since the snappaneers table that is also
 # called would always be the same
-app_update_player_stats = function(df = vals$scores_db){
-  output = df %>% 
+app_update_player_stats = function(scores_df, neers){
+   g.id = scores_df %>% pull(game_id) %>% unique() 
+   output = scores_df %>% 
     # Join scores to snappaneers to get each player's team
-    left_join(snappaneers(), by = "player_id") %>% 
+    left_join(neers, by = "player_id") %>% 
     # Group by game and player, (team and shots are held consistent)
     group_by(game_id, player_id, team, shots) %>% 
     # Calculate summary stats
@@ -192,9 +193,10 @@ app_update_player_stats = function(df = vals$scores_db){
               toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
     ungroup()
   
-  output = troll_check(snappaneers = snappaneers(),
+  output = troll_check(snappaneers = neers,
                                      player_stats = output,
-                                     game_id = vals$game_id)
+                                     game_id = g.id)
+  return(output)
 }
 
 
@@ -239,11 +241,12 @@ generate_round_num = function(df, g.id = vals$game_id){
     unique()
     
   # I generate a multiplier which expresses the difference
-  # between A's players and B's players. For the if's,
-  # I could either reason on the number of players on each 
-  # team or the multiplier. Each of these has their own
+  # between A's players and B's players. For the if statements
+  # which follow, I could either reason on the number of players  
+  # on each team or the multiplier. Each of these has their own
   # drawbacks, but I'll take mathematical complication as the
-  # downside if the gain is having a simple "if" statement. 
+  # downside if the gain is having a simple battery of "if" 
+  # statements. 
   multiplier = df %>% filter(team == "A") %>% pull(n) / 
     df %>% filter(team == "B") %>% pull(n) 
   
@@ -1133,16 +1136,16 @@ observe({
   
   # When previous round button is pushed
   observeEvent(input$previous_round, {
-    browser()
     validate(
       need(vals$shot_num > 1, label = "Can't go below 0", message = "It's the first round still")
     )
     vals$shot_num = vals$shot_num-1
     # Solve to-do #1 by updating player_stats with rounds at this point
     
-    # I will update player_stats with this information just after the 
-    # shot_num has been altered (thus meaning that snappanners has updated).
-    # The tricky thing will be checking to see if 
+    # Update player stats in the app
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
+    #Update the DB with the new player_stats
+    db_update_player_stats(vals$player_stats_db)
     
     
   })
@@ -1152,7 +1155,6 @@ observe({
   
   # When next round button is pushed
   observeEvent(input$next_round, {
-    browser()
     if (vals$rebuttal_tag == T){
       if (vals$rebuttal == T){
         click("finish_game")
@@ -1163,6 +1165,12 @@ observe({
     }
     
     vals$shot_num = vals$shot_num+1
+    
+    # Update player stats in the app
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
+    #Update the DB with the new player_stats (adds to shots)
+    db_update_player_stats(vals$player_stats_db)
+    
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
                                    round = round_num(), points_to_win = vals$score_to)
@@ -1326,6 +1334,7 @@ observe({
   
   # Team A presses score button
   observeEvent(input$ok_A, {
+    
     # set score
     score = as.integer(input$score)
     vals$score <- score
@@ -1369,29 +1378,7 @@ observe({
       
       
       # Update player stats table
-      vals$player_stats_db = vals$scores_db %>% 
-        # Join scores to snappaneers to get each player's team
-        left_join(snappaneers(), by = "player_id") %>% 
-        # Group by game and player, (team and shots are held consistent)
-        group_by(game_id, player_id, team, shots) %>% 
-        # Calculate summary stats
-        summarise(total_points = sum(points_scored),
-                  ones = sum((points_scored == 1)),
-                  twos = sum((points_scored == 2)),
-                  threes = sum((points_scored == 3)),
-                  impossibles = sum((points_scored > 3)),
-                  paddle_points = sum(points_scored* (paddle | foot)),
-                  clink_points = sum(points_scored*clink),
-                  points_per_round = total_points / last(shots),
-                  off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
-                  def_ppr = paddle_points/last(shots),
-                  toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
-        ungroup()
-
-      vals$player_stats_db = troll_check(snappaneers = snappaneers(),
-                                         player_stats = vals$player_stats_db,
-                                         game_id = vals$game_id)
-      
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())
       db_update_player_stats(vals$player_stats_db)
 
       # Congratulate paddlers
@@ -1553,32 +1540,10 @@ observe({
                     anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
       
       
-      # Update player stats
-      vals$player_stats_db = vals$scores_db %>% 
-        left_join(snappaneers(), by = "player_id") %>% 
-        group_by(game_id, player_id, team, shots) %>% 
-        summarise(total_points = sum(points_scored),
-                  ones = sum((points_scored == 1)),
-                  twos = sum((points_scored == 2)),
-                  threes = sum((points_scored == 3)),
-                  impossibles = sum((points_scored > 3)),
-                  paddle_points = sum(points_scored*(paddle | foot)),
-                  clink_points = sum(points_scored*clink),
-                  points_per_round = total_points / last(shots),
-                  off_ppr = sum(points_scored*!(paddle | foot))/ last(shots),
-                  def_ppr = paddle_points/last(shots),
-                  toss_efficiency = sum(!(paddle | foot))/last(shots)) %>% 
-        ungroup()
-      
-      #Update the DB
-      
-      vals$player_stats_db = troll_check(snappaneers = snappaneers(),
-                                         player_stats = vals$player_stats_db,
-                                         game_id = vals$game_id)
-      
+      # Update player stats in the app
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
-      
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
