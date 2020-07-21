@@ -19,6 +19,8 @@ library(dbplyr)
 library(shinyjs)
 library(shinyWidgets)
 library(gt)
+library(extrafont)
+
 
 source("dbconnect.R")
 source("ui_functions.R")
@@ -42,7 +44,6 @@ game_stats_tbl = tbl(con, "game_stats") %>% collect()
 
 
 # Scores doesn't need to be pulled but will be referenced later
-
 
 
 # Functions ---------------------------------------------------------------
@@ -178,6 +179,22 @@ update_player_stats_rows = function(player_stats){
 }
 
 
+# Career Stats ------------------------------------------------------------
+
+
+
+
+score_progression = scores_tbl %>% 
+  arrange(game_id, score_id) %>% 
+  group_by(game_id) %>% 
+  mutate(
+    score_a = cumsum((scoring_team=="a")*points_scored),
+    score_b = cumsum((scoring_team=="b")*points_scored)
+  ) %>% 
+  ungroup() %>% 
+  count(score_a, score_b)
+
+score_prog_plot = score_heatmap(score_progression)
 
 
 
@@ -186,70 +203,15 @@ update_player_stats_rows = function(player_stats){
 # UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(theme = "front-end/app.css",
+ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player Input",
+  theme = "app.css",
   useShinyjs(),
   
-  # Increase font size:
-  #   - Start game button
-  #   - Previous round button
-  #   - Next round button
-  #   - Score buttons
-  #   - Score pop-up buttons
-  tags$style(paste("#start_game, #previous_round, #next_round, #scorer, #paddle, #score", 
-                   "{ font-size: 170%; }",
-                   # Round number
-                   "#round_num", "{font-size:800%; margin-top: 15%; margin-bottom: 15%;}",
-                   ".bttn-unite.bttn-md", "{font-size: 200%;}",
-                   # Score number
-                   "#score_A, #score_B",  "{font-size: 700%; color: white;}",
-                   # We scored button padding
-                   ".bttn-unite.bttn-lg", "{padding: 1rem 4rem;}",
-                   # Score button
-                   "#A_score_button, #B_score_button", "{font-size: 220%;}",
-                   # Name input labels
-                   "label.control-label[for^='name_']", 
-                   "{font-size: large; color: white;}",
-                   ".btn-group .btn-group-toggle .btn-group-lg", "{font-size:100%;}",
-                   # Scorer input labels
-                   "label.control-label[for^='score']", 
-                   "{font-size: x-large;}",
-                   # Paddle input label
-                   "label[for='paddle']", 
-                   "{font-size: 1.75rem; font-weight:inherit;}",
-                   # Clink input label
-                   "label[for='clink']", 
-                   "{font-size: 1.75rem;}",
-                   # Foot input label
-                   "label[for='foot']", 
-                   "{font-size: 1.75rem;}",
-                   # OK Score button
-                   "#ok_A, #ok_B {font-size:x-large;}",
-                   # Name input font size
-                   ".selectize-input {font-size: 150% !important}",
-                   # Other part of name input font size
-                   ".form-control", "{font-size: 2rem;}",
-                   # Name input options font size
-                   ".selectize-dropdown-content",
-                   "{font-size: 3rem;}",
-                   # Once more unto the name input font size dear friends
-                   ".selectize-input.items.has-options.full.has-items", "{line-height: normal;}")), 
-  # Switching mechanism
-  tags$style("#switcher { display:none; }"),
-    
-  
-  # Application title
-  titlePanel("Snappa Scoreboard"),
-
-
-  tabsetPanel(
-        # Switching mechanism
-        id = "switcher",
-        
 
 # Start Screen ------------------------------------------------------------
 
         
-        tabPanel("start_screen", 
+        tabPanel("Player Input", icon = icon("users"),
                  # Fluid Row - 3 columns
                  fluidRow(
                    team_input_ui("A", pull(players_tbl, player_name)),
@@ -283,7 +245,7 @@ ui <- fluidPage(theme = "front-end/app.css",
                           helpText("Note: All players must enter their name before the game can begin")
                           ),
                    column(4)
-                   ),
+                   )
                  
                  # Try to make Icons work
                  
@@ -307,52 +269,30 @@ ui <- fluidPage(theme = "front-end/app.css",
                 
         
 
-# Scoreboard --------------------------------------------------------------
+# Stats Pane --------------------------------------------------------------
+
+  tabPanel("Career Stats", icon = icon("bar-chart"),
+           fluidRow(
+             column(6,
+                    
+                    wellPanel(style = "height: 600px; background-color: #fff",
+                      gt_output("career_stats_table")
+                    )
+                    ),
+             column(1),
+             column(5,
+                    wellPanel(style = "height: 750px;",
+                      plotOutput("scoring_heatmap", height = "600px", width = "auto",
+                                 hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
+                      uiOutput("heatmap_info")
+                    )
+             )
+           )
+  )
 
 
-        tabPanel("scoreboard", 
-                 
-                 # Scoreboard - 3 columns
-                 fluidRow(
-                   # Column 1 - Team A
-                   team_scoreboard_ui("A"),
-                   
-                   # Round
-                   column(width = 4, align = "center",
-                          h1("Round", style = "font-size: 600%;"),
-                          h3(textOutput("round_num")),
-                          fluidRow(actionBttn("previous_round", 
-                                             label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
-                                  actionBttn("next_round", 
-                                             label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
-                          br(),
-                          # Recent Scores
-                          dropdown(
-                            gt_output("recent_scores"),
-                            style = "unite",
-                            size = "lg",
-                            label = "Recent Scores",
-                            icon = icon("backward"),
-                            animate = animateOptions(
-                              enter = animations$fading_entrances$fadeInUp,
-                              exit = animations$fading_exits$fadeOutDown
-                            )
-                          ),
-                   ),
-                   # Team B
-                   team_scoreboard_ui("B"),
-                   tags$style(type = "text/css", " #undo_score_A, #undo_score_B {margin-top:2em}")
-                 ), 
-                 fillRow(
-                   column(width = 4, offset = 4, align = "center",
-                          actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
-                          actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
-                          )
-                   )
-                 )
 
-              ),
-
+        
 
 # Debugging ---------------------------------------------------------------
 
@@ -450,7 +390,9 @@ server <- function(input, output, session) {
     want_A3 = F,
     want_A4 = F,
     want_B3 = F,
-    want_B4 = F
+    want_B4 = F,
+
+    switch_counter = 1
   )
   
   
@@ -499,6 +441,34 @@ server <- function(input, output, session) {
     length(active_player_inputs()[active_player_inputs() != ""])
   })
   
+  top_scorers_tab = reactive({
+    inner_join(vals$players_db, tbl(con, "player_stats") %>% collect(), by = "player_id") %>%
+    select(-player_id) %>% 
+    # Calculate leaderboard
+    group_by(player_name) %>% 
+    summarise(
+      games_played = n(),
+      points_per_game = mean(total_points),
+      total_points = sum(total_points),
+      offensive_points = sum(off_ppr*shots),
+      defensive_points = sum(def_ppr*shots),
+      ones = sum(ones),
+      twos = sum(twos),
+      threes = sum(threes),
+      paddle_points = sum(paddle_points),
+      clink_points = sum(clink_points),
+      total_shots = sum(shots),
+      off_ppg = mean(off_ppr*shots),
+      def_ppg = mean(def_ppr*shots),
+      toss_efficiency = weighted.mean(toss_efficiency, w = shots)
+    ) %>% 
+    ungroup() %>% 
+    filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
+    mutate(rank = rank(-total_points)) %>% 
+    select(rank, everything(), -offensive_points:-clink_points) %>% 
+    arrange(rank)
+  })
+  
   
   
   
@@ -518,6 +488,10 @@ server <- function(input, output, session) {
     
   })
   
+
+# Score Validation --------------------------------------------------------
+
+
   output$A_score_val = renderUI({
     # Check that the round/shooter combination makes sense / indicated a paddle
     validate(
@@ -642,6 +616,32 @@ server <- function(input, output, session) {
     }
   )
   
+
+# Stats Pane --------------------------------------------------------------
+
+  output$career_stats_table = render_gt({
+    top_scorers_tab() %>% 
+      leaderboard_table()
+      
+  })
+  
+  output$scoring_heatmap = renderPlot({
+    score_prog_plot
+  })
+  
+  output$heatmap_info <- renderUI({
+    req(input$heat_hover)
+    x <- round(input$heat_hover$x, 0)
+    y <- round(input$heat_hover$y, 0)
+    
+    freq = filter(score_progression, score_a == y, score_b == x) %>% 
+      pull(n)
+    
+    HTML(str_c("<h3>Score</h3>",
+          "<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
+          "<p><span style='font-weight:500'>Frequency</span>: ", freq))
+  })
+  
   # For debugging
   
   output$db_output_players = renderTable({
@@ -707,10 +707,31 @@ observe({
   
 })
 
-  
 
 # Game Start Validation ---------------------------------------------------
 
+  
+  observeEvent(input$switch_sides, {
+    
+    vals$switch_counter = vals$switch_counter+1
+    
+    switch_is_even = (vals$switch_counter %% 2 == 0)
+    
+    
+    if(switch_is_even){
+      removeUI("#ScoreboardUI", immediate=T)
+      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
+      # removeTab("navbar", target = "Scoreboard", session)
+      # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
+    } else {
+      removeUI("#ScoreboardUI", immediate = T)
+      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui(), where = "beforeBegin")
+      # removeTab("navbar", target = "Scoreboard", session)
+      # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
+    }
+    
+
+  })
   
   
   # Create a UI output which validates that there are four players and the names are unique
@@ -773,7 +794,6 @@ observe({
   })
   # Game Start --------------------------------------------------------------
   
-  
   # When we click "Start Game", 
   #   - Add new players to the players table
   #   - switch to the scoreboard
@@ -781,6 +801,61 @@ observe({
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
+
+# Add Scoreboard ----------------------------------------------------------
+
+    scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
+                              div(
+                                fluidRow(id = "scoreboardrow", 
+                                         column(4, align = "left"#, 
+                                                # # Potentially useful button later
+                                                # dropdown(
+                                                #   gt_output("stats_a"),
+                                                #   style = "unite",
+                                                #   size = "lg", 
+                                                #   label = "Stats",
+                                                #   icon = icon("dice"),
+                                                #   animate = animateOptions(
+                                                #     enter = animations$fading_entrances$fadeInLeft,
+                                                #     exit = animations$fading_exits$fadeOutLeft
+                                                #   ))
+                                                ), 
+                                         column(4, align = "center", 
+                                                actionBttn("switch_sides", 
+                                                           "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
+                                         column(4)),
+                                team_scoreboard_ui(), 
+                                div(id = "bottom_buttons",
+                                    fluidRow(
+                                      column(width =4, offset = 4, align = "center",
+                                             # Recent Scores
+                                             dropdown(
+                                               inputId = "recent_scores",
+                                               gt_output("recent_scores"),
+                                               style = "unite",
+                                               size = "lg", 
+                                               up = T,
+                                               label = "Recent Scores",
+                                               icon = icon("backward"),
+                                               animate = animateOptions(
+                                                 enter = animations$fading_entrances$fadeInUp,
+                                                 exit = animations$fading_exits$fadeOutDown
+                                               )
+                                             ))
+                                      
+                                    ),
+                                    fluidRow(
+                                      column(width = 4, offset = 4, align = "center",
+                                             actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
+                                             actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                                      )
+                                    )
+                                    )
+                                
+                                )
+                              )
+    insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
+    hideTab("navbar", "Player Input")
     
   
     # Add new players to the players table
@@ -1138,6 +1213,11 @@ observe({
   
   observeEvent(input$A_score_button, {
     vals$error_msg <- NULL
+    
+    eligible_shooters = filter(snappaneers(), team == "a") %>% 
+      pull(player_name) %>% 
+      sample()
+    
     showModal(
       score_check(team = "A", 
                   players = arrange(snappaneers(), team) %>% pull(player_name)))
@@ -1216,7 +1296,7 @@ observe({
 
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
-        showNotification("That's some hot shit!")
+        showNotification("That's some hot shit!", id = "paddle")
       }
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
@@ -1319,11 +1399,16 @@ observe({
   
   observeEvent(input$B_score_button, {
     vals$error_msg <- NULL
+    
+    eligible_shooters = filter(snappaneers(), team == "b") %>% 
+      pull(player_name) %>% 
+      sample()
+    
     showModal(
       score_check(
         team = "B", 
         players = arrange(snappaneers(), desc(team)) %>% pull(player_name)))
-    
+
   })
   
   # Score validation

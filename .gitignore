@@ -5,5 +5,5 @@
 Career_Statistics_Creation DO NOT PUSH.Rmd
 Career_Statistics_Creation-DO-NOT-PUSH.html
 knit career stats.R
-db_connect.R
-update_input.js
+database/db_connect.R
+SnappaStatsScratchwork.nb.html

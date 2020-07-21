@@ -13,45 +13,57 @@ score_check <- function(team, players) {
   # Ask how many points were scored and by whom
   modalDialog(align = "center", easyClose = T, size = "l",
               # Header
-              h1(str_c("Team ", team, " Scored"), style = paste("color:", team_colour)),
-              # Who Scored?
-              radioGroupButtons(
-                inputId = "scorer",
-                label = "Who scored?",
-                choices = players,
-                direction = "horizontal",
-                individual = T,
-                size = "lg",
-                checkIcon = list(
-                  yes = tags$i(class = "fa fa-dice", 
-                               style = paste("color:", team_colour)))
-              ),
-              # Number of points
-              radioGroupButtons(
-                inputId = "score",
-                label = "Points",
-                choices = c(1, 2, 3, 4, 5, 6, 7),
-                size = "lg"
-              ),
-              
-              # Was it a paddle?
-              awesomeCheckbox(
-                inputId = "paddle", 
-                label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
-                status = "warning"
-              ),
-              # Was it a clink?
-              awesomeCheckbox(
-                inputId = "clink", 
-                label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
-                status = "warning"
-              ),
-              # feet?
-              awesomeCheckbox(
-                inputId = "foot", 
-                label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
-                status = "warning"
-              ),
+              h2(str_c("Team ", str_to_upper(team), " Scored"), style = paste("color:", team_colour)),
+
+              fluidRow(
+                column(8,
+                       # Who Scored?
+                       radioGroupButtons(
+                         inputId = "scorer",
+                         label = "Who scored?",
+                         choices = players,
+                         direction = "horizontal",
+                         individual = T,
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-dice", 
+                                        style = paste("color:", team_colour)))
+                       ),
+                       # Number of points
+                       radioGroupButtons(
+                         inputId = "score",
+                         label = "Points",
+                         choices = c(1, 2, 3, 4, 5, 6, 7),
+                         size = "lg"
+                       )
+                       ),
+                column(4, 
+                       wellPanel(
+                         align = "center",
+                         h3("Anything cool happen?", style = "font-weight:700; font-size: 2rem;"),
+                         # Was it a paddle?
+                         awesomeCheckbox(
+                           inputId = "paddle", 
+                           label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
+                           status = "warning"
+                         ),
+                         # Was it a clink?
+                         awesomeCheckbox(
+                           inputId = "clink", 
+                           label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
+                           status = "warning"
+                         ),
+                         # feet?
+                         awesomeCheckbox(
+                           inputId = "foot", 
+                           label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
+                           status = "warning"
+                         )
+                       )
+                       
+                       )
+              )
+              ,
               
               textOutput("skip_error_msg"),
               # Use score_val output to only show score button on valid scoring combinations
@@ -75,7 +87,7 @@ team_input_ui = function(team, player_choices){
          wellPanel(
            style = paste("opacity: 0.92; background:", team_colour),
            # Header
-           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
+           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 600%;"),
            # Player 1
            selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  options = list(create = TRUE), width = "60%"),
            # Player 2
@@ -90,31 +102,72 @@ team_input_ui = function(team, player_choices){
   )
 }
 
-team_scoreboard_ui = function(team){
+team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   
-  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-  
-  column(width = 4, align = "center",
-         
-         wellPanel(
-           style = paste("opacity: 0.92; background:", team_colour),
-           # uiOutput("active_die_a"),
-           # Header
-           h1(strong(paste("Team", toupper(team))), style = "align: center; color: white; font-size: 600%; margin-top:30px;margin-bottom:30px;"),
-           # Score
-           h2(textOutput(paste0("score_", team))),
-           # Score button
-           actionBttn(paste0(team, "_score_button"), 
-                      label = "We scored!", color = "danger",
-                      size = "lg"),
-           br(),
-           actionBttn(
-             inputId = paste0("undo_score_", team),
-             label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-           ),
-           h3(textOutput(paste0("player_names_", team)))
-         )
-         
+  team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+
+  div(id = "ScoreboardUI", 
+           
+           fluidRow(
+             # Left Team
+             column(width = 4, align = "center",
+                     
+                     wellPanel(
+                       style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
+                       # uiOutput("active_die_a"),
+                       # Header
+                       h1(paste("Team", toupper(left_team)), style = "align: center; color: white; font-size: 550%;"),
+                       # Score
+                       h2(textOutput(paste0("score_", left_team))),
+                       # Score button
+                       actionBttn(paste0(left_team, "_score_button"), 
+                                  label = "We scored!", color = "danger",
+                                  size = "lg"),
+                       br(),
+                       actionBttn(
+                         inputId = paste0("undo_score_", left_team),
+                         label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                       ),
+                       h3(textOutput(paste0("player_names_", left_team)))
+                     )
+              ), 
+              # Round
+              column(width = 4, align = "center",
+                     # materialSwitch(
+                     #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
+                     # ),
+                     
+                     h1("Round", style = "font-size: 600%;"),
+                     h3(textOutput("round_num")),
+                     fluidRow(actionBttn("previous_round", 
+                                         label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
+                              actionBttn("next_round", 
+                                         label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
+                     br(),
+              ),
+              # Team B
+             column(width = 4, align = "center",
+                    
+                    wellPanel(
+                      style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
+                      # uiOutput("active_die_a"),
+                      # Header
+                      h1(paste("Team", toupper(right_team)), style = "align: center; color: white; font-size: 550%;"),
+                      # Score
+                      h2(textOutput(paste0("score_", right_team))),
+                      # Score button
+                      actionBttn(paste0(right_team, "_score_button"), 
+                                 label = "We scored!", color = "danger",
+                                 size = "lg"),
+                      br(),
+                      actionBttn(
+                        inputId = paste0("undo_score_", right_team),
+                        label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                      ),
+                      h3(textOutput(paste0("player_names_", right_team)))
+                    )
+             )
+              )
   )
 }
 
@@ -218,5 +271,159 @@ recent_score_sentence = function(scores_data){
                                      na.omit(if_else(paddle, str_c(" And it was a", na.omit(if_else(foot, " foot", NA_character_)), " paddle!"), NA_character_)))) %>% 
     ungroup() %>% 
     select(-score_id)
+}
+
+
+# Stats Output ------------------------------------------------------------
+
+theme_snappa = function(){
+  theme_minimal(
+    base_family = "Inter",
+    base_size = 18
+  ) %+replace%
+    theme(
+      plot.title = element_text(size = rel(1.25), margin = margin(b = 20)), 
+      panel.grid.minor = element_line(color = "grey", size = 0.05),
+      panel.grid.major = element_blank(),
+      plot.background = element_rect(fill = "#f5f5f5", colour = "#f5f5f5")
+    ) 
+}
+
+leaderboard_table = function(df){
+  df %>% 
+    select(rank, player_name, games_played, total_points, total_shots, points_per_game, off_ppg, def_ppg, toss_efficiency) %>% 
+    gt(., id = "leaderboard") %>% 
+    tab_header(title = "Snappaneers Leaderboard", 
+               subtitle = "The Deadliest Die-throwers in all the land.") %>% 
+    # Column names
+    cols_label(
+      rank = "", 
+      player_name = "Player",
+      games_played = "Games Played",
+      total_points = "Total Points",
+      total_shots = "Total Shots",
+      points_per_game = "Points per Game\n(PPG)",
+      off_ppg = "Offensive PPG",
+      def_ppg = "Defensive PPG",
+      toss_efficiency = "Toss Efficiency"
+    ) %>% 
+    # Format integers
+    fmt_number(
+      columns = vars(rank, total_points, total_shots),
+      decimals = 0
+    ) %>% 
+    # Format doubles
+    fmt_number(
+      columns = vars(points_per_game, off_ppg, def_ppg),
+      decimals = 2
+    ) %>% 
+    # Format percentages
+    fmt_percent(
+      columns = vars(toss_efficiency),
+      decimals = 1
+    ) %>% 
+    tab_footnote(
+      footnote = "Defensive points are scored from paddles.",
+      locations = cells_column_labels(columns = vars(def_ppg))
+    ) %>% 
+    tab_footnote(
+      footnote = "% of tosses which are successful.",
+      locations = cells_column_labels(columns = vars(toss_efficiency))
+    ) %>%
+    opt_footnote_marks(marks = "letters") %>% 
+    # Styling
+    # Title
+    tab_style(
+      style = list(cell_text(weight = "bold", size = "x-large")),
+      locations = cells_title(groups = "title")
+    ) %>%
+    tab_style(style = cell_text(align = "left", v_align = "bottom"),
+              locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
+    # Rank column
+    tab_style(
+      style = list(cell_text(weight = "bold")),
+      locations = cells_body(
+        columns = vars(rank)
+      )
+    ) %>% 
+    cols_align(align = "right") %>% 
+    cols_align(align = "left", columns = c("player_name", "rank")) %>% 
+    # Left Align Player and Rank
+    # Column widths
+    cols_width(
+      vars(rank) ~ px(30),
+      vars(player_name) ~ px(220),
+      vars(points_per_game) ~ px(110),
+      vars(total_points, games_played, total_shots) ~ px(60),
+      vars(off_ppg, def_ppg, toss_efficiency) ~ px(95)
+    ) %>% 
+    # Underline dope shit
+    tab_style(
+      style = list(cell_text(weight = "bold"), cell_fill(color = "#FFD600", alpha = .8)),
+      locations = list(
+        # Most points
+        cells_body(
+          columns = vars(total_points),
+          rows = total_points == max(total_points)
+          ),
+        # Highest ppg
+        cells_body(
+          columns = vars(points_per_game),
+          rows = points_per_game == max(points_per_game)
+        ),
+        # Highest off ppg
+        cells_body(
+          columns = vars(off_ppg),
+          rows = off_ppg == max(off_ppg)
+        ),
+        # Highest def ppg
+        cells_body(
+          columns = vars(def_ppg),
+          rows = def_ppg == max(def_ppg)
+        )
+      )
+    ) %>% 
+    tab_options(heading.border.lr.style = "none",
+                heading.border.bottom.style = "none",
+                column_labels.border.top.style = "none",
+                column_labels.border.bottom.style = "solid",
+                column_labels.border.bottom.color = "#7c7c7c",
+                column_labels.border.bottom.width = "3px",
+                column_labels.border.lr.style = "none",
+                table.border.top.style = "none",
+                table.border.right.style = "none",
+                table.border.left.style = "none",
+                table.border.bottom.style = "none",
+                column_labels.font.weight = "600")
   
 }
+
+score_heatmap = function(df){
+  max_score = summarise_at(df, vars(starts_with("score")), max) %>% 
+    pull() %>% 
+    max()
+  
+  score_labels = seq_len(max_score + 1) - 1 
+  score_labels[score_labels %% 2 == 0] = ""
+  score_labels = score_labels %>% as.character()
+  # Create helpers for the labels in the scale
+  
+  
+  df %>% 
+    ggplot(aes(x = score_b, y = score_a))+
+    geom_tile(aes(fill = n), color = "black")+
+    # Record the 45 degree line for visual reference
+    geom_abline(mapping = NULL, data = NULL, slope = 1, intercept = 0) + 
+    scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20", na.value = "grey")+
+    labs(x = "Team B",
+         y = "Team A",
+         title = "Heatmap of scores in Snappa")+
+    coord_cartesian(xlim = c(1, max_score - 1),
+                    ylim = c(1, max_score - 1)) +
+    scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 1), labels = score_labels) +
+    scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 1), labels = score_labels) +
+    theme_snappa()
+  
+  
+}
+

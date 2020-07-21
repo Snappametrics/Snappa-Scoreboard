@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 :root {
     --deep-red: #BF0711;
     --red: #DE3618;
@@ -23,6 +24,176 @@
     --gray-2: rgba(8, 0, 26, 0.03);
 }
 
+/* My CSS */
+
+#shiny-notification-panel {
+    background-color: #3d2b73;
+    width: 17%;
+    height: 2rem;
+    opacity: .8;
+    
+}
+
+.shiny-notification {
+    background-color: #3d2b73;
+    color: #fff;
+    margin: 5px;
+    font-size: 2.5rem;
+    border: none;
+}
+
+
+
+
+.navbar-default, .navbar-brand, .navbar-nav>li>a {
+    color: white !important;
+    background-color: #e26a6a !important;
+    font-weight: 500;
+}
+
+.navbar-nav>li>a:hover {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-offset: -2px;
+    z-index: 1;
+    font-weight: 600;
+}
+
+#previous_round, #next_round {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+#switch_sides {
+    font-size: 2.25rem;
+}
+
+#new_game, #finish_game {
+    margin-top: 3rem;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+#start_game, #scorer, #paddle, #score {
+    font-size: 170%; 
+}
+
+#round_num {
+    font-size:800%; 
+    margin-top: 15%; 
+    margin-bottom: 15%;
+    
+}
+
+.bttn-unite.bttn-md { 
+    font-size: 200%;
+}
+
+#score_a, #score_b {
+    font-size: 700%; 
+    color: white;
+    
+}
+
+.bttn-unite.bttn-lg {
+    padding: 1rem 4rem;
+    
+}
+
+#a_score_button, #b_score_button {
+    font-size: 220%;
+    
+}
+
+label.control-label[for^='name_'] {
+    font-size: 4rem; 
+    color: white;
+    
+}
+
+.btn-group .btn-group-toggle .btn-group-lg {
+    font-size:100%;
+    
+}
+
+label.control-label[for='score'] {
+    font-size: 3rem;
+    
+}
+label.control-label[for='scorer'] {
+    font-size: 3rem;
+    
+}
+
+label[for='paddle'] {
+    font-size: 2.25rem; 
+    font-weight:inherit;
+    
+}
+
+label[for='clink'] {
+    font-size: 2.25rem;
+    font-weight:inherit;
+    
+}
+
+label[for='foot'] {
+    font-size: 2.25rem;
+    font-weight:inherit;
+    
+}
+
+#ok_a, #ok_b {
+    font-size: x-large;
+    position: relative !important;
+    left: 80rem !important;
+}
+
+#undo_score_a {
+    right: 19vh;
+    margin-top: 5vh;
+}
+#undo_score_b {
+    left: 21vh;
+    margin-top: 5vh;
+}
+
+.selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
+    font-size: 2.75rem;
+}
+
+
+.selectize-dropdown-content {font-size: 3rem;}
+
+.selectize-input.items.has-options.full.has-items {line-height: normal;}
+
+.form-control.selectize-control {
+    font-size:5rem;
+}
+
+.btn-group {
+    padding: 0 0.1rem;
+}
+
+.form-group {
+    display: block;
+    font-size: 2rem;
+}
+
+.radio-btn-icon-yes {
+    padding-right: 1rem;
+}
+
+.label {
+    font-size: 2rem;
+}
+
+.checkbox-bs input[type="checkbox"] {
+    transform: scale(2);
+}
+
+/* End my CSS */
+
 body{
     background-color: #ffffff;
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232051e5' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
@@ -31,7 +202,6 @@ body{
     font-size: 16px;
     margin: 0;
     padding: 0;
-    padding-top: 64px;
 }
 
 header {
