@@ -1628,52 +1628,13 @@ observe({
     #               message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
     #               label = "check_game_over"))
 
-    
-    
-    #update player_stats one more time so that points per shot is accurate
-    vals$player_stats_db = vals$scores_db %>% 
-      left_join(snappaneers(), by = "player_id") %>% 
-      group_by(game_id, player_id, team, shots) %>% 
-      summarise(total_points = sum(points_scored),
-                ones = sum((points_scored == 1)),
-                twos = sum((points_scored == 2)),
-                threes = sum((points_scored == 3)),
-                impossibles = sum((points_scored > 3)),
-                paddle_points = sum(points_scored*paddle),
-                clink_points = sum(points_scored*clink),
-                points_per_round = total_points / last(shots),
-                off_ppr = sum(points_scored*!paddle)/ last(shots),
-                def_ppr = paddle_points/last(shots),
-                toss_efficiency = sum(!paddle)/last(shots)) %>% 
-      ungroup()
-    
+
     
     # Make sure that everyone is in the player_stats table, i.e., 
     # record the trolls in the dungeon
-    vals$trolls = snappaneers() %>%
-                  anti_join(vals$player_stats_db, by = "player_id")
+
     
-    vals$player_stats_db = bind_rows(vals$player_stats_db, 
-                tibble(
-                  game_id = rep(vals$game_id, times = nrow(vals$trolls)),
-                  player_id = pull(vals$trolls, player_id), 
-                  team = pull(vals$trolls, team), 
-                  total_points = rep(integer(1), times = nrow(vals$trolls)), # Weirdly enough, integer(1) is a 0 integer vector of length 1
-                  shots = pull(vals$trolls, shots),
-                  ones = rep(integer(1), times = nrow(vals$trolls)),
-                  twos = rep(integer(1), times = nrow(vals$trolls)),
-                  threes = rep(integer(1), times = nrow(vals$trolls)),
-                  impossibles = rep(integer(1), times = nrow(vals$trolls)),
-                  paddle_points = rep(integer(1), times = nrow(vals$trolls)),
-                  clink_points = rep(integer(1), times = nrow(vals$trolls)),
-                  points_per_round = rep(integer(1), times = nrow(vals$trolls)),
-                  off_ppr = rep(integer(1), times = nrow(vals$trolls)),
-                  def_ppr = rep(integer(1), times = nrow(vals$trolls)),
-                  toss_efficiency = rep(integer(1), times = nrow(vals$trolls))
-                  )
-                )
-    
-    
+    update_player_stats_rows(vals$player_stats_db)
     
     # Update Game History
     # Calculate game-level stats from game stats players
@@ -1711,6 +1672,36 @@ observe({
       conn = con, 
       name = "game_stats",
       value = vals$game_stats_db)
+    
+    # Update player stats table
+    vals$player_stats_db = vals$scores_db %>% 
+      # Join scores to snappaneers to get each player's team
+      left_join(snappaneers(), by = "player_id") %>% 
+      # Group by game and player, (team and shots are held consistent)
+      group_by(game_id, player_id, team, shots) %>% 
+      # Calculate summary stats
+      summarise(total_points = sum(points_scored),
+                ones = sum((points_scored == 1)),
+                twos = sum((points_scored == 2)),
+                threes = sum((points_scored == 3)),
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored* (paddle | foot)),
+                clink_points = sum(points_scored*clink),
+                points_per_round = total_points / last(shots),
+                off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+                def_ppr = paddle_points/last(shots),
+                toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
+      ungroup()
+    
+    
+    vals$player_stats_db = troll_check(snappaneers = snappaneers(),
+                                       player_stats = vals$player_stats_db,
+                                       game_id = vals$game_id)
+    
+    dbAppendTable(
+      conn = con, 
+      name = "player_stats",
+      value = vals$player_stats_db)
     
     # Should be made unnecessary by adding
     # players immediately 
