@@ -595,6 +595,11 @@ server <- function(input, output, session) {
 
 # Events ------------------------------------------------------------------
 
+  
+
+# Existing Game Check -----------------------------------------------------
+
+
 # Very start of game: display a popup message
 # if the previous game is incomplete
   
@@ -604,7 +609,7 @@ observe({
       tbl(con, "game_stats") %>% 
                   filter(game_id == max(game_id)) %>% 
                   pull(game_end) %>% 
-                  is.na(),
+                  is.na(), # CODE TO CHECK FOR MISSING GAME => CHECK WHETHER SCORE A OR SCORE B IN GAME STATS > 21
       message = FALSE
       )
   )
@@ -1511,11 +1516,12 @@ observe({
   observeEvent(input$send_to_db, {
    
 
-    # Sanity check: Only submit games which have reached their conclusion
-    validate(need(any(vals$current_scores$team_a >= vals$score_to,
-                      vals$current_scores$team_b >= vals$score_to), 
-                  message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
-                  label = "check_game_over"))
+    # CODE TO USE IN RESUME GAME VALIDATION
+    #
+    # validate(need(any(vals$current_scores$team_a >= vals$score_to,
+    #                   vals$current_scores$team_b >= vals$score_to),
+    #               message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
+    #               label = "check_game_over"))
     
     
     
