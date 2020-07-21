@@ -168,7 +168,38 @@ troll_check = function(session, snappaneers, player_stats, game_id){
   
 }
 
-update_player_stats_rows = function(player_stats){
+# For the sake of code simplicity, I'm going to define a function which
+# writes player_stats_db off of scores. This should only require
+# a scores table to be passed on, since the snappaneers table that is also
+# called would always be the same
+app_update_player_stats = function(df = vals$scores_db){
+  output = df %>% 
+    # Join scores to snappaneers to get each player's team
+    left_join(snappaneers(), by = "player_id") %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, team, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
+    ungroup()
+  
+  output = troll_check(snappaneers = snappaneers(),
+                                     player_stats = output,
+                                     game_id = vals$game_id)
+}
+
+
+
+db_update_player_stats = function(player_stats){
   current_game = unique(player_stats$game_id)
   del_rows = sql(str_c("DELETE FROM player_stats 
                  WHERE game_id = ", current_game, ";"))
@@ -1361,7 +1392,7 @@ observe({
                                          player_stats = vals$player_stats_db,
                                          game_id = vals$game_id)
       
-      update_player_stats_rows(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db)
 
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
@@ -1458,7 +1489,7 @@ observe({
                                        game_id = vals$game_id)
     
    #Update the DB with the new player_stats
-    update_player_stats_rows(vals$player_stats_db)
+    db_update_player_stats(vals$player_stats_db)
     
   })
   
@@ -1546,7 +1577,7 @@ observe({
                                          game_id = vals$game_id)
       
       #Update the DB with the new player_stats
-      update_player_stats_rows(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db)
       
       
       
@@ -1644,7 +1675,7 @@ observe({
                                        game_id = vals$game_id)
     
     #Update the DB with the new player_stats
-    update_player_stats_rows(vals$player_stats_db)
+    db_update_player_stats(vals$player_stats_db)
     
   })
   
@@ -1703,7 +1734,7 @@ observe({
     # record the trolls in the dungeon
 
     
-    update_player_stats_rows(vals$player_stats_db)
+    db_update_player_stats(vals$player_stats_db)
     
     # Update Game History
     # Calculate game-level stats from game stats players
