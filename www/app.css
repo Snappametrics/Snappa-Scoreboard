@@ -89,7 +89,7 @@
     font-size: 200%;
 }
 
-#score_a, #score_b {
+#score_A, #score_B {
     font-size: 700%; 
     color: white;
     
@@ -100,7 +100,7 @@
     
 }
 
-#a_score_button, #b_score_button {
+#A_score_button, #B_score_button {
     font-size: 220%;
     
 }
@@ -143,17 +143,17 @@ label[for='foot'] {
     
 }
 
-#ok_a, #ok_b {
+#ok_A, #ok_B {
     font-size: x-large;
     position: relative !important;
     left: 80rem !important;
 }
 
-#undo_score_a {
+#undo_score_A {
     right: 19vh;
     margin-top: 5vh;
 }
-#undo_score_b {
+#undo_score_B {
     left: 21vh;
     margin-top: 5vh;
 }
