@@ -777,12 +777,10 @@ server <- function(input, output, session) {
 observe({
   validate(
     need(
-      tbl(con, "game_stats") %>% 
-                  filter(game_id == max(game_id)) %>% 
-                  pull(game_end) %>% 
-                  is.na(), # CODE TO CHECK FOR MISSING GAME => CHECK WHETHER SCORE A OR SCORE B IN GAME STATS > 21
+      tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>%
+        pull(game_complete) %>% isFALSE(),
       message = FALSE
-      )
+    )
   )
   showModal(
     modalDialog(
@@ -990,12 +988,11 @@ observe({
     
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
-    if (all(
-        # Previous game hasn't ended
-        tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_end) %>% is.na(),
-        # Avoid the case where there are no entries in the table and this if statement fails
-        !(tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_end) %>% identical(character(0)))
-        )){
+    # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
+    if (tbl(con, "game_stats") %>% 
+        filter(game_id == max(game_id)) %>% 
+        pull(game_complete) %>% 
+        isFALSE()) {
         
         lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_id)
       
@@ -1045,16 +1042,17 @@ observe({
                                        num_players = nrow(snappaneers()),
                                        game_start = as.character(now()),
                                        game_end = NA_character_,
-                                       night_dice = NA#,
-                                       # points_a = NA_integer_,
-                                       # points_b = NA_integer_,
-                                       # rounds = NA_integer_,
-                                       # ones = NA_integer_,
-                                       # twos = NA_integer_,
-                                       # threes = NA_integer_,
-                                       # impossibles = NA_integer_,
-                                       # paddle_points = NA_integer_,
-                                       # clink_points = NA_integer_
+                                       night_dice = NA,
+                                       points_a = NA_integer_,
+                                       points_b = NA_integer_,
+                                       rounds = NA_integer_,
+                                       ones = NA_integer_,
+                                       twos = NA_integer_,
+                                       threes = NA_integer_,
+                                       impossibles = NA_integer_,
+                                       paddle_points = NA_integer_,
+                                       clink_points = NA_integer_,
+                                       game_complete = F
                                      ))
       
       
