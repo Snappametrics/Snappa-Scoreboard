@@ -1108,7 +1108,7 @@ observe({
     
     })
     removeModal()
-    delay(2000, shinyjs::click("start_game"))
+    delay(1000, shinyjs::click("start_game"))
     
   })
 
@@ -1638,7 +1638,16 @@ observe({
     #               label = "check_game_over"))
 
     # Update Game History
-    # Calculate game-level stats from game stats players
+    # Calculate game-level stats from game stats players, and vary it based on whether the game is actually complete or not
+    # to test it I use rebuttal since this is the one point in time where we can basically be certain that a game is/isn't over
+    # Checking vals$rebuttal here is redundant if we have already clicked next round, but this is necessary in games where
+    # players clicked "finish game" since rebuttal is checked on the next round button
+    vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
+                                   round = round_num(), points_to_win = vals$score_to)
+    
+    
+    
+    if(vals$rebuttal == T){
     game_stats = vals$player_stats_db %>% 
       group_by(game_id) %>% 
       summarise(points_a = sum((team == "A")*total_points),
@@ -1649,8 +1658,22 @@ observe({
                 threes = sum(threes),
                 impossibles = sum(impossibles),
                 paddle_points = sum(paddle_points),
-                clink_points = sum(clink_points))
-    
+                clink_points = sum(clink_points),
+                game_complete = T)
+    } else {
+      game_stats = vals$player_stats_db %>% 
+        group_by(game_id) %>% 
+        summarise(points_a = sum((team == "A")*total_points),
+                  points_b = sum((team == "B")*total_points),
+                  rounds = as.integer(vals$shot_num-1),
+                  ones = sum(ones),
+                  twos = sum(twos),
+                  threes = sum(threes),
+                  impossibles = sum(impossibles),
+                  paddle_points = sum(paddle_points),
+                  clink_points = sum(clink_points),
+                  game_complete = F)
+    }
     # This uses select because the column names were no longer matching the DB ones after joining
     vals$game_stats_db = vals$game_stats_db %>% 
       replace_na(list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
