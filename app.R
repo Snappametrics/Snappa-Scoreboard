@@ -784,11 +784,19 @@ observe({
   )
   
   showModal(
-    modalDialog(p("There's an incomplete game in the snappa database, would 
+    modalDialog(
+      p("There's an incomplete game in the snappa database, would 
                   you like to restart it?"),
-                br(),
-                p("Warning: saying 'No' will delete the previous game from the 
-                  database"),
+      br(),
+      p("Warning: saying 'No' will delete the previous game from the database"),
+      fluidRow(
+        column(6, 
+          align = "center",
+          gt_output("restart_table_a")),
+        column(6,
+          align = "center", 
+          gt_output("restart_table_b"))
+        ),
       title = "Incomplete Game",
       footer = tagList(
                 fluidRow(
