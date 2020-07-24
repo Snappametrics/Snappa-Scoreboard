@@ -276,16 +276,18 @@ recent_score_sentence = function(scores_data){
 #For the restart game screen, I'm going to make a UI to handle most of the modalDialog
 # output. My idea is that if I make a function which can just do this based on the game, 
 # then we can also parlay this into other things (e.g. a game history ui) at a later time
-glance_table_team = function(game.id, team){
+glance_table_team = function(game.id, team.id){
   base_table = tbl(con, "player_stats") %>% 
+    left_join(tbl(con, "players"), by = "player_id") %>%
     collect() %>% 
-    filter(game_id == game.id, team == team) %>%
-    select(total_points, paddle_points, shots, toss_efficiency)
-  
+    filter(game_id == game.id, team == team.id) %>%
+    select(player_name, total_points, team, paddle_points, shots, toss_efficiency)
+  return(base_table)
 }
 
-
-glance_ui_team =
+glance_ui_team = function(df){
+  df %>% gt()
+}
 
 glance_ui_game = function()
 
