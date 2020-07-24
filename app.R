@@ -782,14 +782,14 @@ observe({
       message = FALSE
     )
   )
-
+  browser()
   showModal(
-    modalDialog(
-      helpText(h2("Incomplete Game", align = "center"),
-      p("There's an unfinished game in the SnappaDB, would you like to resume it?",
-        align = "center"),
-      br(),
-      p('Warning: Saying "No" will delete the previous game')),
+    modalDialog(p("There's an incomplete game in the snappa database, would 
+                  you like to restart it?"),
+                br(),
+                p("Warning: saying 'No' will delete the previous game from the 
+                  database"),
+      title = "Incomplete Game",
       footer = tagList(
                 fluidRow(
                   actionBttn("resume_no",
@@ -802,7 +802,8 @@ observe({
                              color = "warning")
                 )
               ),
-      easyClose = T
+      easyClose = F,
+      fade = F
     )
    
   )
@@ -1121,10 +1122,10 @@ observe({
 # Close the modal dialog if you say no, set an observer value to TRUE, and remove
 # the old game from the DB
   
-observeEvent("resume_no", {
+observeEvent(input$resume_no, {
   removeModal()
   
-  delete_query = SQL("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats")
+  delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
   dbExecute(con, delete_query)
 })
   
