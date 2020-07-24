@@ -782,14 +782,20 @@ observe({
       message = FALSE
     )
   )
+
   showModal(
     modalDialog(
       helpText(h2("Incomplete Game", align = "center"),
       p("There's an unfinished game in the SnappaDB, would you like to resume it?",
-        align = "center")),
+        align = "center"),
+      br(),
+      p('Warning: Saying "No" will delete the previous game')),
       footer = tagList(
                 fluidRow(
-                  modalButton("No"),
+                  actionBttn("resume_no",
+                             label = "No",
+                             style = "unite",
+                             color = "danger"),
                   actionBttn("resume_yes",
                              label = "Yes",
                              style = "unite", 
@@ -990,9 +996,9 @@ observe({
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
     if (tbl(con, "game_stats") %>% 
-        filter(game_id == max(game_id)) %>% 
-        pull(game_complete) %>% 
-        isFALSE()) {
+              filter(game_id == max(game_id)) %>% 
+              pull(game_complete) %>% 
+              isFALSE()) {
         
         lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_id)
       
@@ -1112,9 +1118,15 @@ observe({
     
   })
 
+# Close the modal dialog if you say no, set an observer value to TRUE, and remove
+# the old game from the DB
   
+observeEvent("resume_no", {
+  removeModal()
   
-
+  delete_query = SQL("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats")
+  dbExecute(con, delete_query)
+})
   
   
 
@@ -1628,7 +1640,6 @@ observe({
   
   
   observeEvent(input$send_to_db, {
-   
 
     # CODE TO USE IN RESUME GAME VALIDATION
     #
@@ -1646,7 +1657,7 @@ observe({
                                    round = round_num(), points_to_win = vals$score_to)
     
     
-    
+
     if(vals$rebuttal == T){
     game_stats = vals$player_stats_db %>% 
       group_by(game_id) %>% 
