@@ -22,7 +22,7 @@ library(gt)
 library(extrafont)
 
 
-source("test_dbconnect.R")
+source("dbconnect.R")
 source("ui_functions.R")
 
 # Prior to app startup ----------------------------------------------------
