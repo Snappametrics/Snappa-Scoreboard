@@ -22,7 +22,7 @@ library(gt)
 library(extrafont)
 
 
-source("dbconnect.R")
+source("test_dbconnect.R")
 source("ui_functions.R")
 
 # Prior to app startup ----------------------------------------------------
@@ -741,6 +741,10 @@ server <- function(input, output, session) {
           "<p><span style='font-weight:500'>Frequency</span>: ", freq))
   })
   
+  
+
+# Restart Game Outputs ----------------------------------------------------
+
   # For debugging
   
   output$db_output_players = renderTable({
@@ -782,21 +786,17 @@ observe({
       message = FALSE
     )
   )
-  
+  lost_game_id = tbl(con, "game_stats") %>% pull(game_id) %>% max()
   showModal(
     modalDialog(
       p("There's an incomplete game in the snappa database, would 
-                  you like to restart it?"),
+                  you like to restart it?", align = 'center'),
       br(),
-      p("Warning: saying 'No' will delete the previous game from the database"),
-      fluidRow(
-        column(6, 
-          align = "center",
-          gt_output("restart_table_a")),
-        column(6,
-          align = "center", 
-          gt_output("restart_table_b"))
-        ),
+      p("Warning: saying 'No' will delete the previous game from the database", align = 'center'),
+      br(),
+      h3("Summary of the Previous Game", align = 'center'),
+      br(),
+      renderUI({glance_ui_game(lost_game_id)}),
       title = "Incomplete Game",
       footer = tagList(
                 fluidRow(
@@ -810,6 +810,7 @@ observe({
                              color = "warning")
                 )
               ),
+      size = "l",
       easyClose = F,
       fade = F
     )
