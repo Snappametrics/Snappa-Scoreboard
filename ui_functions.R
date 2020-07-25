@@ -326,13 +326,13 @@ glance_ui_game = function(game.id){
   # Now, set up the UI 
   ui_output = fluidRow(
     column(5, 
-           gt_output(glance_ui_team(df_a))),
+           render_gt({gt_output(glance_ui_team(df_a))})),
     column(2,
            h2(str_c(score_a, " - ", score_b))),
     column(5, 
-           gt_output(glance_ui_team(df_b)))
+           render_gt({gt_output(glance_ui_team(df_b))}))
     )
-  return(ui_output)
+ return(ui_output)
 }
 
 
