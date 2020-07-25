@@ -286,10 +286,53 @@ glance_table_team = function(game.id, team.id){
 }
 
 glance_ui_team = function(df){
-  df %>% gt()
+  # Sneakily cheat and change the table one more team because we 
+  # need team, but not for the table
+  team.id = pull(df, team) %>% unique()
+  new_df = df %>% select(-team)
+  # gt time
+  new_df %>% 
+    gt() %>%
+      tab_header(title = str_c("Team ", 
+                              str_to_upper(team.id)
+                              )) %>%
+      cols_label(
+        player_name = "Player",
+        total_points = "Total Points",
+        paddle_points = "Paddle Points",
+        shots = "Shots",
+        toss_efficiency = "Toss Efficiency") %>% 
+    fmt_number(
+      columns = vars(toss_efficiency),
+      decimals = 3
+    ) %>%
+    tab_style(style = cell_text(align = 'center'),
+              locations = cells_body(
+                columns = vars(player_name, total_points, paddle_points, shots, toss_efficiency)
+              )) %>%
+    tab_style(style = cell_text(align = 'center'),
+              locations = cells_column_labels(vars(player_name))) 
 }
 
-glance_ui_game = function()
+glance_ui_game = function(game.id){
+  # Gather the items that are needed to assemble the UI
+  df_a = glance_table_team(game.id, "a") 
+  df_b = glance_table_team(game.id, "b") 
+  
+  score_a = df_a %>% pull(total_points) %>% sum()
+  score_b = df_b %>% pull(total_points) %>% sum()  
+  
+  # Now, set up the UI 
+  ui_output = fluidRow(
+    column(5, 
+           gt_output(glance_ui_team(df_a))),
+    column(2,
+           h2(str_c(score_a, " - ", score_b))),
+    column(5, 
+           gt_output(glance_ui_team(df_b)))
+    )
+  return(ui_output)
+}
 
 
 # Stats Output ------------------------------------------------------------
