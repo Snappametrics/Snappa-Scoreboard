@@ -315,9 +315,10 @@ glance_ui_team = function(df){
 }
 
 glance_ui_game = function(game.id){
+  browser()
   # Gather the items that are needed to assemble the UI
-  df_a = glance_table_team(game.id, "a") 
-  df_b = glance_table_team(game.id, "b") 
+  df_a = glance_table_team(game.id, "A") 
+  df_b = glance_table_team(game.id, "B") 
   
   score_a = df_a %>% pull(total_points) %>% sum()
   score_b = df_b %>% pull(total_points) %>% sum()  
