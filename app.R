@@ -1148,12 +1148,22 @@ observeEvent(input$resume_no, {
       need(vals$shot_num > 1, label = "Can't go below 0", message = "It's the first round still")
     )
     vals$shot_num = vals$shot_num-1
-    # Solve to-do #1 by updating player_stats with rounds at this point
     
-    # Update player stats in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
-    #Update the DB with the new player_stats
-    db_update_player_stats(vals$player_stats_db)
+    
+    # This is for the case when there hasn't been a scoring point yet, which causes this to fail in the transition
+    # between rounds 1A and 1B. Clumsy, perhaps, but it works
+    if (vals$current_scores$team_a == 0 &
+        vals$current_scores$team_b == 0){
+      invisible()
+    } else {
+      # Update player stats in the app
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
+      #Update the DB with the new player_stats
+      db_update_player_stats(vals$player_stats_db)
+      
+    }
+    
+    
     
     
   })
