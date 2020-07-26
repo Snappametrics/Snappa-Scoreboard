@@ -1152,8 +1152,8 @@ observeEvent(input$resume_no, {
     
     # This is for the case when there hasn't been a scoring point yet, which causes this to fail in the transition
     # between rounds 1A and 1B. Clumsy, perhaps, but it works
-    if (vals$current_scores$team_a == 0 &
-        vals$current_scores$team_b == 0){
+    if (vals$current_scores$team_A == 0 &
+        vals$current_scores$team_B == 0){
       invisible()
     } else {
       # Update player stats in the app
