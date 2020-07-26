@@ -1152,16 +1152,12 @@ observeEvent(input$resume_no, {
     
     # This is for the case when there hasn't been a scoring point yet, which causes this to fail in the transition
     # between rounds 1A and 1B. Clumsy, perhaps, but it works
-    if (vals$current_scores$team_A == 0 &
-        vals$current_scores$team_B == 0){
-      invisible()
-    } else {
       # Update player stats in the app
       vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
       
-    }
+    
     
     
     
@@ -1185,16 +1181,20 @@ observeEvent(input$resume_no, {
     }
     
     vals$shot_num = vals$shot_num+1
-    
+    if (vals$current_scores$team_A == 0 &
+        vals$current_scores$team_B == 0){
+      invisible()
+    } else {
+      
     # Update player stats in the app
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
     #Update the DB with the new player_stats (adds to shots)
     db_update_player_stats(vals$player_stats_db)
-    
+    }
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
                                    round = round_num(), points_to_win = vals$score_to)
-      
+    
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
       showNotification(str_c("Rebuttal: ", "Team ", 
