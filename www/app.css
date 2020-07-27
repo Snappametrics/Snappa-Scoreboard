@@ -26,6 +26,23 @@
 
 /* My CSS */
 
+/* General */
+
+.navbar-default, .navbar-brand, .navbar-nav>li>a {
+    color: white !important;
+    background-color: #e26a6a !important;
+    font-weight: 500;
+}
+
+.navbar-nav>li>a:hover {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-offset: -2px;
+    z-index: 1;
+    font-weight: 600;
+}
+
+
 #shiny-notification-panel {
     background-color: #3d2b73;
     width: 17%;
@@ -42,37 +59,12 @@
     border: none;
 }
 
-
-
-
-.navbar-default, .navbar-brand, .navbar-nav>li>a {
-    color: white !important;
-    background-color: #e26a6a !important;
-    font-weight: 500;
+.well .shiny-input-container {
+    width: 60%;
 }
 
-.navbar-nav>li>a:hover {
-    outline-width: 2px;
-    outline-style: solid;
-    outline-offset: -2px;
-    z-index: 1;
-    font-weight: 600;
-}
 
-#previous_round, #next_round {
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-}
-
-#switch_sides {
-    font-size: 2.25rem;
-}
-
-#new_game, #finish_game {
-    margin-top: 3rem;
-    margin-left: 2rem;
-    margin-right: 2rem;
-}
+/* Player Input */
 
 #start_game {
     margin-top: 25vh;
@@ -83,52 +75,37 @@
     margin-top: 2rem;
     margin-bottom: 2rem;
 }
-#start_game, #scorer, #paddle, #score {
-    font-size: 170%; 
+
+
+/* Scoreboard */
+
+#previous_round, #next_round {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+#switch_sides {
+    font-size: 2.25rem;
 }
 
 #round_num {
-    font-size:800%; 
-    margin-top: 15%; 
-    margin-bottom: 15%;
-    
-}
-
-.bttn-unite.bttn-md { 
-    font-size: 200%;
-}
-
-#score_A, #score_B {
-    font-size: 700%; 
-    color: white;
-    
-}
-
-.bttn-unite.bttn-lg {
-    padding: 1rem 4rem;
-    
+    font-size:18rem; 
+    margin-top: 5rem; 
+    margin-bottom: 5rem;
+    line-height: 20rem;
 }
 
 #A_score_button, #B_score_button {
-    font-size: 220%;
+    font-size: 2.5rem;
     
 }
 
-label.control-label[for^='name_'] {
-    font-size: 4rem; 
+#score_A, #score_B {
+    font-size: 20rem; 
     color: white;
     
 }
 
-.btn-group .btn-group-toggle .btn-group-lg {
-    font-size:100%;
-    
-}
-
-label.control-label[for='score'] {
-    font-size: 3rem;
-    
-}
 label.control-label[for='scorer'] {
     font-size: 3rem;
     
@@ -159,12 +136,54 @@ label[for='foot'] {
 }
 
 #undo_score_A {
-    right: 19vh;
+    right: 9vw;
     margin-top: 5vh;
 }
 #undo_score_B {
-    left: 21vh;
+    left: 9vw;
     margin-top: 5vh;
+}
+
+
+
+
+
+
+
+
+
+#new_game, #finish_game {
+    margin-top: 3rem;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+#start_game, #scorer, #paddle, #score {
+    font-size: 170%; 
+}
+
+
+.bttn-unite.bttn-md { 
+    font-size: 200%;
+}
+.bttn-unite.bttn-lg {
+    padding: 1rem 4rem;
+    
+}
+label.control-label[for^='name_'] {
+    font-size: 4rem; 
+    color: white;
+    
+}
+
+.btn-group .btn-group-toggle .btn-group-lg {
+    font-size:100%;
+    
+}
+
+label.control-label[for='score'] {
+    font-size: 3rem;
+    
 }
 
 .selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
@@ -172,9 +191,13 @@ label[for='foot'] {
 }
 
 
-.selectize-dropdown-content {font-size: 3rem;}
+.selectize-dropdown-content {
+    font-size: 3rem;
+}
 
-.selectize-input.items.has-options.full.has-items {line-height: normal;}
+.selectize-input.items.has-options.full.has-items {
+    line-height: normal;
+}
 
 .form-control.selectize-control {
     font-size:5rem;
@@ -230,7 +253,6 @@ header {
 h1 {
     height: auto !important;
     font-size: 1.2rem;
-    font-style: italic;
 }
 
 h2 {
@@ -318,7 +340,7 @@ h2 {
 }
 
 .form-group {
-    padding: 16px 24px;
+    padding: 8px 24px;
     display: flex;
     flex-direction: column;
 }
@@ -465,10 +487,25 @@ input[type=radio]{
     margin-right: 8px;
 }
 
+@media (max-width: 1500px) {
+    .well .shiny-input-container {
+        width: 80%;
+    }
+}
+
+@media (max-width: 1200px) {
+    .well .shiny-input-container {
+        width: auto;
+    }
+}
+
 @media (max-width: 749px) {
 
     .main-container {
         height: auto;
+    }
+    .well .shiny-input-container {
+        width: auto;
     }
 
     .cards-wrap {
