@@ -217,36 +217,25 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
                    team_input_ui("A", pull(players_tbl, player_name)),
                    
                    # Column 2 - empty
-                   column(4),
+                   column(4,  align = "center",
+                          disabled(actionBttn("start_game", 
+                                              label = "Throw some dice?", style = "pill", color = "primary")),
+                          uiOutput("validate_start"),
+                          
+                          helpText("Note: All players must enter their name before the game can begin"),
+
+                          awesomeRadio(inputId = "play_to", 
+                                       label = "What score are you playing to?", 
+                                       choices = list("21" = 1, "32" = 2), 
+                                       selected = 1, inline = T)),
+                          
                    
                    # Column 3 - Team B
                    team_input_ui("B", pull(players_tbl, player_name))
                    ),
                  
                  
-                # Second row - 3 columns
-                 fluidRow(
-                   # Column 1 - empty
-                   column(4),
-                   # Column 2
-                   #    - Start game button
-                   #    - Score to play to
-                   column(4,  align = "center",
-                          disabled(actionBttn("start_game", 
-                                              label = "Throw some dice?", style = "pill", color = "primary")),
-                          uiOutput("validate_start"),
-                          br(),
-                          
-                          awesomeRadio(inputId = "play_to", 
-                                       label = "What score are you playing to?", 
-                                       choices = list("21" = 1, "32" = 2), 
-                                       selected = 1, inline = T),
-                          br(),
-                          helpText("Note: All players must enter their name before the game can begin")
-                          ),
-                   column(4)
-                   )
-                 
+
                  # Try to make Icons work
                  
                 # fluidRow(

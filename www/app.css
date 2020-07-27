@@ -74,6 +74,15 @@
     margin-right: 2rem;
 }
 
+#start_game {
+    margin-top: 25vh;
+    margin-bottom: 2rem;
+}
+
+#play_to {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
 #start_game, #scorer, #paddle, #score {
     font-size: 170%; 
 }
