@@ -87,11 +87,11 @@ team_input_ui = function(team, player_choices){
          wellPanel(
            style = paste("opacity: 0.92; background:", team_colour),
            # Header
-           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 600%;"),
+           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
            # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  options = list(create = TRUE), width = "60%"),
+           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  options = list(create = TRUE)),
            # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), options = list(create = TRUE), width = "60%"),
+           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), options = list(create = TRUE)),
            # Add Player 3 button
            actionBttn(paste0("extra_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
            
@@ -116,7 +116,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                        style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
-                       h1(paste("Team", toupper(left_team)), style = "align: center; color: white; font-size: 550%;"),
+                       h1(paste("Team", toupper(left_team)), style = "color: white; font-size: 7rem;"),
                        # Score
                        h2(textOutput(paste0("score_", left_team))),
                        # Score button
@@ -137,7 +137,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
                      # ),
                      
-                     h1("Round", style = "font-size: 600%;"),
+                     h1("Round", style = "font-size: 8rem;"),
                      h3(textOutput("round_num")),
                      fluidRow(actionBttn("previous_round", 
                                          label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
@@ -152,7 +152,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                       style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
                       # uiOutput("active_die_a"),
                       # Header
-                      h1(paste("Team", toupper(right_team)), style = "align: center; color: white; font-size: 550%;"),
+                      h1(paste("Team", toupper(right_team)), style = "color: white; font-size: 7rem;"),
                       # Score
                       h2(textOutput(paste0("score_", right_team))),
                       # Score button
@@ -186,7 +186,7 @@ extra_player_ui = function(player, player_choices){
            # Fluid row
                # Add extra player text input 
                selectizeInput(inputId = paste0("name_", player), 
-                              label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE), width = "60%"),
+                              label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
              # Add remove player button outside fluid row
              actionBttn(
                inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
