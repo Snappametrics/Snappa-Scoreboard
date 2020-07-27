@@ -173,7 +173,7 @@ troll_check = function(session, snappaneers, player_stats, game_id){
 # a scores table to be passed on, since the snappaneers table that is also
 # called would always be the same
 app_update_player_stats = function(scores_df, neers){
-   g.id = scores_df %>% pull(game_id) %>% unique() 
+   g.id = unique(scores_df$game_id)
    output = scores_df %>% 
     # Join scores to snappaneers to get each player's team
     left_join(neers, by = "player_id") %>% 
