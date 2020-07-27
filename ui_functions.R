@@ -273,6 +273,81 @@ recent_score_sentence = function(scores_data){
     select(-score_id)
 }
 
+#For the restart game screen, I'm going to make a UI to handle most of the modalDialog
+# output. My idea is that if I make a function which can just do this based on the game, 
+# then we can also parlay this into other things (e.g. a game history ui) at a later time
+glance_table_team = function(game.id, team.id){
+  base_table = tbl(con, "player_stats") %>% 
+    left_join(tbl(con, "players"), by = "player_id") %>%
+    collect() %>% 
+    filter(game_id == game.id, team == team.id) %>%
+    select(player_name, total_points, team, paddle_points, shots, toss_efficiency)
+  return(base_table)
+}
+
+glance_ui_team = function(df){
+  # Sneakily cheat and change the table one more team because we 
+  # need team, but not for the table
+  team.id = pull(df, team) %>% unique()
+  new_df = df %>% select(-team)
+  # gt time
+  output_table = new_df %>% 
+    gt() %>%
+      tab_header(title = str_c("Team ", 
+                              str_to_upper(team.id)
+                              )) %>%
+      cols_label(
+        player_name = "Player",
+        total_points = "Total Points",
+        paddle_points = "Paddle Points",
+        shots = "Shots",
+        toss_efficiency = "Toss Efficiency") %>% 
+    fmt_number(
+      columns = vars(toss_efficiency),
+      decimals = 3
+    ) %>%
+    tab_style(style = cell_text(align = 'center'),
+              locations = cells_body(
+                columns = vars(player_name, total_points, paddle_points, shots, toss_efficiency)
+              )) %>%
+    tab_style(style = cell_text(align = 'center'),
+              locations = cells_column_labels(vars(player_name))) %>% 
+    tab_options(heading.border.lr.style = "none",
+                heading.border.bottom.style = "none",
+                column_labels.border.top.style = "none",
+                column_labels.border.bottom.style = "solid",
+                column_labels.border.bottom.color = "#7c7c7c",
+                column_labels.border.bottom.width = "3px",
+                column_labels.border.lr.style = "none",
+                table.border.top.style = "none",
+                table.border.right.style = "none",
+                table.border.left.style = "none",
+                table.border.bottom.style = "none",
+                column_labels.font.weight = "600")
+  
+  return(output_table)
+}
+
+glance_ui_game = function(game.id){
+  # Gather the items that are needed to assemble the UI
+  df_a = glance_table_team(game.id, "A") 
+  df_b = glance_table_team(game.id, "B") 
+  
+  score_a = df_a %>% pull(total_points) %>% sum()
+  score_b = df_b %>% pull(total_points) %>% sum()  
+  
+  # Now, set up the UI 
+  ui_output = fluidRow(
+    column(5, 
+           render_gt(glance_ui_team(df_a))),
+    column(2,
+           h2(str_c(score_a, " - ", score_b), align = 'center')),
+    column(5, 
+           render_gt(glance_ui_team(df_b)))
+    )
+ return(ui_output)
+}
+
 
 # Stats Output ------------------------------------------------------------
 
@@ -426,4 +501,6 @@ score_heatmap = function(df){
   
   
 }
+
+
 

@@ -1,0 +1,14 @@
+To-do's
+
+From the issues page of our github here: https://github.com/mdewey131/Snappa-Scoreboard/issues/31
+
+FIXED 1. Update number of shots in player_stats every round
+FIXED  1a. This issue is almost completely fixed, but I need to make one more correction: When players use the 
+        next round button to end the game, the round number should increment back one so that players don't
+        have more recorded shots than is true. 
+        
+2. Add a description of the last game when asking players if they would like to restart
+3. Change how the app decides to ask for a game restart
+4. Update the logic from "throw some dice" so that
+  players don't accidentally start the old game anyway
+5. Restyle modal UI for restarting the game
