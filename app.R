@@ -1729,11 +1729,11 @@ observeEvent(input$resume_no, {
     #   name = "players",
     #   value = anti_join(vals$players_db, players_tbl))
     
-    # Update Scores
-    # dbAppendTable(
-    #   conn = con, 
-    #   name = "scores",
-    #   value = vals$scores_db)
+    #Update Scores
+    dbAppendTable(
+      conn = con,
+      name = "scores",
+      value = vals$scores_db)
     
     # Update player_stats
     # dbAppendTable(
