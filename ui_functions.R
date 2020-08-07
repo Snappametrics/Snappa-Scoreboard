@@ -517,4 +517,141 @@ score_heatmap = function(df){
 }
 
 
+game_summary_table = function(player_stats, team_selected){
+  
+    table_df = player_stats %>% 
+      filter(team == team_selected)
+    
+    winners = unique(table_df$winners)
+    
+    table_df %>% 
+      arrange(-total_points) %>% 
+      gt(.) %>% 
+      tab_header(title = str_c("Team ", team_selected),
+                 subtitle = if_else(winners, "the winners.", "the losers.")) %>% 
+      cols_hide(columns = vars(team, winners)) %>% 
+      # Column names
+      cols_label(
+        player_name = "Player",
+        total_points = "Total Points",
+        paddle_points = "Paddle Points",
+        clink_points = "Clink Points",
+        threes = "Sinks", # TODO: Fix this 
+        points_per_round = "Points per Round\n(PPR)",
+        off_ppr = "Offensive PPR",
+        def_ppr = "Defensive PPR",
+        toss_efficiency = "Toss Efficiency"
+      ) %>% 
+      # Format integers
+      fmt_number(
+        columns = vars(total_points, paddle_points, clink_points, threes),
+        decimals = 0
+      ) %>% 
+      # Format doubles
+      fmt_number(
+        columns = vars(points_per_round, off_ppr, def_ppr),
+        decimals = 2
+      ) %>% 
+      # Format percentages
+      fmt_percent(
+        columns = vars(toss_efficiency),
+        decimals = 1
+      ) %>% 
+      tab_footnote(
+        footnote = "Defensive points are scored from paddles.",
+        locations = cells_column_labels(columns = vars(def_ppr))
+      ) %>% 
+      tab_footnote(
+        footnote = "% of tosses which are successful.",
+        locations = cells_column_labels(columns = vars(toss_efficiency))
+      ) %>%
+      opt_footnote_marks(marks = "letters") %>% 
+      # Styling
+      # Title
+      tab_style(
+        style = list(cell_text(weight = "bold", size = "large")),
+        locations = cells_title(groups = "title")
+      ) %>%
+      tab_style(style = cell_text(align = "left", v_align = "bottom"),
+                locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
+      cols_align(align = "right") %>% 
+      cols_align(align = "left", columns = c("player_name")) %>% 
+      # Left Align Player and Rank
+      # Column widths
+      cols_width(
+        vars(player_name) ~ px(120),
+        vars(points_per_round) ~ px(110),
+        vars(total_points, paddle_points, clink_points, threes) ~ px(60),
+        vars(off_ppr, def_ppr, toss_efficiency) ~ px(95)
+      ) %>% 
+      tab_options(heading.border.lr.style = "none",
+                  heading.border.bottom.style = "none",
+                  column_labels.border.top.style = "none",
+                  column_labels.border.bottom.style = "solid",
+                  column_labels.border.bottom.color = "#7c7c7c",
+                  column_labels.border.bottom.width = "3px",
+                  column_labels.border.lr.style = "none",
+                  table.border.top.style = "none",
+                  table.border.right.style = "none",
+                  table.border.left.style = "none",
+                  table.border.bottom.style = "none",
+                  column_labels.font.weight = "600")
+
+}
+
+player_score_breakdown = function(df){
+   df %>%
+    ggplot(., aes(y = player_name, x = points, fill = reorder(point_type, desc(point_type))))+
+    # Bars
+    geom_col(position = "fill", colour = "#f5f5f5", size = 3)+
+    # Bar labels
+    geom_text(aes(label = point_pct), position = position_fill(vjust = .5), colour = "white")+
+    scale_y_discrete(name = NULL)+
+    # X Axis: Percent labels
+    scale_x_continuous(name = NULL, labels = scales::percent)+
+    # Colour scale
+    scale_fill_manual(name = NULL, values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ), guide = guide_legend(reverse=T))+
+    theme_snappa()%+replace%
+    theme(
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "top"
+    )
+}
+
+game_flow = function(df){
+  player_label_df = df %>% 
+    filter(cum_score == max(cum_score)) %>% 
+    select(player_name, player_id, team, round, cum_score)
+  
+  # Calculate max values for scales
+  max_score = max(df$cum_score)
+  max_round = max(df$round)
+  
+  df %>% 
+    ggplot(., aes(x = round, y = cum_score, group = player_id, colour = team))+
+    geom_line(size = 1, show.legend = F)+
+    geom_text_repel(data = player_label_df,
+                    aes(x = round, y = cum_score, group = player_id, colour = team, label = player_name),
+                    size = 5,
+                    nudge_x = 2, show.legend = F, segment.alpha = 0)+
+    # geom_image(data = sinks, aes(x = round, y = sink_position, image = sink_splash))+
+    scale_y_continuous(name = "Cumulative Score", breaks = scales::pretty_breaks(n = 5), limits = c(0, max_score+5-(max_score%%5)))+
+    scale_x_continuous(name = "Round", breaks = scales::pretty_breaks(), limits = c(0, max_round+5))+
+    scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
+    labs(title = "How the die flies",
+         subtitle = "Players' point progression")+
+    theme_snappa()%+replace%
+    theme(
+      plot.title = element_text(hjust = 0),
+      plot.subtitle = element_text(size = rel(.65), hjust = 0),
+      plot.margin = margin(t = 15, r = 10, b = 15, l = 10),
+      panel.grid.major = element_line(color = "grey", size = 0.025),
+      panel.grid.minor = element_blank(),
+      axis.text.x = element_text(size = rel(.7)),
+      axis.text.y = element_text(size = rel(.7))
+    )
+}
+
+
 
