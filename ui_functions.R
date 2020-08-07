@@ -127,8 +127,8 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                        actionBttn(
                          inputId = paste0("undo_score_", left_team),
                          label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                       ),
-                       h3(textOutput(paste0("player_names_", left_team)))
+                       )#,
+                       # h3(textOutput(paste0("player_names_", left_team)))
                      )
               ), 
               # Round
@@ -177,8 +177,8 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                       actionBttn(
                         inputId = paste0("undo_score_", right_team),
                         label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                      ),
-                      h3(textOutput(paste0("player_names_", right_team)))
+                      )#,
+                      # h3(textOutput(paste0("player_names_", right_team)))
                     )
              )
               )
