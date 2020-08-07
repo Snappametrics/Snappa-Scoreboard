@@ -703,6 +703,152 @@ server <- function(input, output, session) {
       write.csv(vals$scores_db, con)
     }
   )
+
+# Game Summary Stats ------------------------------------------------------
+  
+  player_summary = reactive({
+    input$send_to_db
+    vals$player_stats_db %>% 
+      # Identify winners and losers
+      group_by(team) %>% 
+      mutate(team_score = sum(total_points)) %>% 
+      ungroup() %>% 
+      mutate(winners = (team_score == max(team_score))) %>% 
+      # Merge in player info
+      inner_join(snappaneers()) %>% 
+      select(team, winners, player_name, total_points, paddle_points, clink_points, threes, points_per_round:toss_efficiency)
+  })
+  
+  game_summary = function() {
+    modalDialog(title = "Final Score", 
+      
+      h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
+      # ,
+      # Tables
+      fluidRow(
+        column(5,
+               gt_output("team_a_summary")
+        ),
+        column(5, offset = 2,
+               gt_output("team_b_summary")
+        )
+      ),
+      # Point breakdown
+      fluidRow(
+        column(3, align = "left",
+               plotOutput("team_a_ptbreakdown", height = "25vh")
+        ),
+        column(4, offset = 1, align = "center",
+               plotOutput("game_flow")),
+        column(3, offset = 1, align = "right",
+               plotOutput("team_b_ptbreakdown", height = "25vh")
+        )
+      ),
+      footer = NULL,
+      easyClose = T,
+      size = "l"
+    )
+  }
+  
+
+  
+  
+  
+  
+  
+  output$team_a_summary = render_gt({
+    input$send_to_db
+    game_summary_table(player_summary(), "A")
+  })  
+  
+  output$team_b_summary = render_gt({
+    input$send_to_db
+    game_summary_table(player_summary(), "B")
+  })  
+  
+  
+  
+  
+  
+  
+  output$team_a_ptbreakdown = renderPlot({
+    input$send_to_db
+    vals$player_stats_db %>% 
+      # Merge in player info
+      inner_join(snappaneers()) %>% 
+      filter(team == "A") %>% 
+      select(player_name, team, total_points:clink_points) %>% 
+      arrange(-total_points) %>% 
+      # Calculate sink points and "normal" points
+      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
+      mutate(sink = threes*3,
+             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
+      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
+      # Pivot to get point type
+      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
+      # Convert point type to factor
+      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
+      group_by(player_name) %>%
+      filter(points > 0) %>% 
+      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
+      player_score_breakdown(.)
+  })
+  
+  
+  output$team_b_ptbreakdown = renderPlot({
+    input$send_to_db
+    vals$player_stats_db %>% 
+      # Merge in player info
+      inner_join(snappaneers()) %>% 
+      filter(team == "B") %>% 
+      select(player_name, team, total_points:clink_points) %>% 
+      arrange(-total_points) %>% 
+      # Calculate sink points and "normal" points
+      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
+      mutate(sink = threes*3,
+             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
+      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
+      # Pivot to get point type
+      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
+      # Convert point type to factor
+      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
+      group_by(player_name) %>%
+      filter(points > 0) %>% 
+      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
+      player_score_breakdown(.)
+  })
+  
+  
+  
+  
+  
+  
+  output$game_flow = renderPlot({
+    input$send_to_db
+    player_scores = vals$scores_db %>% 
+      inner_join(snappaneers(), by = c("player_id")) %>% 
+      # Convert round_num into the actual round id
+      rowwise() %>% 
+      mutate(round = which(rounds == round_num)) %>% 
+      ungroup() %>% 
+      group_by(player_id) %>% 
+      mutate(cum_score = cumsum(points_scored))
+    
+    # sinks = player_scores %>% 
+    #   filter(points_scored == 3) %>% 
+    #   mutate(sink_splash = list.files("www", pattern="png", full.names = T),
+    #          sink_position = cum_score - 1.5)
+    
+    # Add zeroes
+    player_score_base = player_scores %>% 
+      group_by(game_id, player_id, player_name, team) %>% 
+      summarise(round = min(round)-1, points_scored = 0, cum_score = 0)
+    
+    
+    player_scores %>% 
+      bind_rows(player_score_base) %>% 
+      game_flow(.)
+  })
   
 
 # Stats Pane --------------------------------------------------------------
