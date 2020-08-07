@@ -1892,6 +1892,15 @@ observeEvent(input$resume_no, {
                    text = "Data sent to SnappaDB",
                    type = "success")
     
+
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary()
+               )
+      
+      
+    )
+    
   })
   
 
