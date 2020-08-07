@@ -224,6 +224,13 @@ label.control-label[for='score'] {
     transform: scale(2);
 }
 
+#game_summary .modal-dialog.modal-lg {
+    width: 90vw;
+    background-color: #f5f5f5;
+}
+
+
+
 /* End my CSS */
 
 body{
