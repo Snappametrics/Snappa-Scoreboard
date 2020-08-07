@@ -776,6 +776,21 @@ observe({
     )
   )
   lost_game_id = tbl(con, "game_stats") %>% pull(game_id) %>% max()
+  
+  # Pass an additional check to see if the game which is in question is a 0-0 or not. 
+  total_lost_game_score = tbl(con, "player_stats") %>% 
+    collect() %>% 
+    filter(game_id == lost_game_id) %>%
+    pull(total_points) %>%
+    sum()
+  
+  # Discard that game if it's 0-0 and continue on with business as usual, else
+  # allow players to restart
+  if (total_lost_game_score == 0){
+    delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
+    dbExecute(con, delete_query)
+  } else {
+  
   showModal(
     modalDialog(
       p("There's an incomplete game in the snappa database, would 
@@ -805,7 +820,7 @@ observe({
     )
    
   )
-   
+  }
   
 })
 
