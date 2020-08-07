@@ -531,3 +531,38 @@ input[type=radio]{
         margin-top: 56px;
     }
 }
+
+@media only screen 
+    and (min-device-width : 768px) 
+    and (max-device-width : 1024px) 
+    and (orientation : landscape) {
+    .h1, .h2, .h3, h1, h2, h3 {
+        margin: 0;
+    }
+    
+    #start_game {
+        padding: 2vh 2vw 2vh 2vw;
+    }
+    
+    #undo_score_A {
+        padding: 1vh 1vw 1vh 1vw;
+        right: 6vw;
+    }
+    
+    #undo_score_B {
+        padding: 1vh 1vw 1vh 1vw;
+        left: 6vw;
+    }
+    
+    #previous_round, #next_round {
+        padding: 1vh 1vw 1vh 1vw;
+        margin-bottom: 1vh;
+    }
+    
+    #round_num {
+        margin-top:0;
+        margin-bottom:0;
+    }
+
+    
+}
