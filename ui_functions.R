@@ -365,16 +365,20 @@ glance_ui_game = function(game.id){
 
 # Stats Output ------------------------------------------------------------
 
+snappa_pal = c("#f5f5ef","#e26a6a","#2574a9","#ffaf47","#67a283","#793e8e","#54b6f2")
+
 theme_snappa = function(){
   theme_minimal(
     base_family = "Inter",
     base_size = 18
   ) %+replace%
     theme(
-      plot.title = element_text(size = rel(1.25), margin = margin(b = 20)), 
+      plot.margin = margin(t = 15, r = 10, b = 15, l = 10),
+      plot.title = element_text(size = rel(1.25), margin = margin(b = 10)),
+      plot.background = element_rect(fill = "#f5f5ef", colour = "#f5f5ef"), 
+      # Grid lines
       panel.grid.minor = element_line(color = "grey", size = 0.05),
-      panel.grid.major = element_blank(),
-      plot.background = element_rect(fill = "#f5f5f5", colour = "#f5f5f5")
+      panel.grid.major = element_line(color = "grey", size = 0.05)
     ) 
 }
 
