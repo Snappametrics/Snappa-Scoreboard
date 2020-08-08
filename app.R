@@ -736,12 +736,12 @@ server <- function(input, output, session) {
       # Point breakdown
       fluidRow(
         column(3, align = "left",
-               plotOutput("team_a_ptbreakdown", height = "25vh")
+               plotOutput("team_a_ptbreakdown", height = "20vh")
         ),
         column(4, offset = 1, align = "center",
                plotOutput("game_flow")),
         column(3, offset = 1, align = "right",
-               plotOutput("team_b_ptbreakdown", height = "25vh")
+               plotOutput("team_b_ptbreakdown", height = "20vh")
         )
       ),
       footer = NULL,
