@@ -365,18 +365,128 @@ glance_ui_game = function(game.id){
 
 # Stats Output ------------------------------------------------------------
 
-theme_snappa = function(){
-  theme_minimal(
-    base_family = "Inter",
-    base_size = 18
-  ) %+replace%
-    theme(
-      plot.title = element_text(size = rel(1.25), margin = margin(b = 20)), 
-      panel.grid.minor = element_line(color = "grey", size = 0.05),
-      panel.grid.major = element_blank(),
-      plot.background = element_rect(fill = "#f5f5f5", colour = "#f5f5f5")
-    ) 
+snappa_pal = str_c("#", c("f5f5ef","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
+
+theme_snappa = function(title_family = "Inter SemiBold",
+                        text_family = "Inter",
+                        base_size = 12, 
+                        text_color = "gray20",
+                        bg_color = "#f5f5f5", line_color = "grey",
+                        plot_margin = margin(10,10,10,10),
+                        plots_pane = FALSE,
+                        md = FALSE){
+
+  if (plots_pane == FALSE & md == FALSE) {
+    ggplot2::theme_minimal() +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            size = base_size,
+                            color = text_color),
+        title = element_text(family = title_family,
+                             color = text_color),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = element_text(face = "bold",
+                                  size = base_size * 2,
+                                  lineheight = 1.2),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(size = base_size * 1.5,
+                                     lineheight = 1.1, 
+                                     family = text_family),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot", 
+        plot.caption = element_text(hjust = 0),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        
+        axis.text = element_text(size = base_size * 1.2, face = "italic"),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = element_text(size = base_size * 1.6,
+                                  hjust = 1),
+        axis.line = element_line(color = line_color),
+        
+        legend.title = element_text(size = base_size * 1.3),
+        legend.text = element_text(size = base_size * 1.1)
+      )
+  } else if (plots_pane == FALSE & md == TRUE) {
+    ggplot2::theme_minimal() +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            size = base_size,
+                            color = text_color),
+        title = ggtext::element_markdown(family = title_family,
+                                         color = text_color),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = ggtext::element_markdown(face = "bold",
+                                              size = base_size * 2,
+                                              lineheight = 1.2),
+        plot.title.position = "plot",
+        plot.subtitle = ggtext::element_markdown(size = base_size * 1.7,
+                                                 lineheight = 1.1, 
+                                                 family = text_family),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = ggtext::element_markdown(hjust = 0),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        
+        axis.text = element_text(size = base_size * 1.2),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = ggtext::element_markdown(size = base_size * 1.6,
+                                              hjust = 1),
+        axis.line = element_line(color = line_color),
+        
+        legend.title = ggtext::element_markdown(size = base_size * 1.3),
+        legend.text = element_text(size = base_size * 1.1)
+      )
+  } else if (plots_pane == TRUE & md == TRUE) {
+    ggplot2::theme_minimal(base_size = base_size) +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            color = text_color),
+        title = element_text(family = title_family),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = ggtext::element_markdown(face = "bold",
+                                              lineheight = 1.2),
+        plot.title.position = "plot",
+        plot.subtitle = ggtext::element_markdown(lineheight = 1.1, 
+                                                 family = text_family),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = ggtext::element_markdown(hjust = 0),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = ggtext::element_markdown(hjust = 1),
+        axis.line = element_line(color = line_color)
+      )
+  } else {
+    ggplot2::theme_minimal(base_size = base_size) +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            color = text_color),
+        title = element_text(family = title_family),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = element_text(face = "bold",
+                                  lineheight = 1.2),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(lineheight = 1.1, 
+                                     family = text_family),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = element_text(hjust = 1),
+        axis.line = element_line(color = line_color)
+      )
+  }
 }
+
 
 leaderboard_table = function(df){
   df %>% 
