@@ -81,7 +81,7 @@
 
 #previous_round, #next_round {
     font-size: 2.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 #switch_sides {
@@ -90,8 +90,6 @@
 
 #round_num {
     font-size:18rem; 
-    margin-top: 5rem; 
-    margin-bottom: 5rem;
     line-height: 20rem;
 }
 
@@ -145,15 +143,7 @@ label[for='foot'] {
 }
 
 
-
-
-
-
-
-
-
 #new_game, #finish_game {
-    margin-top: 3rem;
     margin-left: 2rem;
     margin-right: 2rem;
 }
@@ -555,13 +545,25 @@ input[type=radio]{
     }
     
     #previous_round, #next_round {
-        padding: 1vh 1vw 1vh 1vw;
+        font-size: 2rem;
+        padding: 2vh 2vw 2vh 2vw;
         margin-bottom: 1vh;
+        margin-top: 1vh;
     }
     
     #round_num {
+        font-size: 15rem;
         margin-top:0;
         margin-bottom:0;
+        line-height: 15rem;
+    }
+    
+    #score_heatmap {
+        height: 500px;
+    }
+    
+    #finish_game, #new_game {
+        font-size: 2.5rem;
     }
 
     
