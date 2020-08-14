@@ -480,18 +480,124 @@ theme_snappa = function(title_family = "Inter SemiBold",
                                   lineheight = 1.2),
         plot.title.position = "plot",
         plot.subtitle = element_text(lineheight = 1.1, 
-                                     family = text_family),
+                                     family = text_family,
+                                     margin = margin(b=15)),
         plot.margin = plot_margin,
         plot.caption.position = "plot",
-        plot.caption = element_text(hjust = 0),
+        plot.caption = element_text(hjust = 0, 
+                                    size = base_size * 1.25),
         plot.background = element_rect(fill = bg_color,
                                        color = bg_color),
         axis.text.y.left = element_text(hjust = 0),
-        axis.title = element_text(hjust = 1),
+        axis.title = element_text(hjust = 1, face = "italic"),
         axis.line = element_line(color = line_color)
       )
   }
 }
+
+tab_theme_snappa = function(data, 
+                     # Container
+                     container.width = pct(95), 
+                     container.height = pct(50), 
+                     container.overflow.x = NULL, 
+                     container.overflow.y = NULL, 
+                     # Table
+                     table.width = NULL, table.layout = NULL, table.align = NULL, 
+                     table.margin.left = NULL, table.margin.right = NULL, table.background.color = snappa_pal[1], 
+                     table.additional_css = NULL, table.font.names = NULL, table.font.size = NULL, 
+                     table.font.weight = NULL, table.font.style = NULL, table.font.color = NULL, 
+                     table.font.color.light = NULL, 
+                     table.border.top.style = "none",table.border.top.width = NULL, table.border.top.color = NULL, 
+                     table.border.right.style = "none", table.border.right.width = NULL,table.border.right.color = NULL, 
+                     table.border.bottom.style = "none",table.border.bottom.width = NULL, table.border.bottom.color = NULL, 
+                     table.border.left.style = "none", table.border.left.width = NULL,table.border.left.color = NULL, 
+                     # Heading
+                     heading.background.color = NULL, 
+                     heading.align = NULL, 
+                     heading.title.font.size = NULL, heading.title.font.weight = NULL, 
+                     heading.subtitle.font.size = NULL, heading.subtitle.font.weight = NULL, 
+                     heading.border.bottom.style =  "none", heading.border.bottom.width = NULL, heading.border.bottom.color = NULL, 
+                     heading.border.lr.style = "none", heading.border.lr.width = NULL, heading.border.lr.color = NULL, 
+                     # Column labels
+                     column_labels.background.color = NULL, 
+                     column_labels.font.size = NULL, column_labels.font.weight = NULL, 
+                     column_labels.text_transform = NULL, 
+                     column_labels.vlines.style = NULL, column_labels.vlines.width = NULL, column_labels.vlines.color = NULL,
+                     column_labels.border.top.style =  "none", column_labels.border.top.width = NULL, column_labels.border.top.color = NULL, 
+                     column_labels.border.bottom.style = "solid", column_labels.border.bottom.width = "3px", column_labels.border.bottom.color = "#7c7c7c", 
+                     column_labels.border.lr.style = "none", column_labels.border.lr.width = NULL, column_labels.border.lr.color = NULL, 
+                     column_labels.hidden = NULL, 
+                     # Row group
+                     row_group.background.color = NULL, 
+                     row_group.font.size = NULL, row_group.font.weight = NULL, 
+                     row_group.text_transform = NULL, row_group.padding = NULL, 
+                     row_group.border.top.style = NULL, row_group.border.top.width = NULL, 
+                     row_group.border.top.color = NULL, row_group.border.bottom.style = NULL, 
+                     row_group.border.bottom.width = NULL, row_group.border.bottom.color = NULL, 
+                     row_group.border.left.style = NULL, row_group.border.left.width = NULL, 
+                     row_group.border.left.color = NULL, row_group.border.right.style = NULL, 
+                     row_group.border.right.width = NULL, row_group.border.right.color = NULL, 
+                     # Table body
+                     table_body.hlines.style = NULL, table_body.hlines.width = NULL, 
+                     table_body.hlines.color = NULL, 
+                     table_body.vlines.style = NULL, 
+                     table_body.vlines.width = NULL, table_body.vlines.color = NULL, 
+                     table_body.border.top.style = NULL, table_body.border.top.width = NULL, table_body.border.top.color = "#DEDDDD", 
+                     table_body.border.bottom.style = NULL, table_body.border.bottom.width = NULL, table_body.border.bottom.color = "#DEDDDD", 
+                     # Stub
+                     stub.background.color = NULL, stub.font.size = NULL, stub.font.weight = NULL, 
+                     stub.text_transform = NULL, stub.border.style = NULL, stub.border.width = NULL, 
+                     stub.border.color = NULL, 
+                     data_row.padding = NULL, 
+                     # Summary row
+                     summary_row.background.color = NULL, 
+                     summary_row.text_transform = NULL, summary_row.padding = NULL, 
+                     summary_row.border.style = NULL, summary_row.border.width = NULL, 
+                     summary_row.border.color = NULL, 
+                     # Grand summary row
+                     grand_summary_row.background.color = NULL, 
+                     grand_summary_row.text_transform = NULL, grand_summary_row.padding = NULL, 
+                     grand_summary_row.border.style = NULL, grand_summary_row.border.width = NULL, 
+                     grand_summary_row.border.color = NULL, 
+                     # Footnotes
+                     footnotes.background.color = NULL, 
+                     footnotes.font.size = NULL, footnotes.padding = NULL, footnotes.border.bottom.style = NULL, 
+                     footnotes.border.bottom.width = NULL, footnotes.border.bottom.color = NULL, 
+                     footnotes.border.lr.style = NULL, footnotes.border.lr.width = NULL, 
+                     footnotes.border.lr.color = NULL, footnotes.sep = NULL, footnotes.marks = NULL, 
+                     # Source notes
+                     source_notes.background.color = NULL, source_notes.font.size = NULL, 
+                     source_notes.padding = NULL, source_notes.border.bottom.style = NULL, 
+                     source_notes.border.bottom.width = NULL, source_notes.border.bottom.color = NULL, 
+                     source_notes.border.lr.style = NULL, source_notes.border.lr.width = NULL, 
+                     source_notes.border.lr.color = NULL, 
+                     # Row striping
+                     row.striping.background_color = NULL, 
+                     row.striping.include_stub = NULL, row.striping.include_table_body = NULL){
+  gt:::stop_if_not_gt(data = data)
+  opts_df <- gt:::dt_options_get(data = data)
+  arg_names <- formals(tab_options) %>% names() %>% base::setdiff("data")
+  arg_vals <- mget(arg_names)
+  arg_vals <- arg_vals[!vapply(arg_vals, FUN = is.null, FUN.VALUE = logical(1))]
+  arg_vals <- arg_vals %>% gt:::set_super_options()
+  
+  new_df <- dplyr::tibble(parameter = names(arg_vals) %>% 
+                            gt:::tidy_gsub(".", "_", fixed = TRUE), value = unname(arg_vals)) %>%
+    dplyr::left_join(opts_df %>% 
+                       dplyr::select(parameter, type), by = "parameter") %>% 
+    dplyr::mutate(value = mapply(gt:::preprocess_tab_option, option = value, 
+                                 var_name = parameter, type = type, SIMPLIFY = FALSE)) %>% 
+    dplyr::select(-type)
+  
+  opts_df <- dplyr::bind_rows(new_df %>% 
+                                dplyr::inner_join(opts_df %>% 
+                                                    dplyr::select(-value), by = "parameter"), opts_df %>% 
+                                dplyr::anti_join(new_df, by = "parameter"))
+  
+  data <- gt:::dt_options_set(data = data, options = opts_df)
+  data
+}
+
 
 
 leaderboard_table = function(df){
@@ -588,18 +694,7 @@ leaderboard_table = function(df){
         )
       )
     ) %>% 
-    tab_options(heading.border.lr.style = "none",
-                heading.border.bottom.style = "none",
-                column_labels.border.top.style = "none",
-                column_labels.border.bottom.style = "solid",
-                column_labels.border.bottom.color = "#7c7c7c",
-                column_labels.border.bottom.width = "3px",
-                column_labels.border.lr.style = "none",
-                table.border.top.style = "none",
-                table.border.right.style = "none",
-                table.border.left.style = "none",
-                table.border.bottom.style = "none",
-                column_labels.font.weight = "600")
+    tab_theme_snappa()
   
 }
 
