@@ -722,7 +722,8 @@ score_heatmap = function(df){
                     ylim = c(1, max_score - 1)) +
     scale_x_continuous(breaks = seq.int(from = 0, to = max_score, by = 1), labels = score_labels) +
     scale_y_continuous(breaks = seq.int(from = 0, to = max_score, by = 1), labels = score_labels) +
-    theme_snappa()
+    theme_snappa()+
+    theme(panel.grid.major = element_blank())
   
   
 }
