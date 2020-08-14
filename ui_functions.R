@@ -495,6 +495,109 @@ theme_snappa = function(title_family = "Inter SemiBold",
   }
 }
 
+tab_theme_snappa = function(data, 
+                            # Container
+                            container.width = pct(95), 
+                            container.height = pct(50), 
+                            container.overflow.x = NULL, 
+                            container.overflow.y = NULL, 
+                            # Table
+                            table.width = NULL, table.layout = NULL, table.align = NULL, 
+                            table.margin.left = NULL, table.margin.right = NULL, table.background.color = NULL, 
+                            table.additional_css = NULL, table.font.names = NULL, table.font.size = NULL, 
+                            table.font.weight = NULL, table.font.style = NULL, table.font.color = NULL, 
+                            table.font.color.light = NULL, 
+                            table.border.top.style = "none",table.border.top.width = NULL, table.border.top.color = NULL, 
+                            table.border.right.style = "none", table.border.right.width = NULL,table.border.right.color = NULL, 
+                            table.border.bottom.style = "none",table.border.bottom.width = NULL, table.border.bottom.color = NULL, 
+                            table.border.left.style = "none", table.border.left.width = NULL,table.border.left.color = NULL, 
+                            # Heading
+                            heading.background.color = NULL, 
+                            heading.align = NULL, 
+                            heading.title.font.size = NULL, heading.title.font.weight = NULL, 
+                            heading.subtitle.font.size = NULL, heading.subtitle.font.weight = NULL, 
+                            heading.border.bottom.style =  "none", heading.border.bottom.width = NULL, heading.border.bottom.color = NULL, 
+                            heading.border.lr.style = "none", heading.border.lr.width = NULL, heading.border.lr.color = NULL, 
+                            # Column labels
+                            column_labels.background.color = NULL, 
+                            column_labels.font.size = NULL, column_labels.font.weight = NULL, 
+                            column_labels.text_transform = NULL, 
+                            column_labels.vlines.style = NULL, column_labels.vlines.width = NULL, column_labels.vlines.color = NULL,
+                            column_labels.border.top.style =  "none", column_labels.border.top.width = NULL, column_labels.border.top.color = NULL, 
+                            column_labels.border.bottom.style = "solid", column_labels.border.bottom.width = "3px", column_labels.border.bottom.color = "#7c7c7c", 
+                            column_labels.border.lr.style = "none", column_labels.border.lr.width = NULL, column_labels.border.lr.color = NULL, 
+                            column_labels.hidden = NULL, 
+                            # Row group
+                            row_group.background.color = NULL, 
+                            row_group.font.size = NULL, row_group.font.weight = NULL, 
+                            row_group.text_transform = NULL, row_group.padding = NULL, 
+                            row_group.border.top.style = NULL, row_group.border.top.width = NULL, 
+                            row_group.border.top.color = NULL, row_group.border.bottom.style = NULL, 
+                            row_group.border.bottom.width = NULL, row_group.border.bottom.color = NULL, 
+                            row_group.border.left.style = NULL, row_group.border.left.width = NULL, 
+                            row_group.border.left.color = NULL, row_group.border.right.style = NULL, 
+                            row_group.border.right.width = NULL, row_group.border.right.color = NULL, 
+                            # Table body
+                            table_body.hlines.style = NULL, table_body.hlines.width = NULL, 
+                            table_body.hlines.color = NULL, 
+                            table_body.vlines.style = NULL, 
+                            table_body.vlines.width = NULL, table_body.vlines.color = NULL, 
+                            table_body.border.top.style = NULL, table_body.border.top.width = NULL, table_body.border.top.color = "#DEDDDD", 
+                            table_body.border.bottom.style = NULL, table_body.border.bottom.width = NULL, table_body.border.bottom.color = "#DEDDDD", 
+                            # Stub
+                            stub.background.color = NULL, stub.font.size = NULL, stub.font.weight = NULL, 
+                            stub.text_transform = NULL, stub.border.style = NULL, stub.border.width = NULL, 
+                            stub.border.color = NULL, 
+                            data_row.padding = NULL, 
+                            # Summary row
+                            summary_row.background.color = NULL, 
+                            summary_row.text_transform = NULL, summary_row.padding = NULL, 
+                            summary_row.border.style = NULL, summary_row.border.width = NULL, 
+                            summary_row.border.color = NULL, 
+                            # Grand summary row
+                            grand_summary_row.background.color = NULL, 
+                            grand_summary_row.text_transform = NULL, grand_summary_row.padding = NULL, 
+                            grand_summary_row.border.style = NULL, grand_summary_row.border.width = NULL, 
+                            grand_summary_row.border.color = NULL, 
+                            # Footnotes
+                            footnotes.background.color = NULL, 
+                            footnotes.font.size = NULL, footnotes.padding = NULL, footnotes.border.bottom.style = NULL, 
+                            footnotes.border.bottom.width = NULL, footnotes.border.bottom.color = NULL, 
+                            footnotes.border.lr.style = NULL, footnotes.border.lr.width = NULL, 
+                            footnotes.border.lr.color = NULL, footnotes.sep = NULL, footnotes.marks = NULL, 
+                            # Source notes
+                            source_notes.background.color = NULL, source_notes.font.size = NULL, 
+                            source_notes.padding = NULL, source_notes.border.bottom.style = NULL, 
+                            source_notes.border.bottom.width = NULL, source_notes.border.bottom.color = NULL, 
+                            source_notes.border.lr.style = NULL, source_notes.border.lr.width = NULL, 
+                            source_notes.border.lr.color = NULL, 
+                            # Row striping
+                            row.striping.background_color = NULL, 
+                            row.striping.include_stub = NULL, row.striping.include_table_body = NULL){
+  gt:::stop_if_not_gt(data = data)
+  opts_df <- gt:::dt_options_get(data = data)
+  arg_names <- formals(tab_options) %>% names() %>% base::setdiff("data")
+  arg_vals <- mget(arg_names)
+  arg_vals <- arg_vals[!vapply(arg_vals, FUN = is.null, FUN.VALUE = logical(1))]
+  arg_vals <- arg_vals %>% gt:::set_super_options()
+  
+  new_df <- dplyr::tibble(parameter = names(arg_vals) %>% 
+                            gt:::tidy_gsub(".", "_", fixed = TRUE), value = unname(arg_vals)) %>%
+    dplyr::left_join(opts_df %>% 
+                       dplyr::select(parameter, type), by = "parameter") %>% 
+    dplyr::mutate(value = mapply(gt:::preprocess_tab_option, option = value, 
+                                 var_name = parameter, type = type, SIMPLIFY = FALSE)) %>% 
+    dplyr::select(-type)
+  
+  opts_df <- dplyr::bind_rows(new_df %>% 
+                                dplyr::inner_join(opts_df %>% 
+                                                    dplyr::select(-value), by = "parameter"), opts_df %>% 
+                                dplyr::anti_join(new_df, by = "parameter"))
+  
+  data <- gt:::dt_options_set(data = data, options = opts_df)
+  data
+}
+
 leaderboard_table = function(df){
   df %>% 
     select(rank, player_name, games_played, total_points, total_shots, points_per_game, off_ppg, def_ppg, toss_efficiency) %>% 
@@ -634,111 +737,213 @@ score_heatmap = function(df){
 }
 
 
-game_summary_table = function(player_stats, team_selected){
+team_summary_tab = function(df, team){
+  winners = unique(df$winners)
+  title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
   
-    table_df = player_stats %>% 
-      filter(team == team_selected)
-    
-    winners = unique(table_df$winners)
-    
-    table_df %>% 
-      arrange(-total_points) %>% 
-      gt(.) %>% 
-      tab_header(title = str_c("Team ", team_selected),
-                 subtitle = if_else(winners, "the winners.", "the losers.")) %>% 
-      cols_hide(columns = vars(team, winners)) %>% 
-      # Column names
-      cols_label(
-        player_name = "Player",
-        total_points = "Total Points",
-        paddle_points = "Paddle Points",
-        clink_points = "Clink Points",
-        threes = "Sinks", # TODO: Fix this 
-        points_per_round = "Points per Round\n(PPR)",
-        off_ppr = "Offensive PPR",
-        def_ppr = "Defensive PPR",
-        toss_efficiency = "Toss Efficiency"
-      ) %>% 
-      # Format integers
-      fmt_number(
-        columns = vars(total_points, paddle_points, clink_points, threes),
-        decimals = 0
-      ) %>% 
-      # Format doubles
-      fmt_number(
-        columns = vars(points_per_round, off_ppr, def_ppr),
-        decimals = 2
-      ) %>% 
-      # Format percentages
-      fmt_percent(
-        columns = vars(toss_efficiency),
-        decimals = 1
-      ) %>% 
-      tab_footnote(
-        footnote = "Defensive points are scored from paddles.",
-        locations = cells_column_labels(columns = vars(def_ppr))
-      ) %>% 
-      tab_footnote(
-        footnote = "% of tosses which are successful.",
-        locations = cells_column_labels(columns = vars(toss_efficiency))
-      ) %>%
-      opt_footnote_marks(marks = "letters") %>% 
-      # Styling
-      # Title
-      tab_style(
-        style = list(cell_text(weight = "bold", size = "large")),
-        locations = cells_title(groups = "title")
-      ) %>%
-      tab_style(style = cell_text(align = "left", v_align = "bottom"),
-                locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
-      cols_align(align = "right") %>% 
-      cols_align(align = "left", columns = c("player_name")) %>% 
-      # Left Align Player and Rank
-      # Column widths
-      cols_width(
-        vars(player_name) ~ px(120),
-        vars(points_per_round) ~ px(110),
-        vars(total_points, paddle_points, clink_points, threes) ~ px(60),
-        vars(off_ppr, def_ppr, toss_efficiency) ~ px(95)
-      ) %>% 
-      tab_options(heading.border.lr.style = "none",
-                  heading.border.bottom.style = "none",
-                  column_labels.border.top.style = "none",
-                  column_labels.border.bottom.style = "solid",
-                  column_labels.border.bottom.color = "#7c7c7c",
-                  column_labels.border.bottom.width = "3px",
-                  column_labels.border.lr.style = "none",
-                  table.border.top.style = "none",
-                  table.border.right.style = "none",
-                  table.border.left.style = "none",
-                  table.border.bottom.style = "none",
-                  column_labels.font.weight = "600")
-
+  hide_diff_cols = head(df, 1) %>% # Take the first row of a column
+    mutate_all(as.character) %>% # prevents errors in pivot_longer
+    # convert to column-value pair dataframe
+    pivot_longer(everything(), names_to = "column", values_to = "value") %>% 
+    # remove the value
+    select(-value) %>% 
+    # Craft the desired label
+    # Below I remove the year, replace underscores with spaces, and convert to title case
+    mutate(label = case_when(
+      # column == "player_name" ~ "Player",
+      # column == "total_points" ~ "Total Points",
+      # column == "paddle_points" ~ "Paddle Points",
+      # column == "clink_points" ~ "Clink Points",
+      # column == "sinks" ~ "Sinks", # TODO: Fix this 
+      # column == "points_per_round" ~ "Points per Round\n(PPR)",
+      # column == "off_ppr" ~ "Offensive PPR",
+      # column == "def_ppr" ~ "Defensive PPR",
+      # column == "toss_efficiency" ~ "Toss Efficiency",
+      # T ~ ""
+      column == "player_name" ~ "Player",
+      str_detect(column, "_diff$") ~ "Diff.",
+      T ~ "Current"
+    )) %>% 
+    # Deframe to named vector
+    deframe()
+  
+  df %>% 
+    arrange(-total_points) %>% 
+    gt(.) %>% 
+    tab_header(title = str_c("Team ", team),
+               subtitle = if_else(winners, "the winners.", "the losers.")) %>% 
+    cols_hide(columns = vars(player_id, team, winners)) %>% 
+    # Column names
+    cols_label(
+      # player_name = "Player",
+      # total_points = "Total Points",
+      # paddle_points = "Paddle Points",
+      # clink_points = "Clink Points",
+      # sinks_total = "Sinks", # TODO: Fix this
+      # points_per_round = "Points per Round\n(PPR)",
+      # off_ppr = "Offensive PPR",
+      # def_ppr = "Defensive PPR",
+      # toss_efficiency = "Toss Efficiency",
+      .list = hide_diff_cols
+    ) %>%
+    # Format integers
+    fmt_number(
+      columns = vars(total_points, paddle_points, clink_points, sinks),
+      decimals = 0
+    ) %>% 
+    # Format doubles
+    fmt_number(
+      columns = vars(points_per_round, off_ppr, def_ppr),
+      decimals = 2
+    ) %>% 
+    # Format percentages
+    fmt_percent(
+      columns = vars(toss_efficiency),
+      decimals = 1
+    ) %>% 
+    # Styling
+    # Title
+    tab_style(
+      style = list(cell_text(weight = "bold", size = px(20), color = title_colour)),
+      locations = cells_title(groups = "title")
+    ) %>%
+    # Subtitle
+    tab_style(style = cell_text(align = "left", v_align = "bottom"),
+              locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
+    # Colour stat differences
+    ## Positive
+    tab_style(style = cell_text(color = snappa_pal[5]),
+              locations = list(
+                cells_body(columns = vars(total_points_diff), rows = str_detect(total_points_diff, "\\+")),
+                cells_body(columns = vars(paddle_points_diff), rows = str_detect(paddle_points_diff, "\\+")),
+                cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\+")),
+                cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\+")),
+                cells_body(columns = vars(off_ppr_diff), rows = str_detect(off_ppr_diff, "\\+")),
+                cells_body(columns = vars(def_ppr_diff), rows = str_detect(def_ppr_diff, "\\+")),
+                cells_body(columns = vars(toss_efficiency_diff), rows = str_detect(toss_efficiency_diff, "\\+"))
+              )
+    ) %>% 
+    ## Negative
+    tab_style(style = cell_text(color = snappa_pal[2]),
+              locations = list(
+                cells_body(columns = vars(total_points_diff), rows = str_detect(total_points_diff, "\\-")),
+                cells_body(columns = vars(paddle_points_diff), rows = str_detect(paddle_points_diff, "\\-")),
+                cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\-")),
+                cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\-")),
+                cells_body(columns = vars(off_ppr_diff), rows = str_detect(off_ppr_diff, "\\-")),
+                cells_body(columns = vars(def_ppr_diff), rows = str_detect(def_ppr_diff, "\\-")),
+                cells_body(columns = vars(toss_efficiency_diff), rows = str_detect(toss_efficiency_diff, "\\-"))
+              )
+    ) %>% 
+    # Column spanners
+    tab_spanner(
+      label = "Total Points",
+      columns = contains("total_points")
+    ) %>% 
+    tab_spanner(
+      label = "Paddle Points",
+      columns = contains("paddle")
+    ) %>% 
+    tab_spanner(
+      label = "Clink Points",
+      columns = contains("clink")
+    ) %>% 
+    tab_spanner(
+      label = "Sinks",
+      columns = contains("sink")
+    ) %>% 
+    tab_spanner(
+      label = "Pts per Round",
+      columns = contains("per_")
+    ) %>% 
+    tab_spanner(
+      label = "Off. PPR",
+      columns = contains("off_")
+    ) %>% 
+    tab_spanner(
+      label = "Def. PPR",
+      columns = contains("def_")
+    ) %>% 
+    tab_spanner(
+      label = "Toss Efficiency",
+      columns = contains("toss")
+    ) %>% 
+    tab_source_note("Comparison of current game to career average") %>% 
+    tab_source_note(md(str_c('<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[2], ';">Snappa</span>',
+                             '<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[4], ';">DB</span>'))) %>% 
+    # Footnotes
+    # tab_footnote(
+    #   footnote = "Defensive points are scored from paddles.",
+    #   locations = cells_column_spanners("Def. PPR")#cells_column_labels(columns = vars(def_ppr))
+    # ) %>% 
+    # tab_footnote(
+    #   footnote = "% of tosses which are successful.",
+    #   locations = cells_column_spanners("Toss Efficiency")#cells_column_labels(columns = vars(toss_efficiency))
+    # ) %>%
+    # opt_footnote_marks(marks = "letters") %>% 
+    # Styling
+  tab_style(
+    style = cell_text(weight = 600, size = px(15)),
+    locations = map(c("Total Points","Paddle Points","Clink Points","Sinks","Pts per Round","Off. PPR","Def. PPR","Toss Efficiency"),
+                    cells_column_spanners)
+  ) %>% 
+    tab_style(
+      style = cell_text(size = px(14)),
+      locations = cells_column_labels(everything())
+    ) %>% 
+    cols_align(align = "right", 
+               columns = colnames(df) %>% str_subset("player_name", negate = T)) %>% 
+    # Left Align player
+    cols_align(align = "left", 
+               columns = c("player_name")) %>%
+    tab_style(
+      style = cell_text(align = "left"),
+      locations = cells_column_labels(columns = vars(player_name))
+    ) %>% 
+    # Column widths
+    cols_width(
+      vars(player_name) ~px(120),
+      vars(points_per_round) ~ px(110),
+      vars(total_points, paddle_points, clink_points, sinks) ~ px(60),
+      ends_with("points_diff") ~ px(50),
+      matches("(per_round|ppr|efficiency)_diff$") ~ px(55),
+      vars(off_ppr, def_ppr, toss_efficiency) ~ px(95)
+    ) %>% 
+    tab_theme_snappa()
 }
 
 player_score_breakdown = function(df){
    df %>%
     ggplot(., aes(y = player_name, x = points, fill = reorder(point_type, desc(point_type))))+
     # Bars
-    geom_col(position = "fill", colour = "#f5f5f5", size = 3)+
+    geom_col(position = position_fill(vjust = 0), width = 1, colour = snappa_pal[1], size = 2)+
     # Bar labels
-    geom_text(aes(label = point_pct), position = position_fill(vjust = .5), colour = "white")+
+    geom_text(aes(label = point_pct), family = "Inter Medium", position = position_fill(vjust = .5), colour = "white")+
     scale_y_discrete(name = NULL)+
     # X Axis: Percent labels
     scale_x_continuous(name = NULL, labels = scales::percent)+
     # Colour scale
-    scale_fill_manual(name = NULL, values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ), guide = guide_legend(reverse=T))+
-    theme_snappa()+
+    scale_fill_manual(name = NULL, values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ), 
+                      guide = guide_legend(reverse=T))+
+    theme_snappa(md=T, plot_margin = margin(t=-20, 10, 0, 10))+
     theme(
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
-      legend.position = "top",
+      legend.position = "bottom",
       axis.line = element_blank(),
-      axis.text.x = element_blank()
+      axis.text.x = element_blank(),
+      plot.title = element_blank(),
+      plot.subtitle = element_blank()
     )
 }
 
 game_flow = function(df){
+
+  # Add zeroes
+  player_score_base = df %>% 
+    group_by(game_id, player_id, player_name, team) %>% 
+    summarise(round = min(round)-1, points_scored = 0, cum_score = 0)
+  
   player_label_df = df %>% 
     filter(cum_score == max(cum_score)) %>% 
     select(player_name, player_id, team, round, cum_score)
@@ -746,25 +951,28 @@ game_flow = function(df){
   # Calculate max values for scales
   max_score = max(df$cum_score)
   max_round = max(df$round)
-  
+
   df %>% 
+    bind_rows(player_score_base) %>% 
     ggplot(., aes(x = round, y = cum_score, group = player_id, colour = team))+
-    geom_line(size = 1, show.legend = F)+
-    geom_text_repel(data = player_label_df,
-                    aes(x = round, y = cum_score, group = player_id, colour = team, label = player_name),
-                    size = 5,
-                    nudge_x = 2, show.legend = F, segment.alpha = 0)+
+    geom_line(size = 1, show.legend = F, alpha = .8)+
+    geom_label_repel(data = player_label_df,
+                     aes(x = round, y = cum_score, group = player_id, colour = team, label = player_name),
+                     size = 5, label.padding = .15, box.padding = .15, label.size = NA, fill = snappa_pal[1],
+                     nudge_x = 1.25, nudge_y = .5, force = .35, show.legend = F, segment.alpha = 0)+
     # geom_image(data = sinks, aes(x = round, y = sink_position, image = sink_splash))+
-    scale_y_continuous(name = "Cumulative Score", breaks = scales::pretty_breaks(n = 5), limits = c(0, max_score+5-(max_score%%5)))+
-    scale_x_continuous(name = "Round", breaks = scales::pretty_breaks(), limits = c(0, max_round+5))+
+    scale_y_continuous(name = "Points", 
+                       breaks = scales::breaks_pretty(n = 5), 
+                       limits = c(0, max_score+5-(max_score%%5)),
+                       expand = expansion())+
+    scale_x_continuous(name = "Round", 
+                       breaks = scales::breaks_pretty(n =10), 
+                       limits = c(0, max_round+5),
+                       expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
     labs(title = "How the die flies",
          subtitle = "Players' point progression")+
-    theme_snappa()+
-    theme(
-      panel.grid.major = element_line(color = "grey", size = 0.025),
-      panel.grid.minor = element_blank()
-    )
+    theme_snappa(plots_pane = F, md=T)
 }
 
 

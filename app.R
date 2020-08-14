@@ -858,12 +858,12 @@ server <- function(input, output, session) {
   
   output$team_a_summary = render_gt({
     # input$send_to_db
-    game_summary_table(player_summary(), "A")
+    team_summary_tab(player_summary(), "A")
   })  
   
   output$team_b_summary = render_gt({
     # input$send_to_db
-    game_summary_table(player_summary(), "B")
+    team_summary_tab(player_summary(), "B")
   })  
   
   
