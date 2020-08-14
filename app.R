@@ -287,8 +287,8 @@ score_progression = scores_tbl %>%
   arrange(game_id, score_id) %>% 
   group_by(game_id) %>% 
   mutate(
-    score_a = cumsum((scoring_team=="a")*points_scored),
-    score_b = cumsum((scoring_team=="b")*points_scored)
+    score_a = cumsum((scoring_team=="A")*points_scored),
+    score_b = cumsum((scoring_team=="B")*points_scored)
   ) %>% 
   ungroup() %>% 
   count(score_a, score_b)
@@ -1521,7 +1521,7 @@ observeEvent(input$resume_no, {
       scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == "Shaunt"), team)
-      shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "b")
+      shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
       
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
@@ -1529,7 +1529,7 @@ observeEvent(input$resume_no, {
                                 score_id = vals$score_id,
                                 game_id = vals$game_id,
                                 player_id = scorer_pid,
-                                scoring_team = "b",
+                                scoring_team = "B",
                                 round_num = round_num(),
                                 points_scored = score,
                                 shooting = shooting_team_lgl,
@@ -1596,7 +1596,7 @@ observeEvent(input$resume_no, {
     )
 
     # Select the ID which is the max on Team B
-    last_score = filter(vals$scores_db, scoring_team == "b") %>% 
+    last_score = filter(vals$scores_db, scoring_team == "B") %>% 
       pull(score_id) %>% 
       max()
     
