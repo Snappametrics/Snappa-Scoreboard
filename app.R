@@ -801,45 +801,49 @@ server <- function(input, output, session) {
       group_by(player_name) %>%
       filter(points > 0) %>% 
       mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
-      player_score_breakdown(.)
+      player_score_breakdown()
     
-    player_scores = scores_tbl %>% 
+    player_info = player_stats_tbl %>% 
+      # Filter player stats
       filter(game_id == max(game_id)) %>% 
-      inner_join(players_tbl) %>% 
+      select(game_id, player_id, team) %>% 
+      inner_join(players_tbl)
+    
+    # player_scores = vals$scores_db %>% 
+    # inner_join(snappaneers(), by = c("player_id")) %>%
+    player_scores = scores_tbl %>% 
+      inner_join(player_info, by = c("game_id", "player_id")) %>% 
       # Convert round_num into the actual round id
       rowwise() %>% 
       mutate(round = which(rounds == round_num)) %>% 
       ungroup() %>% 
+      arrange(game_id, score_id) %>% 
       group_by(player_id) %>% 
-      mutate(cum_score = cumsum(points_scored)) %>% 
-      ungroup()
+      mutate(cum_score = cumsum(points_scored))
     
     # sinks = player_scores %>% 
     #   filter(points_scored == 3) %>% 
     #   mutate(sink_splash = list.files("www", pattern="png", full.names = T),
     #          sink_position = cum_score - 1.5)
     
-    # Add zeroes
-    player_score_base = player_scores %>% 
-      group_by(game_id, player_id, player_name, scoring_team) %>% 
-      summarise(round = min(round)-1, points_scored = 0, cum_score = 0) %>% 
-      ungroup()
     
     
-    game_flow_plot = player_scores %>% 
-      bind_rows(player_score_base) %>% 
-      rename(team = scoring_team) %>% 
-      game_flow(.)
+    
+    game_flow_plot = game_flow(player_scores)
     
     plot_areas = c(
-      area(1, 1, 2, 2),
-      area(1, 3, 8, 6),
-      area(1, 7, 2, 8)
+      # area(1, 1, 2),
+      # area(1, 3, 8, 6),
+      # area(1, 7, 2, 8)
+      area(1, 1),
+      area(1, 2, 4, 3),
+      area(1, 4)
     )
 
     # (a_breakdown / plot_spacer() / plot_spacer()) | game_flow_plot| (b_breakdown / plot_spacer() / plot_spacer())+
     a_breakdown + game_flow_plot + b_breakdown+
-      plot_layout(design = plot_areas)
+      plot_layout(design = plot_areas)+
+      plot_annotation(theme = theme_snappa())
     
     # layout <- "
     # AABBBBCC
@@ -927,35 +931,33 @@ server <- function(input, output, session) {
   
   output$game_flow = renderPlot({
     # input$send_to_db
-    # player_scores = vals$scores_db %>% 
-      # inner_join(snappaneers(), by = c("player_id")) %>% 
-    player_scores = scores_tbl %>% 
+    player_info = player_stats_tbl %>% 
+      # Filter player stats
       filter(game_id == max(game_id)) %>% 
-      inner_join(players_tbl) %>% 
+      select(game_id, player_id, team) %>% 
+      inner_join(players_tbl)
+    
+    # player_scores = vals$scores_db %>% 
+    # inner_join(snappaneers(), by = c("player_id")) %>%
+    player_scores = scores_tbl %>% 
+      inner_join(player_info, by = c("game_id", "player_id")) %>% 
       # Convert round_num into the actual round id
       rowwise() %>% 
       mutate(round = which(rounds == round_num)) %>% 
       ungroup() %>% 
+      arrange(game_id, score_id) %>% 
       group_by(player_id) %>% 
-      mutate(cum_score = cumsum(points_scored)) %>% 
-      ungroup()
+      mutate(cum_score = cumsum(points_scored))
     
     # sinks = player_scores %>% 
     #   filter(points_scored == 3) %>% 
     #   mutate(sink_splash = list.files("www", pattern="png", full.names = T),
     #          sink_position = cum_score - 1.5)
     
-    # Add zeroes
-    player_score_base = player_scores %>% 
-      group_by(game_id, player_id, player_name, scoring_team) %>% 
-      summarise(round = min(round)-1, points_scored = 0, cum_score = 0) %>% 
-      ungroup()
     
     
-    player_scores %>% 
-      bind_rows(player_score_base) %>% 
-      rename(team = scoring_team) %>% 
-      game_flow(.)
+    
+    game_flow(player_scores)
   })
   
 
