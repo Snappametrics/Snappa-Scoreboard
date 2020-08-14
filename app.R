@@ -743,7 +743,7 @@ server <- function(input, output, session) {
       ),
       # Point breakdown
       # fluidRow(
-        plotOutput("megaplot", height = "55vh"),
+        plotOutput("megaplot", height = "50vh"),
         # column(4, align = "left",
         #        plotOutput("team_a_ptbreakdown", height = "20vh")
         # ),
