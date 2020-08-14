@@ -367,19 +367,132 @@ glance_ui_game = function(game.id){
 
 snappa_pal = c("#f5f5ef","#e26a6a","#2574a9","#ffaf47","#67a283","#793e8e","#54b6f2")
 
-theme_snappa = function(){
-  theme_minimal(
-    base_family = "Inter",
-    base_size = 18
-  ) %+replace%
-    theme(
-      plot.margin = margin(t = 15, r = 10, b = 15, l = 10),
-      plot.title = element_text(size = rel(1.25), margin = margin(b = 10)),
-      plot.background = element_rect(fill = "#f5f5ef", colour = "#f5f5ef"), 
-      # Grid lines
-      panel.grid.minor = element_line(color = "grey", size = 0.05),
-      panel.grid.major = element_line(color = "grey", size = 0.05)
-    ) 
+theme_snappa = function(title_family = "Inter SemiBold",
+                        text_family = "Inter",
+                        base_size = 12, 
+                        text_color = "gray20",
+                        bg_color = snappa_pal[1], line_color = "grey",
+                        plot_margin = margin(20,20,20,20),
+                        plots_pane = FALSE,
+                        md = FALSE){
+  
+  if (plots_pane == FALSE & md == FALSE) {
+    ggplot2::theme_minimal() +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            size = base_size,
+                            color = text_color),
+        title = element_text(family = title_family,
+                             color = text_color),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = element_text(face = "bold",
+                                  size = base_size * 2,
+                                  lineheight = 1.2), 
+        plot.title.position = "plot",
+        plot.subtitle = element_text(size = base_size * 1.5,
+                                     lineheight = 1.1, 
+                                     family = text_family,
+                                     margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot", 
+        plot.caption = element_text(hjust = 0, 
+                                    size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        
+        axis.text = element_text(size = base_size * 1.2),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = element_text(size = base_size * 1.6,
+                                  hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_color),
+        
+        legend.title = element_text(size = base_size * 1.3),
+        legend.text = element_text(size = base_size * 1.1)
+      )
+  } else if (plots_pane == FALSE & md == TRUE) {
+    ggplot2::theme_minimal() +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            size = base_size,
+                            color = text_color),
+        title = ggtext::element_markdown(family = title_family,
+                                         color = text_color),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = ggtext::element_markdown(face = "bold",
+                                              size = base_size * 2,
+                                              lineheight = 1.2),
+        plot.title.position = "plot",
+        plot.subtitle = ggtext::element_markdown(size = base_size * 1.7,
+                                                 lineheight = 1.1, 
+                                                 family = text_family,
+                                                 margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = ggtext::element_markdown(hjust = 0, 
+                                                size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        
+        axis.text = element_text(size = base_size * 1.2),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = ggtext::element_markdown(size = base_size * 1.6,
+                                              hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_color),
+        
+        legend.title = ggtext::element_markdown(size = base_size * 1.3),
+        legend.text = element_text(size = base_size * 1.1)
+      )
+  } else if (plots_pane == TRUE && md == TRUE) {
+    ggplot2::theme_minimal(base_size = base_size) +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            color = text_color),
+        title = element_text(family = title_family),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = ggtext::element_markdown(face = "bold",
+                                              lineheight = 1.2),
+        plot.title.position = "plot",
+        plot.subtitle = ggtext::element_markdown(lineheight = 1.1, 
+                                                 family = text_family,
+                                                 margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = ggtext::element_markdown(hjust = 0, 
+                                                size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = ggtext::element_markdown(hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_color)
+      )
+  } else {
+    ggplot2::theme_minimal(base_size = base_size) +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            color = text_color),
+        title = element_text(family = title_family),
+        line = element_line(color = "#DEDDDD"),
+        
+        plot.title = element_text(face = "bold",
+                                  lineheight = 1.2),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(lineheight = 1.1, 
+                                     family = text_family,
+                                     margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0, 
+                                    size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = element_text(hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_color)
+      )
+  }
 }
 
 leaderboard_table = function(df){
@@ -615,11 +728,13 @@ player_score_breakdown = function(df){
     scale_x_continuous(name = NULL, labels = scales::percent)+
     # Colour scale
     scale_fill_manual(name = NULL, values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ), guide = guide_legend(reverse=T))+
-    theme_snappa()%+replace%
+    theme_snappa()+
     theme(
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
-      legend.position = "top"
+      legend.position = "top",
+      axis.line = element_blank(),
+      axis.text.x = element_blank()
     )
 }
 
@@ -645,15 +760,10 @@ game_flow = function(df){
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
     labs(title = "How the die flies",
          subtitle = "Players' point progression")+
-    theme_snappa()%+replace%
+    theme_snappa()+
     theme(
-      plot.title = element_text(hjust = 0),
-      plot.subtitle = element_text(size = rel(.65), hjust = 0),
-      plot.margin = margin(t = 15, r = 10, b = 15, l = 10),
       panel.grid.major = element_line(color = "grey", size = 0.025),
-      panel.grid.minor = element_blank(),
-      axis.text.x = element_text(size = rel(.7)),
-      axis.text.y = element_text(size = rel(.7))
+      panel.grid.minor = element_blank()
     )
 }
 
