@@ -363,13 +363,13 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
            fluidRow(
              column(6,
                     
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]),
+                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
                       gt_output("career_stats_table")
                     )
                     ),
              column(6,
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]),
-                      plotOutput("scoring_heatmap", height = "600px", width = "auto",
+                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
+                      plotOutput("scoring_heatmap", height = "500px",
                                  hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
                       uiOutput("heatmap_info")
                     )
@@ -724,8 +724,7 @@ server <- function(input, output, session) {
     freq = filter(score_progression, score_a == y, score_b == x) %>% 
       pull(n)
     
-    HTML(str_c("<h3>Score</h3>",
-          "<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
+    HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
           "<p><span style='font-weight:500'>Frequency</span>: ", freq))
   })
   
