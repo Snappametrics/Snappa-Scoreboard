@@ -10,3 +10,6 @@ https://www.postgresqltutorial.com/postgresql-primary-key/#:~:text=Technically%2
 - Added foreign key to player stats game_id (from game_stats), using delete on CASCADE
 - Updated foreign key in scores game_id column (from game_stats), using delete on CASCADE
 - Updated the game_start value in games from UTC times to PST times (-7 hrs)
+
+2020-08-13
+- Replaced lowercase values of scores.scoring_team with uppercase values
