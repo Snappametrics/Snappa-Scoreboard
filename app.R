@@ -761,7 +761,7 @@ server <- function(input, output, session) {
 
   
 
-# Existing Game Check -----------------------------------------------------
+# Check Existing Game -----------------------------------------------------
 
 
 # Very start of game: display a popup message
@@ -770,8 +770,10 @@ server <- function(input, output, session) {
 observe({
   validate(
     need(
-      tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>%
-        pull(game_complete) %>% isFALSE(),
+      tbl(con, "game_stats") %>% 
+        filter(game_id == max(game_id, na.rm=T)) %>%
+        pull(game_complete) %>% 
+        isFALSE(),
       message = FALSE
     )
   )
@@ -1014,11 +1016,15 @@ observe({
               pull(game_complete) %>% 
               isFALSE()) {
         
-        lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id, na.rm = T)) %>% pull(game_id)
+        lost_game = tbl(con, "game_stats") %>% 
+          filter(game_id == max(game_id, na.rm = T)) %>% 
+          pull(game_id)
       
-        lost_game_stats = tbl(con, "game_stats") %>% filter(game_id == lost_game)
+        lost_game_stats = tbl(con, "game_stats") %>% 
+          filter(game_id == lost_game)
       
-        lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+        lost_player_stats = tbl(con, "player_stats") %>% 
+          filter(game_id == lost_game)
       
         lost_game_scores = list(team_a = lost_game_stats)
       
