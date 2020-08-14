@@ -19,6 +19,9 @@ library(dbplyr)
 library(shinyjs)
 library(shinyWidgets)
 library(gt)
+library(ggrepel)
+library(ggtext)
+library(patchwork)
 library(extrafont)
 
 
