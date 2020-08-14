@@ -365,14 +365,14 @@ glance_ui_game = function(game.id){
 
 # Stats Output ------------------------------------------------------------
 
-snappa_pal = str_c("#", c("f5f5ef","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
+snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
 
 theme_snappa = function(title_family = "Inter SemiBold",
                         text_family = "Inter",
                         base_size = 12, 
                         text_color = "gray20",
-                        bg_color = "#f5f5f5", line_color = "grey",
-                        plot_margin = margin(10,10,10,10),
+                        bg_color = snappa_pal[1], line_color = "grey",
+                        plot_margin = margin(20,20,20,20),
                         plots_pane = FALSE,
                         md = FALSE){
 
@@ -388,21 +388,23 @@ theme_snappa = function(title_family = "Inter SemiBold",
         
         plot.title = element_text(face = "bold",
                                   size = base_size * 2,
-                                  lineheight = 1.2),
+                                  lineheight = 1.2), 
         plot.title.position = "plot",
         plot.subtitle = element_text(size = base_size * 1.5,
                                      lineheight = 1.1, 
-                                     family = text_family),
+                                     family = text_family,
+                                     margin = margin(b=15)),
         plot.margin = plot_margin,
         plot.caption.position = "plot", 
-        plot.caption = element_text(hjust = 0),
+        plot.caption = element_text(hjust = 0, 
+                                    size = base_size * 1.25),
         plot.background = element_rect(fill = bg_color,
                                        color = bg_color),
         
-        axis.text = element_text(size = base_size * 1.2, face = "italic"),
+        axis.text = element_text(size = base_size * 1.2),
         axis.text.y.left = element_text(hjust = 0),
         axis.title = element_text(size = base_size * 1.6,
-                                  hjust = 1),
+                                  hjust = 1, face = "italic"),
         axis.line = element_line(color = line_color),
         
         legend.title = element_text(size = base_size * 1.3),
@@ -424,23 +426,25 @@ theme_snappa = function(title_family = "Inter SemiBold",
         plot.title.position = "plot",
         plot.subtitle = ggtext::element_markdown(size = base_size * 1.7,
                                                  lineheight = 1.1, 
-                                                 family = text_family),
+                                                 family = text_family,
+                                                 margin = margin(b=15)),
         plot.margin = plot_margin,
         plot.caption.position = "plot",
-        plot.caption = ggtext::element_markdown(hjust = 0),
+        plot.caption = ggtext::element_markdown(hjust = 0, 
+                                                size = base_size * 1.25),
         plot.background = element_rect(fill = bg_color,
                                        color = bg_color),
         
         axis.text = element_text(size = base_size * 1.2),
         axis.text.y.left = element_text(hjust = 0),
         axis.title = ggtext::element_markdown(size = base_size * 1.6,
-                                              hjust = 1),
+                                              hjust = 1, face = "italic"),
         axis.line = element_line(color = line_color),
         
         legend.title = ggtext::element_markdown(size = base_size * 1.3),
         legend.text = element_text(size = base_size * 1.1)
       )
-  } else if (plots_pane == TRUE & md == TRUE) {
+  } else if (plots_pane == TRUE && md == TRUE) {
     ggplot2::theme_minimal(base_size = base_size) +
       ggplot2::theme(
         text = element_text(family = text_family,
@@ -452,14 +456,16 @@ theme_snappa = function(title_family = "Inter SemiBold",
                                               lineheight = 1.2),
         plot.title.position = "plot",
         plot.subtitle = ggtext::element_markdown(lineheight = 1.1, 
-                                                 family = text_family),
+                                                 family = text_family,
+                                                 margin = margin(b=15)),
         plot.margin = plot_margin,
         plot.caption.position = "plot",
-        plot.caption = ggtext::element_markdown(hjust = 0),
+        plot.caption = ggtext::element_markdown(hjust = 0, 
+                                                size = base_size * 1.25),
         plot.background = element_rect(fill = bg_color,
                                        color = bg_color),
         axis.text.y.left = element_text(hjust = 0),
-        axis.title = ggtext::element_markdown(hjust = 1),
+        axis.title = ggtext::element_markdown(hjust = 1, face = "italic"),
         axis.line = element_line(color = line_color)
       )
   } else {
