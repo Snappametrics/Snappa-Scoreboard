@@ -963,8 +963,8 @@ observe({
                                     # ),
                                     fluidRow(
                                       column(width = 4, offset = 4, align = "center",
-                                             actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
-                                             actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                                             actionBttn("new_game", "Restart", style = "unite", color = "warning"),
+                                             actionBttn("finish_game", "Finish", style = "unite", color = "warning")
                                       )
                                     )
                                     )
