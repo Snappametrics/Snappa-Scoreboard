@@ -643,13 +643,14 @@ leaderboard_table = function(df){
     ) %>%
     opt_footnote_marks(marks = "letters") %>% 
     # Styling
+    # Subtitle
+    tab_style(style = cell_text(align = "left", v_align = "bottom", size = px(16)),
+              locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
     # Title
     tab_style(
-      style = list(cell_text(weight = "bold", size = "x-large")),
+      style = list(cell_text(weight = "bold", size = px(18))),
       locations = cells_title(groups = "title")
     ) %>%
-    tab_style(style = cell_text(align = "left", v_align = "bottom"),
-              locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
     # Rank column
     tab_style(
       style = list(cell_text(weight = "bold")),
@@ -662,11 +663,11 @@ leaderboard_table = function(df){
     # Left Align Player and Rank
     # Column widths
     cols_width(
-      vars(rank) ~ px(30),
-      vars(player_name) ~ px(220),
-      vars(points_per_game) ~ px(110),
-      vars(total_points, games_played, total_shots) ~ px(60),
-      vars(off_ppg, def_ppg, toss_efficiency) ~ px(95)
+      vars(rank) ~ px(20),
+      vars(player_name) ~ px(90),
+      vars(points_per_game) ~ px(80),
+      vars(total_points, games_played, total_shots) ~ px(48),
+      vars(off_ppg, def_ppg, toss_efficiency) ~ px(75)
     ) %>% 
     # Underline dope shit
     tab_style(
@@ -694,7 +695,7 @@ leaderboard_table = function(df){
         )
       )
     ) %>% 
-    tab_theme_snappa()
+    tab_theme_snappa(table.font.size = px(12))
   
 }
 
