@@ -685,6 +685,7 @@ server <- function(input, output, session) {
       left_join(select(snappaneers(), player_id, player_name)) %>% 
       recent_score_sentence() %>% 
       gt() %>% 
+      tab_theme_snappa() %>% 
       tab_options(column_labels.hidden = T)
   })
   
