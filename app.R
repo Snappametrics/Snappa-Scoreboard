@@ -850,7 +850,8 @@ server <- function(input, output, session) {
       mutate(round = which(rounds == round_num)) %>% 
       ungroup() %>% 
       group_by(player_id) %>% 
-      mutate(cum_score = cumsum(points_scored))
+      mutate(cum_score = cumsum(points_scored)) %>% 
+      ungroup()
     
     # sinks = player_scores %>% 
     #   filter(points_scored == 3) %>% 
@@ -859,12 +860,14 @@ server <- function(input, output, session) {
     
     # Add zeroes
     player_score_base = player_scores %>% 
-      group_by(game_id, player_id, player_name, team) %>% 
-      summarise(round = min(round)-1, points_scored = 0, cum_score = 0)
+      group_by(game_id, player_id, player_name, scoring_team) %>% 
+      summarise(round = min(round)-1, points_scored = 0, cum_score = 0) %>% 
+      ungroup()
     
     
     player_scores %>% 
       bind_rows(player_score_base) %>% 
+      rename(team = scoring_team) %>% 
       game_flow(.)
   })
   
