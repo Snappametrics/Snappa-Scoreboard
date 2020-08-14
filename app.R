@@ -363,13 +363,12 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
            fluidRow(
              column(6,
                     
-                    wellPanel(style = "height: 600px; background-color: #fff",
+                    wellPanel(style = str_c("background-color:", snappa_pal[1]),
                       gt_output("career_stats_table")
                     )
                     ),
-             column(1),
-             column(5,
-                    wellPanel(style = "height: 750px;",
+             column(6,
+                    wellPanel(style = str_c("background-color:", snappa_pal[1]),
                       plotOutput("scoring_heatmap", height = "600px", width = "auto",
                                  hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
                       uiOutput("heatmap_info")
