@@ -707,22 +707,28 @@ server <- function(input, output, session) {
 # Game Summary Stats ------------------------------------------------------
   
   player_summary = reactive({
-    input$send_to_db
-    vals$player_stats_db %>% 
+    # input$send_to_db
+    # vals$player_stats_db %>% 
+    player_stats_tbl %>% 
+      filter(game_id == max(game_id)) %>% 
       # Identify winners and losers
       group_by(team) %>% 
       mutate(team_score = sum(total_points)) %>% 
       ungroup() %>% 
       mutate(winners = (team_score == max(team_score))) %>% 
       # Merge in player info
-      inner_join(snappaneers()) %>% 
+      # inner_join(snappaneers()) %>% 
+      inner_join(players_tbl) %>% 
       select(team, winners, player_name, total_points, paddle_points, clink_points, threes, points_per_round:toss_efficiency)
   })
   
-  game_summary = function() {
+  game_summary = function(df) {
+    
+    browser()
     modalDialog(title = "Final Score", 
       
-      h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
+      # h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
+      h1(str_c(df$points_a, " - ", df$points_b), align = "center"),
       # ,
       # Tables
       fluidRow(
@@ -757,12 +763,12 @@ server <- function(input, output, session) {
   
   
   output$team_a_summary = render_gt({
-    input$send_to_db
+    # input$send_to_db
     game_summary_table(player_summary(), "A")
   })  
   
   output$team_b_summary = render_gt({
-    input$send_to_db
+    # input$send_to_db
     game_summary_table(player_summary(), "B")
   })  
   
@@ -772,10 +778,13 @@ server <- function(input, output, session) {
   
   
   output$team_a_ptbreakdown = renderPlot({
-    input$send_to_db
-    vals$player_stats_db %>% 
+    # input$send_to_db
+    # vals$player_stats_db %>% 
       # Merge in player info
-      inner_join(snappaneers()) %>% 
+      # inner_join(snappaneers()) %>% 
+    player_stats_tbl %>% 
+      filter(game_id == max(game_id)) %>% 
+      inner_join(players_tbl) %>% 
       filter(team == "A") %>% 
       select(player_name, team, total_points:clink_points) %>% 
       arrange(-total_points) %>% 
@@ -796,10 +805,13 @@ server <- function(input, output, session) {
   
   
   output$team_b_ptbreakdown = renderPlot({
-    input$send_to_db
-    vals$player_stats_db %>% 
+    # input$send_to_db
+    # vals$player_stats_db %>% 
       # Merge in player info
-      inner_join(snappaneers()) %>% 
+      # inner_join(snappaneers()) %>% 
+    player_stats_tbl %>% 
+      filter(game_id == max(game_id)) %>% 
+      inner_join(players_tbl) %>% 
       filter(team == "B") %>% 
       select(player_name, team, total_points:clink_points) %>% 
       arrange(-total_points) %>% 
@@ -824,9 +836,12 @@ server <- function(input, output, session) {
   
   
   output$game_flow = renderPlot({
-    input$send_to_db
-    player_scores = vals$scores_db %>% 
-      inner_join(snappaneers(), by = c("player_id")) %>% 
+    # input$send_to_db
+    # player_scores = vals$scores_db %>% 
+      # inner_join(snappaneers(), by = c("player_id")) %>% 
+    player_scores = scores_tbl %>% 
+      filter(game_id == max(game_id)) %>% 
+      inner_join(players_tbl) %>% 
       # Convert round_num into the actual round id
       rowwise() %>% 
       mutate(round = which(rounds == round_num)) %>% 
@@ -914,6 +929,11 @@ server <- function(input, output, session) {
 # if the previous game is incomplete
   
 observe({
+  showModal(
+    tags$div(id= "game_summary", 
+             game_summary(game_stats_tbl %>% filter(game_id == max(game_id)))
+    )
+  )
   validate(
     need(
       tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>%
@@ -1897,8 +1917,6 @@ observeEvent(input$resume_no, {
       tags$div(id= "game_summary", 
                game_summary()
                )
-      
-      
     )
     
   })
