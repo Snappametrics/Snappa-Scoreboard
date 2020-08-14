@@ -744,14 +744,15 @@ server <- function(input, output, session) {
       ),
       # Point breakdown
       fluidRow(
-        column(3, align = "left",
-               plotOutput("team_a_ptbreakdown", height = "20vh")
-        ),
-        column(4, offset = 1, align = "center",
-               plotOutput("game_flow")),
-        column(3, offset = 1, align = "right",
-               plotOutput("team_b_ptbreakdown", height = "20vh")
-        )
+        plotOutput("megaplot", height = "55vh")
+        # column(4, align = "left",
+        #        plotOutput("team_a_ptbreakdown", height = "20vh")
+        # ),
+        # column(4, align = "center",
+        #        plotOutput("game_flow")),
+        # column(4, align = "right",
+        #        plotOutput("team_b_ptbreakdown", height = "20vh")
+        # )
       ),
       footer = NULL,
       easyClose = T,
@@ -762,7 +763,94 @@ server <- function(input, output, session) {
 
   
   
-  
+  output$megaplot = renderPlot({
+    a_breakdown = player_stats_tbl %>% 
+      filter(game_id == max(game_id)) %>% 
+      inner_join(players_tbl) %>% 
+      filter(team == "A") %>% 
+      select(player_name, team, total_points:clink_points) %>% 
+      arrange(-total_points) %>% 
+      # Calculate sink points and "normal" points
+      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
+      mutate(sink = threes*3,
+             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
+      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
+      # Pivot to get point type
+      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
+      # Convert point type to factor
+      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
+      group_by(player_name) %>%
+      filter(points > 0) %>% 
+      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
+      player_score_breakdown(.)
+    
+    b_breakdown = player_stats_tbl %>% 
+      filter(game_id == max(game_id)) %>% 
+      inner_join(players_tbl) %>% 
+      filter(team == "B") %>% 
+      select(player_name, team, total_points:clink_points) %>% 
+      arrange(-total_points) %>% 
+      # Calculate sink points and "normal" points
+      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
+      mutate(sink = threes*3,
+             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
+      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
+      # Pivot to get point type
+      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
+      # Convert point type to factor
+      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
+      group_by(player_name) %>%
+      filter(points > 0) %>% 
+      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
+      player_score_breakdown(.)
+    
+    player_scores = scores_tbl %>% 
+      filter(game_id == max(game_id)) %>% 
+      inner_join(players_tbl) %>% 
+      # Convert round_num into the actual round id
+      rowwise() %>% 
+      mutate(round = which(rounds == round_num)) %>% 
+      ungroup() %>% 
+      group_by(player_id) %>% 
+      mutate(cum_score = cumsum(points_scored)) %>% 
+      ungroup()
+    
+    # sinks = player_scores %>% 
+    #   filter(points_scored == 3) %>% 
+    #   mutate(sink_splash = list.files("www", pattern="png", full.names = T),
+    #          sink_position = cum_score - 1.5)
+    
+    # Add zeroes
+    player_score_base = player_scores %>% 
+      group_by(game_id, player_id, player_name, scoring_team) %>% 
+      summarise(round = min(round)-1, points_scored = 0, cum_score = 0) %>% 
+      ungroup()
+    
+    
+    game_flow_plot = player_scores %>% 
+      bind_rows(player_score_base) %>% 
+      rename(team = scoring_team) %>% 
+      game_flow(.)
+    
+    plot_areas = c(
+      area(1, 1, 2, 2),
+      area(1, 3, 8, 6),
+      area(1, 7, 2, 8)
+    )
+
+    # (a_breakdown / plot_spacer() / plot_spacer()) | game_flow_plot| (b_breakdown / plot_spacer() / plot_spacer())+
+    a_breakdown + game_flow_plot + b_breakdown+
+      plot_layout(design = plot_areas)
+    
+    # layout <- "
+    # AABBBBCC
+    # ##BBBB##
+    # ##BBBB##
+    # "
+    # a_breakdown + game_flow_plot+ b_breakdown+
+    #   plot_layout(design = layout)
+    
+  })
   
   
   output$team_a_summary = render_gt({
