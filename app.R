@@ -727,7 +727,6 @@ server <- function(input, output, session) {
   
   game_summary = function(df) {
     
-    browser()
     modalDialog(title = "Final Score", 
       
       # h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
