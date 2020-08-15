@@ -503,7 +503,7 @@ tab_theme_snappa = function(data,
                             container.overflow.y = NULL, 
                             # Table
                             table.width = NULL, table.layout = NULL, table.align = NULL, 
-                            table.margin.left = NULL, table.margin.right = NULL, table.background.color = NULL, 
+                            table.margin.left = NULL, table.margin.right = NULL, table.background.color = snappa_pal[1], 
                             table.additional_css = NULL, table.font.names = NULL, table.font.size = NULL, 
                             table.font.weight = NULL, table.font.style = NULL, table.font.color = NULL, 
                             table.font.color.light = NULL, 
@@ -731,8 +731,8 @@ team_summary_tab = function(df, team){
       columns = contains("toss")
     ) %>% 
     tab_source_note("Comparison of current game to career average") %>% 
-    tab_source_note(md(str_c('<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[2], ';">Snappa</span>',
-                             '<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[4], ';">DB</span>'))) %>% 
+    # tab_source_note(md(str_c('<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[2], ';">Snappa</span>',
+    #                          '<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[4], ';">DB</span>'))) %>% 
     # Footnotes
     # tab_footnote(
     #   footnote = "Defensive points are scored from paddles.",
