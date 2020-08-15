@@ -906,9 +906,23 @@ server <- function(input, output, session) {
     )
 
     # (a_breakdown / plot_spacer() / plot_spacer()) | game_flow_plot| (b_breakdown / plot_spacer() / plot_spacer())+
-    a_breakdown + game_flow_plot + b_breakdown+
-      plot_layout(design = plot_areas)+
-      plot_annotation(theme = theme_snappa())
+    # a_breakdown + game_flow_plot + b_breakdown+
+    #   plot_layout(design = plot_areas)+
+    (wrap_elements(full = a_breakdown /
+                     plot_spacer() / 
+                     plot_spacer()*
+                     theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))*
+                     plot_annotation(theme = theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))))+
+        game_flow_plot+
+        theme_snappa(plots_pane = T, md = T)+
+        wrap_elements(full = b_breakdown /
+                        plot_spacer() /
+                        plot_spacer()*
+                        theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))*
+                        plot_annotation(theme = theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1])))))+
+      plot_layout(widths = c(3,5,3))+
+      plot_annotation(caption = str_c('<span style="color:', snappa_pal[2], ';">Snappa</span><span style="color:', snappa_pal[4], ';">DB</span>'), theme = theme_snappa(md=T, plot_margin = margin(5,5,15,5)))
+    
     
     # layout <- "
     # AABBBBCC
