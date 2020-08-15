@@ -1143,13 +1143,13 @@ game_flow = function(df){
 
   df %>% 
     bind_rows(player_score_base) %>% 
-    ggplot(., aes(x = round, y = cum_score, group = player_id, colour = team))+
-    geom_line(size = 1, show.legend = F, alpha = .8)+
+    ggplot(., aes(x = round, y = cum_score))+
+    geom_line(aes(group = player_id, colour = team), size = 1, show.legend = F, alpha = .8)+
     geom_label_repel(data = player_label_df,
-                     aes(x = round, y = cum_score, group = player_id, colour = team, label = player_name),
+                     aes(group = player_id, colour = team, label = player_name),
                      size = 5, label.padding = .15, box.padding = .15, label.size = NA, fill = snappa_pal[1],
                      nudge_x = 1.25, nudge_y = .5, force = .35, show.legend = F, segment.alpha = 0)+
-    # geom_image(data = sinks, aes(x = round, y = sink_position, image = sink_splash))+
+    # geom_image(data = filter(game_flow_df, !is.na(sink_image)))+
     scale_y_continuous(name = "Points", 
                        breaks = scales::breaks_pretty(n = 5), 
                        limits = c(0, max_score+5-(max_score%%5)),
@@ -1160,8 +1160,8 @@ game_flow = function(df){
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
     labs(title = "How the die flies",
-         subtitle = "Players' point progression")+
-    theme_snappa(plots_pane = F, md=T)
+         subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
+    theme_snappa(md=T)
 }
 
 
