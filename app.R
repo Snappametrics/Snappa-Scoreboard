@@ -792,7 +792,7 @@ server <- function(input, output, session) {
   
   game_summary = function(df) {
     
-    modalDialog(title = "Final Score", 
+    modalDialog(title = "Final Score",  style = str_c("background-color: ", snappa_pal[1], ";"),
       
       # h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
       h1(str_c(df$points_a, " - ", df$points_b), align = "center"),
