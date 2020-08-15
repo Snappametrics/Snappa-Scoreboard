@@ -562,14 +562,25 @@ input[type=radio]{
     }
     
     #previous_round, #next_round {
-        padding: 1vh 1vw 1vh 1vw;
+        font-size: 2rem;
+        padding: 2vh 2vw 2vh 2vw;
         margin-bottom: 1vh;
+        margin-top: 1vh;
     }
     
     #round_num {
+        font-size: 15rem;
         margin-top:0;
         margin-bottom:0;
+        line-height: 15rem;
     }
+    
+    #score_heatmap {
+        height: 500px;
+    }
+    
+    #finish_game, #new_game {
+        font-size:
     
     .gt_table {
         font-size: 12px;
