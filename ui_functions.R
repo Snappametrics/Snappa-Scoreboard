@@ -1091,27 +1091,38 @@ team_summary_tab = function(df, team){
 }
 
 player_score_breakdown = function(df){
+  
+  team = unique(df$team)
+  
+  reverse_legend = (team == "A")
+  
    df %>%
     ggplot(., aes(y = player_name, x = points, fill = reorder(point_type, desc(point_type))))+
     # Bars
-    geom_col(position = position_fill(vjust = 0), width = 1, colour = snappa_pal[1], size = 2)+
-    # Bar labels
-    geom_text(aes(label = point_pct), family = "Inter Medium", position = position_fill(vjust = .5), colour = "white")+
-    scale_y_discrete(name = NULL)+
-    # X Axis: Percent labels
+    geom_col(position = "fill", colour = snappa_pal[1], size = 3)+
+    # Labels
+    geom_text(data = filter(df, point_pct > .1), aes(label = point_pct), 
+              position = position_fill(vjust = .5), colour = "white", show.legend = F)+
+    # Y Axis
+    scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
+    # X Axis
     scale_x_continuous(name = NULL, labels = scales::percent)+
     # Colour scale
-    scale_fill_manual(name = NULL, values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ), 
-                      guide = guide_legend(reverse=T))+
-    theme_snappa(md=T, plot_margin = margin(t=-20, 10, 0, 10))+
+    scale_fill_manual(name = NULL, 
+                      values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
+                      guide = guide_legend(reverse = reverse_legend, label.hjust = 0.5))+
+    # Theme elements
+    theme_snappa(md=T, plot_margin = margin(0,0,0,0))+
     theme(
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
-      legend.position = "bottom",
       axis.line = element_blank(),
+      legend.position = "bottom",
+      legend.margin = margin(0,0,0,-30),
+      legend.text.align = -.5,
       axis.text.x = element_blank(),
-      plot.title = element_blank(),
-      plot.subtitle = element_blank()
+      axis.text.y.left = element_text(margin = margin(l = -5, r = -5), hjust = 1),
+      axis.text.y.right = element_text(margin = margin(l = -5, r = -5), hjust = 0)
     )
 }
 
