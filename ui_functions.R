@@ -916,43 +916,65 @@ score_heatmap = function(df){
 
 
 
-player_score_breakdown = function(df){
+player_score_breakdown = function(stats_df, players_df, team){
   
-  team = unique(df$team)
+  if(team == "A"){
+    team_margin = margin(0,-20,0,0)
+  } else {
+    team_margin = margin(0,0,0, -20)
+  }
+  reverse_legend = (!!team == "A")
   
-  reverse_legend = (team == "A")
-  
-  df = df %>% 
+  df = stats_df %>% 
+    filter(game_id == max(game_id)) %>% 
+    inner_join(players_df) %>% 
+    filter(team == !!team) %>% 
+    select(player_name, team, total_points:clink_points) %>% 
+    arrange(-total_points) %>% 
+    # Calculate sink points and "normal" points
+    # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
+    mutate(sink = threes*3,
+           normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
+    select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
+    # Pivot to get point type
+    pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
+    # Convert point type to factor
+    mutate(point_type = factor(point_type, levels = c("Sink", "Clink", "Paddle", "Normal toss"), ordered = T)) %>% 
+    group_by(player_name) %>%
+    filter(points > 0) %>% 
     mutate(point_pct = points/sum(points))
   
+  
+  
     df %>%
-    ggplot(., aes(y = player_name, x = points, fill = reorder(point_type, desc(point_type))))+
-    # Bars
-    geom_col(position = "fill", colour = snappa_pal[1], size = 1.5)+
-    # Labels
-    geom_text(data = filter(df, point_pct > .15), aes(label = scales::percent(point_pct, accuracy = 1)), 
-              position = position_fill(vjust = .5), colour = "white", show.legend = F)+
-    # Y Axis
-    scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
-    # X Axis
-    scale_x_continuous(name = NULL, labels = scales::percent)+
-    # Colour scale
-    scale_fill_manual(name = NULL, 
-                      values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
-                      guide = guide_legend(reverse = reverse_legend, label.hjust = 0.5, ncol = 2))+
-    # Theme elements
-    theme_snappa(md=T, plot_margin = margin(0,0,0,0), base_size = 11)+
-    theme(
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      axis.line = element_blank(),
-      legend.position = "bottom",
-      legend.margin = margin(0,-30,0,-30),
-      legend.text.align = .5,
-      axis.text.x = element_blank(),
-      axis.text.y.left = element_text(margin = margin(l = -5, r = -5), hjust = 1),
-      axis.text.y.right = element_text(margin = margin(l = -5, r = -5), hjust = 0)
-    )
+      ggplot(., aes(y = player_name, x = points, fill = point_type))+
+      # Bars
+      geom_col(position = "fill", colour = snappa_pal[1], size = 1.5)+
+      # Labels
+      geom_text(data = filter(df, point_pct > .15), 
+                aes(label = scales::percent(point_pct, accuracy = 1)), 
+                position = position_fill(vjust = .5), colour = "white", show.legend = F)+
+      # Y Axis
+      scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
+      # X Axis
+      scale_x_continuous(name = NULL, labels = scales::percent)+
+      # Colour scale
+      scale_fill_manual(name = NULL, drop=F,
+                        values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
+                        guide = guide_legend(reverse = T, label.hjust = 0.5, nrow = 2, byrow = T))+
+      # Theme elements
+      theme_snappa(md=T, plot_margin = team_margin, base_size = 11)+
+      theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_blank(),
+        legend.position = "bottom",
+        legend.margin = margin(0,-30,0,-30),
+        legend.text.align = .5,
+        axis.text.x = element_blank(),
+        axis.text.y.left = element_text(margin = margin(l = -5, r = -5), hjust = 1),
+        axis.text.y.right = element_text(margin = margin(l = -5, r = -5), hjust = 0)
+      )
 }
 
 game_flow = function(df){

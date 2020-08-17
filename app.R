@@ -827,43 +827,10 @@ server <- function(input, output, session) {
   
   
   output$megaplot = renderPlot({
-    a_breakdown = player_stats_tbl %>% 
-      filter(game_id == max(game_id)) %>% 
-      inner_join(players_tbl) %>% 
-      filter(team == "A") %>% 
-      select(player_name, team, total_points:clink_points) %>% 
-      arrange(-total_points) %>% 
-      # Calculate sink points and "normal" points
-      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
-      mutate(sink = threes*3,
-             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
-      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
-      # Pivot to get point type
-      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
-      # Convert point type to factor
-      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
-      group_by(player_name) %>%
-      filter(points > 0) %>% 
-      player_score_breakdown(.)
+    a_breakdown = player_score_breakdown(player_stats_tbl, players_tbl, team = "A")
+      
     
-    b_breakdown = player_stats_tbl %>% 
-      filter(game_id == max(game_id)) %>% 
-      inner_join(players_tbl) %>% 
-      filter(team == "B") %>% 
-      select(player_name, team, total_points:clink_points) %>% 
-      arrange(-total_points) %>% 
-      # Calculate sink points and "normal" points
-      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
-      mutate(sink = threes*3,
-             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
-      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
-      # Pivot to get point type
-      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
-      # Convert point type to factor
-      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
-      group_by(player_name) %>%
-      filter(points > 0) %>% 
-      player_score_breakdown()
+    b_breakdown = player_score_breakdown(player_stats_tbl, players_tbl, team = "B")
     
     player_info = player_stats_tbl %>% 
       # Filter player stats
