@@ -1531,7 +1531,7 @@ observeEvent(input$resume_no, {
       # Player ID
       scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
       # Were they shooting?
-      scorers_team = pull(filter(snappaneers(), player_name == "Shaunt"), team)
+      scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
       
       # Add the score to the scores table
