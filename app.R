@@ -1414,7 +1414,8 @@ observeEvent(input$resume_no, {
 
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
-        showNotification("That's some hot shit!", id = "paddle")
+        showNotification(HTML(str_c("<span style='color:", snappa_pal[2], "'>That's some hot shit!</span>")), id = "paddle",
+                         duration = 10, closeButton = F)
       }
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
@@ -1560,7 +1561,8 @@ observeEvent(input$resume_no, {
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
-        showNotification("That's some hot shit!")
+        showNotification(HTML(str_c("<span style='color:", snappa_pal[3], "'>That's some hot shit!</span>")),
+                         duration = 10, closeButton = F)
       }
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
