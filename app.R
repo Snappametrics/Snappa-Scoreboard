@@ -1102,6 +1102,17 @@ observe({
 
   })
   
+  observeEvent(req(sum(vals$scores_db$points_scored) >= 21), {
+    sendSweetAlert(session, 
+                   title = "Halftime", 
+                   type = "info",
+                   text = HTML(str_c("Change places!", 
+                                     "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
+    
+    
+  }, once = T, ignoreNULL = T)
+  
+
 
 
   
