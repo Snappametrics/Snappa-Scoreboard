@@ -600,8 +600,14 @@ tab_theme_snappa = function(data,
 
 
 team_summary_tab = function(df, team){
+  
+  df = select(df,
+              -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
+    filter(team == !!team)
   winners = unique(df$winners)
   title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
+  
+  
   
   hide_diff_cols = head(df, 1) %>% # Take the first row of a column
     mutate_all(as.character) %>% # prevents errors in pivot_longer
@@ -650,12 +656,14 @@ team_summary_tab = function(df, team){
     ) %>%
     # Format integers
     fmt_number(
-      columns = vars(total_points, paddle_points, clink_points, sinks),
+      # columns = vars(total_points, paddle_points, clink_points, sinks),
+      columns = vars(total_points, paddle_points),
       decimals = 0
     ) %>% 
     # Format doubles
     fmt_number(
-      columns = vars(points_per_round, off_ppr, def_ppr),
+      # columns = vars(points_per_round, off_ppr, def_ppr),
+      columns = vars(off_ppr, def_ppr),
       decimals = 2
     ) %>% 
     # Format percentages
@@ -666,20 +674,20 @@ team_summary_tab = function(df, team){
     # Styling
     # Title
     tab_style(
-      style = list(cell_text(weight = "bold", size = px(20), color = title_colour)),
+      style = list(cell_text(align = "left", v_align = "bottom", weight = "bold", size = px(18), color = title_colour)),
       locations = cells_title(groups = "title")
     ) %>%
     # Subtitle
     tab_style(style = cell_text(align = "left", v_align = "bottom"),
-              locations = list(cells_title("title"), cells_title("subtitle"))) %>% 
+              locations = list(cells_title("subtitle"))) %>% 
     # Colour stat differences
     ## Positive
     tab_style(style = cell_text(color = snappa_pal[5]),
               locations = list(
                 cells_body(columns = vars(total_points_diff), rows = str_detect(total_points_diff, "\\+")),
                 cells_body(columns = vars(paddle_points_diff), rows = str_detect(paddle_points_diff, "\\+")),
-                cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\+")),
-                cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\+")),
+                # cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\+")),
+                # cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\+")),
                 cells_body(columns = vars(off_ppr_diff), rows = str_detect(off_ppr_diff, "\\+")),
                 cells_body(columns = vars(def_ppr_diff), rows = str_detect(def_ppr_diff, "\\+")),
                 cells_body(columns = vars(toss_efficiency_diff), rows = str_detect(toss_efficiency_diff, "\\+"))
@@ -690,8 +698,8 @@ team_summary_tab = function(df, team){
               locations = list(
                 cells_body(columns = vars(total_points_diff), rows = str_detect(total_points_diff, "\\-")),
                 cells_body(columns = vars(paddle_points_diff), rows = str_detect(paddle_points_diff, "\\-")),
-                cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\-")),
-                cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\-")),
+                # cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\-")),
+                # cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\-")),
                 cells_body(columns = vars(off_ppr_diff), rows = str_detect(off_ppr_diff, "\\-")),
                 cells_body(columns = vars(def_ppr_diff), rows = str_detect(def_ppr_diff, "\\-")),
                 cells_body(columns = vars(toss_efficiency_diff), rows = str_detect(toss_efficiency_diff, "\\-"))
@@ -706,18 +714,18 @@ team_summary_tab = function(df, team){
       label = "Paddle Points",
       columns = contains("paddle")
     ) %>% 
-    tab_spanner(
-      label = "Clink Points",
-      columns = contains("clink")
-    ) %>% 
-    tab_spanner(
-      label = "Sinks",
-      columns = contains("sink")
-    ) %>% 
-    tab_spanner(
-      label = "Pts per Round",
-      columns = contains("per_")
-    ) %>% 
+    # tab_spanner(
+    #   label = "Clink Points",
+    #   columns = contains("clink")
+    # ) %>% 
+    # tab_spanner(
+    #   label = "Sinks",
+    #   columns = contains("sink")
+    # ) %>% 
+    # tab_spanner(
+    #   label = "Pts per Round",
+    #   columns = contains("per_")
+    # ) %>% 
     tab_spanner(
       label = "Off. PPR",
       columns = contains("off_")
@@ -745,13 +753,20 @@ team_summary_tab = function(df, team){
     # opt_footnote_marks(marks = "letters") %>% 
     # Styling
   tab_style(
-    style = cell_text(weight = 600, size = px(15), v_align = "bottom"),
-    locations = map(c("Total Points","Paddle Points","Clink Points","Sinks","Pts per Round","Off. PPR","Def. PPR","Toss Efficiency"),
+    style = cell_text(weight = 600, size = px(14), v_align = "bottom"),
+    # locations = map(c("Total Points","Paddle Points","Clink Points","Sinks","Pts per Round","Off. PPR","Def. PPR","Toss Efficiency"),
+    locations = map(c("Total Points","Paddle Points","Off. PPR","Def. PPR","Toss Efficiency"),
                     cells_column_spanners)
   ) %>% 
+    # Column Labels
     tab_style(
-      style = cell_text(size = px(14)),
+      style = cell_text(size = px(12)),
       locations = cells_column_labels(everything())
+    ) %>% 
+    # Table body text
+    tab_style(
+      style = cell_text(size = px(12)),
+      locations = cells_body(everything())
     ) %>% 
     cols_align(align = "right", 
                columns = colnames(df) %>% str_subset("player_name", negate = T)) %>% 
@@ -765,9 +780,12 @@ team_summary_tab = function(df, team){
     # Column widths
     cols_width(
       vars(player_name) ~pct(7),#px(120),
-      vars(total_points, paddle_points, clink_points) ~ pct(3), 
-      vars(points_per_round, off_ppr, def_ppr) ~ pct(4),
-      vars(toss_efficiency, sinks) ~ pct(5),#px(60),
+      # vars(total_points, paddle_points, clink_points) ~ pct(3), 
+      vars(total_points, paddle_points) ~ pct(3), 
+      # vars(points_per_round, off_ppr, def_ppr) ~ pct(4),
+      vars(off_ppr, def_ppr) ~ pct(4),
+      # vars(toss_efficiency, sinks) ~ pct(5),#px(60),
+      vars(toss_efficiency) ~ pct(4),#px(60),
       ends_with("points_diff") ~ pct(5),#px(50),
       matches("(per_round|ppr|efficiency)_diff$") ~ pct(6)#px(55),
     ) %>% 
