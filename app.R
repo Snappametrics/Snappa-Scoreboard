@@ -1205,13 +1205,15 @@ observeEvent(input$resume_no, {
     
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
-      showNotification(str_c("Rebuttal: ", "Team ", 
-                             str_sub(round_num(), start = -1),
-                             " needs ", str_c(
-                               abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
-                             " points to bring it back"
-                             )
-                      ) 
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " needs ", str_c(
+                                    abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
+                                  " points to bring it back")
+      ), duration = 20, closeButton = F
+      )
     } else {
     }
       
@@ -1429,12 +1431,14 @@ observeEvent(input$resume_no, {
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
-      showNotification(str_c("Rebuttal: ", "Team ", 
-                             str_sub(round_num(), start = -1),
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
+                             team_in_rebuttal, "</span>",
                              " needs ", str_c(
                                abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
-                             " points to bring it back"
-      )
+                             " points to bring it back")
+      ), duration = 20, closeButton = F
       )
     } else {
       
@@ -1573,12 +1577,14 @@ observeEvent(input$resume_no, {
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
-      showNotification(str_c("Rebuttal: ", "Team ", 
-                             str_sub(round_num(), start = -1),
-                             " needs ", str_c(
-                               abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
-                             " points to bring it back"
-      )
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " needs ", str_c(
+                                    abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
+                                  " points to bring it back")
+      ), duration = 20, closeButton = F
       )
     } else {
       
