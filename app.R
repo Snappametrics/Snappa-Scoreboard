@@ -792,17 +792,16 @@ server <- function(input, output, session) {
   
   game_summary = function(df) {
     
-    modalDialog(title = "Final Score",  style = str_c("background-color: ", snappa_pal[1], ";"),
+    modalDialog(title = str_c("Final Score: ", df$points_a, " - ", df$points_b),  style = str_c("background-color: ", snappa_pal[1], ";"),
       
       # h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
-      h1(str_c(df$points_a, " - ", df$points_b), align = "center"),
       # ,
       # Tables
       fluidRow(
-        column(5,
+        column(6, align = "center",
                gt_output("team_a_summary")
         ),
-        column(5, offset = 2,
+        column(6,align = "center",# offset = 2,
                gt_output("team_b_summary")
         )
       ),
