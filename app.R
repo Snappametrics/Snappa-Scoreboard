@@ -860,14 +860,6 @@ server <- function(input, output, session) {
     
     game_flow_plot = game_flow(player_scores)
     
-    plot_areas = c(
-      # area(1, 1, 2),
-      # area(1, 3, 8, 6),
-      # area(1, 7, 2, 8)
-      area(1, 1),
-      area(1, 2, 4, 3),
-      area(1, 4)
-    )
 
     # (a_breakdown / plot_spacer() / plot_spacer()) | game_flow_plot| (b_breakdown / plot_spacer() / plot_spacer())+
     # a_breakdown + game_flow_plot + b_breakdown+
