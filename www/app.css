@@ -74,10 +74,20 @@
     margin-bottom: 2rem;
 }
 
+#remove_A3, #remove_A4, #remove_B3, #remove_B4 {
+    position: relative; 
+    top:-11vh; 
+    z-index:1;
+}
 
 /* Scoreboard */
 
-#previous_round, #next_round {
+#previous_round {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+#next_round {
     font-size: 2.5rem;
     margin-bottom: 2rem;
 }
@@ -150,6 +160,10 @@ label[for='foot'] {
     font-size: 170%; 
 }
 
+.sw-dropdown {
+    display: inline-block;
+    margin-top: 6vh;
+}
 
 .bttn-unite.bttn-md { 
     font-size: 200%;
@@ -198,6 +212,7 @@ label.control-label[for='score'] {
 .form-group {
     display: block;
     font-size: 2rem;
+    margin-bottom: 0;
 }
 
 .radio-btn-icon-yes {
@@ -528,6 +543,10 @@ input[type=radio]{
         margin: 0;
     }
     
+    #remove_A3, #remove_A4, #remove_B3, #remove_B4 {
+        top:-15vh; 
+    }
+    
     #start_game {
         padding: 2vh 2vw 2vh 2vw;
     }
@@ -542,7 +561,14 @@ input[type=radio]{
         left: 6vw;
     }
     
-    #previous_round, #next_round {
+    #previous_round{
+        font-size: 1rem;
+        padding: 2vh 2vw 2vh 2vw;
+        margin-bottom: 1vh;
+        margin-top: 1vh;
+    }
+    
+    #next_round {
         font-size: 2rem;
         padding: 2vh 2vw 2vh 2vw;
         margin-bottom: 1vh;
