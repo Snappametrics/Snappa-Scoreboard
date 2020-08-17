@@ -580,9 +580,10 @@ input[type=radio]{
     }
     
     #finish_game, #new_game {
-        font-size:
+        font-size: 3rem
+    }
     
-    .gt_table {
+    .table {
         font-size: 12px;
     }
 
