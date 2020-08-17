@@ -845,7 +845,6 @@ server <- function(input, output, session) {
       mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
       group_by(player_name) %>%
       filter(points > 0) %>% 
-      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
       player_score_breakdown(.)
     
     b_breakdown = player_stats_tbl %>% 
@@ -865,7 +864,6 @@ server <- function(input, output, session) {
       mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
       group_by(player_name) %>%
       filter(points > 0) %>% 
-      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
       player_score_breakdown()
     
     player_info = player_stats_tbl %>% 

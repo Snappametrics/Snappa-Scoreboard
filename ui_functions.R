@@ -922,12 +922,15 @@ player_score_breakdown = function(df){
   
   reverse_legend = (team == "A")
   
-   df %>%
+  df = df %>% 
+    mutate(point_pct = points/sum(points))
+  
+    df %>%
     ggplot(., aes(y = player_name, x = points, fill = reorder(point_type, desc(point_type))))+
     # Bars
-    geom_col(position = "fill", colour = snappa_pal[1], size = 3)+
+    geom_col(position = "fill", colour = snappa_pal[1], size = 1.5)+
     # Labels
-    geom_text(data = filter(df, point_pct > .1), aes(label = point_pct), 
+    geom_text(data = filter(df, point_pct > .15), aes(label = scales::percent(point_pct, accuracy = 1)), 
               position = position_fill(vjust = .5), colour = "white", show.legend = F)+
     # Y Axis
     scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
@@ -936,16 +939,16 @@ player_score_breakdown = function(df){
     # Colour scale
     scale_fill_manual(name = NULL, 
                       values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
-                      guide = guide_legend(reverse = reverse_legend, label.hjust = 0.5))+
+                      guide = guide_legend(reverse = reverse_legend, label.hjust = 0.5, ncol = 2))+
     # Theme elements
-    theme_snappa(md=T, plot_margin = margin(0,0,0,0))+
+    theme_snappa(md=T, plot_margin = margin(0,0,0,0), base_size = 11)+
     theme(
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
       axis.line = element_blank(),
       legend.position = "bottom",
-      legend.margin = margin(0,0,0,-30),
-      legend.text.align = -.5,
+      legend.margin = margin(0,-30,0,-30),
+      legend.text.align = .5,
       axis.text.x = element_blank(),
       axis.text.y.left = element_text(margin = margin(l = -5, r = -5), hjust = 1),
       axis.text.y.right = element_text(margin = margin(l = -5, r = -5), hjust = 0)
