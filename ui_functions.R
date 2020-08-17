@@ -13,7 +13,8 @@ score_check <- function(team, players, round) {
   # Ask how many points were scored and by whom
   modalDialog(align = "center", easyClose = T, size = "l",
               # Header
-              h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>"))),
+              h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>")),
+                 style = "margin-bottom: 2vh;"),
 
               fluidRow(
                 column(8,
