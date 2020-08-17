@@ -1357,7 +1357,8 @@ observeEvent(input$resume_no, {
     
     showModal(
       score_check(team = "A", 
-                  players = eligible_shooters))
+                  players = eligible_shooters,
+                  round = round_num()))
   })
   
   # Team A presses score button
@@ -1500,7 +1501,8 @@ observeEvent(input$resume_no, {
     showModal(
       score_check(
         team = "B", 
-        players = eligible_shooters))
+        players = eligible_shooters,
+        round = round_num()))
 
   })
   

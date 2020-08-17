@@ -4,7 +4,7 @@
 # UI functions ------------------------------------------------------------
 
 # Score pop-up dialog box
-score_check <- function(team, players) {
+score_check <- function(team, players, round) {
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
   team_colour = if_else(team_scored == "ok_A", "#e26a6a", "#2574a9")
@@ -13,7 +13,7 @@ score_check <- function(team, players) {
   # Ask how many points were scored and by whom
   modalDialog(align = "center", easyClose = T, size = "l",
               # Header
-              h2(str_c("Team ", str_to_upper(team), " Scored"), style = paste("color:", team_colour)),
+              h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>"))),
 
               fluidRow(
                 column(8,
