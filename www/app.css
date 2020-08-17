@@ -18,6 +18,7 @@
     --green-bg: #F3FFEA;
 
     --purpp: #100033;
+    --grey-bg: #fafaf9;
     --gray-10: rgba(8, 0, 26, 0.8);
     --gray-4: rgba(8, 0, 26, 0.25);
     --gray-3: rgba(8, 0, 26, 0.08);
@@ -44,19 +45,18 @@
 
 
 #shiny-notification-panel {
-    background-color: #3d2b73;
-    width: 17%;
-    height: 2rem;
-    opacity: .8;
-    
+    background-color: var(--grey-bg);
+    width: 40vw;
+    height: 10vh;
 }
 
 .shiny-notification {
-    background-color: #3d2b73;
-    color: #fff;
+    background-color: var(--grey-bg);
     margin: 5px;
     font-size: 2.5rem;
+    font-weight: 600;
     border: none;
+    text-align: right;
 }
 
 
