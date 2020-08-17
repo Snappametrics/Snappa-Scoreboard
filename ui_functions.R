@@ -210,8 +210,7 @@ extra_player_ui = function(player, player_choices){
                inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
              
              # CSS
-             tags$style(paste0("#add_remove_", player, " {margin-left:auto; margin-right:auto; position: relative;} #remove_", 
-                               player, " {position: relative; top:-9rem; right:-28rem; z-index:1;}")),
+             tags$style(paste0("#add_remove_", player, " {margin-left:auto; margin-right:auto; position: relative;}")),
 
            # If the extra player is not the fourth on a team yet, add another add player button
            if(player_num < 4){
