@@ -172,8 +172,8 @@ troll_check = function(session, snappaneers, player_stats, game_id){
 # writes player_stats_db off of scores. This should only require
 # a scores table to be passed on, since the snappaneers table that is also
 # called would always be the same
-app_update_player_stats = function(scores_df, neers){
-   g.id = unique(scores_df$game_id)
+app_update_player_stats = function(scores_df, neers, game){
+   g.id = game
    output = scores_df %>% 
     # Join scores to snappaneers to get each player's team
     left_join(neers, by = "player_id") %>% 
@@ -1158,11 +1158,10 @@ observeEvent(input$resume_no, {
     )
     vals$shot_num = vals$shot_num-1
     
-    
     # This is for the case when there hasn't been a scoring point yet, which causes this to fail in the transition
     # between rounds 1A and 1B. Clumsy, perhaps, but it works
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
       
@@ -1196,7 +1195,7 @@ observeEvent(input$resume_no, {
     } else {
       
     # Update player stats in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
     #Update the DB with the new player_stats (adds to shots)
     db_update_player_stats(vals$player_stats_db)
     }
@@ -1407,7 +1406,7 @@ observeEvent(input$resume_no, {
       
       
       # Update player stats table
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
       db_update_player_stats(vals$player_stats_db)
 
       # Congratulate paddlers
@@ -1481,7 +1480,7 @@ observeEvent(input$resume_no, {
     
     
     # Update player stats table in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
    #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
     
@@ -1548,7 +1547,7 @@ observeEvent(input$resume_no, {
       
       
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())    
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
       
@@ -1623,7 +1622,7 @@ observeEvent(input$resume_no, {
                       " AND game_id = ", vals$game_id)
     )    
     # Update player_stats 
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
     
@@ -1736,7 +1735,7 @@ observeEvent(input$resume_no, {
       value = vals$game_stats_db)
     
     # Update player stats table one final time
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers())
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     
     db_update_player_stats(vals$player_stats_db)
     
