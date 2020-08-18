@@ -276,19 +276,39 @@ remove_p4_input = function(team, session){
   updateSelectizeInput(session, paste0("name_", team, "4"), selected = character(0))
 }
 
-recent_score_sentence = function(scores_data){
+recent_scores_tab = function(scores_data){
   scores_data %>% 
-    group_by(score_id) %>% 
-    transmute(score_sentence = str_c(player_name, 
-                                     " scored ",
-                                     points_scored,
-                                     " point(s)", 
-                                     na.omit(if_else(clink, " with a clink", NA_character_)),  
-                                     " for Team ", toupper(scoring_team),
-                                     " in round ", round_num, ".",
-                                     na.omit(if_else(paddle, str_c(" And it was a", na.omit(if_else(foot, " foot", NA_character_)), " paddle!"), NA_character_)))) %>% 
-    ungroup() %>% 
-    select(-score_id)
+    mutate(colour = if_else(scoring_team == "A", snappa_pal[2], snappa_pal[3]),
+           # Who scored?
+           scorer = str_c("<span style = 'font-weight: 600;color:", 
+                          colour, ";'>",
+                          player_name, "</span>"), 
+           # How many points?
+           points = str_c(" scored <span style='font-weight: 600;'>",
+                          points_scored,
+                          if_else(points_scored > 1, " points", " point"), "</span>",
+                          na.omit(if_else(clink, " with a clink", NA_character_)), " for"),
+           # In what round?
+           when_scored= str_c(" in round <span style = 'font-weight: 600;'>", round_num, "</span>"),
+           # For which team?
+           for_whom = str_c(" <span style = 'font-weight: 600;color:", 
+                            colour, ";'>", "Team ", toupper(scoring_team), "</span>"),
+           # Anything special?
+           special = str_c(
+             if_else(paddle, str_c(" and it was a", 
+                                   na.omit(
+                                     if_else(foot, " foot", NA_character_)), " paddle!"), NA_character_
+             )
+           ),
+           # Put the sentence together
+           sentence = str_c(scorer, points, for_whom, when_scored, if_else(is.na(special), "", special))
+    ) %>% 
+    select(sentence) %>% 
+    gt() %>% 
+    # Format the sentence with markdown
+    fmt_markdown(vars(sentence)) %>% 
+    tab_theme_snappa() %>% 
+    tab_options(column_labels.hidden = T)
 }
 
 #For the restart game screen, I'm going to make a UI to handle most of the modalDialog

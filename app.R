@@ -683,10 +683,7 @@ server <- function(input, output, session) {
     top_n(vals$scores_db, 5, score_id) %>% 
       arrange(-score_id) %>% 
       left_join(select(snappaneers(), player_id, player_name)) %>% 
-      recent_score_sentence() %>% 
-      gt() %>% 
-      tab_theme_snappa() %>% 
-      tab_options(column_labels.hidden = T)
+      recent_scores_tab()
   })
   
   # Output error message

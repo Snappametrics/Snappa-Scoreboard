@@ -165,6 +165,15 @@ label[for='foot'] {
     margin-top: 6vh;
 }
 
+.sw-dropdown-in {
+    background-color: var(--grey-bg) !important;
+}
+
+.sw-show.sw-dropdown-content {
+    background-color: var(--grey-bg);
+}
+
+
 .bttn-unite.bttn-md { 
     font-size: 200%;
 }
