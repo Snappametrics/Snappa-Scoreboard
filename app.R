@@ -794,15 +794,22 @@ observe({
   
   showModal(
     modalDialog(
-      p("There's an incomplete game in the snappa database, would 
+      title = "Incomplete Game",
+      style = str_c("background-color:", snappa_pal[1], ";"),
+      div(
+        p("There's an incomplete game in the snappa database, would 
                   you like to restart it?", align = 'center'),
-      br(),
-      p("Warning: saying 'No' will delete the previous game from the database", align = 'center'),
-      br(),
-      h3("Summary of the Previous Game", align = 'center'),
+        p("Warning: saying 'No' will delete the previous game from the database", align = 'center', style = "color: red;"),
+        h3("Summary of the Previous Game", align = 'center')
+      ),
+      
+      # br(),
+      
+      # br(),
+      
       br(),
       renderUI({glance_ui_game(lost_game_id)}),
-      title = "Incomplete Game",
+      
       footer = tagList(
                 fluidRow(
                   actionBttn("resume_no",

@@ -303,16 +303,17 @@ glance_table_team = function(game.id, team.id){
   return(base_table)
 }
 
-glance_ui_team = function(df){
+glance_ui_team = function(df, team){
   # Sneakily cheat and change the table one more team because we 
   # need team, but not for the table
-  team.id = pull(df, team) %>% unique()
+  
+  title_colour = if_else(!!team == "A", snappa_pal[2], snappa_pal[3])
   new_df = df %>% select(-team)
   # gt time
   output_table = new_df %>% 
     gt() %>%
       tab_header(title = str_c("Team ", 
-                              str_to_upper(team.id)
+                              str_to_upper(team)
                               )) %>%
       cols_label(
         player_name = "Player",
@@ -320,9 +321,9 @@ glance_ui_team = function(df){
         paddle_points = "Paddle Points",
         shots = "Shots",
         toss_efficiency = "Toss Efficiency") %>% 
-    fmt_number(
+    fmt_percent(
       columns = vars(toss_efficiency),
-      decimals = 3
+      decimals = 0
     ) %>%
     tab_style(style = cell_text(align = 'center'),
               locations = cells_body(
@@ -330,18 +331,9 @@ glance_ui_team = function(df){
               )) %>%
     tab_style(style = cell_text(align = 'center'),
               locations = cells_column_labels(vars(player_name))) %>% 
-    tab_options(heading.border.lr.style = "none",
-                heading.border.bottom.style = "none",
-                column_labels.border.top.style = "none",
-                column_labels.border.bottom.style = "solid",
-                column_labels.border.bottom.color = "#7c7c7c",
-                column_labels.border.bottom.width = "3px",
-                column_labels.border.lr.style = "none",
-                table.border.top.style = "none",
-                table.border.right.style = "none",
-                table.border.left.style = "none",
-                table.border.bottom.style = "none",
-                column_labels.font.weight = "600")
+    tab_style(style = cell_text(color = title_colour),
+              locations = cells_title("title")) %>% 
+    tab_theme_snappa()
   
   return(output_table)
 }
@@ -357,11 +349,11 @@ glance_ui_game = function(game.id){
   # Now, set up the UI 
   ui_output = fluidRow(
     column(5, 
-           render_gt(glance_ui_team(df_a))),
+           render_gt(glance_ui_team(df_a, team = "A"))),
     column(2,
            h2(str_c(score_a, " - ", score_b), align = 'center')),
     column(5, 
-           render_gt(glance_ui_team(df_b)))
+           render_gt(glance_ui_team(df_b, team = "B")))
     )
  return(ui_output)
 }
