@@ -616,9 +616,39 @@ tab_theme_snappa = function(data,
 
 
 
-leaderboard_table = function(df){
-  df %>% 
-    select(rank, player_name, games_played, total_points, total_shots, points_per_game, off_ppg, def_ppg, toss_efficiency) %>% 
+leaderboard_table = function(players, player_stats, game_stats){
+  # Join players, player_stats, and game_stats
+  inner_join(players, player_stats, by = "player_id") %>%
+    inner_join(select(game_stats, game_id, points_a:points_b) %>% collect(), by = "game_id") %>% 
+    # Identify which games were won
+    mutate(winners = if_else(points_a > points_b, "A", "B"),
+           won_game = (team == winners)) %>% 
+    select(-player_id) %>% 
+    # Calculate leaderboard
+    group_by(player_name) %>% 
+    summarise(
+      games_played = n(),
+      win_pct = sum(won_game)/games_played,
+      points_per_game = mean(total_points),
+      total_points = sum(total_points),
+      offensive_points = sum(off_ppr*shots),
+      defensive_points = sum(def_ppr*shots),
+      ones = sum(ones),
+      twos = sum(twos),
+      threes = sum(threes),
+      paddle_points = sum(paddle_points),
+      clink_points = sum(clink_points),
+      total_shots = sum(shots),
+      off_ppg = mean(off_ppr*shots),
+      def_ppg = mean(def_ppr*shots),
+      toss_efficiency = weighted.mean(toss_efficiency, w = shots)
+    ) %>% 
+    ungroup() %>% 
+    # Remove any NAs
+    filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
+    mutate(rank = rank(-total_points)) %>% 
+    arrange(rank) %>% 
+    select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency) %>% 
     gt(., id = "leaderboard") %>% 
     tab_header(title = "Snappaneers Leaderboard", 
                subtitle = "The Deadliest Die-throwers in all the land.") %>% 
@@ -627,11 +657,12 @@ leaderboard_table = function(df){
       rank = "", 
       player_name = "Player",
       games_played = "Games Played",
+      win_pct = "Win %", 
       total_points = "Total Points",
       total_shots = "Total Shots",
       points_per_game = "Points per Game\n(PPG)",
-      off_ppg = "Offensive PPG",
-      def_ppg = "Defensive PPG",
+      # off_ppg = "Offensive PPG",
+      # def_ppg = "Defensive PPG",
       toss_efficiency = "Toss Efficiency"
     ) %>% 
     # Format integers
@@ -641,18 +672,18 @@ leaderboard_table = function(df){
     ) %>% 
     # Format doubles
     fmt_number(
-      columns = vars(points_per_game, off_ppg, def_ppg),
+      columns = vars(points_per_game),
       decimals = 2
     ) %>% 
     # Format percentages
     fmt_percent(
-      columns = vars(toss_efficiency),
-      decimals = 1
+      columns = vars(win_pct, toss_efficiency),
+      decimals = 0
     ) %>% 
-    tab_footnote(
-      footnote = "Defensive points are scored from paddles.",
-      locations = cells_column_labels(columns = vars(def_ppg))
-    ) %>% 
+    # tab_footnote(
+    #   footnote = "Defensive points are scored from paddles.",
+    #   locations = cells_column_labels(columns = vars(def_ppg))
+    # ) %>% 
     tab_footnote(
       footnote = "% of tosses which are successful.",
       locations = cells_column_labels(columns = vars(toss_efficiency))
@@ -667,6 +698,10 @@ leaderboard_table = function(df){
       style = list(cell_text(weight = "bold", size = px(18))),
       locations = cells_title(groups = "title")
     ) %>%
+    tab_style(
+      style = cell_text(v_align = "bottom", weight = 700, align = "left"),
+      locations = cells_column_labels(everything())
+    ) %>% 
     # Rank column
     tab_style(
       style = list(cell_text(weight = "bold")),

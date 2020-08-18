@@ -528,34 +528,7 @@ server <- function(input, output, session) {
     length(active_player_inputs()[active_player_inputs() != ""])
   })
   
-  top_scorers_tab = reactive({
-    inner_join(vals$players_db, tbl(con, "player_stats") %>% collect(), by = "player_id") %>%
-    select(-player_id) %>% 
-    # Calculate leaderboard
-    group_by(player_name) %>% 
-    summarise(
-      games_played = n(),
-      points_per_game = mean(total_points),
-      total_points = sum(total_points),
-      offensive_points = sum(off_ppr*shots),
-      defensive_points = sum(def_ppr*shots),
-      ones = sum(ones),
-      twos = sum(twos),
-      threes = sum(threes),
-      paddle_points = sum(paddle_points),
-      clink_points = sum(clink_points),
-      total_shots = sum(shots),
-      off_ppg = mean(off_ppr*shots),
-      def_ppg = mean(def_ppr*shots),
-      toss_efficiency = weighted.mean(toss_efficiency, w = shots)
-    ) %>% 
-    ungroup() %>% 
-    filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
-    mutate(rank = rank(-total_points)) %>% 
-    select(rank, everything(), -offensive_points:-clink_points) %>% 
-    arrange(rank)
-  })
-  
+
   
   
   
@@ -564,17 +537,6 @@ server <- function(input, output, session) {
   
 
 # Outputs -----------------------------------------------------------------
-  
-
-  # Switch between pass the dice and next round
-  output$selector_ui <- renderUI({
-    fillRow(actionBttn("previous_round", 
-                       label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
-            actionBttn("next_round", 
-                       label = round_labels[vals$shot_num], style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg"))
-    
-  })
-  
 
 # Score Validation --------------------------------------------------------
 
@@ -702,11 +664,12 @@ server <- function(input, output, session) {
   )
   
 
-# Stats Pane --------------------------------------------------------------
+# Stats Pane Outputs --------------------------------------------------------------
 
   output$career_stats_table = render_gt({
-    top_scorers_tab() %>% 
-      leaderboard_table()
+    leaderboard_table(players = vals$players_db,
+                      player_stats = tbl(con, "player_stats") %>% collect(),
+                      game_stats = tbl(con, "game_stats"))
       
   })
   
