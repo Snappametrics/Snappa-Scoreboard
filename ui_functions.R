@@ -714,11 +714,11 @@ leaderboard_table = function(players, player_stats, game_stats){
     # Left Align Player and Rank
     # Column widths
     cols_width(
-      vars(rank) ~ px(20),
-      vars(player_name) ~ px(90),
-      vars(points_per_game) ~ px(80),
-      vars(total_points, games_played, total_shots) ~ px(48),
-      vars(off_ppg, def_ppg, toss_efficiency) ~ px(75)
+      vars(rank) ~ pct(8),
+      vars(player_name) ~ pct(24),
+      vars(total_points, games_played, total_shots) ~ pct(19),
+      vars(win_pct) ~ pct(14),
+      vars(toss_efficiency, points_per_game) ~ pct(28)
     ) %>% 
     # Underline dope shit
     tab_style(
@@ -728,21 +728,11 @@ leaderboard_table = function(players, player_stats, game_stats){
         cells_body(
           columns = vars(total_points),
           rows = total_points == max(total_points)
-          ),
+        ),
         # Highest ppg
         cells_body(
           columns = vars(points_per_game),
           rows = points_per_game == max(points_per_game)
-        ),
-        # Highest off ppg
-        cells_body(
-          columns = vars(off_ppg),
-          rows = off_ppg == max(off_ppg)
-        ),
-        # Highest def ppg
-        cells_body(
-          columns = vars(def_ppg),
-          rows = def_ppg == max(def_ppg)
         )
       )
     ) %>% 
