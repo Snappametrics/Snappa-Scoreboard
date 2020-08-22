@@ -148,21 +148,8 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      ),
                      # fluidRow(,
                      #          ),
-                     br(),
-                     # Recent Scores
-                     dropdown(
-                       inputId = "recent_scores",
-                       gt_output("recent_scores"),
-                       style = "unite",
-                       size = "lg", 
-                       up = T,
-                       label = "Recent Scores",
-                       icon = icon("backward"),
-                       animate = animateOptions(
-                         enter = animations$fading_entrances$fadeInUp,
-                         exit = animations$fading_exits$fadeOutDown
-                       )
-                     )
+                     br()
+                     
               ),
               # Team B
              column(width = 4, align = "center",

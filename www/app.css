@@ -162,7 +162,7 @@ label[for='foot'] {
 
 .sw-dropdown {
     display: inline-block;
-    margin-top: 6vh;
+    margin-top: -2vh;
 }
 
 .sw-dropdown-in {
@@ -563,11 +563,13 @@ input[type=radio]{
     #undo_score_A {
         padding: 1vh 1vw 1vh 1vw;
         right: 6vw;
+        font-size: 2.5vh;
     }
     
     #undo_score_B {
         padding: 1vh 1vw 1vh 1vw;
         left: 6vw;
+        font-size: 2.5vh;
     }
     
     #previous_round{

@@ -929,6 +929,22 @@ observe({
                                     #          ))
                                     #   
                                     # ),
+                                    fluidRow(width = 4, offset = 4, align = "center",
+                                             # Recent Scores
+                                             dropdown(
+                                               class = "recent_scores",
+                                               inputId = "recent_scores_",
+                                               gt_output("recent_scores"),
+                                               style = "unite",
+                                               size = "lg", 
+                                               up = T,
+                                               label = "Recent Scores",
+                                               icon = icon("backward"),
+                                               animate = animateOptions(
+                                                 enter = animations$fading_entrances$fadeInUp,
+                                                 exit = animations$fading_exits$fadeOutDown
+                                               )
+                                             )),
                                     fluidRow(
                                       column(width = 4, offset = 4, align = "center",
                                              actionBttn("new_game", "Restart", style = "unite", color = "warning"),
