@@ -892,20 +892,7 @@ observe({
     scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
                               div(
                                 fluidRow(id = "scoreboardrow", 
-                                         column(4, align = "left"#, 
-                                                # # Potentially useful button later
-                                                # dropdown(
-                                                #   gt_output("stats_a"),
-                                                #   style = "unite",
-                                                #   size = "lg", 
-                                                #   label = "Stats",
-                                                #   icon = icon("dice"),
-                                                #   animate = animateOptions(
-                                                #     enter = animations$fading_entrances$fadeInLeft,
-                                                #     exit = animations$fading_exits$fadeOutLeft
-                                                #   ))
-                                                ), 
-                                         column(4, align = "center", 
+                                         column(4, offset = 4, align = "center", 
                                                 actionBttn("switch_sides", 
                                                            "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
                                          column(4)),
