@@ -1114,7 +1114,7 @@ observe({
     
     })
     removeModal()
-    delay(1000, shinyjs::click("start_game"))
+    delay(25, shinyjs::click("start_game"))
     
   })
 
