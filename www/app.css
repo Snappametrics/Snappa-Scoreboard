@@ -163,6 +163,7 @@ label[for='foot'] {
 .sw-dropdown {
     display: inline-block;
     margin-top: -2vh;
+    margin-bottom: 2vh;
 }
 
 .sw-dropdown-in {
