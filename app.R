@@ -758,9 +758,12 @@ observe({
       style = str_c("background-color:", snappa_pal[1], ";"),
       div(
         p("There's an incomplete game in the snappa database, would 
-                  you like to restart it?", align = 'center'),
-        p("Warning: saying 'No' will delete the previous game from the database", align = 'center', style = "color: red;"),
-        h3("Summary of the Previous Game", align = 'center')
+                  you like to restart it?", 
+          align = 'center'),
+        p("Warning: saying 'No' will delete the previous game from the database", 
+          align = 'center', style = "color: red;"),
+        h3("Summary of the Previous Game", 
+           align = 'center')
       ),
       
       # br(),
