@@ -615,7 +615,7 @@ leaderboard_table = function(players, player_stats, game_stats){
     group_by(player_name) %>% 
     summarise(
       games_played = n(),
-      win_pct = sum(won_game)/games_played,
+      win_pct = sum(won_game, na.rm=T)/games_played,
       points_per_game = mean(total_points),
       total_points = sum(total_points),
       offensive_points = sum(off_ppr*shots),

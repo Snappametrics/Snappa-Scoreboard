@@ -669,7 +669,7 @@ server <- function(input, output, session) {
   output$career_stats_table = render_gt({
     leaderboard_table(players = vals$players_db,
                       player_stats = tbl(con, "player_stats") %>% collect(),
-                      game_stats = tbl(con, "game_stats"))
+                      game_stats = filter(tbl(con, "game_stats"), game_complete))
       
   })
   
