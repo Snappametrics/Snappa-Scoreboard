@@ -264,6 +264,7 @@ remove_p4_input = function(team, session){
 }
 
 recent_scores_tab = function(scores_data){
+  
   scores_data %>% 
     mutate(colour = if_else(scoring_team == "A", snappa_pal[2], snappa_pal[3]),
            # Who scored?
@@ -274,7 +275,7 @@ recent_scores_tab = function(scores_data){
            points = str_c(" scored <span style='font-weight: 600;'>",
                           points_scored,
                           if_else(points_scored > 1, " points", " point"), "</span>",
-                          na.omit(if_else(clink, " with a clink", NA_character_)), " for"),
+                          if_else(clink, " with a clink", ""), " for"),
            # In what round?
            when_scored= str_c(" in round <span style = 'font-weight: 600;'>", round_num, "</span>"),
            # For which team?
@@ -283,12 +284,11 @@ recent_scores_tab = function(scores_data){
            # Anything special?
            special = str_c(
              if_else(paddle, str_c(" and it was a", 
-                                   na.omit(
-                                     if_else(foot, " foot", NA_character_)), " paddle!"), NA_character_
+                                   if_else(foot, " foot", ""), " paddle!"), ""
              )
            ),
            # Put the sentence together
-           sentence = str_c(scorer, points, for_whom, when_scored, if_else(is.na(special), "", special))
+           sentence = str_c(scorer, points, for_whom, when_scored, special)
     ) %>% 
     select(sentence) %>% 
     gt() %>% 
