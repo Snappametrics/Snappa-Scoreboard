@@ -727,20 +727,17 @@ server <- function(input, output, session) {
 observe({
   validate(
     need(
-      dbGetQuery(con, "SELECT * FROM game_stats") %>% 
-        filter(game_id == max(game_id, na.rm=T)) %>%
-        pull(game_complete) %>% 
+      dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
+        pull() %>% 
         isFALSE(),
       message = FALSE
     )
   )
-  lost_game_id = dbGetQuery(con, "SELECT * FROM game_stats") %>% pull(game_id) %>% max()
+  lost_game_id = dbGetQuery(con, "SELECT game_id FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% pull()
   
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
-  total_lost_game_score = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
-    filter(game_id == lost_game_id) %>%
-    pull(total_points) %>%
-    sum()
+  total_lost_game_score = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE game_id = ", lost_game_id)) %>% 
+    pull()
   
   # Discard that game if it's 0-0 and continue on with business as usual, else
   # allow players to restart
