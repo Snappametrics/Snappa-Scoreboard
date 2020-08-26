@@ -604,7 +604,7 @@ tab_theme_snappa = function(data,
 leaderboard_table = function(players, player_stats, game_stats){
   # Join players, player_stats, and game_stats
   inner_join(players, player_stats, by = "player_id") %>%
-    inner_join(select(game_stats, game_id, points_a:points_b) %>% collect(), by = "game_id") %>% 
+    inner_join(game_stats, by = "game_id") %>% 
     # Identify which games were won
     mutate(winners = if_else(points_a > points_b, "A", "B"),
            won_game = (team == winners)) %>% 
