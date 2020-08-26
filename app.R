@@ -1020,10 +1020,10 @@ observe({
         vals$game_id = lost_game
         vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
         
-        vals$game_stats_db = collect(lost_game_stats)
+        vals$game_stats_db = lost_game_stats
         
         # Initialize the current game's player_stats table
-        vals$player_stats_db = collect(lost_player_stats)
+        vals$player_stats_db = lost_player_stats
         
     } else {
       
@@ -1103,8 +1103,7 @@ observe({
       select(player_name, team) %>% 
       group_by(team) %>% 
       mutate(player_input = str_c("name_", team, row_number())) %>% 
-      ungroup() %>% 
-      collect()
+      ungroup()
     
     input_list = lost_players %>%
       select(player_input, player_name) %>% 
