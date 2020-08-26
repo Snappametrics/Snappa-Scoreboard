@@ -302,11 +302,9 @@ recent_scores_tab = function(scores_data){
 # output. My idea is that if I make a function which can just do this based on the game, 
 # then we can also parlay this into other things (e.g. a game history ui) at a later time
 glance_table_team = function(game.id, team.id){
-  base_table = tbl(con, "player_stats") %>% 
-    left_join(tbl(con, "players"), by = "player_id") %>%
-    collect() %>% 
-    filter(game_id == game.id, team == team.id) %>%
-    select(player_name, total_points, team, paddle_points, shots, toss_efficiency)
+  base_table = dbGetQuery(con, str_c("SELECT players.player_name, ps.total_points, ps.team, ps.paddle_points, ps.shots, ps.toss_efficiency FROM player_stats AS ps
+                                LEFT JOIN players ON players.player_id = ps.player_id
+                          WHERE ps.game_id = ", game.id, " AND ps.team = '", team.id, "'"))
   return(base_table)
 }
 
