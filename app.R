@@ -977,41 +977,30 @@ observe({
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
-    if (dbGetQuery(con, "SELECT * FROM game_stats") %>% 
-              filter(game_id == max(game_id)) %>% 
-              pull(game_complete) %>% 
+    if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
+              pull() %>% 
               isFALSE()) {
         
-        lost_game = dbGetQuery(con, "SELECT * FROM game_stats") %>% 
-          filter(game_id == max(game_id, na.rm = T)) %>% 
-          pull(game_id)
+        lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
+          pull()
       
-        lost_game_stats = dbGetQuery(con, "SELECT * FROM game_stats") %>% 
-          filter(game_id == lost_game)
+        lost_game_stats = dbGetQuery(con, str_c("SELECT * FROM game_stats WHERE game_id = ", lost_game))
       
-        lost_player_stats = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
-          filter(game_id == lost_game)
-      
-        lost_game_scores = list(team_a = lost_game_stats)
-      
+        lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
+      browser()
       # Set the score outputs and shot number to the values from the last game
-        vals$current_scores$team_A = lost_player_stats %>% 
-          filter(team == "A" & game_id == lost_game) %>%
-          pull(total_points) %>%
-          sum()
+        vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game)) %>%
+          pull() %>% as.numeric()
         
-        vals$current_scores$team_B = lost_player_stats %>% 
-          filter(team == "B" & game_id == lost_game) %>%
-          pull(total_points) %>%
-          sum()
         
-        vals$score_id = dbGetQuery(con, "SELECT * FROM scores") %>% 
-          filter(game_id == lost_game) %>%
-          pull(score_id) %>%
-          max()
+        vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game)) %>%
+          pull() %>% as.numeric()
+        
+        vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game)) %>%
+          pull() %>% as.numeric()
         
 
-        vals$scores_db = dbGetQuery(con, "SELECT * FROM scores") %>% filter(game_id == lost_game)
+        vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
         vals$game_id = lost_game
         vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
         
