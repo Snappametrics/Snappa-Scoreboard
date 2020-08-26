@@ -213,10 +213,10 @@ db_update_player_stats = function(player_stats){
 
 # For use with restarting a lost game: First extract the table
 # with the teams and the number of players for each team for the given
-# game_id. This function isn't all that necesary in its own right, but
+# game_id. This function isn't all that necessary in its own right, but
 # I think it helps for readability
 extract_team_sizes = function(g.id){
-  output = tbl(con, "player_stats") %>% collect() %>% 
+  output = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
     filter(game_id == g.id) %>%
     count(team)
   return(output)
@@ -231,11 +231,11 @@ generate_round_num = function(df, g.id){
   # The values of the shot nums from each team also
   # need to be recorded. Unique works in this case because
   # we update shot number for every team member simultaneously
-  A_shots = tbl(con, "player_stats") %>% 
+  A_shots = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
     filter(game_id == g.id & team == "A") %>% 
     pull(shots) %>%
     unique()
-  B_shots = tbl(con, "player_stats") %>% 
+  B_shots = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
     filter(game_id == g.id & team == "B") %>% 
     pull(shots) %>%
     unique()
@@ -668,8 +668,8 @@ server <- function(input, output, session) {
 
   output$career_stats_table = render_gt({
     leaderboard_table(players = vals$players_db,
-                      player_stats = tbl(con, "player_stats") %>% collect(),
-                      game_stats = filter(tbl(con, "game_stats"), game_complete))
+                      player_stats = dbGetQuery(con, "SELECT * FROM player_stats"),
+                      game_stats = filter(dbGetQuery(con, "SELECT * FROM game_stats"), game_complete))
       
   })
   
