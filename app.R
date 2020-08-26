@@ -208,16 +208,16 @@ db_update_player_stats = function(player_stats){
   
   dbExecute(con, del_rows)
   
-  dbAppendTable(con, "player_stats", player_stats)
+  dbWriteTable(con, "player_stats", player_stats, append = T)
 }
+
 
 # For use with restarting a lost game: First extract the table
 # with the teams and the number of players for each team for the given
 # game_id. This function isn't all that necessary in its own right, but
 # I think it helps for readability
 extract_team_sizes = function(g.id){
-  output = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
-    filter(game_id == g.id) %>%
+  output = dbGetQuery(con, str_c("SELECT game_id, team FROM player_stats WHERE game_id = ", g.id)) %>% 
     count(team)
   return(output)
 }
@@ -227,19 +227,15 @@ generate_round_num = function(df, g.id){
   shot_nums = rep(1:200, each = 1)
   A_geq = rep(1:100, each = 2)
   B_geq = c(0, A_geq[-200])
-
+  
   # The values of the shot nums from each team also
   # need to be recorded. Unique works in this case because
   # we update shot number for every team member simultaneously
-  A_shots = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
-    filter(game_id == g.id & team == "A") %>% 
-    pull(shots) %>%
-    unique()
-  B_shots = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
-    filter(game_id == g.id & team == "B") %>% 
-    pull(shots) %>%
-    unique()
-    
+  A_shots = dbGetQuery(con, str_c("SELECT DISTINCT(shots) FROM player_stats WHERE team = 'A' AND game_id =", g.id)) %>% 
+    pull()
+  B_shots = dbGetQuery(con, str_c("SELECT DISTINCT(shots) FROM player_stats WHERE team = 'B' AND game_id =", g.id)) %>% 
+    pull()
+  
   # I generate a multiplier which expresses the difference
   # between A's players and B's players. For the if statements
   # which follow, I could either reason on the number of players  
@@ -247,8 +243,8 @@ generate_round_num = function(df, g.id){
   # drawbacks, but I'll take mathematical complication as the
   # downside if the gain is having a simple battery of "if" 
   # statements. 
-  multiplier = df %>% filter(team == "A") %>% pull(n) / 
-    df %>% filter(team == "B") %>% pull(n) 
+  multiplier = df[df$team == "A", "n"] / 
+    df[df$team == "B", "n"] 
   
   
   # Reason on the possible sequence of shots according
