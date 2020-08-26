@@ -987,8 +987,9 @@ observe({
         lost_game_stats = dbGetQuery(con, str_c("SELECT * FROM game_stats WHERE game_id = ", lost_game))
       
         lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
-      browser()
-      # Set the score outputs and shot number to the values from the last game
+
+        
+        # Set the score outputs and shot number to the values from the last game
         vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game)) %>%
           pull() %>% as.numeric()
         
