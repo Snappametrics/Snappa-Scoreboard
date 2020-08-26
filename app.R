@@ -1042,10 +1042,11 @@ observe({
       # Initialize the current game's player_stats table
       vals$player_stats_db = slice(vals$player_stats_db, 0)
       
-      dbAppendTable(
+      dbWriteTable(
         conn = con, 
         name = "game_stats",
-        value = vals$game_stats_db
+        value = vals$game_stats_db,
+        append = T
       )
     }
     
@@ -1113,7 +1114,7 @@ observe({
 observeEvent(input$resume_no, {
   removeModal()
   
-  delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
+  delete_query = "DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"
   dbExecute(con, delete_query)
 })
   
@@ -1375,7 +1376,7 @@ observeEvent(input$resume_no, {
                                  ))
       #Update the db with the new score
   
-      dbAppendTable(con, "scores", anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")))
+      dbWriteTable(con, "scores", anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
       
       
       # Update player stats table
@@ -1519,12 +1520,14 @@ observeEvent(input$resume_no, {
                                 foot = input$foot
                               ))
       #Update the server with the new score
-      dbAppendTable(con, "scores", 
-                    anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")))
+      dbWriteTable(con, "scores", 
+                    anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
       
       
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, 
+                                                     snappaneers(), 
+                                                     game = vals$game_id)    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
       
@@ -1704,15 +1707,16 @@ observeEvent(input$resume_no, {
     # As with player_stats, I perform the update by deleting the relevant row in the DB table and reinserting the
     # one that we need
     
-    del_game_row = sql(str_c("DELETE FROM game_stats 
-                 WHERE game_id = ", vals$game_id, ";"))
+    del_game_row = str_c("DELETE FROM game_stats 
+                 WHERE game_id = ", vals$game_id, ";")
     
     dbExecute(con, del_game_row)
   
-    dbAppendTable(
+    dbWriteTable(
       conn = con, 
       name = "game_stats",
-      value = vals$game_stats_db)
+      value = vals$game_stats_db,
+      append = T)
     
     # Update player stats table one final time
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
@@ -1729,10 +1733,11 @@ observeEvent(input$resume_no, {
     #   value = anti_join(vals$players_db, players_tbl))
     
     #Update Scores
-    dbAppendTable(
+    dbWriteTable(
       conn = con,
       name = "scores",
-      value = vals$scores_db)
+      value = vals$scores_db,
+      append = T)
     
     # Update player_stats
     # dbAppendTable(
