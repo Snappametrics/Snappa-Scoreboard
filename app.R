@@ -36,10 +36,10 @@ round_labels = rep(c("Pass the dice", "Next round"),100)
 
 
 # Pull db tables for tibble templates
-players_tbl = tbl(con, "players") %>% collect()
-scores_tbl = tbl(con, "scores") %>% collect()
-player_stats_tbl = tbl(con, "player_stats") %>% collect()
-game_stats_tbl = tbl(con, "game_stats") %>% collect()
+players_tbl = dbGetQuery(con, "SELECT * FROM players")
+scores_tbl = dbGetQuery(con, "SELECT * FROM scores") 
+player_stats_tbl = dbGetQuery(con, "SELECT * FROM player_stats")
+game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
 
 
