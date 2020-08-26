@@ -1426,6 +1426,11 @@ observeEvent(input$resume_no, {
                    type = "warning")
 
   })
+  
+
+# Undo Score --------------------------------------------------------------
+
+  
   # Undo score
   observeEvent(input$undo_score_A, {
     validate(
