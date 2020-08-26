@@ -1012,10 +1012,11 @@ observe({
     } else {
       
       # Set the score outputs and shot number to 0
-      vals$current_scores$team_a = 0
-      vals$current_scores$team_b = 0
+      vals$current_scores$team_A = 0
+      vals$current_scores$team_B = 0
       vals$scores_db = slice(scores_tbl, 0)
-      vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
+      vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
+        as.integer()
       
       vals$game_stats_db = bind_rows(vals$game_stats_db,
                                      tibble(
