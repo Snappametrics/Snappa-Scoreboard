@@ -663,9 +663,11 @@ server <- function(input, output, session) {
 # Stats Pane Outputs --------------------------------------------------------------
 
   output$career_stats_table = render_gt({
+    ps_cols = c("game_id", "player_id", "team", "shots", "total_points", "ones", "twos", "threes", "paddle_points",
+                "clink_points", "off_ppr", "def_ppr", "toss_efficiency")
     leaderboard_table(players = vals$players_db,
-                      player_stats = dbGetQuery(con, "SELECT * FROM player_stats"),
-                      game_stats = filter(dbGetQuery(con, "SELECT * FROM game_stats"), game_complete))
+                      player_stats = dbGetQuery(con, str_c("SELECT ", str_c(ps_cols, collapse = ", "), " FROM player_stats")),
+                      game_stats = dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"))
       
   })
   
