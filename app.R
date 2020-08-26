@@ -271,7 +271,7 @@ generate_round_num = function(df, g.id){
   #   filter(A == A_shots, B == B_shots) %>%
   #   pull(shots)
   value = check_table[(check_table$A == A_shots & check_table$B == B_shots), "shots"]
-  return(value)
+  return(value$shots)
 }
 
 # Career Stats ------------------------------------------------------------
