@@ -729,18 +729,17 @@ server <- function(input, output, session) {
 observe({
   validate(
     need(
-      tbl(con, "game_stats") %>% 
+      dbGetQuery(con, "SELECT * FROM game_stats") %>% 
         filter(game_id == max(game_id, na.rm=T)) %>%
         pull(game_complete) %>% 
         isFALSE(),
       message = FALSE
     )
   )
-  lost_game_id = tbl(con, "game_stats") %>% pull(game_id) %>% max()
+  lost_game_id = dbGetQuery(con, "SELECT * FROM game_stats") %>% pull(game_id) %>% max()
   
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
-  total_lost_game_score = tbl(con, "player_stats") %>% 
-    collect() %>% 
+  total_lost_game_score = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
     filter(game_id == lost_game_id) %>%
     pull(total_points) %>%
     sum()
@@ -983,19 +982,19 @@ observe({
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
-    if (tbl(con, "game_stats") %>% 
+    if (dbGetQuery(con, "SELECT * FROM game_stats") %>% 
               filter(game_id == max(game_id)) %>% 
               pull(game_complete) %>% 
               isFALSE()) {
         
-        lost_game = tbl(con, "game_stats") %>% 
+        lost_game = dbGetQuery(con, "SELECT * FROM game_stats") %>% 
           filter(game_id == max(game_id, na.rm = T)) %>% 
           pull(game_id)
       
-        lost_game_stats = tbl(con, "game_stats") %>% 
+        lost_game_stats = dbGetQuery(con, "SELECT * FROM game_stats") %>% 
           filter(game_id == lost_game)
       
-        lost_player_stats = tbl(con, "player_stats") %>% 
+        lost_player_stats = dbGetQuery(con, "SELECT * FROM player_stats") %>% 
           filter(game_id == lost_game)
       
         lost_game_scores = list(team_a = lost_game_stats)
@@ -1011,13 +1010,13 @@ observe({
           pull(total_points) %>%
           sum()
         
-        vals$score_id = tbl(con, "scores") %>% 
+        vals$score_id = dbGetQuery(con, "SELECT * FROM scores") %>% 
           filter(game_id == lost_game) %>%
           pull(score_id) %>%
           max()
         
 
-        vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
+        vals$scores_db = dbGetQuery(con, "SELECT * FROM scores") %>% filter(game_id == lost_game)
         vals$game_id = lost_game
         vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
         
@@ -1093,11 +1092,11 @@ observe({
   observeEvent(input$resume_yes, {
     
     
-    lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+    lost_game = dbGetQuery(con, "SELECT * FROM game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
     
-    lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+    lost_player_stats = dbGetQuery(con, "SELECT * FROM player_stats") %>% filter(game_id == lost_game)
     
-    players = tbl(con, "players")
+    players = dbGetQuery(con, "SELECT * FROM players")
     
     lost_players = lost_player_stats %>%
       left_join(players) %>%
@@ -1121,7 +1120,8 @@ observe({
     
   })
 
-# Close the modal dialog if you say no, set an observer value to TRUE, and remove
+  
+# Close the modal dialog if you say no and remove
 # the old game from the DB
   
 observeEvent(input$resume_no, {
@@ -1389,7 +1389,7 @@ observeEvent(input$resume_no, {
                                  ))
       #Update the db with the new score
   
-      dbAppendTable(con, "scores", anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+      dbAppendTable(con, "scores", anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")))
       
       
       # Update player stats table
@@ -1534,7 +1534,7 @@ observeEvent(input$resume_no, {
                               ))
       #Update the server with the new score
       dbAppendTable(con, "scores", 
-                    anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+                    anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")))
       
       
       # Update player stats in the app
@@ -1792,7 +1792,7 @@ observeEvent(input$resume_no, {
     # 3. Reset reactive values
     vals$game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5)
     vals$player_stats_db = player_stats_tbl %>% slice(0)
-    vals$players_db = tbl(con, "players") %>% collect()
+    vals$players_db = dbGetQuery(con, "SELECT * FROM players")
     vals$scores_db = scores_tbl %>% slice(0)
     vals$score_id = as.integer(0)
     vals$shot_num = as.integer(1)
