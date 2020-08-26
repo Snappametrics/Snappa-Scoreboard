@@ -1078,9 +1078,10 @@ observe({
   observeEvent(input$resume_yes, {
     
     
-    lost_game = dbGetQuery(con, "SELECT * FROM game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+    lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
+      as.integer()
     
-    lost_player_stats = dbGetQuery(con, "SELECT * FROM player_stats") %>% filter(game_id == lost_game)
+    lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
     
     players = dbGetQuery(con, "SELECT * FROM players")
     
