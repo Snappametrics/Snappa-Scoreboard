@@ -47,21 +47,21 @@ career_stats = player_stats_tbl %>% left_join(players_tbl)
 
 # Present the column names
 
-
-list("Players" = players_tbl, "Scores" = scores_tbl, 
-     "Game Performance" = game_stats_tbl, "Game History" = game_history_tbl) %>% 
-  imap_dfr(function(df, id) {
-    columns = colnames(df)
-    table_name = id
-    tibble(table = table_name, 
-                       variable = columns)
-  }) %>% 
-group_by(table) %>%
-mutate(id = row_number()) %>%
-pivot_wider(names_from = table,
-            values_from = variable,
-            id_cols = id) %>%
-  select(-id)
+# 
+# list("Players" = players_tbl, "Scores" = scores_tbl, 
+#      "Game Performance" = game_stats_tbl, "Game History" = game_history_tbl) %>% 
+#   imap_dfr(function(df, id) {
+#     columns = colnames(df)
+#     table_name = id
+#     tibble(table = table_name, 
+#                        variable = columns)
+#   }) %>% 
+# group_by(table) %>%
+# mutate(id = row_number()) %>%
+# pivot_wider(names_from = table,
+#             values_from = variable,
+#             id_cols = id) %>%
+#   select(-id)
 
 # Using pivot wide to generate the output table at this point  
   
@@ -166,7 +166,7 @@ Having said all of this, let's proceed to the statistics.
 
 ```
 
-# Other Interesting Statistics
+### Other Interesting Statistics
 This section is more experimental, and will present the statistics in individualized tables. These are just statistics that I thought would be interesting
 given the kinds of things that we know about our players' performance, and are the kinds of things which you can only really generate with sufficient data. 
 
