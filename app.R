@@ -737,7 +737,8 @@ observe({
   
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
   total_lost_game_score = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE game_id = ", lost_game_id)) %>% 
-    pull()
+    pull() %>% 
+    replace_na(0)
   
   # Discard that game if it's 0-0 and continue on with business as usual, else
   # allow players to restart
