@@ -783,8 +783,8 @@ score_heatmap = function(df){
          subtitle = "How often does each score occur?")+
     coord_cartesian(xlim = c(1, max_score - 1),
                     ylim = c(1, max_score - 1)) +
-    scale_x_continuous(breaks = scales::breaks_pretty(n = 10)) +
-    scale_y_continuous(breaks = scales::breaks_pretty(n = 10)) +
+    scale_x_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
+    scale_y_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
     theme_snappa()+
     theme(panel.grid.major = element_blank(),
           legend.position = "bottom",
