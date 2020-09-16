@@ -603,7 +603,7 @@ tab_theme_snappa = function(data,
 
 leaderboard_table = function(players, player_stats, game_stats){
   # Join players, player_stats, and game_stats
-  inner_join(players, player_stats, by = "player_id") %>%
+  tab_df = inner_join(players, player_stats, by = "player_id") %>%
     inner_join(game_stats, by = "game_id") %>% 
     # Identify which games were won
     mutate(winners = if_else(points_a > points_b, "A", "B"),
@@ -633,7 +633,14 @@ leaderboard_table = function(players, player_stats, game_stats){
     filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
     mutate(rank = rank(-total_points)) %>% 
     arrange(rank) %>% 
-    select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency) %>% 
+    select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency)
+  
+  dividing_line = tab_df %>% filter(games_played < 5) %>% pull(rank) %>% min()
+  
+  stats_eligible = tab_df %>% 
+    filter(rank < dividing_line)
+  
+  tab_df %>% 
     gt(., id = "leaderboard") %>% 
     tab_header(title = "Snappaneers Leaderboard", 
                subtitle = "The Deadliest Die-throwers in all the land.") %>% 
@@ -707,20 +714,46 @@ leaderboard_table = function(players, player_stats, game_stats){
     ) %>% 
     # Underline dope shit
     tab_style(
-      style = list(cell_text(weight = "bold"), cell_fill(color = "#FFD600", alpha = .8)),
+      style = list(cell_text(weight = "bold", color = snappa_pal[2])),
       locations = list(
+        # Highest win %
+        cells_body(
+          columns = vars(win_pct),
+          rows = rank == which.max(stats_eligible$win_pct)
+        ),
+        # Highest Toss efficiency
+        cells_body(
+          columns = vars(toss_efficiency),
+          rows = rank == which.max(stats_eligible$toss_efficiency)
+        ),
         # Most points
         cells_body(
           columns = vars(total_points),
-          rows = total_points == max(total_points)
+          rows = rank == which.max(stats_eligible$total_points)
         ),
         # Highest ppg
         cells_body(
           columns = vars(points_per_game),
-          rows = points_per_game == max(points_per_game)
+          rows = rank == which.max(stats_eligible$points_per_game)
         )
       )
     ) %>% 
+    # Fade out the irrelevants
+    tab_style(
+      style = list(cell_borders(sides = "top", color = snappa_pal[2], weight = px(1), style = "dashed")),
+      locations = cells_body(
+        columns = everything(),
+        rows = rank == dividing_line
+      )
+    ) %>% 
+    tab_style(
+      style = list(cell_fill(color = "#E3E3DE", alpha = .25), cell_text(weight = "lighter")),
+      locations = cells_body(
+        columns = everything(),
+        rows = rank >= dividing_line
+      )
+    ) %>% 
+    tab_source_note("Players need to play at least 5 games to be eligible for achievements.") %>% 
     tab_theme_snappa(table.font.size = px(12))
   
 }
