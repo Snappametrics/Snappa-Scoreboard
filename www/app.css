@@ -18,6 +18,7 @@
     --green-bg: #F3FFEA;
 
     --purpp: #100033;
+    --grey-bg: #fafaf9;
     --gray-10: rgba(8, 0, 26, 0.8);
     --gray-4: rgba(8, 0, 26, 0.25);
     --gray-3: rgba(8, 0, 26, 0.08);
@@ -44,24 +45,21 @@
 
 
 #shiny-notification-panel {
-    background-color: #3d2b73;
-    width: 17%;
-    height: 2rem;
-    opacity: .8;
-    
+    background-color: var(--grey-bg);
+    width: 40vw;
+    height: 10vh;
 }
 
 .shiny-notification {
-    background-color: #3d2b73;
-    color: #fff;
+    background-color: var(--grey-bg);
     margin: 5px;
     font-size: 2.5rem;
+    font-weight: 600;
     border: none;
+    text-align: right;
 }
 
-.well .shiny-input-container {
-    width: 60%;
-}
+
 
 
 /* Player Input */
@@ -76,12 +74,22 @@
     margin-bottom: 2rem;
 }
 
+#remove_A3, #remove_A4, #remove_B3, #remove_B4 {
+    position: relative; 
+    top:-11vh; 
+    z-index:1;
+}
 
 /* Scoreboard */
 
-#previous_round, #next_round {
+#previous_round {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+#next_round {
     font-size: 2.5rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 #switch_sides {
@@ -90,8 +98,6 @@
 
 #round_num {
     font-size:18rem; 
-    margin-top: 5rem; 
-    margin-bottom: 5rem;
     line-height: 20rem;
 }
 
@@ -145,21 +151,27 @@ label[for='foot'] {
 }
 
 
-
-
-
-
-
-
-
 #new_game, #finish_game {
-    margin-top: 3rem;
     margin-left: 2rem;
     margin-right: 2rem;
 }
 
 #start_game, #scorer, #paddle, #score {
     font-size: 170%; 
+}
+
+.sw-dropdown {
+    display: inline-block;
+    margin-top: -2vh;
+    margin-bottom: 2vh;
+}
+
+.sw-dropdown-in {
+    background-color: var(--grey-bg) !important;
+}
+
+.sw-show.sw-dropdown-content {
+    background-color: var(--grey-bg);
 }
 
 
@@ -210,6 +222,7 @@ label.control-label[for='score'] {
 .form-group {
     display: block;
     font-size: 2rem;
+    margin-bottom: 0;
 }
 
 .radio-btn-icon-yes {
@@ -547,6 +560,10 @@ input[type=radio]{
         margin: 0;
     }
     
+    #remove_A3, #remove_A4, #remove_B3, #remove_B4 {
+        top:-15vh; 
+    }
+    
     #start_game {
         padding: 2vh 2vw 2vh 2vw;
     }
@@ -554,14 +571,23 @@ input[type=radio]{
     #undo_score_A {
         padding: 1vh 1vw 1vh 1vw;
         right: 6vw;
+        font-size: 2.5vh;
     }
     
     #undo_score_B {
         padding: 1vh 1vw 1vh 1vw;
         left: 6vw;
+        font-size: 2.5vh;
     }
     
-    #previous_round, #next_round {
+    #previous_round{
+        font-size: 1rem;
+        padding: 2vh 2vw 2vh 2vw;
+        margin-bottom: 1vh;
+        margin-top: 1vh;
+    }
+    
+    #next_round {
         font-size: 2rem;
         padding: 2vh 2vw 2vh 2vw;
         margin-bottom: 1vh;
@@ -580,11 +606,7 @@ input[type=radio]{
     }
     
     #finish_game, #new_game {
-        font-size: 3rem
-    }
-    
-    .table {
-        font-size: 12px;
+        font-size: 2.5rem;
     }
 
     
