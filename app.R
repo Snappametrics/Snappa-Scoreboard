@@ -36,10 +36,10 @@ round_labels = rep(c("Pass the dice", "Next round"),100)
 
 
 # Pull db tables for tibble templates
-players_tbl = tbl(con, "players") %>% collect()
-scores_tbl = tbl(con, "scores") %>% collect()
-player_stats_tbl = tbl(con, "player_stats") %>% collect()
-game_stats_tbl = tbl(con, "game_stats") %>% collect()
+players_tbl = dbGetQuery(con, "SELECT * FROM players")
+scores_tbl = dbGetQuery(con, "SELECT * FROM scores") 
+player_stats_tbl = dbGetQuery(con, "SELECT * FROM player_stats")
+game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
 
 
@@ -208,16 +208,16 @@ db_update_player_stats = function(player_stats){
   
   dbExecute(con, del_rows)
   
-  dbAppendTable(con, "player_stats", player_stats)
+  dbWriteTable(con, "player_stats", player_stats, append = T)
 }
+
 
 # For use with restarting a lost game: First extract the table
 # with the teams and the number of players for each team for the given
-# game_id. This function isn't all that necesary in its own right, but
+# game_id. This function isn't all that necessary in its own right, but
 # I think it helps for readability
 extract_team_sizes = function(g.id){
-  output = tbl(con, "player_stats") %>% collect() %>% 
-    filter(game_id == g.id) %>%
+  output = dbGetQuery(con, str_c("SELECT game_id, team FROM player_stats WHERE game_id = ", g.id)) %>% 
     count(team)
   return(output)
 }
@@ -227,19 +227,15 @@ generate_round_num = function(df, g.id){
   shot_nums = rep(1:200, each = 1)
   A_geq = rep(1:100, each = 2)
   B_geq = c(0, A_geq[-200])
-
+  
   # The values of the shot nums from each team also
   # need to be recorded. Unique works in this case because
   # we update shot number for every team member simultaneously
-  A_shots = tbl(con, "player_stats") %>% 
-    filter(game_id == g.id & team == "A") %>% 
-    pull(shots) %>%
-    unique()
-  B_shots = tbl(con, "player_stats") %>% 
-    filter(game_id == g.id & team == "B") %>% 
-    pull(shots) %>%
-    unique()
-    
+  A_shots = dbGetQuery(con, str_c("SELECT DISTINCT(shots) FROM player_stats WHERE team = 'A' AND game_id =", g.id)) %>% 
+    pull()
+  B_shots = dbGetQuery(con, str_c("SELECT DISTINCT(shots) FROM player_stats WHERE team = 'B' AND game_id =", g.id)) %>% 
+    pull()
+  
   # I generate a multiplier which expresses the difference
   # between A's players and B's players. For the if statements
   # which follow, I could either reason on the number of players  
@@ -247,8 +243,8 @@ generate_round_num = function(df, g.id){
   # drawbacks, but I'll take mathematical complication as the
   # downside if the gain is having a simple battery of "if" 
   # statements. 
-  multiplier = df %>% filter(team == "A") %>% pull(n) / 
-    df %>% filter(team == "B") %>% pull(n) 
+  multiplier = df[df$team == "A", "n"] / 
+    df[df$team == "B", "n"] 
   
   
   # Reason on the possible sequence of shots according
@@ -268,15 +264,15 @@ generate_round_num = function(df, g.id){
   check_table = tibble(shots = shot_nums, 
                        A = A_seq,
                        B = B_seq)
-
+  
   # Finally, pull the value from shots when A and B meet
   # the conditions
-  value = check_table %>% 
-    filter(A == A_shots, B == B_shots) %>%
-    pull(shots)
-  return(value)
+  # value = check_table %>% 
+  #   filter(A == A_shots, B == B_shots) %>%
+  #   pull(shots)
+  value = check_table[(check_table$A == A_shots & check_table$B == B_shots), "shots"]
+  return(value$shots)
 }
-
 
 # Career Stats ------------------------------------------------------------
 
@@ -667,9 +663,11 @@ server <- function(input, output, session) {
 # Stats Pane Outputs --------------------------------------------------------------
 
   output$career_stats_table = render_gt({
+    ps_cols = c("game_id", "player_id", "team", "shots", "total_points", "ones", "twos", "threes", "paddle_points",
+                "clink_points", "off_ppr", "def_ppr", "toss_efficiency")
     leaderboard_table(players = vals$players_db,
-                      player_stats = tbl(con, "player_stats") %>% collect(),
-                      game_stats = filter(tbl(con, "game_stats"), game_complete))
+                      player_stats = dbGetQuery(con, str_c("SELECT ", str_c(ps_cols, collapse = ", "), " FROM player_stats")),
+                      game_stats = dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"))
       
   })
   
@@ -729,21 +727,18 @@ server <- function(input, output, session) {
 observe({
   validate(
     need(
-      tbl(con, "game_stats") %>% 
-        filter(game_id == max(game_id, na.rm=T)) %>%
-        pull(game_complete) %>% 
+      dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
+        pull() %>% 
         isFALSE(),
       message = FALSE
     )
   )
-  lost_game_id = tbl(con, "game_stats") %>% pull(game_id) %>% max()
+  lost_game_id = dbGetQuery(con, "SELECT game_id FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% pull()
   
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
-  total_lost_game_score = tbl(con, "player_stats") %>% 
-    collect() %>% 
-    filter(game_id == lost_game_id) %>%
-    pull(total_points) %>%
-    sum()
+  total_lost_game_score = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE game_id = ", lost_game_id)) %>% 
+    pull() %>% 
+    replace_na(0)
   
   # Discard that game if it's 0-0 and continue on with business as usual, else
   # allow players to restart
@@ -983,56 +978,47 @@ observe({
     # Switch to the scoreboard
     updateTabsetPanel(session, "switcher", selected = "scoreboard")
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
-    if (tbl(con, "game_stats") %>% 
-              filter(game_id == max(game_id)) %>% 
-              pull(game_complete) %>% 
+    if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
+              pull() %>% 
               isFALSE()) {
         
-        lost_game = tbl(con, "game_stats") %>% 
-          filter(game_id == max(game_id, na.rm = T)) %>% 
-          pull(game_id)
+        lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
+          pull()
       
-        lost_game_stats = tbl(con, "game_stats") %>% 
-          filter(game_id == lost_game)
+        lost_game_stats = dbGetQuery(con, str_c("SELECT * FROM game_stats WHERE game_id = ", lost_game))
       
-        lost_player_stats = tbl(con, "player_stats") %>% 
-          filter(game_id == lost_game)
-      
-        lost_game_scores = list(team_a = lost_game_stats)
-      
-      # Set the score outputs and shot number to the values from the last game
-        vals$current_scores$team_A = lost_player_stats %>% 
-          filter(team == "A" & game_id == lost_game) %>%
-          pull(total_points) %>%
-          sum()
+        lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
+
         
-        vals$current_scores$team_B = lost_player_stats %>% 
-          filter(team == "B" & game_id == lost_game) %>%
-          pull(total_points) %>%
-          sum()
+        # Set the score outputs and shot number to the values from the last game
+        vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game)) %>%
+          pull() %>% as.numeric()
         
-        vals$score_id = tbl(con, "scores") %>% 
-          filter(game_id == lost_game) %>%
-          pull(score_id) %>%
-          max()
+        
+        vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game)) %>%
+          pull() %>% as.numeric()
+        
+        vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game)) %>%
+          pull() %>% as.numeric()
         
 
-        vals$scores_db = tbl(con, "scores") %>% filter(game_id == lost_game) %>% collect()
+        vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
         vals$game_id = lost_game
         vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
         
-        vals$game_stats_db = collect(lost_game_stats)
+        vals$game_stats_db = lost_game_stats
         
         # Initialize the current game's player_stats table
-        vals$player_stats_db = collect(lost_player_stats)
+        vals$player_stats_db = lost_player_stats
         
     } else {
       
       # Set the score outputs and shot number to 0
-      vals$current_scores$team_a = 0
-      vals$current_scores$team_b = 0
+      vals$current_scores$team_A = 0
+      vals$current_scores$team_B = 0
       vals$scores_db = slice(scores_tbl, 0)
-      vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
+      vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
+        as.integer()
       
       vals$game_stats_db = bind_rows(vals$game_stats_db,
                                      tibble(
@@ -1057,10 +1043,11 @@ observe({
       # Initialize the current game's player_stats table
       vals$player_stats_db = slice(vals$player_stats_db, 0)
       
-      dbAppendTable(
+      dbWriteTable(
         conn = con, 
         name = "game_stats",
-        value = vals$game_stats_db
+        value = vals$game_stats_db,
+        append = T
       )
     }
     
@@ -1093,19 +1080,19 @@ observe({
   observeEvent(input$resume_yes, {
     
     
-    lost_game = tbl(con, "game_stats") %>% filter(game_id == max(game_id)) %>% pull(game_id)
+    lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
+      as.integer()
     
-    lost_player_stats = tbl(con, "player_stats") %>% filter(game_id == lost_game)
+    lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
     
-    players = tbl(con, "players")
+    players = dbGetQuery(con, "SELECT * FROM players")
     
     lost_players = lost_player_stats %>%
       left_join(players) %>%
       select(player_name, team) %>% 
       group_by(team) %>% 
       mutate(player_input = str_c("name_", team, row_number())) %>% 
-      ungroup() %>% 
-      collect()
+      ungroup()
     
     input_list = lost_players %>%
       select(player_input, player_name) %>% 
@@ -1121,13 +1108,14 @@ observe({
     
   })
 
-# Close the modal dialog if you say no, set an observer value to TRUE, and remove
+  
+# Close the modal dialog if you say no and remove
 # the old game from the DB
   
 observeEvent(input$resume_no, {
   removeModal()
   
-  delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
+  delete_query = "DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"
   dbExecute(con, delete_query)
 })
   
@@ -1389,7 +1377,7 @@ observeEvent(input$resume_no, {
                                  ))
       #Update the db with the new score
   
-      dbAppendTable(con, "scores", anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+      dbWriteTable(con, "scores", anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
       
       
       # Update player stats table
@@ -1439,6 +1427,11 @@ observeEvent(input$resume_no, {
                    type = "warning")
 
   })
+  
+
+# Undo Score --------------------------------------------------------------
+
+  
   # Undo score
   observeEvent(input$undo_score_A, {
     validate(
@@ -1533,12 +1526,14 @@ observeEvent(input$resume_no, {
                                 foot = input$foot
                               ))
       #Update the server with the new score
-      dbAppendTable(con, "scores", 
-                    anti_join(vals$scores_db, tbl(con, "scores") %>% collect()))
+      dbWriteTable(con, "scores", 
+                    anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
       
       
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, 
+                                                     snappaneers(), 
+                                                     game = vals$game_id)    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
       
@@ -1718,15 +1713,16 @@ observeEvent(input$resume_no, {
     # As with player_stats, I perform the update by deleting the relevant row in the DB table and reinserting the
     # one that we need
     
-    del_game_row = sql(str_c("DELETE FROM game_stats 
-                 WHERE game_id = ", vals$game_id, ";"))
+    del_game_row = str_c("DELETE FROM game_stats 
+                 WHERE game_id = ", vals$game_id, ";")
     
     dbExecute(con, del_game_row)
   
-    dbAppendTable(
+    dbWriteTable(
       conn = con, 
       name = "game_stats",
-      value = vals$game_stats_db)
+      value = vals$game_stats_db,
+      append = T)
     
     # Update player stats table one final time
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
@@ -1743,10 +1739,11 @@ observeEvent(input$resume_no, {
     #   value = anti_join(vals$players_db, players_tbl))
     
     #Update Scores
-    dbAppendTable(
+    dbWriteTable(
       conn = con,
       name = "scores",
-      value = vals$scores_db)
+      value = vals$scores_db,
+      append = T)
     
     # Update player_stats
     # dbAppendTable(
@@ -1792,7 +1789,7 @@ observeEvent(input$resume_no, {
     # 3. Reset reactive values
     vals$game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5)
     vals$player_stats_db = player_stats_tbl %>% slice(0)
-    vals$players_db = tbl(con, "players") %>% collect()
+    vals$players_db = dbGetQuery(con, "SELECT * FROM players")
     vals$scores_db = scores_tbl %>% slice(0)
     vals$score_id = as.integer(0)
     vals$shot_num = as.integer(1)

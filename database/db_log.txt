@@ -13,3 +13,11 @@ https://www.postgresqltutorial.com/postgresql-primary-key/#:~:text=Technically%2
 
 2020-08-13
 - Replaced lowercase values of scores.scoring_team with uppercase values
+
+2020-09-15
+- Update constraint names to be a little clearer
+- Add foreign constraints for player_id to scores and player_stats
+- Updated player_stats and scores to replace Perez2 (player_id 18 AND 19) with Perez (player_id 16) using the following:
+UPDATE player_stats // (or scores)
+SET player_id = 16
+WHERE player_id IN (18, 19)
