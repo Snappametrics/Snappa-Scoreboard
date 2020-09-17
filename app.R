@@ -22,7 +22,7 @@ library(gt)
 library(extrafont)
 
 
-source("test_dbconnect.R")
+source("dbconnect.R")
 source("ui_functions.R")
 
 # Prior to app startup ----------------------------------------------------
@@ -223,7 +223,6 @@ extract_team_sizes = function(g.id){
 }
 
 generate_round_num = function(df, g.id){
-  browser()
   # Generate the possible sequences for assignment
   shot_nums = rep(1:200, each = 1)
   A_geq = rep(1:100, each = 2)
