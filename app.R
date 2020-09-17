@@ -835,14 +835,7 @@ server <- function(input, output, session) {
       plot_annotation(caption = str_c('<span style="color:', snappa_pal[2], ';">Snappa</span><span style="color:', snappa_pal[4], ';">DB</span>'), theme = theme_snappa(md=T, plot_margin = margin(5,5,15,5)))
     
     
-    # layout <- "
-    # AABBBBCC
-    # ##BBBB##
-    # ##BBBB##
-    # "
-    # a_breakdown + game_flow_plot+ b_breakdown+
-    #   plot_layout(design = layout)
-    
+
   })
   
   
