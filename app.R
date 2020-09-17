@@ -248,15 +248,17 @@ generate_round_num = function(df, g.id){
   
   
   # Reason on the possible sequence of shots according
-  # to the multiplier
+  # to the multiplier. This requires some "finer tuning" on B_seq than
+  # I'm really happy with, so this would be a nice thing to come back to and improve
+  # in the future
   if(multiplier > 1) {
     A_seq = A_geq
-    B_seq = c(0, seq(from = 1, to = (100 * multiplier - multiplier), by = multiplier))
+    B_seq = c(0, rep(seq(from = multiplier, to = (100 * multiplier), by = multiplier), each = 2))[-201]
   } else if (multiplier == 1){
     A_seq = A_geq
     B_seq = B_geq
   } else {
-    A_seq = seq(from = 1, to = (100 / multiplier), by = (1/multiplier))
+    A_seq = rep(seq(from = (1/multiplier), to = (100 / multiplier), by = (1/multiplier)), each = 2)
     B_seq = B_geq
   }
   
@@ -981,7 +983,6 @@ observe({
     if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
               pull() %>% 
               isFALSE()) {
-        
         lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
           pull()
       
@@ -1004,8 +1005,9 @@ observe({
 
         vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
         vals$game_id = lost_game
-        vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
         
+        vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
+       
         vals$game_stats_db = lost_game_stats
         
         # Initialize the current game's player_stats table
@@ -1086,7 +1088,7 @@ observe({
     lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
     
     players = dbGetQuery(con, "SELECT * FROM players")
-    
+  
     lost_players = lost_player_stats %>%
       left_join(players) %>%
       select(player_name, team) %>% 

@@ -10,7 +10,7 @@ This notebook goes over the creation of our career statistics table
 for the snappa scoreboard project. In this, we will explain the way in which we think about statistics in snappa, the concepts behind the statistics which we can collect with our current level of inputs, and the process to create the table. 
 
 
-If you're just here to see the stats, you can jump to the <a href = "#The Current Offensive Leaderboard"> offensive leaderboard </a> the defensive leaderboard. 
+If you're just here to see the stats, you can jump to the <a href = "#The Current Offensive Leaderboard"> offensive leaderboard </a>, the defensive leaderboard, or <a href = "#Other Interesting Statistics"> other interesting statistics </a>. 
 
 
 This notebook is, like the project, a work in progress. Many of these values are subject to change as we iterate upon player input and expand the possibility of statistics that we can generate. 
@@ -25,13 +25,7 @@ library(tidyverse)
 library(gt)
 library(askpass)
 # Connect to the database
-con <- dbConnect(RPostgres::Postgres(),
-                          user = "postgres",
-                          password = params$pwd,
-                          host = "snappabase.cvoo4ewh2y4x.us-west-1.rds.amazonaws.com",
-                          port = 5432,
-                          dbname = "Snappa Scoreboard"
-       )
+source('../dbconnect.R')
 
 
 
@@ -39,12 +33,12 @@ con <- dbConnect(RPostgres::Postgres(),
 
 players_tbl = tbl(con, "players") %>% collect()
 scores_tbl = tbl(con, "scores") %>% collect()
+player_stats_tbl = tbl(con, "player_stats") %>% collect()
 game_stats_tbl = tbl(con, "game_stats") %>% collect()
-game_history_tbl = tbl(con, "game_history") %>% collect()
 
 # Generate the framework for the career stats table
 
-career_stats = game_stats_tbl %>% left_join(players_tbl)
+career_stats = player_stats_tbl %>% left_join(players_tbl)
 
 
 ```
@@ -53,21 +47,21 @@ career_stats = game_stats_tbl %>% left_join(players_tbl)
 
 # Present the column names
 
-
-list("Players" = players_tbl, "Scores" = scores_tbl, 
-     "Game Performance" = game_stats_tbl, "Game History" = game_history_tbl) %>% 
-  imap_dfr(function(df, id) {
-    columns = colnames(df)
-    table_name = id
-    tibble(table = table_name, 
-                       variable = columns)
-  }) %>% 
-group_by(table) %>%
-mutate(id = row_number()) %>%
-pivot_wider(names_from = table,
-            values_from = variable,
-            id_cols = id) %>%
-  select(-id)
+# 
+# list("Players" = players_tbl, "Scores" = scores_tbl, 
+#      "Game Performance" = game_stats_tbl, "Game History" = game_history_tbl) %>% 
+#   imap_dfr(function(df, id) {
+#     columns = colnames(df)
+#     table_name = id
+#     tibble(table = table_name, 
+#                        variable = columns)
+#   }) %>% 
+# group_by(table) %>%
+# mutate(id = row_number()) %>%
+# pivot_wider(names_from = table,
+#             values_from = variable,
+#             id_cols = id) %>%
+#   select(-id)
 
 # Using pivot wide to generate the output table at this point  
   
@@ -112,64 +106,112 @@ Having said all of this, let's proceed to the statistics.
 ```{r echo = F}
 
 
-who_won = scores_tbl %>% 
-            group_by(game_id) %>%
-            summarize(total_a = su
-# Update missing values that are in game_stats_tbl
-missings = scores_tbl %>%
-            group_by(player_id, game_id) %>% 
-              summarise(total_points = sum(points_scored),
-                        shots = case_when(
-                              # People on team A
-                                  any(str_detect(last(round_num), "A" & shooting = T ),
-                                      str_detect(last(round_num) "B" & shooting = F)) ~
-                                        max(as.integer(str_sub(round_num, end = -2, start = -3))),
-                              # People on team B. This one is harder because I have to look at which team won
-                      
-                      points_per_round = case_when(
-                                              str_detect(pull(
-                                                filter(
-                                                  snappaneers(),p layer_name == input$scorer
-                                                  ),
-                                                team), "a"
-                                                ) ~ sum(points_scored) / ceiling(vals$shot_num/2),
-                                              str_detect(
-                                                pull(
-                                                  filter(
-                                                    snappaneers(), player_name == input$scorer
-                                                    ), 
-                                                  team), "b"
-                                                ) ~ sum(points_scored) / floor(vals$shot_num/2)),
-                ones = sum((points_scored == 1)),
-                twos = sum((points_scored == 2)),
-                threes = sum((points_scored == 3)),
-                impossibles = sum((points_scored > 3)))
-    
+# who_won = scores_tbl %>% 
+#             group_by(game_id) %>%
+#             summarize(total_a = su
+# # Update missing values that are in game_stats_tbl
+# missings = scores_tbl %>%
+#             group_by(player_id, game_id) %>% 
+#               summarise(total_points = sum(points_scored),
+#                         shots = case_when(
+#                               # People on team A
+#                                   any(str_detect(last(round_num), "A" & shooting = T ),
+#                                       str_detect(last(round_num) "B" & shooting = F)) ~
+#                                         max(as.integer(str_sub(round_num, end = -2, start = -3))),
+#                               # People on team B. This one is harder because I have to look at which team won
+#                       
+#                       points_per_round = case_when(
+#                                               str_detect(pull(
+#                                                 filter(
+#                                                   snappaneers(),p layer_name == input$scorer
+#                                                   ),
+#                                                 team), "a"
+#                                                 ) ~ sum(points_scored) / ceiling(vals$shot_num/2),
+#                                               str_detect(
+#                                                 pull(
+#                                                   filter(
+#                                                     snappaneers(), player_name == input$scorer
+#                                                     ), 
+#                                                   team), "b"
+#                                                 ) ~ sum(points_scored) / floor(vals$shot_num/2)),
+#                 ones = sum((points_scored == 1)),
+#                 twos = sum((points_scored == 2)),
+#                 threes = sum((points_scored == 3)),
+#                 impossibles = sum((points_scored > 3)))
+#     
+# 
+# 
+# 
+# 
+# career_stats %>%
+#   group_by(player_id) %>%
+#   summarise(`Name` = unique(player_name),
+#             `Lifetime Points` = sum(total_points, na.rm = T),
+#             `Games Played` = length(game_id),
+#             `Lifetime Ones` = sum(ones, na.rm = T),
+#             `Lifetime Clinks` = sum(twos, na.rm = T),
+#             `Lifetime Sinks` = sum(threes, na.rm = T),
+#             `Lifetime Impossibles` = sum(impossibles, na.rm = T),
+#             `Paddle Points` = sum(paddle_points, na.rm = T),
+#             `Lifetime Points Per Round` = `Lifetime Points`/sum(shots, na.rm = T),
+#             `Offensive Points Per Round` = (`Lifetime Points` - `Paddle Points`)/ sum(shots, na.rm = T),
+#             `Defensive Points Per Round` = sum(paddle_points)/sum(shots, na.rm = T),
+#             `Toss Efficiency` = sum(sum(ones, na.rm = T), 
+#                                   sum(twos, na.rm = T), 
+#                                   sum(threes, na.rm = T), 
+#                                   sum(impossibles, na.rm = T))/sum(shots, na.rm = T)) %>%
+#   select(-player_id)
+#   
 
 
+```
 
+### Other Interesting Statistics
+This section is more experimental, and will present the statistics in individualized tables. These are just statistics that I thought would be interesting
+given the kinds of things that we know about our players' performance, and are the kinds of things which you can only really generate with sufficient data. 
 
-career_stats %>%
-  group_by(player_id) %>%
-  summarise(`Name` = unique(player_name),
-            `Lifetime Points` = sum(total_points, na.rm = T),
-            `Games Played` = length(game_id),
-            `Lifetime Ones` = sum(ones, na.rm = T),
-            `Lifetime Clinks` = sum(twos, na.rm = T),
-            `Lifetime Sinks` = sum(threes, na.rm = T),
-            `Lifetime Impossibles` = sum(impossibles, na.rm = T),
-            `Paddle Points` = sum(paddle_points, na.rm = T),
-            `Lifetime Points Per Round` = `Lifetime Points`/sum(shots, na.rm = T),
-            `Offensive Points Per Round` = (`Lifetime Points` - `Paddle Points`)/ sum(shots, na.rm = T),
-            `Defensive Points Per Round` = sum(paddle_points)/sum(shots, na.rm = T),
-            `Toss Efficiency` = sum(sum(ones, na.rm = T), 
-                                  sum(twos, na.rm = T), 
-                                  sum(threes, na.rm = T), 
-                                  sum(impossibles, na.rm = T))/sum(shots, na.rm = T)) %>%
-  select(-player_id)
+### A. Stability Statistics
+  These are the stats which look at a player's variability. These are the kinds of stats which you examine after seeing the "top line" numbers like raw
+  performance, because they should give you a better sense of player performance once the average is established.
   
+##### Total Point Variance
+  As the name suggests, this is a ranking of the variance in `total_points` over each game that the player has been in, with attention restricted to players with 5 or more games. 
+```{r include = F, echo = T}
+points_by_player_game = career_stats %>% 
+  group_by(player_name) %>%
+  select(game_id, total_points) %>%
+  summarize(num_games = n(),
+            total_points_average = mean(total_points),
+            total_points_variance = var(total_points)) %>%
+  filter(num_games >= 5) %>%
+  select(player_name, total_points_average, total_points_variance) %>% 
+  arrange(total_points_variance)
+  
+  
+points_by_player_game
+```
 
+##### Hits Table
+This is the variability measure for `toss_efficiency`, so it records how often players are hitting the table across their games. 
+Unlike the `total_point_variance` measurement, this one should not be done with game-level measurements, because a player's toss efficiency is highly dependent
+on the denominator, and it would be a mistake to assume they are all "equal" as one implicitly does when rolling up game-level measures. I also include the standard
+deviation here, becuase we're dealing with percentages and the interpretation of a standard deviation feels "cleaner" here. 
 
+```{r include = F, echo = T}
+scores_tbl %>% left_join(players_tbl) %>% left_join(player_stats_tbl) %>%
+  group_by(player_name, game_id) %>%
+  mutate(te_valid = !paddle * !foot) %>%
+  summarize(total_valid = sum(te_valid),
+            total_shots = unique(shots)
+            ) %>%
+  summarize(num_games = n(),
+            toss_efficiency_agg = sum(total_valid) / sum(total_shots),
+            toss_efficiency_var = sum(((total_valid / total_shots) - toss_efficiency_agg)^2) / (n() - 1),
+            toss_efficiency_sd = toss_efficiency_var ^ 0.5
+            ) %>%
+  filter(num_games >= 5) %>%
+  select(player_name, toss_efficiency_agg, toss_efficiency_sd, toss_efficiency_var) %>% 
+  arrange(toss_efficiency_var)
 ```
 
 ```{js include = F, echo = F}
