@@ -1,4 +1,9 @@
-
+toss_percent_plus = function(x){
+  str_c("(+", round(x*100, 0), "%)")
+}
+toss_percent_minus = function(x){
+  str_c("(", round(x*100, 0), "%)")
+}
 
 
 # UI functions ------------------------------------------------------------

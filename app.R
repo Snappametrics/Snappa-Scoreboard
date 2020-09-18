@@ -52,12 +52,7 @@ game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats")
 # Functions ---------------------------------------------------------------
 
 
-toss_percent_plus = function(x){
-  str_c("(+", round(x*100, 0), "%)")
-}
-toss_percent_minus = function(x){
-  str_c("(", round(x*100, 0), "%)")
-}
+
 
 
 rebuttal_check <- function(a , b , round, points_to_win) {
