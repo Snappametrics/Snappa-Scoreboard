@@ -1051,19 +1051,24 @@ score_heatmap = function(df){
 
 
 
-player_score_breakdown = function(stats_df, players_df, team){
-  
-  if(team == "A"){
+# Summary Visualizations --------------------------------------------------
+
+
+
+
+player_score_breakdown = function(ps_player_stats, ps_players, ps_game, ps_team){
+
+  if(ps_team == "A"){
     team_margin = margin(0,-20,0,0)
   } else {
     team_margin = margin(0,0,0, -20)
   }
-  reverse_legend = (!!team == "A")
+  reverse_legend = (!!ps_team == "A")
   
-  df = stats_df %>% 
-    filter(game_id == max(game_id)) %>% 
-    inner_join(players_df) %>% 
-    filter(team == !!team) %>% 
+  df = ps_player_stats %>% 
+    filter(game_id == !!ps_game) %>% 
+    inner_join(ps_players) %>% 
+    filter(team == !!ps_team) %>% 
     select(player_name, team, total_points:clink_points) %>% 
     arrange(-total_points) %>% 
     # Calculate sink points and "normal" points
@@ -1076,8 +1081,8 @@ player_score_breakdown = function(stats_df, players_df, team){
     # Convert point type to factor
     mutate(point_type = factor(point_type, levels = c("Sink", "Clink", "Paddle", "Normal toss"), ordered = T)) %>% 
     group_by(player_name) %>%
-    filter(points > 0) %>% 
-    mutate(point_pct = points/sum(points))
+    mutate(point_pct = points/sum(points)) %>% 
+    replace_na(list(point_pct = 0))
   
   
   
