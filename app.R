@@ -681,93 +681,36 @@ server <- function(input, output, session) {
                gt_output("team_b_summary")
         )
       ),
-      # Point breakdown
-      # fluidRow(
-        plotOutput("megaplot", height = "50vh"),
-        # column(4, align = "left",
-        #        plotOutput("team_a_ptbreakdown", height = "20vh")
-        # ),
-        # column(4, align = "center",
-        #        plotOutput("game_flow")),
-        # column(4, align = "right",
-        #        plotOutput("team_b_ptbreakdown", height = "20vh")
-        # )
-      # ),
+      # Summary plot
+        plotOutput("summary_plot", height = "50vh"),
+      
       footer = NULL,
       easyClose = T,
       size = "l"
     )
   }
   
-
-  
-  
-  output$megaplot = renderPlot({
-    a_breakdown = player_score_breakdown(player_stats_tbl, players_tbl, team = "A")
-      
-    
-    b_breakdown = player_score_breakdown(player_stats_tbl, players_tbl, team = "B")
-    
-    player_info = player_stats_tbl %>% 
-      # Filter player stats
-      filter(game_id == max(game_id)) %>% 
-      select(game_id, player_id, team) %>% 
-      inner_join(players_tbl)
-    
-    # player_scores = vals$scores_db %>% 
-    # inner_join(snappaneers(), by = c("player_id")) %>%
-    player_scores = scores_tbl %>% 
-      inner_join(player_info, by = c("game_id", "player_id")) %>% 
-      # Convert round_num into the actual round id
-      rowwise() %>% 
-      mutate(round = which(rounds == round_num)) %>% 
-      ungroup() %>% 
-      arrange(game_id, score_id) %>% 
-      group_by(player_id) %>% 
-      mutate(cum_score = cumsum(points_scored))
-    
-    # sinks = player_scores %>% 
-    #   filter(points_scored == 3) %>% 
-    #   mutate(sink_splash = list.files("www", pattern="png", full.names = T),
-    #          sink_position = cum_score - 1.5)
-    
-    
-    
-    
-    game_flow_plot = game_flow(player_scores)
-    
-
-    # (a_breakdown / plot_spacer() / plot_spacer()) | game_flow_plot| (b_breakdown / plot_spacer() / plot_spacer())+
-    # a_breakdown + game_flow_plot + b_breakdown+
-    #   plot_layout(design = plot_areas)+
-    (wrap_elements(full = a_breakdown /
-                     plot_spacer() / 
-                     plot_spacer()*
-                     theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))*
-                     plot_annotation(theme = theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))))+
-        game_flow_plot+
-        theme_snappa(plots_pane = T, md = T)+
-        wrap_elements(full = b_breakdown /
-                        plot_spacer() /
-                        plot_spacer()*
-                        theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))*
-                        plot_annotation(theme = theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1])))))+
-      plot_layout(widths = c(3,5,3))+
-      plot_annotation(caption = str_c('<span style="color:', snappa_pal[2], ';">Snappa</span><span style="color:', snappa_pal[4], ';">DB</span>'), theme = theme_snappa(md=T, plot_margin = margin(5,5,15,5)))
-    
-    
-
+  output$summary_plot = renderPlot({
+    game_summary_plot(player_stats = vals$player_stats_db,
+                      players = vals$players_db, 
+                      scores = vals$scores_db,
+                      game = vals$game_id)
   })
   
   
+  
+  
+  
+  
+
   output$team_a_summary = render_gt({
-    # input$send_to_db
-    team_summary_tab(player_summary(), "A")
+    input$send_to_db
+    team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "A")
   })  
   
   output$team_b_summary = render_gt({
-    # input$send_to_db
-    team_summary_tab(player_summary(), "B")
+    input$send_to_db
+    team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "B")
   })  
   
   
@@ -775,95 +718,7 @@ server <- function(input, output, session) {
   
   
   
-  output$team_a_ptbreakdown = renderPlot({
-    # input$send_to_db
-    # vals$player_stats_db %>% 
-      # Merge in player info
-      # inner_join(snappaneers()) %>% 
-    player_stats_tbl %>% 
-      filter(game_id == max(game_id)) %>% 
-      inner_join(players_tbl) %>% 
-      filter(team == "A") %>% 
-      select(player_name, team, total_points:clink_points) %>% 
-      arrange(-total_points) %>% 
-      # Calculate sink points and "normal" points
-      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
-      mutate(sink = threes*3,
-             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
-      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
-      # Pivot to get point type
-      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
-      # Convert point type to factor
-      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
-      group_by(player_name) %>%
-      filter(points > 0) %>% 
-      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
-      player_score_breakdown(.)
-  })
-  
-  
-  output$team_b_ptbreakdown = renderPlot({
-    # input$send_to_db
-    # vals$player_stats_db %>% 
-      # Merge in player info
-      # inner_join(snappaneers()) %>% 
-    player_stats_tbl %>% 
-      filter(game_id == max(game_id)) %>% 
-      inner_join(players_tbl) %>% 
-      filter(team == "B") %>% 
-      select(player_name, team, total_points:clink_points) %>% 
-      arrange(-total_points) %>% 
-      # Calculate sink points and "normal" points
-      # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
-      mutate(sink = threes*3,
-             normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
-      select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
-      # Pivot to get point type
-      pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
-      # Convert point type to factor
-      mutate(point_type = factor(point_type, levels = c("Normal toss", "Paddle", "Clink", "Sink"), ordered = T)) %>% 
-      group_by(player_name) %>%
-      filter(points > 0) %>% 
-      mutate(point_pct = scales::percent(points/sum(points), accuracy = 1)) %>% 
-      player_score_breakdown(.)
-  })
-  
-  
-  
-  
-  
-  
-  output$game_flow = renderPlot({
-    # input$send_to_db
-    player_info = player_stats_tbl %>% 
-      # Filter player stats
-      filter(game_id == max(game_id)) %>% 
-      select(game_id, player_id, team) %>% 
-      inner_join(players_tbl)
-    
-    # player_scores = vals$scores_db %>% 
-    # inner_join(snappaneers(), by = c("player_id")) %>%
-    player_scores = scores_tbl %>% 
-      inner_join(player_info, by = c("game_id", "player_id")) %>% 
-      # Convert round_num into the actual round id
-      rowwise() %>% 
-      mutate(round = which(rounds == round_num)) %>% 
-      ungroup() %>% 
-      arrange(game_id, score_id) %>% 
-      group_by(player_id) %>% 
-      mutate(cum_score = cumsum(points_scored))
-    
-    # sinks = player_scores %>% 
-    #   filter(points_scored == 3) %>% 
-    #   mutate(sink_splash = list.files("www", pattern="png", full.names = T),
-    #          sink_position = cum_score - 1.5)
-    
-    
-    
-    
-    game_flow(player_scores)
-  })
-  
+
 
 # Stats Pane Outputs --------------------------------------------------------------
 

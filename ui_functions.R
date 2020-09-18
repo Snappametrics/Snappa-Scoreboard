@@ -1110,24 +1110,56 @@ player_score_breakdown = function(stats_df, players_df, team){
         axis.text.y.left = element_text(margin = margin(l = -5, r = -5), hjust = 1),
         axis.text.y.right = element_text(margin = margin(l = -5, r = -5), hjust = 0)
       )
+    
+    # TODO: Add troll image for the trolls
+    # Potentially an if statement and detect if any player trolls
+    # plot+
+    #   geom_image(data = df %>% distinct(player_name, points, .keep_all = T) %>% mutate(image = 'www/troll_toll.jpg'),
+    #              aes(y = player_name, x = points, image = image), size = .35)
 }
 
-game_flow = function(df){
+game_flow = function(player_stats, players, scores, game){
+  
+  player_info = player_stats %>% 
+    # Filter player stats
+    filter(game_id == !!game) %>% 
+    select(game_id, player_id, team) %>% 
+    inner_join(players)
+  
+  # player_scores = vals$scores_db %>% 
+  # inner_join(snappaneers(), by = c("player_id")) %>%
+  player_scores = scores %>% 
+    # Join scores to the player info table
+    inner_join(player_info, by = c("game_id", "player_id")) %>% 
+    # Convert round_num into the actual round id
+    rowwise() %>% 
+    mutate(round = which(rounds == round_num)) %>% 
+    ungroup() %>% 
+    # Order by game and score id
+    arrange(game_id, score_id) %>% 
+    group_by(player_id) %>%
+    # Calculate players' cumulative score throughout the game
+    mutate(cum_score = cumsum(points_scored))
 
   # Add zeroes
-  player_score_base = df %>% 
+  player_score_base = player_scores %>% 
+    # Filter player stats
+    filter(game_id == !!game) %>% 
     group_by(game_id, player_id, player_name, team) %>% 
-    summarise(round = min(round)-1, points_scored = 0, cum_score = 0)
+    summarise(round = min(round)-1, 
+              points_scored = 0, 
+              cum_score = 0)
   
-  player_label_df = df %>% 
+  player_label_df = player_scores %>% 
+    filter(game_id == !!game) %>% 
     filter(cum_score == max(cum_score)) %>% 
     select(player_name, player_id, team, round, cum_score)
   
   # Calculate max values for scales
-  max_score = max(df$cum_score)
-  max_round = max(df$round)
+  max_score = max(player_label_df$cum_score)
+  max_round = max(player_label_df$round)
 
-  df %>% 
+  player_scores %>% 
     bind_rows(player_score_base) %>% 
     ggplot(., aes(x = round, y = cum_score))+
     geom_line(aes(group = player_id, colour = team), size = 1, show.legend = F, alpha = .8)+
@@ -1148,6 +1180,47 @@ game_flow = function(df){
     labs(title = "How the die flies",
          subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
     theme_snappa(md=T)
+}
+
+game_summary_plot = function(player_stats, players, scores, game){
+  # Function which creates the game summary plots and puts them together
+  #   - Create a player_score_breakdown for both teams
+  #   - Create a game_flow plot
+
+  # Player breakdowns
+  a_breakdown = player_score_breakdown(ps_player_stats = player_stats, 
+                                       ps_game = game, 
+                                       ps_players = players,
+                                       ps_team = "A")
+  
+  b_breakdown = player_score_breakdown(ps_player_stats = player_stats, 
+                                       ps_game = game, 
+                                       ps_players = players,
+                                       ps_team = "B")
+    
+  game_flow_plot = game_flow(player_stats = player_stats,
+                              players = players, 
+                              scores = scores,
+                              game = game)
+
+  ## Combining plots
+  # Team A's breakdown
+  (wrap_elements(full = a_breakdown /
+                   plot_spacer() / 
+                   plot_spacer()*
+                   theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))*
+                   plot_annotation(theme = theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))))+
+      # Game flow
+      game_flow_plot+
+      theme_snappa(plots_pane = T, md = T)+
+      # Team B breakdown
+      wrap_elements(full = b_breakdown /
+                      plot_spacer() /
+                      plot_spacer()*
+                      theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))*
+                      plot_annotation(theme = theme(plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1])))))+
+    plot_layout(widths = c(3,5,3))+
+    plot_annotation(caption = str_c('<span style="color:', snappa_pal[2], ';">Snappa</span><span style="color:', snappa_pal[4], ';">DB</span>'), theme = theme_snappa(md=T, plot_margin = margin(5,5,15,5)))
 }
 
 
