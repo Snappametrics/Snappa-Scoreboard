@@ -605,9 +605,66 @@ tab_theme_snappa = function(data,
 }
 
 
-team_summary_tab = function(df, team){
+team_summary_tab = function(current_player_stats, player_stats, players, team){
   
-  df = select(df,
+  player_info = current_player_stats %>% 
+    # Filter player stats
+    # filter(game_id == max(game_id)) %>% 
+    select(game_id, player_id, team) %>% 
+    inner_join(players)
+  
+  player_summary = current_player_stats %>% 
+    # Select the last game
+    # filter(game_id == max(game_id)) %>% 
+    group_by(team) %>% 
+    mutate(team_score = sum(total_points)) %>% 
+    ungroup() %>% 
+    mutate(winners = (team_score == max(team_score))) %>% 
+    # Merge in player info
+    inner_join(player_info) %>% 
+    select(team, winners, player_id, player_name, total_points, paddle_points, clink_points, threes, points_per_round:toss_efficiency)
+  
+  historical_stats = player_stats %>% 
+    select(-team) %>% 
+    # Join in player name
+    inner_join(select(player_summary, player_id, team)) %>%
+    arrange(player_id, game_id) %>% 
+    group_by(player_id) %>% 
+    mutate(game_num = 1:n()) %>% 
+    ungroup() %>% 
+    select(game_id, player_id, shots, total_points, paddle_points, clink_points, sinks = threes, points_per_round:toss_efficiency) %>% 
+    group_by(player_id) %>% 
+    summarise(
+      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
+      across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
+      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
+             .fns = ~weighted.mean(., w = shots), 
+             .names = "{col}_wavg")
+    )
+  
+  player_summary_historical = full_join(player_summary, historical_stats, by = "player_id") %>% 
+    # Calculate the difference between current game and historical performance
+    mutate(total_points_diff = total_points - total_points_avg,
+           paddle_points_diff = paddle_points - paddle_points_avg,
+           clink_points_diff = clink_points - clink_points_avg,
+           points_per_round_diff = points_per_round - points_per_round_wavg,
+           off_ppr_diff = off_ppr - off_ppr_wavg,
+           def_ppr_diff = def_ppr - def_ppr_wavg,
+           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
+           # Format each difference for the table
+           across(matches("points_diff"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 1), ")")),
+           across(matches("(per_round|ppr)_diff$"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 2), ")")),
+           toss_efficiency_diff = map_chr(toss_efficiency_diff, ~case_when(. >= 0 ~ toss_percent_plus(.), 
+                                                                           . < 0 ~ toss_percent_minus(.)))) %>% 
+    # Remove historical stats
+    select(-ends_with("_avg"), -ends_with("wavg")) %>% 
+    # Order columns
+    select(starts_with("player"), team, winners, 
+           contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
+           contains("per_round"), contains("off_"), contains("def_"), contains("toss")) 
+  
+  
+  df = select(player_summary_historical,
               -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
     filter(team == !!team)
   winners = unique(df$winners)
