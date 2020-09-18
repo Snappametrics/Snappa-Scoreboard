@@ -785,11 +785,6 @@ server <- function(input, output, session) {
 # if the previous game is incomplete
   
 observe({
-  showModal(
-    tags$div(id= "game_summary", 
-             game_summary(game_stats_tbl %>% filter(game_id == max(game_id)))
-    )
-  )
   validate(
     need(
       dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
@@ -1824,8 +1819,7 @@ observeEvent(input$resume_no, {
 
     showModal(
       tags$div(id= "game_summary", 
-               game_summary()
-               )
+               game_summary(vals$game_stats_db))
     )
     
   })
