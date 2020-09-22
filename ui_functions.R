@@ -816,7 +816,7 @@ team_summary_tab = function(current_player_stats, player_stats, players, team){
     # opt_footnote_marks(marks = "letters") %>% 
     # Styling
   tab_style(
-    style = cell_text(weight = 600, size = px(14), v_align = "bottom"),
+    style = cell_text(weight = "normal", size = px(14), v_align = "bottom"),
     # locations = map(c("Total Points","Paddle Points","Clink Points","Sinks","Pts per Round","Off. PPR","Def. PPR","Toss Efficiency"),
     locations = map(c("Total Points","Paddle Points","Off. PPR","Def. PPR","Toss Efficiency"),
                     cells_column_spanners)
@@ -947,7 +947,7 @@ leaderboard_table = function(players, player_stats, game_stats){
       locations = cells_title(groups = "title")
     ) %>%
     tab_style(
-      style = cell_text(v_align = "bottom", weight = 700, align = "left"),
+      style = cell_text(v_align = "bottom", weight = "normal", align = "left"),
       locations = cells_column_labels(everything())
     ) %>% 
     # Rank column
