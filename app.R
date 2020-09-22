@@ -1064,13 +1064,14 @@ observe({
 
   })
   
-  observeEvent(req(sum(vals$scores_db$points_scored) >= 21), {
+  observeEvent(req(sum(vals$scores_db$points_scored) >= vals$score_to), {
     sendSweetAlert(session, 
                    title = "Halftime", 
                    type = "info",
                    text = HTML(str_c("Change places!", 
                                      "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
     
+    shinyjs::click("switch_sides")
     
   }, once = T, ignoreNULL = T)
   
