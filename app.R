@@ -691,6 +691,7 @@ server <- function(input, output, session) {
   }
   
   output$summary_plot = renderPlot({
+    input$finish_game_sure
     game_summary_plot(player_stats = vals$player_stats_db,
                       players = vals$players_db, 
                       scores = vals$scores_db,
@@ -704,12 +705,12 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    input$send_to_db
+    input$finish_game_sure
     team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "A")
   })  
   
   output$team_b_summary = render_gt({
-    input$send_to_db
+    input$finish_game_sure
     team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "B")
   })  
   
