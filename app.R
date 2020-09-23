@@ -1064,6 +1064,10 @@ observe({
 
   })
   
+
+# Halftime ----------------------------------------------------------------
+
+  
   observeEvent(req(sum(vals$scores_db$points_scored) >= vals$score_to), {
     sendSweetAlert(session, 
                    title = "Halftime", 
@@ -1075,7 +1079,18 @@ observe({
     
   }, once = T, ignoreNULL = T)
   
-
+  observeEvent(c(
+    input$ok_A,
+    input$ok_B
+  ), {
+    if(all(input$score == 3, !input$clink)){
+      insertUI(selector = "#round_num",
+               where = "afterEnd",
+               ui = HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
+      
+    }
+  },
+  ignoreNULL = T, ignoreInit = T)
 
 
   
