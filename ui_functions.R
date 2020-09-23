@@ -5,6 +5,7 @@ toss_percent_minus = function(x){
   str_c("(", round(x*100, 0), "%)")
 }
 
+rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
 # UI functions ------------------------------------------------------------
 
