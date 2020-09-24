@@ -496,6 +496,45 @@ ui <- dashboardPagePlus(
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
   
+  output$sidebar_menu <- renderUI({
+    
+    
+    if(input$start_game) {
+      sidebarMenu(
+        menuItem("Scoreboard", 
+                 tabName = "scoreboard", 
+                 icon = icon("window-maximize"), selected = T),
+        menuItem("Career Stats", 
+                 tabName = "career_stats", 
+                 icon = icon("bar-chart")),
+        menuItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
+                 text = "More stuff than we can add", newtab = T)
+      )
+      
+    } else {
+      sidebarMenu(
+        menuItem("Player Input", 
+                 tabName = "player_input", 
+                 icon = icon("users"), selected = T),
+        menuItem("Career Stats", 
+                 tabName = "career_stats", 
+                 icon = icon("bar-chart")),
+        menuItem(text = "More stuff than we can add", tabName = "idksubmenu",
+                 menuSubItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
+                             newtab = T, 
+                             text = "Yeah we got submenus too"))
+      )
+      
+    }
+    
+  })
+  
+  observeEvent(input$sidebarItemExpanded == "idksubmenu",
+               {insertUI(where = "afterEnd",
+                         HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay style="display:none;"></audio>'), 
+                         selector = "#start_game")}, ignoreNULL = T, ignoreInit = T)
+  
+
   #Change the html of an icon
   # html(id = "one_point", 
   #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
@@ -977,61 +1016,44 @@ observe({
 
 # Add Scoreboard ----------------------------------------------------------
 
-    scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
-                              div(
-                                fluidRow(id = "scoreboardrow", 
-                                         column(4, offset = 4, align = "center", 
-                                                actionBttn("switch_sides", 
-                                                           "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
-                                         column(4)),
-                                team_scoreboard_ui(), 
-                                div(id = "bottom_buttons",
-                                    # fluidRow(
-                                    #   column(width =4, offset = 4, align = "center",
-                                    #          # Recent Scores
-                                    #          dropdown(
-                                    #            inputId = "recent_scores",
-                                    #            gt_output("recent_scores"),
-                                    #            style = "unite",
-                                    #            size = "lg", 
-                                    #            up = T,
-                                    #            label = "Recent Scores",
-                                    #            icon = icon("backward"),
-                                    #            animate = animateOptions(
-                                    #              enter = animations$fading_entrances$fadeInUp,
-                                    #              exit = animations$fading_exits$fadeOutDown
-                                    #            )
-                                    #          ))
-                                    #   
-                                    # ),
-                                    fluidRow(width = 4, offset = 4, align = "center",
-                                             # Recent Scores
-                                             dropdown(
-                                               class = "recent_scores",
-                                               inputId = "recent_scores_",
-                                               gt_output("recent_scores"),
-                                               style = "unite",
-                                               size = "lg", 
-                                               up = T,
-                                               label = "Recent Scores",
-                                               icon = icon("backward"),
-                                               animate = animateOptions(
-                                                 enter = animations$fading_entrances$fadeInUp,
-                                                 exit = animations$fading_exits$fadeOutDown
-                                               )
-                                             )),
-                                    fluidRow(
-                                      column(width = 4, offset = 4, align = "center",
-                                             actionBttn("new_game", "Restart", style = "unite", color = "warning"),
-                                             actionBttn("finish_game", "Finish", style = "unite", color = "warning")
-                                      )
-                                    )
-                                    )
-                                
-                                )
-                              )
-    insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
-    hideTab("navbar", "Player Input")
+    # scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
+    #                           div(
+    #                             fluidRow(id = "scoreboardrow", 
+    #                                      column(4, offset = 4, align = "center", 
+    #                                             actionBttn("switch_sides", 
+    #                                                        "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
+    #                                      column(4)),
+    #                             team_scoreboard_ui(), 
+    #                             
+    #                             div(id = "bottom_buttons",
+    #                                 fluidRow(width = 4, offset = 4, align = "center",
+    #                                          # Recent Scores
+    #                                          dropdown(
+    #                                            class = "recent_scores",
+    #                                            inputId = "recent_scores_",
+    #                                            gt_output("recent_scores"),
+    #                                            style = "unite",
+    #                                            size = "lg", 
+    #                                            up = T,
+    #                                            label = "Recent Scores",
+    #                                            icon = icon("backward"),
+    #                                            animate = animateOptions(
+    #                                              enter = animations$fading_entrances$fadeInUp,
+    #                                              exit = animations$fading_exits$fadeOutDown
+    #                                            )
+    #                                          )),
+    #                                 fluidRow(
+    #                                   column(width = 4, offset = 4, align = "center",
+    #                                          actionBttn("new_game", "Restart", style = "unite", color = "warning"),
+    #                                          actionBttn("finish_game", "Finish", style = "unite", color = "warning")
+    #                                   )
+    #                                 )
+    #                                 )
+    #                             
+    #                             )
+    #                           )
+    # insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
+    # hideTab("navbar", "Player Input")
     
   
     # Add new players to the players table
@@ -1066,7 +1088,7 @@ observe({
     })
     
     # Switch to the scoreboard
-    updateTabsetPanel(session, "switcher", selected = "scoreboard")
+    # updateTabsetPanel(session, "switcher", selected = "scoreboard")
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
     if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
               pull() %>% 
