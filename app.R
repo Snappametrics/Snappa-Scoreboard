@@ -1431,8 +1431,6 @@ observeEvent(input$resume_no, {
                        duration = 20, closeButton = F
                       )
     }
-    
-    if (vals$rebuttal)
     validate(
       need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
     )
@@ -1586,6 +1584,17 @@ observeEvent(input$resume_no, {
       )
     } else {
       
+    }
+    if (vals$rebuttal_tag == T & vals$rebuttal == F){
+      vals$rebuttal_tag == F
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " has exited rebuttal!")
+      ), 
+      duration = 20, closeButton = F
+      )
     }
     
     validate(
