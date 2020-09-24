@@ -13,16 +13,17 @@
 library(DBI)
 library(RPostgres)
 library(tidyverse)
-library(shiny)
 library(lubridate)
-library(dbplyr)
+library(shiny)
 library(shinyjs)
 library(shinyWidgets)
+library(shinydashboard)
+library(shinydashboardPlus)
 library(gt)
 library(extrafont)
 
 
-source("dbconnect.R")
+source("test_dbconnect.R")
 source("ui_functions.R")
 
 # Prior to app startup ----------------------------------------------------
