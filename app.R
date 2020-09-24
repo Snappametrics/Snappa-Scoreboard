@@ -301,80 +301,167 @@ score_prog_plot = score_heatmap(score_progression)
 # UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
-ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player Input",
-  theme = "app.css",
+ui <- dashboardPagePlus(
+  
+  dashboardHeaderPlus(title = tagList(
+    span(class = "logo-lg", "Snappa Scoreboard"), 
+    img(class = "logo-mini", src = "die_hex.png", style = "padding:.25vw;")),
+    enable_rightsidebar = TRUE,
+    rightSidebarIcon = "gears",
+    left_menu = tagList(
+      dropdownBlock(
+        id = "mydropdown",
+        title = "Dropdown 1",
+        icon = icon("sliders"),
+        sliderInput(
+          inputId = "n",
+          label = "Could be good?",
+          min = 10, max = 100, value = 30
+        )
+    ),
+    dropdownBlock(
+      id = "mydropdown2",
+      title = "Dropdown 2",
+      icon = icon("sliders"),
+      prettySwitch(
+        inputId = "switch4",
+        label = "Fill switch with status:",
+        fill = TRUE,
+        status = "primary"
+      ),
+      prettyCheckboxGroup(
+        inputId = "checkgroup2",
+        label = "Click me!",
+        thick = TRUE,
+        choices = c("Click me !", "Me !", "Or me !"),
+        animation = "pulse",
+        status = "info"
+      )
+    )
+    ),
+    dropdownMenu(
+      type = "tasks",
+      badgeStatus = "danger",
+      taskItem(value = 20, color = "aqua", "Recent Scores?"),
+      taskItem(value = 40, color = "green", "Design new layout"),
+      taskItem(value = 60, color = "yellow", "Another task"),
+      taskItem(value = 80, color = "red", "Write documentation")
+    )
+    ),
+  dashboardSidebar(
+    sidebarMenuOutput("sidebar_menu")
+  ),
+  rightsidebar = rightSidebar(
+    background = "dark",
+    rightSidebarTabContent(
+      id = 1,
+      title = "Tab 1",
+      icon = "desktop",
+      active = TRUE,
+      sliderInput(
+        "obs",
+        "Number of observations:",
+        min = 0, max = 1000, value = 500
+      )
+    ),
+    rightSidebarTabContent(
+      id = 2,
+      title = "Tab 2",
+      textInput("caption", "Caption", "Data Summary")
+    )
+    ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "player_input",
+              fluidRow(
+                team_input_ui("A", pull(players_tbl, player_name)),
+                
+                # Column 2 - empty
+                column(4,  align = "center",
+                       disabled(actionBttn("start_game", 
+                                           label = "Throw some dice?", style = "pill", color = "primary")),
+                       uiOutput("validate_start"),
+                       
+                       helpText("Note: All players must enter their name before the game can begin"),
+                       
+                       awesomeRadio(inputId = "play_to", 
+                                    label = "What score are you playing to?", 
+                                    choices = list("21" = 1, "32" = 2), 
+                                    selected = 1, inline = T)),
+                
+                
+                # Column 3 - Team B
+                team_input_ui("B", pull(players_tbl, player_name))
+              )
+              ),
+      
+      tabItem(tabName = "scoreboard", #icon = icon("window-maximize"), 
+               div(
+                 fluidRow(id = "scoreboardrow", 
+                          column(4, offset = 4, align = "center", 
+                                 actionBttn("switch_sides", 
+                                            "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
+                          column(4)),
+                 team_scoreboard_ui(), 
+                 
+                 div(id = "bottom_buttons",
+                     fluidRow(width = 4, offset = 4, align = "center",
+                              # Recent Scores
+                              dropdown(
+                                class = "recent_scores",
+                                inputId = "recent_scores_",
+                                gt_output("recent_scores"),
+                                style = "unite",
+                                size = "lg", 
+                                up = T,
+                                label = "Recent Scores",
+                                icon = icon("backward"),
+                                animate = animateOptions(
+                                  enter = animations$fading_entrances$fadeInUp,
+                                  exit = animations$fading_exits$fadeOutDown
+                                )
+                              )),
+                     fluidRow(
+                       column(width = 4, offset = 4, align = "center",
+                              actionBttn("new_game", "Restart", style = "unite", color = "warning"),
+                              actionBttn("finish_game", "Finish", style = "unite", color = "warning")
+                       )
+                     )
+                 )
+                 
+               )
+      ),
+      
+      tabItem(tabName = "career_stats",
+              fluidRow(
+                box(width = 6, height = "61vh", 
+                    style = str_c("background:", snappa_pal[1]), align = "center",
+                                 gt_output("career_stats_table")
+                ),
+                box(width = 6, height = "61vh", 
+                    style = str_c("background:", snappa_pal[1]), align = "center",
+                                 plotOutput("scoring_heatmap", height = "55vh",
+                                            hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
+                                 uiOutput("heatmap_info")
+                )
+              )),
+      tabItem(tabName = "idksubmenu")
+    ),
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
+    )
+  ),
   useShinyjs(),
   
 
 # Start Screen ------------------------------------------------------------
 
         
-        tabPanel("Player Input", icon = icon("users"),
-                 # Fluid Row - 3 columns
-                 fluidRow(
-                   team_input_ui("A", pull(players_tbl, player_name)),
-                   
-                   # Column 2 - empty
-                   column(4,  align = "center",
-                          disabled(actionBttn("start_game", 
-                                              label = "Throw some dice?", style = "pill", color = "primary")),
-                          uiOutput("validate_start"),
-                          
-                          helpText("Note: All players must enter their name before the game can begin"),
 
-                          awesomeRadio(inputId = "play_to", 
-                                       label = "What score are you playing to?", 
-                                       choices = list("21" = 1, "32" = 2), 
-                                       selected = 1, inline = T)),
-                          
-                   
-                   # Column 3 - Team B
-                   team_input_ui("B", pull(players_tbl, player_name))
-                   ),
-                 
-                 
-
-                 # Try to make Icons work
-                 
-                # fluidRow(
-                #   column(3, 
-                #          actionButton("one_point", label = "Off the Table", 
-                #                       style = 
-                #                         'img {
-                #                         border: 1px solid #ddd;
-                #                         border-radius: 50%;
-                #                         
-                #                         width: 50%;
-                #                         height: 100px;
-                #                         margin-left: 0px;
-                #                         margin-right: 0px;
-                #                         
-                #                       }'
-                #          ))
-                # )
-        ),
-                
         
 
 # Stats Pane --------------------------------------------------------------
 
-  tabPanel("Career Stats", icon = icon("bar-chart"),
-           fluidRow(
-             column(6,
-                    
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
-                      gt_output("career_stats_table")
-                    )
-                    ),
-             column(6,
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
-                      plotOutput("scoring_heatmap", height = "500px",
-                                 hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
-                      uiOutput("heatmap_info")
-                    )
-             )
-           )
-  )
 
 
 
