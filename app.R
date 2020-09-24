@@ -22,7 +22,7 @@ library(gt)
 library(extrafont)
 
 
-source("test_dbconnect.R")
+source("dbconnect.R")
 source("ui_functions.R")
 
 # Prior to app startup ----------------------------------------------------
@@ -1420,7 +1420,7 @@ observeEvent(input$resume_no, {
     }
     # A fix to issue 45 where games would be prompted to end even though
     # a team has technically left rebuttal (meaning tag needs to be false)
-    browser()
+    
     if (vals$rebuttal_tag == T & vals$rebuttal == F){
       vals$rebuttal_tag = F
       team_in_rebuttal = str_sub(round_num(), start = -1)
@@ -1586,7 +1586,7 @@ observeEvent(input$resume_no, {
     } else {
       
     }
-    browser()
+    
     if (vals$rebuttal_tag == T & vals$rebuttal == F){
       vals$rebuttal_tag = F
       team_in_rebuttal = str_sub(round_num(), start = -1)
