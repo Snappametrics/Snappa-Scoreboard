@@ -311,23 +311,23 @@ ui <- dashboardPagePlus(
     left_menu = tagList(
       dropdownBlock(
         id = "mydropdown",
-        title = "Dropdown 1",
+        title = "Winning Score",
         icon = icon("sliders"),
         sliderInput(
-          inputId = "n",
+          inputId = "score_to",
           label = "Could be good?",
-          min = 10, max = 100, value = 30
+          min = 21, max = 50, value = 21
         )
-    ),
-    dropdownBlock(
-      id = "mydropdown2",
-      title = "Dropdown 2",
-      icon = icon("sliders"),
-      prettySwitch(
-        inputId = "switch4",
-        label = "Fill switch with status:",
-        fill = TRUE,
-        status = "primary"
+      ),
+      dropdownBlock(
+        id = "mydropdown2",
+        title = "Dropdown 2",
+        icon = icon("sliders"),
+        prettySwitch(
+          inputId = "switch4",
+          label = "Fill switch with status:",
+          fill = TRUE,
+          status = "primary"
       ),
       prettyCheckboxGroup(
         inputId = "checkgroup2",
