@@ -311,11 +311,11 @@ ui <- dashboardPagePlus(
     left_menu = tagList(
       dropdownBlock(
         id = "mydropdown",
-        title = "Winning Score",
+        title = "Game Point",
         icon = icon("sliders"),
         sliderInput(
           inputId = "score_to",
-          label = "Could be good?",
+          label = "What score are you playing to?",
           min = 21, max = 50, value = 21
         )
       ),
@@ -383,12 +383,12 @@ ui <- dashboardPagePlus(
                        uiOutput("validate_start"),
                        
                        helpText("Note: All players must enter their name before the game can begin"),
-                       
-                       awesomeRadio(inputId = "play_to", 
-                                    label = "What score are you playing to?", 
-                                    choices = list("21" = 1, "32" = 2), 
-                                    selected = 1, inline = T)),
-                
+                       # 
+                       # awesomeRadio(inputId = "play_to", 
+                       #              label = "What score are you playing to?", 
+                       #              choices = list("21" = 1, "32" = 2), 
+                       #              selected = 1, inline = T)),
+                       # 
                 
                 # Column 3 - Team B
                 team_input_ui("B", pull(players_tbl, player_name))
