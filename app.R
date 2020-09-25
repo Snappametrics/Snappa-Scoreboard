@@ -446,7 +446,7 @@ ui <- dashboardPagePlus(
                                  uiOutput("heatmap_info")
                 )
               )),
-      tabItem(tabName = "edit_teams")
+      tabItem(tabName = "edit_teams"),
       tabItem(tabName = "idksubmenu")
     
     ),
@@ -522,6 +522,9 @@ server <- function(input, output, session) {
         menuItem("Career Stats", 
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
+        menuItem("Edit Teams", 
+                 tabName = "edit_teams",
+                 icon = icon("edit")),
         menuItem(text = "More stuff than we can add", tabName = "idksubmenu",
                  menuSubItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
                              newtab = T, 
