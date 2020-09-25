@@ -328,14 +328,14 @@ ui <- dashboardPagePlus(
           label = "Fill switch with status:",
           fill = TRUE,
           status = "primary"
-      ),
-      prettyCheckboxGroup(
-        inputId = "checkgroup2",
-        label = "Click me!",
-        thick = TRUE,
-        choices = c("Click me !", "Me !", "Or me !"),
-        animation = "pulse",
-        status = "info"
+        ),
+        prettyCheckboxGroup(
+          inputId = "checkgroup2",
+          label = "Click me!",
+          thick = TRUE,
+          choices = c("Click me !", "Me !", "Or me !"),
+          animation = "pulse",
+          status = "info"
       )
     )
     ),
@@ -446,7 +446,9 @@ ui <- dashboardPagePlus(
                                  uiOutput("heatmap_info")
                 )
               )),
+      tabItem(tabName = "edit_teams")
       tabItem(tabName = "idksubmenu")
+    
     ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
