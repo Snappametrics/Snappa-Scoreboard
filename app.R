@@ -387,8 +387,9 @@ ui <- dashboardPagePlus(
                        # awesomeRadio(inputId = "play_to", 
                        #              label = "What score are you playing to?", 
                        #              choices = list("21" = 1, "32" = 2), 
-                       #              selected = 1, inline = T)),
-                       # 
+                       #              selected = 1, inline = T)
+                       ),
+                       
                 
                 # Column 3 - Team B
                 team_input_ui("B", pull(players_tbl, player_name))
@@ -612,7 +613,10 @@ server <- function(input, output, session) {
 
 # Player Inputs, Snappaneers, Other Reactives --------------------------------------
 
-  
+  # A reactive for the current score that we're playing to
+  score_to = reactive({
+    input$score_to
+  })
   
   # Increment round number
   round_num = reactive({
@@ -1164,10 +1168,6 @@ observe({
     }
     
     
-
-    # Record the score we're playing to
-    vals$score_to = case_when(input$play_to == 1 ~ 21,
-                              input$play_to == 2 ~ 32)
     
     
     
@@ -1178,7 +1178,7 @@ observe({
 # Halftime ----------------------------------------------------------------
 
   
-  observeEvent(req(sum(vals$scores_db$points_scored) >= vals$score_to), {
+  observeEvent(req(sum(vals$scores_db$points_scored) >= score_to()), {
     sendSweetAlert(session, 
                    title = "Halftime", 
                    type = "info",
@@ -1301,7 +1301,7 @@ observeEvent(input$resume_no, {
     }
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
-                                   round = round_num(), points_to_win = vals$score_to)
+                                   round = round_num(), points_to_win = score_to())
     
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
@@ -1451,6 +1451,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
@@ -1528,7 +1529,7 @@ observeEvent(input$resume_no, {
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
                                    vals$current_scores$team_B,
-                                   round_num(), vals$score_to)
+                                   round_num(), score_to())
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
@@ -1682,7 +1683,7 @@ observeEvent(input$resume_no, {
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
                                    vals$current_scores$team_B,
-                                   round_num(), vals$score_to)
+                                   round_num(), score_to())
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
@@ -1788,8 +1789,8 @@ observeEvent(input$resume_no, {
 
     # CODE TO USE IN RESUME GAME VALIDATION
     #
-    # validate(need(any(vals$current_scores$team_a >= vals$score_to,
-    #                   vals$current_scores$team_b >= vals$score_to),
+    # validate(need(any(vals$current_scores$team_a >= score_to(),
+    #                   vals$current_scores$team_b >= score_to()),
     #               message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
     #               label = "check_game_over"))
 
@@ -1799,7 +1800,7 @@ observeEvent(input$resume_no, {
     # Checking vals$rebuttal here is redundant if we have already clicked next round, but this is necessary in games where
     # players clicked "finish game" since rebuttal is checked on the next round button
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
-                                   round = round_num(), points_to_win = vals$score_to)
+                                   round = round_num(), points_to_win = score_to())
     
     
 
