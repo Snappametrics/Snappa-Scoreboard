@@ -502,7 +502,7 @@ server <- function(input, output, session) {
   output$sidebar_menu <- renderUI({
     
     
-    if(input$start_game) {
+    if(isTRUE(input$start_game)) {
       sidebarMenu(
         menuItem("Scoreboard", 
                  tabName = "scoreboard", 
@@ -510,6 +510,9 @@ server <- function(input, output, session) {
         menuItem("Career Stats", 
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
+        menuItem("Edit Teams", 
+                 tabName = "edit_teams",
+                 icon = icon("edit")),
         menuItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
                  text = "More stuff than we can add", newtab = T)
       )
@@ -522,9 +525,6 @@ server <- function(input, output, session) {
         menuItem("Career Stats", 
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
-        menuItem("Edit Teams", 
-                 tabName = "edit_teams",
-                 icon = icon("edit")),
         menuItem(text = "More stuff than we can add", tabName = "idksubmenu",
                  menuSubItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
                              newtab = T, 
@@ -1063,7 +1063,7 @@ observe({
     #                           )
     # insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
     # hideTab("navbar", "Player Input")
-    
+    browser()
   
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
