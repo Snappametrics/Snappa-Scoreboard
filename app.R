@@ -502,7 +502,7 @@ server <- function(input, output, session) {
   output$sidebar_menu <- renderUI({
     
     
-    if(isTRUE(input$start_game)) {
+    if(input$start_game) {
       sidebarMenu(
         menuItem("Scoreboard", 
                  tabName = "scoreboard", 
@@ -1063,8 +1063,7 @@ observe({
     #                           )
     # insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
     # hideTab("navbar", "Player Input")
-    browser()
-  
+    
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
@@ -1456,7 +1455,6 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
-    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
