@@ -103,6 +103,33 @@ team_input_ui = function(team, player_choices){
   )
 }
 
+
+team_edit_ui = function(team, player_choices){
+  players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
+  player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
+  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+  
+  
+  column(4, align = "center",
+         
+         wellPanel(
+           style = paste("opacity: 0.92; background:", team_colour),
+           # Header
+           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
+           # Player 1
+           selectizeInput(paste0('edit_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  selected = options = list(create = TRUE)),
+           # Player 2
+           selectizeInput(paste0('edit_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), options = list(create = TRUE)),
+           # Add Player 3 button
+           actionBttn(paste0("add_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
+           
+           # CSS: Increase font size, change color to white, add top and bottom margins
+           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}",
+                                               player_inputs, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+         )
+  )
+}
+
 team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   
   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
