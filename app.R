@@ -446,7 +446,15 @@ ui <- dashboardPagePlus(
                                  uiOutput("heatmap_info")
                 )
               )),
-      tabItem(tabName = "edit_teams"),
+      tabItem(tabName = "edit_teams",
+              fluidRow(
+                team_edit_ui("A", pull(players_tbl, player_name)),
+                
+                # Column 2 - empty
+                column(4,  align = "center"),
+                team_edit_ui("B", pull(players_tbl, player_name))
+              )
+      ),
       tabItem(tabName = "idksubmenu")
     
     ),
@@ -1455,6 +1463,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
