@@ -630,7 +630,13 @@ leaderboard_table = function(players, player_stats, game_stats){
     ) %>% 
     ungroup() %>% 
     # Remove any NAs
-    filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
+    filter_at(vars(-player_name), any_vars(!is.na(.))) 
+  
+# Before ranking players according to total score, first sort them by games played
+# (this prevents players from ending up on the wrong side of the dividing line due
+#  to having less points than some who should be below)
+  tab_df = rbind(tab_df %>% filter(games_played >= 5),
+                 tab_df %>% filter(games_played < 5)) %>% 
     mutate(rank = rank(-total_points)) %>% 
     arrange(rank) %>% 
     select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency)
@@ -691,7 +697,7 @@ leaderboard_table = function(players, player_stats, game_stats){
       locations = cells_title(groups = "title")
     ) %>%
     tab_style(
-      style = cell_text(v_align = "bottom", weight = 700, align = "left"),
+      style = cell_text(v_align = "bottom", weight = "bold", align = "left"),
       locations = cells_column_labels(everything())
     ) %>% 
     # Rank column
