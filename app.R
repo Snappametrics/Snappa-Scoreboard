@@ -448,11 +448,11 @@ ui <- dashboardPagePlus(
               )),
       tabItem(tabName = "edit_teams",
               fluidRow(
-                team_edit_ui("A", pull(players_tbl, player_name)),
+                team_edit_ui("A"),
                 
                 # Column 2 - empty
                 column(4,  align = "center"),
-                team_edit_ui("B", pull(players_tbl, player_name))
+                team_edit_ui("B")
               )
       ),
       tabItem(tabName = "idksubmenu")
@@ -670,8 +670,6 @@ server <- function(input, output, session) {
     length(active_player_inputs()[active_player_inputs() != ""])
   })
   
-
-  
   
   
   
@@ -856,9 +854,15 @@ server <- function(input, output, session) {
   })
   
   
-  
-  
-  
+# # Generates outputs for the edit teams page
+output$add_edit_team_A <- renderUI({
+  add_edit_ui("A", pull(players_tbl, player_name), active_player_inputs())
+})
+
+output$add_edit_team_B <- renderUI({
+    add_edit_ui("B", pull(players_tbl, player_name), active_player_inputs())
+})
+    
 
 # Events ------------------------------------------------------------------
 
@@ -1181,8 +1185,6 @@ observe({
     
     
     
-    
-    
 
   })
   
@@ -1446,12 +1448,7 @@ observeEvent(input$resume_no, {
     vals$want_B4 = F
 
   })  
-    
-
   
-  
-  
-    
   
 
 # Scoring -----------------------------------------------------------------
