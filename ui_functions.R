@@ -637,7 +637,7 @@ leaderboard_table = function(players, player_stats, game_stats){
 #  to having less points than some who should be below)
   tab_df = rbind(tab_df %>% filter(games_played >= 5) %>% arrange(-total_points),
                  tab_df %>% filter(games_played < 5) %>% arrange(-total_points)) %>% 
-    mutate(rank = n()) %>% 
+    mutate(rank = 1:n()) %>% 
     arrange(rank) %>% 
     select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency)
   
@@ -712,12 +712,12 @@ leaderboard_table = function(players, player_stats, game_stats){
     # Left Align Player and Rank
     # Column widths
     cols_width(
-      vars(rank) ~ pct(8),
-      vars(player_name) ~ pct(24),
-      vars(total_points, games_played, total_shots) ~ pct(19),
-      vars(win_pct) ~ pct(14),
-      vars(toss_efficiency, points_per_game) ~ pct(28)
-    ) %>% 
+      vars(rank) ~ 8,
+      vars(player_name) ~ 200,
+      vars(total_points, games_played, total_shots) ~ 40,
+      vars(win_pct) ~ 100,
+      vars(toss_efficiency, points_per_game) ~ 100
+    ) %>%
     # Underline dope shit
     tab_style(
       style = list(cell_text(weight = "bold", color = snappa_pal[2])),
