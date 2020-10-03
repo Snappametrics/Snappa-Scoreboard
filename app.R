@@ -856,17 +856,18 @@ server <- function(input, output, session) {
   
 # # Generates outputs for the edit teams page
 output$add_edit_team_A <- renderUI({
-  add_edit_ui("A", pull(players_tbl, player_name), active_player_inputs())
+  tagList(add_edit_ui("A", pull(players_tbl, player_name), active_player_inputs()))
 })
 
 output$add_edit_team_B <- renderUI({
-    add_edit_ui("B", pull(players_tbl, player_name), active_player_inputs())
+   tagList( add_edit_ui("B", pull(players_tbl, player_name), active_player_inputs()))
 })
     
 
 # Events ------------------------------------------------------------------
 
   
+
 
 # Check Existing Game -----------------------------------------------------
 
