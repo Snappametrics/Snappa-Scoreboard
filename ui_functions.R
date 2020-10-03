@@ -105,8 +105,8 @@ team_input_ui = function(team, player_choices){
 
 
 team_edit_ui = function(team){
-  players = str_c("#edit_", team, 1:4, "-selectized", collapse = ", ")
-  player_inputs = str_c("#edit_", team, 1:4, collapse = ", ")
+  players = str_c("#add_edit_", team, 1:4, "-selectized", collapse = ", ")
+  player_inputs = str_c("#add_edit_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
   # Because the ui elements here need to be dynamically generated, I generate them
@@ -131,19 +131,27 @@ team_edit_ui = function(team){
 # This function is called inside the renderUI for each team's add/edit page.
 
 add_edit_ui = function(team, player_choices, active_players){
-  
   current_players = active_players[str_detect(names(active_players), team)]
+  add_player_number = length(current_players) + 1
   
   team_list = imap(current_players, ~{
     tagList(
-      selectizeInput(paste0('edit_', team, .y), paste0('Player ', .y), c(`Player Name`='', player_choices), 
+      selectizeInput(paste0('add_edit_', team, str_sub(.y, -1)), paste0('Player ', str_sub(.y, -1)), c(`Player Name`='', player_choices), 
                      selected = .x, options = list(create = TRUE)
       ),
       br()
       
     )
   })
+  if (add_player_number < 5) {
+    team_list[[add_player_number]] = tagList(
+      actionBttn(paste0("add_player_", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger") 
+    )
+  } else {
+    invisible
+  }
   
+  return(team_list)
 }
 
 
