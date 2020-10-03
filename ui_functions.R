@@ -295,7 +295,8 @@ recent_scores_tab = function(scores_data){
     # Format the sentence with markdown
     fmt_markdown(vars(sentence)) %>% 
     tab_theme_snappa() %>% 
-    tab_options(column_labels.hidden = T)
+    tab_options(column_labels.hidden = T,
+                heading.align = 'center')
 }
 
 #For the restart game screen, I'm going to make a UI to handle most of the modalDialog
@@ -630,8 +631,14 @@ leaderboard_table = function(players, player_stats, game_stats){
     ) %>% 
     ungroup() %>% 
     # Remove any NAs
-    filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
-    mutate(rank = rank(-total_points)) %>% 
+    filter_at(vars(-player_name), any_vars(!is.na(.))) 
+  
+# Before ranking players according to total score, first sort them by games played
+# (this prevents players from ending up on the wrong side of the dividing line due
+#  to having less points than some who should be below)
+  tab_df = rbind(tab_df %>% filter(games_played >= 5) %>% arrange(-total_points),
+                 tab_df %>% filter(games_played < 5) %>% arrange(-total_points)) %>% 
+    mutate(rank = 1:n()) %>% 
     arrange(rank) %>% 
     select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency)
   
@@ -691,7 +698,7 @@ leaderboard_table = function(players, player_stats, game_stats){
       locations = cells_title(groups = "title")
     ) %>%
     tab_style(
-      style = cell_text(v_align = "bottom", weight = 700, align = "left"),
+      style = cell_text(v_align = "bottom", weight = "bold", align = "left"),
       locations = cells_column_labels(everything())
     ) %>% 
     # Rank column
@@ -701,17 +708,17 @@ leaderboard_table = function(players, player_stats, game_stats){
         columns = vars(rank)
       )
     ) %>% 
-    cols_align(align = "right") %>% 
+    cols_align(align = "center") %>% 
     cols_align(align = "left", columns = c("player_name", "rank")) %>% 
     # Left Align Player and Rank
     # Column widths
     cols_width(
-      vars(rank) ~ pct(8),
-      vars(player_name) ~ pct(24),
-      vars(total_points, games_played, total_shots) ~ pct(19),
-      vars(win_pct) ~ pct(14),
-      vars(toss_efficiency, points_per_game) ~ pct(28)
-    ) %>% 
+      vars(rank) ~ 8,
+      vars(player_name) ~ 150,
+      vars(total_points, games_played, total_shots) ~ 40,
+      vars(win_pct) ~ 100,
+      vars(toss_efficiency, points_per_game) ~ 100
+    ) %>%
     # Underline dope shit
     tab_style(
       style = list(cell_text(weight = "bold", color = snappa_pal[2])),
