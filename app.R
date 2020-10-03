@@ -1325,6 +1325,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
