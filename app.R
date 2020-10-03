@@ -360,7 +360,6 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
   tabPanel("Career Stats", icon = icon("bar-chart"),
            fluidRow(
              column(6,
-                    
                     wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
                       gt_output("career_stats_table")
                     )
