@@ -360,7 +360,6 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
   tabPanel("Career Stats", icon = icon("bar-chart"),
            fluidRow(
              column(6,
-                    
                     wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
                       gt_output("career_stats_table")
                     )
@@ -1326,6 +1325,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 

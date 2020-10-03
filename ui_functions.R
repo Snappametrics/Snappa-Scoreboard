@@ -295,7 +295,8 @@ recent_scores_tab = function(scores_data){
     # Format the sentence with markdown
     fmt_markdown(vars(sentence)) %>% 
     tab_theme_snappa() %>% 
-    tab_options(column_labels.hidden = T)
+    tab_options(column_labels.hidden = T,
+                heading.align = 'center')
 }
 
 #For the restart game screen, I'm going to make a UI to handle most of the modalDialog
@@ -707,13 +708,13 @@ leaderboard_table = function(players, player_stats, game_stats){
         columns = vars(rank)
       )
     ) %>% 
-    cols_align(align = "right") %>% 
+    cols_align(align = "center") %>% 
     cols_align(align = "left", columns = c("player_name", "rank")) %>% 
     # Left Align Player and Rank
     # Column widths
     cols_width(
       vars(rank) ~ 8,
-      vars(player_name) ~ 200,
+      vars(player_name) ~ 150,
       vars(total_points, games_played, total_shots) ~ 40,
       vars(win_pct) ~ 100,
       vars(toss_efficiency, points_per_game) ~ 100
