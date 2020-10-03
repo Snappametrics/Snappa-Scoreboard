@@ -635,9 +635,9 @@ leaderboard_table = function(players, player_stats, game_stats){
 # Before ranking players according to total score, first sort them by games played
 # (this prevents players from ending up on the wrong side of the dividing line due
 #  to having less points than some who should be below)
-  tab_df = rbind(tab_df %>% filter(games_played >= 5),
-                 tab_df %>% filter(games_played < 5)) %>% 
-    mutate(rank = rank(-total_points)) %>% 
+  tab_df = rbind(tab_df %>% filter(games_played >= 5) %>% arrange(-total_points),
+                 tab_df %>% filter(games_played < 5) %>% arrange(-total_points)) %>% 
+    mutate(rank = n()) %>% 
     arrange(rank) %>% 
     select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency)
   
