@@ -1079,7 +1079,8 @@ player_score_breakdown = function(ps_player_stats, ps_players, ps_game, ps_team)
     # Calculate sink points and "normal" points
     # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
     mutate(sink = threes*3,
-           normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
+           normal_toss = total_points-(paddle_points+clink_points+sink),
+           normal_toss = if_else(normal_toss < 0, 0, normal_toss)) %>% 
     select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
     # Pivot to get point type
     pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
