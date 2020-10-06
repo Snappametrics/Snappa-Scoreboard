@@ -1,5 +1,7 @@
 
-
+rowAny <- function(x) {
+  rowSums(x) > 0
+} 
 
 # UI functions ------------------------------------------------------------
 
@@ -632,17 +634,23 @@ leaderboard_table = function(players, player_stats, game_stats){
     ) %>% 
     ungroup() %>% 
     # Remove any NAs
-    filter_at(vars(-player_name), any_vars(!is.na(.))) 
-  
-# Before ranking players according to total score, first sort them by games played
-# (this prevents players from ending up on the wrong side of the dividing line due
-#  to having less points than some who should be below)
-  tab_df = rbind(tab_df %>% filter(games_played >= 5) %>% arrange(-total_points),
-                 tab_df %>% filter(games_played < 5) %>% arrange(-total_points)) %>% 
+    filter(rowAny(
+      across(
+        .cols = everything(),
+        .fns = ~ !is.na(.x)
+      )
+    ))  %>% 
+    # Before ranking players according to total score, first sort them by games played
+    # (this prevents players from ending up on the wrong side of the dividing line due
+    #  to having less points than some who should be below)
+    mutate(played_5_games = (games_played >= 5)) %>% 
+    arrange(-played_5_games, -total_points) %>% 
     mutate(rank = 1:n()) %>% 
     arrange(rank) %>% 
-    select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency)
-  
+    select(rank, player_name, 
+           games_played, win_pct, 
+           points_per_game, off_ppg:toss_efficiency)
+
   dividing_line = tab_df %>% filter(games_played < 5) %>% pull(rank) %>% min()
   
   stats_eligible = tab_df %>% 
