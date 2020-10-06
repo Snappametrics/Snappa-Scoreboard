@@ -138,7 +138,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
                      # ),
                      
-                     h1("Round", style = "font-size: 8rem;"),
+                     h1("Round", style = "font-size: 4rem;"),
                      uiOutput("round_num"),
                      uiOutput("round_control_buttons"),
                      # column(width=12, align = "center",

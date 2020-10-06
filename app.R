@@ -595,18 +595,7 @@ server <- function(input, output, session) {
       actionButton("ok_B", "OK")
   })
   
-  # output$active_die_a = renderUI({
-  #   icon("dice-d6")
-  #   
-  #   if(str_detect(round_num(), "A")){
-  #     die_col = "#fffff"
-  #   } else {
-  #     die_col = "#e26a6a"
-  #   }
-  #   tags$i(class = "fa fa-dice-d6", 
-  #          style = paste("color:", die_col))
-  # })
-  
+
   # Output the round number
   output$round_num = renderUI({
     team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
@@ -622,6 +611,14 @@ server <- function(input, output, session) {
            actionBttn("previous_round", 
                       label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg")
     )
+  })
+  
+  output$active_die_A = renderUI({
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+  })
+  
+  output$active_die_B = renderUI({
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
   })
   
   # Output Team A's score
@@ -903,10 +900,14 @@ observe({
     scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
                               div(
                                 fluidRow(id = "scoreboardrow", 
-                                         column(4, offset = 4, align = "center", 
+                                         column(4, align = "center", 
+                                                uiOutput("active_die_A")),
+                                         column(4, align = "center", 
                                                 actionBttn("switch_sides", 
                                                            "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
-                                         column(4)),
+                                         column(4, align = "center", 
+                                                uiOutput("active_die_B"))
+                                ),
                                 team_scoreboard_ui(), 
                                 div(id = "bottom_buttons",
                                     # fluidRow(
