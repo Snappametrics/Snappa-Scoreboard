@@ -1126,7 +1126,12 @@ observe({
                    type = "info",
                    text = HTML(str_c("Change places!", 
                                      "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
-    
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
+                                                                points_b = vals$current_scores$team_B)))
+      )
+    )
     
   }, once = T, ignoreNULL = T)
   
