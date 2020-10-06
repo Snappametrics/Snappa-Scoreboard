@@ -714,11 +714,11 @@ leaderboard_table = function(players, player_stats, game_stats){
     # Left Align Player and Rank
     # Column widths
     cols_width(
-      vars(rank) ~ 8,
-      vars(player_name) ~ 150,
-      vars(total_points, games_played, total_shots) ~ 40,
-      vars(win_pct) ~ 100,
-      vars(toss_efficiency, points_per_game) ~ 100
+      vars(rank) ~ pct(8),
+      vars(player_name) ~ pct(24),
+      vars(total_points, games_played, total_shots) ~ pct(19),
+      vars(win_pct) ~ pct(14),
+      vars(toss_efficiency, points_per_game) ~ pct(28)
     ) %>%
     # Underline dope shit
     tab_style(
