@@ -608,8 +608,20 @@ server <- function(input, output, session) {
   # })
   
   # Output the round number
-  output$round_num = renderText({
-    round_num()
+  output$round_num = renderUI({
+    team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+    h3(round_num(), style = str_c("color:", team_colours[[substr(round_num(), 2, 2)]],
+                                  "; font-size:18rem; line-height: 20rem"))
+  })
+  
+  output$round_control_buttons = renderUI({
+    team_colours = list("A" = "danger", "B" = "primary")
+    column(width=12, align = "center",
+           actionBttn("next_round", 
+                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg"),
+           actionBttn("previous_round", 
+                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg")
+    )
   })
   
   # Output Team A's score

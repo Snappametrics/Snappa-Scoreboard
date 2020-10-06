@@ -139,13 +139,14 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      # ),
                      
                      h1("Round", style = "font-size: 8rem;"),
-                     h3(textOutput("round_num")),
-                     column(width=12, align = "center",
-                       actionBttn("next_round", 
-                                  label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg"),
-                       actionBttn("previous_round", 
-                                  label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg")
-                     ),
+                     uiOutput("round_num"),
+                     uiOutput("round_control_buttons"),
+                     # column(width=12, align = "center",
+                     #   actionBttn("next_round", 
+                     #              label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg"),
+                     #   actionBttn("previous_round", 
+                     #              label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg")
+                     # ),
                      # fluidRow(,
                      #          ),
                      br()
