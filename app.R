@@ -614,11 +614,25 @@ server <- function(input, output, session) {
   })
   
   output$active_die_A = renderUI({
-    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+    
+    if(sum(vals$scores_db$points_scored) >= vals$score_to){
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                           if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+    } else {
+      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                             if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+      }
   })
   
   output$active_die_B = renderUI({
-    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+    
+    if(sum(vals$scores_db$points_scored) >= vals$score_to){
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                           if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+      } else {
+        img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                               if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+      }
   })
   
   # Output Team A's score
