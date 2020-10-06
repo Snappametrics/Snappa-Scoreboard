@@ -360,21 +360,18 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
 # Stats Pane --------------------------------------------------------------
 
   tabPanel("Career Stats", icon = icon("bar-chart"),
-           fluidRow(
-             column(6,
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
-                      gt_output("career_stats_table")
-                    )
-                    ),
-             column(6,
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
-                      plotOutput("scoring_heatmap", height = "500px",
-                                 hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
-                      uiOutput("heatmap_info")
-                    )
+           wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
+                              title = "Leaderboard", 
+                              gt_output("career_stats_table")
+             ),
+             wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
+                              title = "Heatmap",
+                       plotOutput("scoring_heatmap", height = "750px",
+                                  hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
+                       uiOutput("heatmap_info")
              )
+
            )
-  )
 
 
 
