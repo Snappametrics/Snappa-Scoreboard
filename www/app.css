@@ -34,13 +34,6 @@
 /* General */
 
 
-.navbar-nav>li>a:hover {
-    outline-width: 2px;
-    outline-style: solid;
-    outline-offset: -2px;
-    z-index: 1;
-    font-weight: 600;
-}
 
 
 #shiny-notification-panel {
