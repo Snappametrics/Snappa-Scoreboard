@@ -666,21 +666,19 @@ leaderboard_table = function(players, player_stats, game_stats){
       player_name = "Player",
       games_played = "Games Played",
       win_pct = "Win %", 
-      total_points = "Total Points",
-      total_shots = "Total Shots",
       points_per_game = "Points per Game\n(PPG)",
-      # off_ppg = "Offensive PPG",
-      # def_ppg = "Defensive PPG",
+      off_ppg = "Offensive PPG",
+      def_ppg = "Defensive PPG",
       toss_efficiency = "Toss Efficiency"
     ) %>% 
     # Format integers
     fmt_number(
-      columns = vars(rank, total_points, total_shots),
+      columns = vars(rank),
       decimals = 0
     ) %>% 
     # Format doubles
     fmt_number(
-      columns = vars(points_per_game),
+      columns = vars(points_per_game, off_ppg, def_ppg),
       decimals = 2
     ) %>% 
     # Format percentages
@@ -724,9 +722,9 @@ leaderboard_table = function(players, player_stats, game_stats){
     cols_width(
       vars(rank) ~ pct(8),
       vars(player_name) ~ pct(24),
-      vars(total_points, games_played, total_shots) ~ pct(19),
+      vars(games_played) ~ pct(19),
       vars(win_pct) ~ pct(14),
-      vars(toss_efficiency, points_per_game) ~ pct(28)
+      vars(toss_efficiency, points_per_game, def_ppg, off_ppg) ~ pct(28)
     ) %>%
     # Underline dope shit
     tab_style(
@@ -744,8 +742,12 @@ leaderboard_table = function(players, player_stats, game_stats){
         ),
         # Most points
         cells_body(
-          columns = vars(total_points),
-          rows = rank == which.max(stats_eligible$total_points)
+          columns = vars(def_ppg),
+          rows = rank == which.max(stats_eligible$def_ppg)
+        ),
+        cells_body(
+          columns = vars(off_ppg),
+          rows = rank == which.max(stats_eligible$off_ppg)
         ),
         # Highest ppg
         cells_body(
