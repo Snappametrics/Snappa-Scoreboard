@@ -72,13 +72,14 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 validate_scores = function(player, shot, snappaneers, paddle, scores_table, round_vector = rounds, rebuttal = F){
   
+  # Identify the scorer's team and ID
   players_team = pull(filter(snappaneers, player_name == player), team) %>% toupper()
   scorer_id = pull(filter(snappaneers, player_name == player), player_id)
   
-  # Typical Offense
+  # Typical Offense: Scoring on one's shot
   typical_offense = str_detect(round_vector[shot], players_team)
   
-  # Typical Paddle
+  # Typical Paddle: Scoring on the other team's shot
   typical_paddle = all(str_detect(round_vector[shot], players_team, negate = T), 
                        paddle == T)
   
@@ -90,10 +91,12 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
   # If teams are even
   if(nrow(distinct(count(snappaneers, team), n)) == 1){
     
-    
+    # A valid score is either a paddle or a typical offense and the scorer has not already scored
+    # OR it's rebuttal
     valid_score = any(paddle,
                       all(typical_offense,
-                          not_already_scored))
+                          not_already_scored),
+                      rebuttal)
     
     if(not_already_scored){
       valid_score_message = "That entry doesn't make sense for this round/shooter combination"
@@ -123,10 +126,11 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
       valid_score_message = "That player scored a non-paddle point already!"
       
     } else { # If they have the larger team:
-      # They cannot have scored already
+      # They cannot have scored already OR it's rebuttal
       valid_score = any(all(typical_offense,
                             not_already_scored),
-                        paddle)
+                        paddle,
+                        rebuttal)
       
       valid_score_message = "That player scored a non-paddle point already!"
       
