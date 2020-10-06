@@ -90,7 +90,8 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
     
     valid_score = any(paddle,
                       all(typical_offense,
-                          not_already_scored))
+                          not_already_scored),
+                      rebuttal)
     
     if(not_already_scored){
       valid_score_message = "That entry doesn't make sense for this round/shooter combination"
@@ -123,7 +124,8 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
       # They cannot have scored already
       valid_score = any(all(typical_offense,
                             not_already_scored),
-                        paddle)
+                        paddle,
+                        rebuttal)
       
       valid_score_message = "That player scored a non-paddle point already!"
       
