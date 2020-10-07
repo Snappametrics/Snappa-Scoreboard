@@ -917,7 +917,12 @@ observe({
                                                 uiOutput("active_die_A")),
                                          column(4, align = "center", 
                                                 actionBttn("switch_sides", 
-                                                           "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
+                                                           "Switch Sides", style = "unite", color = "primary", 
+                                                           icon = icon("refresh"), size = "sm"),
+                                                actionBttn("check_game", 
+                                                           "Check your score breakdown", style = "unite", color = "primary", 
+                                                           icon = icon("refresh"), size = "sm")
+                                                ),
                                          column(4, align = "center", 
                                                 uiOutput("active_die_B"))
                                 ),
@@ -1232,6 +1237,22 @@ observeEvent(input$resume_no, {
       
     })
   
+  
+# Check to see the current game's progress. A second use for glance_ui!
+observeEvent(input$check_game, {
+  showModal(
+    modalDialog(
+                renderUI({glance_ui_game(vals$game_id)}),
+                footer = tagList(
+                  actionBttn("close_check_game", "Close", style = "bordered", color = "warning")
+                ),
+                easyClose = T,
+                size = 'l'
+    )
+  )
+  
+  
+})
 
 # New Players -------------------------------------------------------------
 
