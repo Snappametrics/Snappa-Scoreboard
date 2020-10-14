@@ -285,7 +285,7 @@ add_player_input = function(current_tab, inputs, team, player, player_choices, s
   insertUI(
     selector = inputs,
     where = "afterEnd",
-    ui = extra_player_ui(paste0(team, player), player_choices)
+    ui = extra_player_ui(current_tab, paste0(team, player), player_choices)
   )
   
   # Remove add player button       
@@ -297,7 +297,7 @@ add_player_input = function(current_tab, inputs, team, player, player_choices, s
 
 
 
-remove_p3_input = function(team, current_tab, session){
+remove_p3_input = function(current_tab, team, session){
   
   if (current_tab == "start"){
     add_p3_button = paste0("#add_remove_", team, "3")
@@ -333,7 +333,7 @@ remove_p3_input = function(team, current_tab, session){
 
 
 
-remove_p4_input = function(team, type, session){
+remove_p4_input = function(team, session){
   
   add_p4_button = paste0("#add_remove_", team, "4")
   # Insert add player button
