@@ -1350,8 +1350,8 @@ observeEvent(input$resume_no, {
     vals$want_A3 = T
     
     # Get add player button inputs
-    vals <- paste0("#",getInputs("extra_player_A3"))
-    add_player_input(vals, "A", 3, current_choices(), session)
+    val <- paste0("#",getInputs("extra_player_A3"))
+    add_player_input(val, "A", 3, current_choices(), session)
     
   })
   
