@@ -668,7 +668,7 @@ server <- function(input, output, session) {
   
   game_summary = function(df) {
     
-    modalDialog(title = str_c("Final Score: ", df$points_a, " - ", df$points_b),  style = str_c("background-color: ", snappa_pal[1], ";"),
+    modalDialog(title = str_c("Score: ", df$points_a, " - ", df$points_b),  style = str_c("background-color: ", snappa_pal[1], ";"),
       
       # h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
       # ,
@@ -691,7 +691,6 @@ server <- function(input, output, session) {
   }
   
   output$summary_plot = renderPlot({
-    input$finish_game_sure
     game_summary_plot(player_stats = vals$player_stats_db,
                       players = vals$players_db, 
                       scores = vals$scores_db,
@@ -705,12 +704,10 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    input$finish_game_sure
     team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "A")
   })  
   
   output$team_b_summary = render_gt({
-    input$finish_game_sure
     team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "B")
   })  
   
@@ -1129,7 +1126,12 @@ observe({
                    type = "info",
                    text = HTML(str_c("Change places!", 
                                      "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
-    
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
+                                                                points_b = vals$current_scores$team_B)))
+      )
+    )
     
   }, once = T, ignoreNULL = T)
   

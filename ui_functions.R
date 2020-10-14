@@ -623,17 +623,21 @@ team_summary_tab = function(current_player_stats, player_stats, players, team){
     mutate(winners = (team_score == max(team_score))) %>% 
     # Merge in player info
     inner_join(player_info) %>% 
-    select(team, winners, player_id, player_name, total_points, paddle_points, clink_points, threes, points_per_round:toss_efficiency)
+    select(team, winners, player_id, player_name, 
+           total_points, paddle_points, clink_points, threes, 
+           points_per_round:toss_efficiency)
   
   historical_stats = player_stats %>% 
     select(-team) %>% 
     # Join in player name
-    inner_join(select(player_summary, player_id, team)) %>%
+    inner_join(select(player_summary, player_id, team)) %>% 
+    select(game_id, player_id, 
+           shots, total_points, paddle_points, clink_points, sinks = threes, 
+           points_per_round:toss_efficiency) %>%
     arrange(player_id, game_id) %>% 
     group_by(player_id) %>% 
     mutate(game_num = 1:n()) %>% 
     ungroup() %>% 
-    select(game_id, player_id, shots, total_points, paddle_points, clink_points, sinks = threes, points_per_round:toss_efficiency) %>% 
     group_by(player_id) %>% 
     summarise(
       across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
@@ -1075,7 +1079,8 @@ player_score_breakdown = function(ps_player_stats, ps_players, ps_game, ps_team)
     # Calculate sink points and "normal" points
     # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
     mutate(sink = threes*3,
-           normal_toss = total_points-(paddle_points+clink_points+sink)) %>% 
+           normal_toss = total_points-(paddle_points+clink_points+sink),
+           normal_toss = if_else(normal_toss < 0, 0, normal_toss)) %>% 
     select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
     # Pivot to get point type
     pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
