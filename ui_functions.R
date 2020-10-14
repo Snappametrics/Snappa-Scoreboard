@@ -105,8 +105,6 @@ team_input_ui = function(team, player_choices){
 
 
 team_edit_ui = function(team){
-  players = str_c("#add_edit_", team, 1:4, "-selectized", collapse = ", ")
-  player_inputs = str_c("#add_edit_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
   # Because the ui elements here need to be dynamically generated, I generate them
@@ -119,9 +117,7 @@ team_edit_ui = function(team){
                   h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
                   uiOutput(
                     outputId = paste0("add_edit_team_", team)
-                  ),
-                  tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}",
-                                                      player_inputs, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+                  )
                   
                 )
         )
@@ -131,11 +127,16 @@ team_edit_ui = function(team){
 # This function is called inside the renderUI for each team's add/edit page.
 
 add_edit_ui = function(team, player_choices, active_players){
+  # For styling
+  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+  
   current_players = active_players[str_detect(names(active_players), team)]
   add_player_number = length(current_players) + 1
   
   team_list = imap(current_players, ~{
     tagList(
+      tags$style(type = "text/css", str_c("#add_edit_", team, str_sub(.y, -1), "-selectized ", "{color: white; margin-top:30px;margin-bottom:30px;} ",
+                                          "#add_edit_", team, str_sub(.y, -1), "{color: white; margin-top:30px;margin-bottom:30px;}")),
       selectizeInput(paste0('add_edit_', team, str_sub(.y, -1)), paste0('Player ', str_sub(.y, -1)), c(`Player Name`='', player_choices), 
                      selected = .x, options = list(create = TRUE)
       ),
@@ -145,10 +146,10 @@ add_edit_ui = function(team, player_choices, active_players){
   })
   if (add_player_number < 5) {
     team_list[[add_player_number]] = tagList(
-      actionBttn(paste0("add_player_", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger") 
+      actionBttn(paste0("add_player_", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger")
     )
   } else {
-    invisible
+    invisible()
   }
   
   return(team_list)
@@ -230,31 +231,43 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
 }
 
 # Function for producing extra player UI inputs
-extra_player_ui = function(player, player_choices){
+extra_player_ui = function(current_tab, player, player_choices){
   
   # Get the player's team
   player_team = str_extract(player, "[A-z]")
   
   # Get the player number
   player_num = as.numeric(str_extract(player, "[0-9]"))
-  div_id = paste0("add_remove_", player)
   
+  # Name the upcoming div based on which screen you're on
+  
+  if (current_tab == "start") {
+    div_id = paste0("add_remove_", player)
+    input_type = paste0("name_", player)
+    remove_type = paste0("remove_", player)
+    extra_type = paste0("extra_player_", player_team, player_num + 1)
+  } else {
+    div_id = paste0("edit_new_", player)
+    input_type = paste0("edit_name_", player)
+    remove_type = paste0("edit_remove_", player)
+    extra_type = paste0("edit_add_", player_team, player_num + 1)
+  }
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
                # Add extra player text input 
-               selectizeInput(inputId = paste0("name_", player), 
+               selectizeInput(inputId = input_type, 
                               label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
              # Add remove player button outside fluid row
              actionBttn(
-               inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
+               inputId = remove_type,  label = "X", style = "jelly", color = "danger", size = "sm"),
              
              # CSS
-             tags$style(paste0("#add_remove_", player, " {margin-left:auto; margin-right:auto; position: relative;}")),
+             tags$style(paste0(div_id, " {margin-left:auto; margin-right:auto; position: relative;}")),
 
            # If the extra player is not the fourth on a team yet, add another add player button
            if(player_num < 4){
-             actionBttn(paste0("extra_player_", player_team, player_num+1), 
+             actionBttn(extra_type, 
                         label = "+ Add Player", style = "unite", color = "danger")
            } else{
              invisible()
@@ -263,7 +276,7 @@ extra_player_ui = function(player, player_choices){
   )
 }
 
-add_player_input = function(inputs, team, player, player_choices, session){
+add_player_input = function(current_tab, inputs, team, player, player_choices, session){
   
   
   # Insert extra player UI
@@ -282,24 +295,43 @@ add_player_input = function(inputs, team, player, player_choices, session){
 
 
 
-remove_p3_input = function(team, session){
-  add_p3_button = paste0("#add_remove_", team, "3")
+remove_p3_input = function(team, current_tab, session){
   
-  insertUI(selector = add_p3_button,
-           where = "afterEnd",
-           ui = actionBttn(paste0("extra_player_", team,"3"), label = "+ Add Player", style = "unite", color = "danger")
-  )
+  if (current_tab == "start"){
+    add_p3_button = paste0("#add_remove_", team, "3")
+    
+    insertUI(selector = add_p3_button,
+             where = "afterEnd",
+             ui = actionBttn(paste0("extra_player_", team,"3"), label = "+ Add Player", style = "unite", color = "danger")
+    )
+    
+    
+    removeUI(selector = add_p3_button)
+    
+    updateSelectizeInput(session, paste0("name_", team, "3"), selected = character(0))
+    updateSelectizeInput(session, paste0("name_", team, "4"), selected = character(0))
+  
+  } else if (current_tab == "edit") {
+    add_p3_button = paste0("#edit_remove_", team, "3")
+    
+    insertUI(selector = add_p3_button,
+             where = "afterEnd",
+             ui = actionBttn(paste0("add_player_", team,"3"), label = "+ Add Player", style = "unite", color = "danger")
+    )
+    
+    
+    removeUI(selector = add_p3_button)
+    
+    updateSelectizeInput(session, paste0("add_edit_", team, "3"), selected = character(0))
+    updateSelectizeInput(session, paste0("add_edit_", team, "4"), selected = character(0))
+  }
   
   
-  removeUI(selector = add_p3_button)
-  
-  updateSelectizeInput(session, paste0("name_", team, "3"), selected = character(0))
-  updateSelectizeInput(session, paste0("name_", team, "4"), selected = character(0))
 }
 
 
 
-remove_p4_input = function(team, session){
+remove_p4_input = function(team, type, session){
   
   add_p4_button = paste0("#add_remove_", team, "4")
   # Insert add player button
