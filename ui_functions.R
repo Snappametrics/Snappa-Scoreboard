@@ -104,7 +104,7 @@ team_input_ui = function(team, player_choices){
 }
 
 
-team_edit_ui = function(team){
+team_edit_column = function(team){
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
   # Because the ui elements here need to be dynamically generated, I generate them
@@ -123,10 +123,12 @@ team_edit_ui = function(team){
         )
 }
 
+
+
 # This function creates the panels that are used in the add/edit process (the function above).
 # This function is called inside the renderUI for each team's add/edit page.
 
-add_edit_ui = function(team, player_choices, active_players){
+team_edit_ui = function(team, player_choices, active_players){
   # For styling
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
@@ -135,9 +137,9 @@ add_edit_ui = function(team, player_choices, active_players){
   
   team_list = imap(current_players, ~{
     tagList(
-      tags$style(type = "text/css", str_c("#add_edit_", team, str_sub(.y, -1), "-selectized ", "{color: white; margin-top:30px;margin-bottom:30px;} ",
-                                          "#add_edit_", team, str_sub(.y, -1), "{color: white; margin-top:30px;margin-bottom:30px;}")),
-      selectizeInput(paste0('add_edit_', team, str_sub(.y, -1)), paste0('Player ', str_sub(.y, -1)), c(`Player Name`='', player_choices), 
+      tags$style(type = "text/css", str_c("#edit_name_", team, str_sub(.y, -1), "-selectized ", "{color: white; margin-top:30px;margin-bottom:30px;} ",
+                                          "#edit_name_", team, str_sub(.y, -1), "{color: white; margin-top:30px;margin-bottom:30px;}")),
+      selectizeInput(paste0('edit_name_', team, str_sub(.y, -1)), paste0('Player ', str_sub(.y, -1)), c(`Player Name`='', player_choices), 
                      selected = .x, options = list(create = TRUE)
       ),
       br()
@@ -146,7 +148,7 @@ add_edit_ui = function(team, player_choices, active_players){
   })
   if (add_player_number < 5) {
     team_list[[add_player_number]] = tagList(
-      actionBttn(paste0("add_player_", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger")
+      actionBttn(paste0("edit_add", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger")
     )
   } else {
     invisible()
