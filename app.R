@@ -448,11 +448,11 @@ ui <- dashboardPagePlus(
               )),
       tabItem(tabName = "edit_teams",
               fluidRow(
-                team_edit_ui("A"),
+                team_edit_column("A"),
                 
                 # Column 2 - empty
                 column(4,  align = "center"),
-                team_edit_ui("B")
+                team_edit_column("B")
               )
       ),
       tabItem(tabName = "idksubmenu")
@@ -855,12 +855,12 @@ server <- function(input, output, session) {
   
   
 # # Generates outputs for the edit teams page
-output$add_edit_team_A <- renderUI({
-  tagList(add_edit_ui("A", pull(players_tbl, player_name), active_player_inputs()))
+output$edit_team_A <- renderUI({
+  tagList(team_edit_ui("A", pull(players_tbl, player_name), active_player_inputs()))
 })
 
-output$add_edit_team_B <- renderUI({
-   tagList( add_edit_ui("B", pull(players_tbl, player_name), active_player_inputs()))
+output$edit_team_B <- renderUI({
+   tagList(team_edit_ui("B", pull(players_tbl, player_name), active_player_inputs()))
 })
     
 
