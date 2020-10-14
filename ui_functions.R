@@ -116,7 +116,7 @@ team_edit_column = function(team){
                   # Header
                   h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
                   uiOutput(
-                    outputId = paste0("add_edit_team_", team)
+                    outputId = paste0("edit_team_", team)
                   )
                   
                 )
