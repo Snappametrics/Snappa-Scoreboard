@@ -1351,7 +1351,7 @@ observeEvent(input$resume_no, {
     
     # Get add player button inputs
     val <- paste0("#",getInputs("extra_player_A3"))
-    add_player_input(val, "A", 3, current_choices(), session)
+    add_player_input("start", val, "A", 3, current_choices(), session)
     
   })
   
@@ -1359,7 +1359,7 @@ observeEvent(input$resume_no, {
   #   - Insert add new player action button
   #   - Remove A3 player name input
   observeEvent(input$remove_A3, {
-    remove_p3_input("A", session)
+    remove_p3_input("start", "A", session)
 
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
@@ -1381,7 +1381,7 @@ observeEvent(input$resume_no, {
     # Get UI inputs for extra player button
     vals <- paste0("#",getInputs("extra_player_A4"))
     
-    add_player_input(vals, "A", 4, current_choices(), session)
+    add_player_input("start", vals, "A", 4, current_choices(), session)
     
   })
   
@@ -1407,14 +1407,14 @@ observeEvent(input$resume_no, {
     # Get inputs for add player button
     vals <- paste0("#",getInputs("extra_player_B3"))
     
-    add_player_input(vals, "B", 3, current_choices(), session)
+    add_player_input("start", vals, "B", 3, current_choices(), session)
   })
 
   # Remove B3
   #   - Insert add new player action button
   #   - Remove B3 player name input
   observeEvent(input$remove_B3, {
-    remove_p3_input("B", session)
+    remove_p3_input("start", "B", session)
     
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
@@ -1435,7 +1435,7 @@ observeEvent(input$resume_no, {
     # Get add player button inputs
     vals <- paste0("#",getInputs("extra_player_B4"))
     
-    add_player_input(vals, "B", 4, current_choices(), session)
+    add_player_input("start", vals, "B", 4, current_choices(), session)
   })
   
 
