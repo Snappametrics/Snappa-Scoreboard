@@ -298,55 +298,60 @@ add_player_input = function(current_tab, inputs, team, player, player_choices, s
 
 
 remove_p3_input = function(current_tab, team, session){
-  
-  if (current_tab == "start"){
+ 
+   if (current_tab == "start") {
+     
     add_p3_button = paste0("#add_remove_", team, "3")
+    ui_name = paste0("extra_player_", team,"3")
+    selectize_name_3 =  paste0("name_", team, "3")
+    selectize_name_4 = paste0("name_", team, "4")
     
-    insertUI(selector = add_p3_button,
-             where = "afterEnd",
-             ui = actionBttn(paste0("extra_player_", team,"3"), label = "+ Add Player", style = "unite", color = "danger")
-    )
+  }  else if (current_tab == "edit"){
     
-    
-    removeUI(selector = add_p3_button)
-    
-    updateSelectizeInput(session, paste0("name_", team, "3"), selected = character(0))
-    updateSelectizeInput(session, paste0("name_", team, "4"), selected = character(0))
-  
-  } else if (current_tab == "edit") {
-    add_p3_button = paste0("#edit_remove_", team, "3")
-    
-    insertUI(selector = add_p3_button,
-             where = "afterEnd",
-             ui = actionBttn(paste0("add_player_", team,"3"), label = "+ Add Player", style = "unite", color = "danger")
-    )
-    
-    
-    removeUI(selector = add_p3_button)
-    
-    updateSelectizeInput(session, paste0("add_edit_", team, "3"), selected = character(0))
-    updateSelectizeInput(session, paste0("add_edit_", team, "4"), selected = character(0))
+    add_p3_button = paste0("#edit_new_", team, "3")
+    ui_name = paste0("edit_add_", team,"3")
+    selectize_name_3 =  paste0("edit_name_", team, "3")
+    selectize_name_4 = paste0("edit_name_", team, "4")
   }
+    
   
+    insertUI(selector = add_p3_button,
+             where = "afterEnd",
+             ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
+    )
+    
+    
+    removeUI(selector = add_p3_button)
+    
+    updateSelectizeInput(session, selectize_name_3, selected = character(0))
+    updateSelectizeInput(session, selectize_name_4, selected = character(0))
   
 }
 
 
 
-remove_p4_input = function(team, session){
-  
-  add_p4_button = paste0("#add_remove_", team, "4")
+remove_p4_input = function(current_tab, team, session){
+  if (current_tab == "start") {
+    add_p4_button = paste0("#add_remove_", team, "4")
+    ui_name = paste0("extra_player_", team, "4")
+    selectize_name = paste0("name_", team, "4")
+  } else if (current_tab == "edit") {
+    add_p4_button = paste0("edit_new_", team, "4")
+    ui_name = paste0("edit_add", team, "4")
+    selectize_name = paste0("edit_name_", team, "4")
+  }
+      
   # Insert add player button
   insertUI(selector = add_p4_button,
            where = "afterEnd",
-           ui = actionBttn(paste0("extra_player_", team, "4"), label = "+ Add Player", style = "unite", color = "danger")
+           ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
   )
   # Remove player text input
   removeUI(selector = add_p4_button)
   
   # Tells later checks to not worry about this
   # empty slot in active_player_names
-  updateSelectizeInput(session, paste0("name_", team, "4"), selected = character(0))
+  updateSelectizeInput(session, selectize_name, selected = character(0))
 }
 
 recent_scores_tab = function(scores_data){
