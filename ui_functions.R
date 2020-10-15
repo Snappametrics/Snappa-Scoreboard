@@ -148,7 +148,7 @@ team_edit_ui = function(team, player_choices, active_players){
   })
   if (add_player_number < 5) {
     team_list[[add_player_number]] = tagList(
-      actionBttn(paste0("edit_add", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger")
+      actionBttn(paste0("edit_add_", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger")
     )
   } else {
     invisible()
@@ -257,12 +257,12 @@ extra_player_ui = function(current_tab, player, player_choices){
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
+               actionBttn(inputId = remove_type,  label = "X", style = "jelly",
+                              color = "danger", size = "sm"),
                # Add extra player text input 
                selectizeInput(inputId = input_type, 
                               label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
              # Add remove player button outside fluid row
-             actionBttn(
-               inputId = remove_type,  label = "X", style = "jelly", color = "danger", size = "sm"),
              
              # CSS
              tags$style(paste0(div_id, " {margin-left:auto; margin-right:auto; position: relative;}")),
@@ -337,7 +337,7 @@ remove_p4_input = function(current_tab, team, session){
     selectize_name = paste0("name_", team, "4")
   } else if (current_tab == "edit") {
     add_p4_button = paste0("edit_new_", team, "4")
-    ui_name = paste0("edit_add", team, "4")
+    ui_name = paste0("edit_add_", team, "4")
     selectize_name = paste0("edit_name_", team, "4")
   }
       

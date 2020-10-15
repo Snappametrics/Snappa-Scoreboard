@@ -1389,7 +1389,7 @@ observeEvent(input$resume_no, {
   #   - Insert add new player action button
   #   - Remove A4 player name input
   observeEvent(input$remove_A4, {
-    remove_p4_input("A", session)
+    remove_p4_input("start", "A", session)
     
     vals$want_A4 = F
     
@@ -1443,12 +1443,126 @@ observeEvent(input$resume_no, {
   #   - Insert add new player action button
   #   - Remove B4 player name input
   observeEvent(input$remove_B4, {
-    remove_p4_input("B", session)
+    remove_p4_input("start", "B", session)
     # Tells later checks to not worry about this
     # empty slot in active_player_names
     vals$want_B4 = F
 
   })  
+  
+  
+
+# Dynamic UI for the Edit Teams Tab ---------------------------------------
+
+  # New Player A3
+  #   - Add A3 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_A3, {
+    # Set input want to true
+    vals$want_A3 = T
+    
+    # Get add player button inputs
+    val <- paste0("#",getInputs("edit_add_A3"))
+    add_player_input("edit", val, "A", 3, current_choices(), session)
+    
+  })
+  
+  # Remove A3
+  #   - Insert add new player action button
+  #   - Remove A3 player name input
+  observeEvent(input$edit_remove_A3, {
+    browser()
+    remove_p3_input("edit", "A", session)
+    
+    #Don't consider these elements when looking at
+    # total length of players. Prevents the game
+    # from getting locked out after players have
+    # been added
+    vals$want_A3 = F
+    vals$want_A4 = F
+    
+  })
+  
+  
+  # New Player A4
+  #   - Add A4 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_A4, {
+    # Set input want to true
+    vals$want_A4 = T
+    
+    # Get UI inputs for extra player button
+    vals <- paste0("#",getInputs("edit_add_A4"))
+    
+    add_player_input("edit", vals, "A", 4, current_choices(), session)
+    
+  })
+  
+  # Remove A4
+  #   - Insert add new player action button
+  #   - Remove A4 player name input
+  observeEvent(input$edit_remove_A4, {
+    remove_p4_input("edit", "A", session)
+    
+    vals$want_A4 = F
+    
+  })  
+  
+  
+  # New Player B3
+  #   - Add B3 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_B3, {
+    
+    # Set want check to true
+    vals$want_B3 = T
+    
+    # Get inputs for add player button
+    vals <- paste0("#",getInputs("edit_add_B3"))
+    
+    add_player_input("edit", vals, "B", 3, current_choices(), session)
+  })
+  
+  # Remove B3
+  #   - Insert add new player action button
+  #   - Remove B3 player name input
+  observeEvent(input$edit_remove_B3, {
+    remove_p3_input("edit", "B", session)
+    
+    #Don't consider these elements when looking at
+    # total length of players. Prevents the game
+    # from getting locked out after players have
+    # been added
+    vals$want_B3 = F
+    vals$want_B4 = F
+    
+  })
+  
+  # New Player B4
+  #   - Add B4 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_B4, {
+    # Set want check to true
+    vals$want_B4 = T
+    
+    # Get add player button inputs
+    vals <- paste0("#",getInputs("edit_add_B4"))
+    
+    add_player_input("edit", vals, "B", 4, current_choices(), session)
+  })
+  
+  
+  # Remove B4
+  #   - Insert add new player action button
+  #   - Remove B4 player name input
+  observeEvent(input$edit_remove_B4, {
+    remove_p4_input("edit", "B", session)
+    # Tells later checks to not worry about this
+    # empty slot in active_player_names
+    vals$want_B4 = F
+    
+  })  
+  
   
   
 
@@ -1476,7 +1590,7 @@ observeEvent(input$resume_no, {
   
   # Team A presses score button
   observeEvent(input$ok_A, {
-  
+
     # set score
     score = as.integer(input$score)
     vals$score <- score
