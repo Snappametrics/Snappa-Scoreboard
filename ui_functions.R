@@ -143,7 +143,11 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      # materialSwitch(
                      #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
                      # ),
-                     
+                      actionBttn("score_breakdown", 
+                                 "Check your current score summary",
+                                 style = "jelly",
+                                 color = "primary",
+                                 size = "lg"),
                      h1("Round", style = "font-size: 8rem;"),
                      h3(textOutput("round_num")),
                      column(width=12, align = "center",
@@ -1264,22 +1268,13 @@ game_summary_plot = function(player_stats, players, scores, game){
 
 
 test_function = function(current_player_stats, player_stats, players, neers, team_name, current_round, past_scores){
-  browser() 
   current_team_size = if_else(team == "A", 
                               length(pull(filter(neers, team == "A"), team)), 
                               length(pull(filter(neers, team == "B"), team)))
   
-  
-  #This should allow us to compare apples to apples when someone checks game_summary mid-game
-  # shot_filter = if_else(dbWriteTable(con, "game_stats") %>% 
-  #                          filter(game_id == max(game_id)) %>%
-  #                          pull(game_complete) %>% isFALSE(), 
-  #                       team_shots,
-  #                       999)
-  
   # Make a historical stats table that is only comparing games which are similar
   # to the current one.
-
+  browser()
   # First, obtain a list of games in which the players on this team were on
   # an equally sized team. This is player specific, so map() is used
   games_list = current_player_stats %>% filter(team == team_name) %>% pull(player_id) %>%
@@ -1303,7 +1298,8 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
   scores_slice = neers %>% filter(team == team_name) %>% 
     pull(player_id) %>% 
     sort() %>%
-    imap( ~{past_scores %>% filter(game_id %in% games_list[[.y]], as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
+    imap( ~{
+      past_scores %>% filter(game_id %in% games_list[[.y]], as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
                               player_id == .x)
       })
   
@@ -1332,7 +1328,257 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
               toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
     ungroup()
   
-    return(comparison_player_stats)
+    
+  player_info = current_player_stats %>% 
+    # Filter player stats
+    # filter(game_id == max(game_id)) %>% 
+    select(game_id, player_id, team) %>% 
+    inner_join(players)
+  
+  player_summary = current_player_stats %>% 
+    # Select the last game
+    # filter(game_id == max(game_id)) %>% 
+    group_by(team) %>% 
+    mutate(team_score = sum(total_points)) %>% 
+    ungroup() %>% 
+    mutate(winners = (team_score == max(team_score))) %>% 
+    # Merge in player info
+    inner_join(player_info) %>% 
+    select(team, winners, player_id, player_name, 
+           total_points, paddle_points, clink_points, threes, 
+           points_per_round:toss_efficiency)
+  
+  historical_stats = comparison_player_stats %>% 
+    select(-team) %>% 
+    # Join in player name
+    inner_join(select(player_summary, player_id, team)) %>% 
+    select(game_id, player_id, 
+           shots, total_points, paddle_points, clink_points, sinks = threes, 
+           points_per_round:toss_efficiency) %>%
+    arrange(player_id, game_id) %>% 
+    group_by(player_id) %>% 
+    mutate(game_num = 1:n()) %>% 
+    ungroup() %>% 
+    group_by(player_id) %>% 
+    summarise(
+      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
+      across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
+      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
+             .fns = ~weighted.mean(., w = shots), 
+             .names = "{col}_wavg")
+    )
+  
+  player_summary_historical = full_join(player_summary, historical_stats, by = "player_id") %>% 
+    # Calculate the difference between current game and historical performance
+    mutate(total_points_diff = total_points - total_points_avg,
+           paddle_points_diff = paddle_points - paddle_points_avg,
+           clink_points_diff = clink_points - clink_points_avg,
+           points_per_round_diff = points_per_round - points_per_round_wavg,
+           off_ppr_diff = off_ppr - off_ppr_wavg,
+           def_ppr_diff = def_ppr - def_ppr_wavg,
+           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
+           # Format each difference for the table
+           across(matches("points_diff"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 1), ")")),
+           across(matches("(per_round|ppr)_diff$"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 2), ")")),
+           toss_efficiency_diff = map_chr(toss_efficiency_diff, ~case_when(. >= 0 ~ toss_percent_plus(.), 
+                                                                           . < 0 ~ toss_percent_minus(.)))) %>% 
+    # Remove historical stats
+    select(-ends_with("_avg"), -ends_with("wavg")) %>% 
+    # Order columns
+    select(starts_with("player"), team, winners, 
+           contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
+           contains("per_round"), contains("off_"), contains("def_"), contains("toss")) 
+  
+  
+  df = select(player_summary_historical,
+              -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
+    filter(team == team_name)
+  winners = unique(df$winners)
+  title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
+  
+  
+  
+  hide_diff_cols = head(df, 1) %>% # Take the first row of a column
+    mutate_all(as.character) %>% # prevents errors in pivot_longer
+    # convert to column-value pair dataframe
+    pivot_longer(everything(), names_to = "column", values_to = "value") %>% 
+    # remove the value
+    select(-value) %>% 
+    # Craft the desired label
+    # Below I remove the year, replace underscores with spaces, and convert to title case
+    mutate(label = case_when(
+      # column == "player_name" ~ "Player",
+      # column == "total_points" ~ "Total Points",
+      # column == "paddle_points" ~ "Paddle Points",
+      # column == "clink_points" ~ "Clink Points",
+      # column == "sinks" ~ "Sinks", # TODO: Fix this 
+      # column == "points_per_round" ~ "Points per Round\n(PPR)",
+      # column == "off_ppr" ~ "Offensive PPR",
+      # column == "def_ppr" ~ "Defensive PPR",
+      # column == "toss_efficiency" ~ "Toss Efficiency",
+      # T ~ ""
+      column == "player_name" ~ "Player",
+      str_detect(column, "_diff$") ~ "Diff.",
+      T ~ ""
+    )) %>% 
+    # Deframe to named vector
+    deframe()
+  
+  df %>% 
+    arrange(-total_points) %>% 
+    gt(.) %>% 
+    tab_header(title = str_c("Team ", team),
+               subtitle = if_else(winners, "the winners.", "the losers.")) %>% 
+    cols_hide(columns = vars(player_id, team, winners)) %>% 
+    # Column names
+    cols_label(
+      # player_name = "Player",
+      # total_points = "Total Points",
+      # paddle_points = "Paddle Points",
+      # clink_points = "Clink Points",
+      # sinks_total = "Sinks", # TODO: Fix this
+      # points_per_round = "Points per Round\n(PPR)",
+      # off_ppr = "Offensive PPR",
+      # def_ppr = "Defensive PPR",
+      # toss_efficiency = "Toss Efficiency",
+      .list = hide_diff_cols
+    ) %>%
+    # Format integers
+    fmt_number(
+      # columns = vars(total_points, paddle_points, clink_points, sinks),
+      columns = vars(total_points, paddle_points),
+      decimals = 0
+    ) %>% 
+    # Format doubles
+    fmt_number(
+      # columns = vars(points_per_round, off_ppr, def_ppr),
+      columns = vars(off_ppr, def_ppr),
+      decimals = 2
+    ) %>% 
+    # Format percentages
+    fmt_percent(
+      columns = vars(toss_efficiency),
+      decimals = 0
+    ) %>% 
+    # Styling
+    # Title
+    tab_style(
+      style = list(cell_text(align = "left", v_align = "bottom", weight = "bold", size = px(18), color = title_colour)),
+      locations = cells_title(groups = "title")
+    ) %>%
+    # Subtitle
+    tab_style(style = cell_text(align = "left", v_align = "bottom"),
+              locations = list(cells_title("subtitle"))) %>% 
+    # Colour stat differences
+    ## Positive
+    tab_style(style = cell_text(color = snappa_pal[5]),
+              locations = list(
+                cells_body(columns = vars(total_points_diff), rows = str_detect(total_points_diff, "\\+")),
+                cells_body(columns = vars(paddle_points_diff), rows = str_detect(paddle_points_diff, "\\+")),
+                # cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\+")),
+                # cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\+")),
+                cells_body(columns = vars(off_ppr_diff), rows = str_detect(off_ppr_diff, "\\+")),
+                cells_body(columns = vars(def_ppr_diff), rows = str_detect(def_ppr_diff, "\\+")),
+                cells_body(columns = vars(toss_efficiency_diff), rows = str_detect(toss_efficiency_diff, "\\+"))
+              )
+    ) %>% 
+    ## Negative
+    tab_style(style = cell_text(color = snappa_pal[2]),
+              locations = list(
+                cells_body(columns = vars(total_points_diff), rows = str_detect(total_points_diff, "\\-")),
+                cells_body(columns = vars(paddle_points_diff), rows = str_detect(paddle_points_diff, "\\-")),
+                # cells_body(columns = vars(clink_points_diff), rows = str_detect(clink_points_diff, "\\-")),
+                # cells_body(columns = vars(points_per_round_diff), rows = str_detect(points_per_round_diff, "\\-")),
+                cells_body(columns = vars(off_ppr_diff), rows = str_detect(off_ppr_diff, "\\-")),
+                cells_body(columns = vars(def_ppr_diff), rows = str_detect(def_ppr_diff, "\\-")),
+                cells_body(columns = vars(toss_efficiency_diff), rows = str_detect(toss_efficiency_diff, "\\-"))
+              )
+    ) %>% 
+    # Column spanners
+    tab_spanner(
+      label = "Total Points",
+      columns = contains("total_points")
+    ) %>% 
+    tab_spanner(
+      label = "Paddle Points",
+      columns = contains("paddle")
+    ) %>% 
+    # tab_spanner(
+    #   label = "Clink Points",
+    #   columns = contains("clink")
+    # ) %>% 
+    # tab_spanner(
+    #   label = "Sinks",
+    #   columns = contains("sink")
+    # ) %>% 
+    # tab_spanner(
+    #   label = "Pts per Round",
+    #   columns = contains("per_")
+  # ) %>% 
+  tab_spanner(
+    label = "Off. PPR",
+    columns = contains("off_")
+  ) %>% 
+    tab_spanner(
+      label = "Def. PPR",
+      columns = contains("def_")
+    ) %>% 
+    tab_spanner(
+      label = "Toss Efficiency",
+      columns = contains("toss")
+    ) %>% 
+    tab_source_note("Comparison of current game to career average") %>% 
+    # tab_source_note(md(str_c('<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[2], ';">Snappa</span>',
+    #                          '<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[4], ';">DB</span>'))) %>% 
+    # Footnotes
+    # tab_footnote(
+    #   footnote = "Defensive points are scored from paddles.",
+    #   locations = cells_column_spanners("Def. PPR")#cells_column_labels(columns = vars(def_ppr))
+    # ) %>% 
+    # tab_footnote(
+    #   footnote = "% of tosses which are successful.",
+    #   locations = cells_column_spanners("Toss Efficiency")#cells_column_labels(columns = vars(toss_efficiency))
+    # ) %>%
+  # opt_footnote_marks(marks = "letters") %>% 
+  # Styling
+  tab_style(
+    style = cell_text(weight = "normal", size = px(14), v_align = "bottom"),
+    # locations = map(c("Total Points","Paddle Points","Clink Points","Sinks","Pts per Round","Off. PPR","Def. PPR","Toss Efficiency"),
+    locations = map(c("Total Points","Paddle Points","Off. PPR","Def. PPR","Toss Efficiency"),
+                    cells_column_spanners)
+  ) %>% 
+    # Column Labels
+    tab_style(
+      style = cell_text(size = px(12)),
+      locations = cells_column_labels(everything())
+    ) %>% 
+    # Table body text
+    tab_style(
+      style = cell_text(size = px(12)),
+      locations = cells_body(everything())
+    ) %>% 
+    cols_align(align = "right", 
+               columns = colnames(df) %>% str_subset("player_name", negate = T)) %>% 
+    # Left Align player
+    cols_align(align = "left", 
+               columns = c("player_name")) %>%
+    tab_style(
+      style = cell_text(align = "left"),
+      locations = cells_column_labels(columns = vars(player_name))
+    ) %>% 
+    # Column widths
+    cols_width(
+      vars(player_name) ~pct(7),#px(120),
+      # vars(total_points, paddle_points, clink_points) ~ pct(3), 
+      vars(total_points, paddle_points) ~ pct(3), 
+      # vars(points_per_round, off_ppr, def_ppr) ~ pct(4),
+      vars(off_ppr, def_ppr) ~ pct(4),
+      # vars(toss_efficiency, sinks) ~ pct(5),#px(60),
+      vars(toss_efficiency) ~ pct(4),#px(60),
+      ends_with("points_diff") ~ pct(5),#px(50),
+      matches("(per_round|ppr|efficiency)_diff$") ~ pct(6)#px(55),
+    ) %>% 
+    tab_theme_snappa()
   
   
 }
