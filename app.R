@@ -23,7 +23,7 @@ library(ggrepel)
 library(ggtext)
 library(patchwork)
 library(extrafont)
-
+library(rlist)
 
 source("test_dbconnect.R")
 source("ui_functions.R")
@@ -531,7 +531,7 @@ server <- function(input, output, session) {
   
   
   
-  
+
 
   
 
@@ -1386,6 +1386,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
