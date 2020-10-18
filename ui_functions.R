@@ -608,6 +608,33 @@ tab_theme_snappa = function(data,
 
 team_summary_tab = function(current_player_stats, player_stats, players, team){
   
+  current_team_size = if_else(team == "A", 
+                              length(filter(snappaneers(), team == "A")), 
+                              length(filter(snappaneers(), team == "B")))
+  
+  
+  #This should allow us to compare apples to apples when someone checks game_summary mid-game
+  # shot_filter = if_else(dbWriteTable(con, "game_stats") %>% 
+  #                          filter(game_id == max(game_id)) %>%
+  #                          pull(game_complete) %>% isFALSE(), 
+  #                       team_shots,
+  #                       999)
+  
+  # Make a historical stats table that is only comparing games which are similar
+  # to the current one.
+  
+  # First, obtain a list of games in which the players on this team were on
+  # an equally sized team. This is player specific, so map() is used
+  games_list = map(players, ~{
+    player_stats %>% group_by(game_id, team) %>% mutate(team_size = n()) %>% 
+      filter(player_id ==., team_size == current_team_size) %>% pull(game_id) 
+  })
+  
+  
+  
+  
+  
+  
   player_info = current_player_stats %>% 
     # Filter player stats
     # filter(game_id == max(game_id)) %>% 
@@ -1236,3 +1263,65 @@ game_summary_plot = function(player_stats, players, scores, game){
 
 
 
+test_function = function(current_player_stats, player_stats, players, neers, team_name, current_round, past_scores){
+  browser() 
+  current_team_size = if_else(team == "A", 
+                              length(pull(filter(neers, team == "A"), team)), 
+                              length(pull(filter(neers, team == "B"), team)))
+  
+  
+  #This should allow us to compare apples to apples when someone checks game_summary mid-game
+  # shot_filter = if_else(dbWriteTable(con, "game_stats") %>% 
+  #                          filter(game_id == max(game_id)) %>%
+  #                          pull(game_complete) %>% isFALSE(), 
+  #                       team_shots,
+  #                       999)
+  
+  # Make a historical stats table that is only comparing games which are similar
+  # to the current one.
+
+  # First, obtain a list of games in which the players on this team were on
+  # an equally sized team. This is player specific, so map() is used
+  games_list = current_player_stats %>% filter(team == team_name) %>% pull(player_id) %>%
+    sort() %>% 
+    map(~{
+      player_stats %>% group_by(game_id, team) %>% mutate(team_size = n()) %>%
+        filter(player_id ==.x,  team_size == current_team_size) %>% pull(game_id)
+    })
+  
+  # make a unique subsection of the scores table which only considers the given player in the
+  # given games
+  scores_slice = neers %>% filter(team == team_name) %>% 
+    pull(player_id) %>% 
+    sort() %>%
+    imap( ~{past_scores %>% filter(game_id %in% games_list[[.y]], as.numeric(str_sub(round_num, 1, -2)) <= current_round, 
+                              player_id == .x)
+      })
+  
+  # Bind that list together to make historical scores
+  historical_scores = list.rbind(scores_slice)
+
+  # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
+  # That means I have to recreate player_stats using this table 
+  
+  comparison_player_stats = historical_scores %>% 
+    # Join scores to snappaneers to get each player's team
+    left_join(neers, by = "player_id") %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, team, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
+    ungroup()
+  
+    return(comparison_player_stats)
+}
