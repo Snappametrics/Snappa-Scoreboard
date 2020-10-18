@@ -1289,12 +1289,21 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
         filter(player_id ==.x,  team_size == current_team_size) %>% pull(game_id)
     })
   
+  
   # make a unique subsection of the scores table which only considers the given player in the
-  # given games
+  # given games. round_comparison should only be applied when a game is in progress
+  
+  if (isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
+                   game_complete))){
+    round_comparison = current_round
+  } else {
+    round_comparison = 999
+  }
+  
   scores_slice = neers %>% filter(team == team_name) %>% 
     pull(player_id) %>% 
     sort() %>%
-    imap( ~{past_scores %>% filter(game_id %in% games_list[[.y]], as.numeric(str_sub(round_num, 1, -2)) <= current_round, 
+    imap( ~{past_scores %>% filter(game_id %in% games_list[[.y]], as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
                               player_id == .x)
       })
   
@@ -1324,4 +1333,6 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
     ungroup()
   
     return(comparison_player_stats)
+  
+  
 }
