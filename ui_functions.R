@@ -1274,7 +1274,6 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
   
   # Make a historical stats table that is only comparing games which are similar
   # to the current one.
-  browser()
   # First, obtain a list of games in which the players on this team were on
   # an equally sized team. This is player specific, so map() is used
   games_list = current_player_stats %>% filter(team == team_name) %>% pull(player_id) %>%
@@ -1389,14 +1388,15 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
            contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
            contains("per_round"), contains("off_"), contains("def_"), contains("toss")) 
   
-  
+  browser()
   df = select(player_summary_historical,
               -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
     filter(team == team_name)
   winners = unique(df$winners)
   title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
   
-  
+  player_names = df %>% arrange(player_id) %>% pull(player_name)
+  player_games = scores_slice %>% imap( ~{.x %>% pull(game_id) %>% length()}) %>% unlist()
   
   hide_diff_cols = head(df, 1) %>% # Take the first row of a column
     mutate_all(as.character) %>% # prevents errors in pivot_longer
@@ -1527,9 +1527,10 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
       label = "Toss Efficiency",
       columns = contains("toss")
     ) %>% 
-    tab_source_note("Comparison of current game to career average") %>% 
+    tab_source_note(HTML(str_c("Comparison of current game to the following number of games per player: <ul style=\"list-style-type:none; padding:0;\">",
+                               paste0("<li> ", player_names, " - ", player_games,  " <//li> ", collapse = ""), "<//ul> "))) %>% 
     # tab_source_note(md(str_c('<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[2], ';">Snappa</span>',
-    #                          '<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[4], ';">DB</span>'))) %>% 
+    #                          '<span style="font-size: 18px;font-weight: 700;color:'  snappa_pal[4], ';">DB</span>'))) %>% 
     # Footnotes
     # tab_footnote(
     #   footnote = "Defensive points are scored from paddles.",
