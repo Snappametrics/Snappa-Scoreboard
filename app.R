@@ -23,7 +23,7 @@ library(ggrepel)
 library(ggtext)
 library(patchwork)
 library(extrafont)
-
+library(rlist)
 
 source("test_dbconnect.R")
 source("ui_functions.R")
@@ -535,7 +535,7 @@ server <- function(input, output, session) {
   
   
   
-  
+
 
   
 
@@ -708,11 +708,11 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "A")
+    test_function(vals$player_stats_db, player_stats_tbl, vals$players_db, snappaneers(), "A", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
   })  
   
   output$team_b_summary = render_gt({
-    team_summary_tab(vals$player_stats_db, player_stats_tbl, vals$players_db, "B")
+    test_function(vals$player_stats_db, player_stats_tbl, vals$players_db, snappaneers(), "B", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
   })  
   
   
@@ -1140,8 +1140,17 @@ observe({
   }, once = T, ignoreNULL = T)
   
 
+observeEvent(input$score_breakdown, {
+  showModal(
+    tags$div(id= "game_summary", 
+             game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
+                                                              points_b = vals$current_scores$team_B)))
+    )
+  )
+  
+})
 
-
+  
   
 # Restart a game after indicating you would like to do so
   observeEvent(input$resume_yes, {
@@ -1390,6 +1399,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
