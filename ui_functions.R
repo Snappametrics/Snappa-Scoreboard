@@ -1268,9 +1268,14 @@ game_summary_plot = function(player_stats, players, scores, game){
 
 
 test_function = function(current_player_stats, player_stats, players, neers, team_name, current_round, past_scores){
-  current_team_size = if_else(team == "A", 
-                              length(pull(filter(neers, team == "A"), team)), 
-                              length(pull(filter(neers, team == "B"), team)))
+  
+  # Produce a team's performance summary and comparison to historical performance in equivalent games
+  # 1. Get a list of games the player has played in
+  # 2. Get a list of scores from historical games at the equivalent point in the game
+  # 3. Calculate current game player stats
+  # 4. Calculate historical player stats from 1 & 2
+  team_size = nrow(neers[neers$team == team_name, ]) # 20x as fast
+  opponent_size = nrow(neers[neers$team != team_name, ])
   
   # Make a historical stats table that is only comparing games which are similar
   # to the current one.
@@ -1280,7 +1285,7 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
     sort() %>% 
     map(~{
       player_stats %>% group_by(game_id, team) %>% mutate(team_size = n()) %>%
-        filter(player_id ==.x,  team_size == current_team_size) %>% pull(game_id)
+        filter(player_id ==.x,  team_size == team_size) %>% pull(game_id)
     })
   
   
