@@ -5,6 +5,36 @@ toss_percent_minus = function(x){
   str_c("(", round(x*100, 0), "%)")
 }
 
+aggregate_player_stats = function(scores, players){
+  scores %>% 
+    # Join scores to snappaneers to get each player's team
+    left_join(players, by = "player_id") %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, team, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
+    ungroup()
+}
+
+parse_round_num = function(round){
+  str_replace_all(round, c("([0-9]+)A" = "(\\1*2)-1",
+                           "([0-9]+)B" = "(\\1*2)")) %>% 
+    parse(text = .) %>% 
+    eval()
+}
+
+
+
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
 # UI functions ------------------------------------------------------------
