@@ -5,6 +5,36 @@ toss_percent_minus = function(x){
   str_c("(", round(x*100, 0), "%)")
 }
 
+aggregate_player_stats = function(scores, players){
+  scores %>% 
+    # Join scores to snappaneers to get each player's team
+    left_join(players, by = "player_id") %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, team, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
+    ungroup()
+}
+
+parse_round_num = function(round){
+  str_replace_all(round, c("([0-9]+)A" = "(\\1*2)-1",
+                           "([0-9]+)B" = "(\\1*2)")) %>% 
+    parse(text = .) %>% 
+    eval()
+}
+
+
+
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
 # UI functions ------------------------------------------------------------
@@ -619,10 +649,14 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   team_size = nrow(neers[neers$team == team_name, ]) # 20x as fast
   opponent_size = nrow(neers[neers$team != team_name, ])
   
+  current_game = unique(current_player_stats$game_id)
+  team_player_stats = current_player_stats[current_player_stats$team == team_name, ]
+  
   # Make a historical stats table that is only comparing games which are similar
   # to the current one.
   # First, obtain a list of games in which the players on this team were on
   # an equally sized team. This is player specific, so map() is used
+
   
   
   # A not particularly elegant but probably working solution to making sure that games
@@ -635,14 +669,19 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     group_by(game_id, team) %>% 
     summarize(team_size = n()) %>%
     pivot_wider(names_from = team, values_from = team_size, names_glue = "size_{team}")
-  
-  games_list = current_player_stats %>% filter(team == team_name) %>% pull(player_id) %>%
+
+  games_list = team_player_stats[, "player_id"] %>%
     sort() %>% 
-    map(~{
-      player_stats %>% group_by(game_id) %>% left_join(team_sizes) %>%
-        filter(player_id ==.x,  
+    map(function(player){
+      player_stats %>% 
+        group_by(game_id) %>%
+        left_join(team_sizes) %>%
+        filter(player_id == player, 
                if_else(team == "A", size_A, size_B) == team_size,
-               if_else(team == "B", size_A, size_B) == opponent_size) %>% pull(game_id)
+               if_else(team == "B", size_A, size_B) == opponent_size
+               ) %>%
+        pull(game_id)
+
     })
   
   
@@ -654,20 +693,33 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   if (isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
                    game_complete))){
     round_comparison = current_round
+    
+    # Filter to scores which are:
+    #   - less than or equal to the current round
+    scores_comparison = past_scores %>% 
+      group_by(game_id, score_id) %>% 
+      mutate(shot_num = parse_round_num(round_num)) %>% 
+      filter(shot_num <= parse_round_num(current_round))
   } else {
     round_comparison = 999
+    
+    scores_comparison = past_scores
   }
   
-  scores_slice = neers %>% filter(team == team_name) %>% 
+  scores_slice = neers %>% 
+    filter(team == team_name) %>% 
     pull(player_id) %>% 
     sort() %>%
-    imap( ~{
-      past_scores %>% filter(game_id %in% games_list[[.y]], as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
-                             player_id == .x)
+    imap(function(player, index){
+      past_scores %>% 
+        filter(game_id %in% games_list[[index]], 
+               as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
+               player_id == player)
     })
   
   # Bind that list together to make historical scores
-  historical_scores = list.rbind(scores_slice)
+  historical_scores = bind_rows(scores_slice) %>% 
+    filter(game_id != current_game)
   
   # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
   # That means I have to recreate player_stats using this table 
@@ -691,15 +743,16 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
               toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
     ungroup()
   
-  player_info = current_player_stats %>% 
+  player_info = team_player_stats %>% 
     # Filter player stats
-    # filter(game_id == max(game_id)) %>% 
     select(game_id, player_id, team) %>% 
     inner_join(neers) 
   
+  # Calculate:
+  #   - Team score
+  #   - Winning
+  # Then join on player info
   player_summary = current_player_stats %>% 
-    # Select the last game
-    # filter(game_id == max(game_id)) %>% 
     group_by(team) %>% 
     mutate(team_score = sum(total_points)) %>% 
     ungroup() %>% 
@@ -752,13 +805,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            contains("per_round"), contains("off_"), contains("def_"), contains("toss")) 
   
   df = select(player_summary_historical,
-              -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
-    filter(team == team_name)
+              -contains("clink"), -contains("sink"), -contains("points_per"))
   
   return(df)
 }
 
-team_summary_tab = function(df, game_over, score_difference){
+team_summary_tab = function(df, game_over, score_difference, team){
   winning = unique(df$winning)
   if (game_over){
     subtitle_name = if_else(winning, "the winners.", "the losers.")
@@ -839,6 +891,7 @@ team_summary_tab = function(df, game_over, score_difference){
       columns = vars(toss_efficiency),
       decimals = 0
     ) %>% 
+    fmt_missing(columns = contains("diff"), missing_text = "—") %>% 
     # Styling
     # Title
     tab_style(
@@ -1335,6 +1388,3 @@ game_summary_plot = function(player_stats, players, scores, game){
 
 
 
-
-  
-  

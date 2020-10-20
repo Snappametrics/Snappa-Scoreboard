@@ -52,9 +52,6 @@ game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats")
 # Functions ---------------------------------------------------------------
 
 
-
-
-
 rebuttal_check <- function(a , b , round, points_to_win) {
   if (any(is.null(a),is.null(b))){
     check <- F
@@ -418,17 +415,7 @@ server <- function(input, output, session) {
   #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
   # )
   
-  add_shot_count = function(df){
-    
-    add_count(df, .data$team, name = "n_players") %>% # Count the number of rows for each team
-      # Calculate the number of shots for each player by diving the team shots by 2
-      # Team shots calculated using ceiling/floor because A always goes first
-      mutate(baseline_shots = case_when(str_detect(.data$team, "A") ~ ceiling(vals$shot_num/2),
-                                        str_detect(.data$team, "B") ~ floor(vals$shot_num/2)),
-             # In cases where teams are uneven, we calculate the average shots a player had
-             shots = .data$baseline_shots*max(.data$n_players)/.data$n_players) %>% 
-      select(-baseline_shots, -n_players)
-  }
+  
   
   
     
@@ -518,7 +505,7 @@ server <- function(input, output, session) {
       filter(player_name != "") %>% 
       left_join(vals$players_db, by = "player_name") %>% 
       # Add shot count
-      add_shot_count()
+      add_shot_count(shot_num = vals$shot_num)
   })
   
   # Vector of players, with current players removed
@@ -709,15 +696,29 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    make_summary_table(vals$player_stats_db, player_stats_tbl, snappaneers(), "A", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl) %>%
-      team_summary_tab(vals$game_over, 
-                       abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    make_summary_table(current_player_stats = vals$player_stats_db, 
+                       player_stats = player_stats_tbl, 
+                       neers = snappaneers(), 
+                       team_name = "A", 
+                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                       past_scores = scores_tbl) %>%
+      team_summary_tab(.,
+                       game_over = vals$game_over, 
+                       team = "A",
+                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
   })  
   
   output$team_b_summary = render_gt({
-    make_summary_table(vals$player_stats_db, player_stats_tbl, snappaneers(), "B", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl) %>%
-      team_summary_tab(vals$game_over,
-                       abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    make_summary_table(current_player_stats = vals$player_stats_db, 
+                       player_stats = player_stats_tbl, 
+                       neers = snappaneers(), 
+                       team_name = "B", 
+                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                       past_scores = scores_tbl) %>%
+      team_summary_tab(.,
+                       game_over = vals$game_over, 
+                       team = "B",
+                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
   })  
   
   
