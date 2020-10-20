@@ -52,9 +52,6 @@ game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats")
 # Functions ---------------------------------------------------------------
 
 
-
-
-
 rebuttal_check <- function(a , b , round, points_to_win) {
   if (any(is.null(a),is.null(b))){
     check <- F
@@ -418,17 +415,7 @@ server <- function(input, output, session) {
   #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
   # )
   
-  add_shot_count = function(df){
-    
-    add_count(df, .data$team, name = "n_players") %>% # Count the number of rows for each team
-      # Calculate the number of shots for each player by diving the team shots by 2
-      # Team shots calculated using ceiling/floor because A always goes first
-      mutate(baseline_shots = case_when(str_detect(.data$team, "A") ~ ceiling(vals$shot_num/2),
-                                        str_detect(.data$team, "B") ~ floor(vals$shot_num/2)),
-             # In cases where teams are uneven, we calculate the average shots a player had
-             shots = .data$baseline_shots*max(.data$n_players)/.data$n_players) %>% 
-      select(-baseline_shots, -n_players)
-  }
+  
   
   
     
@@ -517,7 +504,7 @@ server <- function(input, output, session) {
       filter(player_name != "") %>% 
       left_join(vals$players_db, by = "player_name") %>% 
       # Add shot count
-      add_shot_count()
+      add_shot_count(shot_num = vals$shot_num)
   })
   
   # Vector of players, with current players removed
