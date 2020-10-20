@@ -668,7 +668,9 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   team_sizes = player_stats %>% 
     group_by(game_id, team) %>% 
     summarize(team_size = n()) %>%
-    pivot_wider(names_from = team, values_from = team_size, names_glue = "size_{team}")
+    pivot_wider(names_from = team, 
+                values_from = team_size, 
+                names_glue = "size_{team}")
 
   games_list = team_player_stats[, "player_id"] %>%
     sort() %>% 
