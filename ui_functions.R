@@ -1267,7 +1267,7 @@ game_summary_plot = function(player_stats, players, scores, game){
 
 
 
-test_function = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
+make_summary_table = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
   
   # Produce a team's performance summary and comparison to historical performance in equivalent games
   # 1. Get a list of games the player has played in
@@ -1290,7 +1290,9 @@ test_function = function(current_player_stats, player_stats, neers, team_name, c
   
   
   # make a unique subsection of the scores table which only considers the given player in the
-  # given games. round_comparison should only be applied when a game is in progress
+  # given games. round_comparison should only be applied when a game is in progress. 
+  # While we're here, also tell the display not to care about winners maybe? I could also set
+  # a value here so that I don't have to execute a query later, but the issue becomes 
   
   if (isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
                    game_complete))){
@@ -1344,10 +1346,10 @@ test_function = function(current_player_stats, player_stats, neers, team_name, c
     group_by(team) %>% 
     mutate(team_score = sum(total_points)) %>% 
     ungroup() %>% 
-    mutate(winners = (team_score == max(team_score))) %>% 
+    mutate(winning = (team_score == max(team_score))) %>% 
     # Merge in player info
     inner_join(player_info) %>% 
-    select(team, winners, player_id, player_name, 
+    select(team, winning, player_id, player_name, 
            total_points, paddle_points, clink_points, threes, 
            points_per_round:toss_efficiency)
   
@@ -1388,7 +1390,7 @@ test_function = function(current_player_stats, player_stats, neers, team_name, c
     # Remove historical stats
     select(-ends_with("_avg"), -ends_with("wavg")) %>% 
     # Order columns
-    select(starts_with("player"), team, winners, 
+    select(starts_with("player"), team, winning, 
            contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
            contains("per_round"), contains("off_"), contains("def_"), contains("toss")) 
   
@@ -1396,7 +1398,7 @@ test_function = function(current_player_stats, player_stats, neers, team_name, c
   df = select(player_summary_historical,
               -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
     filter(team == team_name)
-  winners = unique(df$winners)
+  winning = unique(df$winning)
   title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
   
   player_names = df %>% arrange(player_id) %>% pull(player_name)
@@ -1428,12 +1430,16 @@ test_function = function(current_player_stats, player_stats, neers, team_name, c
     # Deframe to named vector
     deframe()
   
+  
+  return(df)
+}
+  
   df %>% 
     arrange(-total_points) %>% 
     gt(.) %>% 
     tab_header(title = str_c("Team ", team),
-               subtitle = if_else(winners, "the winners.", "the losers.")) %>% 
-    cols_hide(columns = vars(player_id, team, winners)) %>% 
+               subtitle = if_else(winning, "the winners", "the losers.")) %>% 
+    cols_hide(columns = vars(player_id, team, winning)) %>% 
     # Column names
     cols_label(
       # player_name = "Player",
