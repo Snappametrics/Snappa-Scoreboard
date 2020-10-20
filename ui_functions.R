@@ -623,11 +623,26 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # to the current one.
   # First, obtain a list of games in which the players on this team were on
   # an equally sized team. This is player specific, so map() is used
+  
+  
+  # A not particularly elegant but probably working solution to making sure that games
+  # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
+  # and opponent_team_size and merge it to player_stats to be used as a 
+  
+
+  
+  team_sizes = player_stats %>% 
+    group_by(game_id, team) %>% 
+    summarize(team_size = n()) %>%
+    pivot_wider(names_from = team, values_from = team_size, names_glue = "size_{team}")
+  
   games_list = current_player_stats %>% filter(team == team_name) %>% pull(player_id) %>%
     sort() %>% 
     map(~{
-      player_stats %>% group_by(game_id, team) %>% mutate(team_size = n()) %>%
-        filter(player_id ==.x,  team_size == team_size) %>% pull(game_id)
+      player_stats %>% group_by(game_id) %>% left_join(team_sizes) %>%
+        filter(player_id ==.x,  
+               if_else(team == "A", size_A, size_B) == team_size,
+               if_else(team == "B", size_A, size_B) == opponent_size) %>% pull(game_id)
     })
   
   
