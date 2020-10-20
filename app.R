@@ -695,7 +695,14 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    test_function(vals$player_stats_db, player_stats_tbl, vals$players_db, snappaneers(), "A", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
+    browser()
+    test_function(current_player_stats = vals$player_stats_db, 
+                  player_stats = player_stats_tbl, 
+                  players = vals$players_db, 
+                  neers = snappaneers(), 
+                  team_name = "A", 
+                  current_round = round_num(), #as.numeric(str_sub(round_num(), 1, -2)), 
+                  past_scores = scores_tbl)
   })  
   
   output$team_b_summary = render_gt({
