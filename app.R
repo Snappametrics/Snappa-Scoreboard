@@ -708,11 +708,11 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    test_function(vals$player_stats_db, player_stats_tbl, vals$players_db, snappaneers(), "A", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
+    test_function(vals$player_stats_db, player_stats_tbl, snappaneers(), "A", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
   })  
   
   output$team_b_summary = render_gt({
-    test_function(vals$player_stats_db, player_stats_tbl, vals$players_db, snappaneers(), "B", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
+    test_function(vals$player_stats_db, player_stats_tbl, snappaneers(), "B", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
   })  
   
   

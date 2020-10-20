@@ -1267,7 +1267,7 @@ game_summary_plot = function(player_stats, players, scores, game){
 
 
 
-test_function = function(current_player_stats, player_stats, players, neers, team_name, current_round, past_scores){
+test_function = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
   
   # Produce a team's performance summary and comparison to historical performance in equivalent games
   # 1. Get a list of games the player has played in
@@ -1331,13 +1331,12 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
               def_ppr = paddle_points/last(shots),
               toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
     ungroup()
-  
     
   player_info = current_player_stats %>% 
     # Filter player stats
     # filter(game_id == max(game_id)) %>% 
     select(game_id, player_id, team) %>% 
-    inner_join(neers, by = "player_id")
+    inner_join(neers) 
   
   player_summary = current_player_stats %>% 
     # Select the last game
