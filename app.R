@@ -469,7 +469,8 @@ server <- function(input, output, session) {
     want_B3 = F,
     want_B4 = F,
 
-    switch_counter = 1
+    switch_counter = 1,
+    game_over = F
   )
   
   
@@ -695,18 +696,20 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    browser()
-    test_function(current_player_stats = vals$player_stats_db, 
-                  player_stats = player_stats_tbl, 
-                  players = vals$players_db, 
-                  neers = snappaneers(), 
-                  team_name = "A", 
-                  current_round = round_num(), #as.numeric(str_sub(round_num(), 1, -2)), 
-                  past_scores = scores_tbl)
+    make_summary_table(vals$player_stats_db, 
+                       player_stats_tbl, 
+                       snappaneers(), 
+                       "A", 
+                       as.numeric(str_sub(round_num(), 1, -2)), 
+                       scores_tbl) %>%
+      team_summary_tab(vals$game_over, 
+                       abs(vals$current_scores$team_A - vals$current_scores$team_B))
   })  
   
   output$team_b_summary = render_gt({
-    test_function(vals$player_stats_db, player_stats_tbl, vals$players_db, snappaneers(), "B", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl)
+    make_summary_table(vals$player_stats_db, player_stats_tbl, snappaneers(), "B", as.numeric(str_sub(round_num(), 1, -2)), scores_tbl) %>%
+      team_summary_tab(vals$game_over,
+                       abs(vals$current_scores$team_A - vals$current_scores$team_B))
   })  
   
   
@@ -1709,6 +1712,9 @@ observeEvent(input$resume_no, {
   })
   
   observeEvent(input$finish_game_sure, {
+    
+    vals$game_over = T
+
     showModal(
       modalDialog(
                   h2("Well full send that data to the SnappaDB!"),
