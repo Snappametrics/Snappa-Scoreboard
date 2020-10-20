@@ -1281,11 +1281,13 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
   # to the current one.
   # First, obtain a list of games in which the players on this team were on
   # an equally sized team. This is player specific, so map() is used
-  games_list = current_player_stats %>% filter(team == team_name) %>% pull(player_id) %>%
+  games_list = current_player_stats[current_player_stats$team == team_name, "player_id", drop=T] %>%
     sort() %>% 
-    map(~{
-      player_stats %>% group_by(game_id, team) %>% mutate(team_size = n()) %>%
-        filter(player_id ==.x,  team_size == team_size) %>% pull(game_id)
+    map(function(player){
+      player_stats %>% 
+        group_by(game_id, team) %>% 
+        filter(player_id == player,  n() == team_size) %>% 
+        pull(game_id)
     })
   
   
@@ -1295,16 +1297,27 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
   if (isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
                    game_complete))){
     round_comparison = current_round
+    
+    # Filter to scores which are:
+    #   - less than or equal to the current round
+    scores_comparison = past_scores %>% 
+      group_by(game_id, score_id) %>% 
+      mutate(shot_num = parse_round_num(round_num)) %>% 
+      filter(shot_num <= parse_round_num(current_round))
   } else {
     round_comparison = 999
+    
+    scores_comparison = past_scores
   }
   
   scores_slice = neers %>% filter(team == team_name) %>% 
     pull(player_id) %>% 
     sort() %>%
     imap( ~{
-      past_scores %>% filter(game_id %in% games_list[[.y]], as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
-                              player_id == .x)
+      past_scores %>% 
+        filter(game_id %in% games_list[[.y]], 
+               as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
+               player_id == .x)
       })
   
   # Bind that list together to make historical scores
