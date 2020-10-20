@@ -1153,13 +1153,13 @@ player_score_breakdown = function(ps_player_stats, ps_players, ps_game, ps_team)
     team_margin = margin(0,0,0, -20)
   }
   reverse_legend = (!!ps_team == "A")
-  
+
   df = ps_player_stats %>% 
     filter(game_id == !!ps_game) %>% 
     inner_join(ps_players) %>% 
     filter(team == !!ps_team) %>% 
     select(player_name, team, total_points:clink_points) %>% 
-    arrange(-total_points) %>% 
+    arrange(-total_points) %>%
     # Calculate sink points and "normal" points
     # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
     mutate(sink = threes*3,
@@ -1183,7 +1183,7 @@ player_score_breakdown = function(ps_player_stats, ps_players, ps_game, ps_team)
       # Labels
       geom_text(data = filter(df, point_pct > .15), 
                 aes(label = scales::percent(point_pct, accuracy = 1)), 
-                position = position_fill(vjust = .5), colour = "white", show.legend = F)+
+                position = position_fill(vjust = .5), colour = "white", show.legend = F) +
       # Y Axis
       scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
       # X Axis
