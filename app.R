@@ -704,6 +704,7 @@ server <- function(input, output, session) {
                        past_scores = scores_tbl) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
+                       team = "A",
                        score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
   })  
   
@@ -716,6 +717,7 @@ server <- function(input, output, session) {
                        past_scores = scores_tbl) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
+                       team = "B",
                        score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
   })  
   
