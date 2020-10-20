@@ -724,15 +724,16 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
               toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
     ungroup()
   
-  player_info = current_player_stats %>% 
+  player_info = team_player_stats %>% 
     # Filter player stats
-    # filter(game_id == max(game_id)) %>% 
     select(game_id, player_id, team) %>% 
     inner_join(neers) 
   
+  # Calculate:
+  #   - Team score
+  #   - Winning
+  # Then join on player info
   player_summary = current_player_stats %>% 
-    # Select the last game
-    # filter(game_id == max(game_id)) %>% 
     group_by(team) %>% 
     mutate(team_score = sum(total_points)) %>% 
     ungroup() %>% 
