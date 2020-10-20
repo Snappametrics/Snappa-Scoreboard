@@ -31,11 +31,7 @@ team_players_wide = player_stats %>%
 
 # I should take the difference in the teams' ratios as my independent variables,
 # so it's probably best to just difference these things out
-difference_names = names(player_stats)[which(names(player_stats) == "ones"):which(names(player_stats) == "def_ppr")]
-
-difference_expression = rlang::parse_exprs(paste0('across(starts_with(',difference_names, '), function(name_A, name_B){name_A - name_B})'))
-
-
+#DF 1
 df_pivot = player_stats %>% 
         group_by(game_id, team) %>%
         summarize(points = sum(total_points),
@@ -55,8 +51,8 @@ df_pivot = player_stats %>%
         left_join(team_players_wide, by = "game_id")
       
 
-        
-df_difference = player_stats %>% 
+#DF 2 
+df_pct_difference = player_stats %>% 
           group_by(game_id, team) %>%
           summarize(points = sum(total_points),
                     across(ones:clink_points, 
@@ -74,6 +70,27 @@ df_difference = player_stats %>%
           select(-team) %>% 
           left_join(team_players_wide, by = "game_id")
         
+# DF 3
+df_abs_difference = player_stats %>%
+  filter(player_id %in% players$player_id[which(player_stats %>% count(player_id) %>%  pull(n) >= 10)]) %>%
+  group_by(game_id, team) %>%
+  summarize(points = sum(total_points),
+            across(ones:clink_points, 
+                   function(column){sum(column)}),
+            across(points_per_round:def_ppr, sum),
+            # Take the average of player's TE to find team TE
+            team_te = mean(toss_efficiency),
+  ) %>% 
+  arrange(game_id, team) %>%
+  summarize(team = team,
+            across(ones:def_ppr, function(column){column - last(column)})
+  ) %>%
+  left_join(df_pivot %>% select(game_id, team_a_won), by = "game_id") %>%
+  filter(team == "A") %>% 
+  select(-team) %>% 
+  left_join(team_players_wide, by = "game_id")
+
+
 
 # Create an expression to make the mutations to the table to add dummies
 cols_to_make_A = rlang::parse_exprs(
@@ -83,13 +100,17 @@ cols_to_make_B = rlang::parse_exprs(
   paste0('ifelse(',  players$player_id, '%in% c(B_1, B_2, B_3, B_4), 1,0)')
 )
 
-df_dummies = df_difference %>% mutate(!!!cols_to_make_A, !!!cols_to_make_B) %>% ungroup()
 
-names(df_dummies) = c(names(df_difference), 
+
+df_dummies = df_abs_difference %>% mutate(!!!cols_to_make_A, !!!cols_to_make_B) %>% ungroup()
+
+
+names(df_dummies) = c(names(df_abs_difference), 
                       str_c("A_", players %>% arrange(player_id) %>% pull(player_name)),
                       str_c("B_", players %>% arrange(player_id) %>% pull(player_name)))
 
-df_dummies = df_dummies %>% select(-c(game_id, "A_1", "A_2", "A_3", "A_4", "B_1", "B_2", "B_3", "B_4", 
+df_dummies = df_dummies %>% filter(need_five)
+  select(-c(game_id, "A_1", "A_2", "A_3", "A_4", "B_1", "B_2", "B_3", "B_4", 
                                         "A_Dewey", "B_Dewey"))
 
 
@@ -109,14 +130,11 @@ predict(model,
         newdata = data.frame("A_Matthew" = c(0,1)),
         type = "response")
 
-# Make predictions based on changing out the team compositions
-comparison_tibble = function(df, original_player, challenger){
-  og_names = c(str_c("A_" original_player),
-              str_c("B_", original_player))
+# See how a given player influences the winrate relative to the dummy left out 
+player_influence = function(df, player_name){
+  # generate a tibble that can be filled in with values for the contrast
+  df_A = df %>% slice(0) %>%
+    
   
-  chal_names = c(str_c("A_" challenger),
-               str_c("B_", challenger))
-  
-  untouched = !(names(df) %in% c(og_names, chal_names)
   
 }
