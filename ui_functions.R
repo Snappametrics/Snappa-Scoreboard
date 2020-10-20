@@ -650,12 +650,13 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   opponent_size = nrow(neers[neers$team != team_name, ])
   
   current_game = unique(current_player_stats$game_id)
+  team_player_stats = current_player_stats[current_player_stats$team == team_name, ]
   
   # Make a historical stats table that is only comparing games which are similar
   # to the current one.
   # First, obtain a list of games in which the players on this team were on
   # an equally sized team. This is player specific, so map() is used
-  games_list = current_player_stats[current_player_stats$team == team_name, "player_id", drop=T] %>%
+  games_list = team_player_stats[, "player_id"] %>%
     sort() %>% 
     map(function(player){
       player_stats %>% 
