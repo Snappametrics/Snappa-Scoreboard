@@ -649,6 +649,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   team_size = nrow(neers[neers$team == team_name, ]) # 20x as fast
   opponent_size = nrow(neers[neers$team != team_name, ])
   
+  current_game = unique(current_player_stats$game_id)
+  
   # Make a historical stats table that is only comparing games which are similar
   # to the current one.
   # First, obtain a list of games in which the players on this team were on
@@ -696,7 +698,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     })
   
   # Bind that list together to make historical scores
-  historical_scores = list.rbind(scores_slice)
+  historical_scores = bind_rows(scores_slice) %>% 
+    filter(game_id != current_game)
   
   # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
   # That means I have to recreate player_stats using this table 
