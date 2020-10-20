@@ -1337,7 +1337,7 @@ test_function = function(current_player_stats, player_stats, players, neers, tea
     # Filter player stats
     # filter(game_id == max(game_id)) %>% 
     select(game_id, player_id, team) %>% 
-    inner_join(players)
+    inner_join(neers, by = "player_id")
   
   player_summary = current_player_stats %>% 
     # Select the last game
