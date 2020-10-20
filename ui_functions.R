@@ -786,13 +786,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            contains("per_round"), contains("off_"), contains("def_"), contains("toss")) 
   
   df = select(player_summary_historical,
-              -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
-    filter(team == team_name)
+              -contains("clink"), -contains("sink"), -contains("points_per"))
   
   return(df)
 }
 
-team_summary_tab = function(df, game_over, score_difference){
+team_summary_tab = function(df, game_over, score_difference, team){
   winning = unique(df$winning)
   if (game_over){
     subtitle_name = if_else(winning, "the winners.", "the losers.")
