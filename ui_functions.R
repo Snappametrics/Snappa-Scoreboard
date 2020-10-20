@@ -739,12 +739,27 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   df = select(player_summary_historical,
               -contains("clink"), -contains("sink"), -contains("points_per")) %>% 
     filter(team == team_name)
+  
+  return(df)
+}
 
+team_summary_tab = function(df, game_over, score_difference){
+  winning = unique(df$winning)
+  if (game_over){
+    subtitle_name = if_else(winning, "the winners.", "the losers.")
+  } else{
+    subtitle_name = if_else(winning, 
+                            "in the lead.", 
+                            str_c("chasing ", 
+                                  score_difference,
+                                  ".")
+                            )
+  }
+  
+  
   title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
   
-  player_names = df %>% arrange(player_id) %>% pull(player_name)
-  player_games = scores_slice %>% imap( ~{.x %>% pull(game_id) %>% length()}) %>% unlist()
-  
+
   hide_diff_cols = head(df, 1) %>% # Take the first row of a column
     mutate_all(as.character) %>% # prevents errors in pivot_longer
     # convert to column-value pair dataframe
@@ -771,24 +786,6 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     # Deframe to named vector
     deframe()
   
-  
-  return(df)
-}
-
-team_summary_tab = function(df, finish_game_input){
-  
-  winning = unique(df$winning)
-  if (finish_game_input){
-    subtitle_name = if_else(winning, "the winners.", "the losers.")
-  } else{
-    
-    subtitle_name = if_else(winning, 
-                            "in the lead.", 
-                            str_c("chasing ", 
-                                  abs(vals$current_scores$team_a - vals$current_scores$team_b),
-                                  ".")
-                            )
-  }
   
   
   df %>% 
