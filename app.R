@@ -699,7 +699,7 @@ server <- function(input, output, session) {
     make_summary_table(current_player_stats = vals$player_stats_db, 
                        player_stats = player_stats_tbl, 
                        neers = snappaneers(), 
-                       current_team = "A", 
+                       team_name = "A", 
                        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
                        past_scores = scores_tbl) %>%
       team_summary_tab(.,
