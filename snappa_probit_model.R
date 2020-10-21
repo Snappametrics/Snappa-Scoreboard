@@ -28,6 +28,30 @@ team_players_wide = player_stats %>%
   mutate(number = row_number()) %>%
   pivot_wider(id_cols= game_id, names_from = c(team, number), values_from = player_id)
 
+valid_players = player_stats %>%
+  filter(player_id %in% players$player_id[which(
+  player_stats %>% 
+    count(player_id) %>%  
+    pull(n) >= 10)]
+  ) %>%
+  pull(player_id) %>%  unique()
+
+
+# Challenge: only take in those games which featured players that have played 
+# more than 10 games
+
+
+valid_games = player_stats %>%
+  select(game_id, player_id) %>%
+  group_by(game_id) %>%
+  nest() %>%
+  arrange(game_id) %>%
+  mutate(all_valid = map_lgl(data, function(player_vec){
+    all(pull(player_vec) %in% valid_players)
+  })
+  ) %>% filter(all_valid) %>%
+  pull(game_id)
+
 
 # I should take the difference in the teams' ratios as my independent variables,
 # so it's probably best to just difference these things out
@@ -53,6 +77,7 @@ df_pivot = player_stats %>%
 
 #DF 2 
 df_pct_difference = player_stats %>% 
+          filter(game_id %in% valid_games) %>%
           group_by(game_id, team) %>%
           summarize(points = sum(total_points),
                     across(ones:clink_points, 
@@ -72,7 +97,11 @@ df_pct_difference = player_stats %>%
         
 # DF 3
 df_abs_difference = player_stats %>%
-  filter(player_id %in% players$player_id[which(player_stats %>% count(player_id) %>%  pull(n) >= 10)]) %>%
+  filter(player_id %in% players$player_id[which(
+                                          player_stats %>% 
+                                            count(player_id) %>%  
+                                            pull(n) >= 10)]
+         ) %>%
   group_by(game_id, team) %>%
   summarize(points = sum(total_points),
             across(ones:clink_points, 
@@ -92,24 +121,43 @@ df_abs_difference = player_stats %>%
 
 
 
+
+run_probit_model = function(df) {
+browser()
+
+model_ids = tibble(player_id =  
+                     unique(c(df$A_1, df$A_2, df$A_3, df$A_4,
+                              df$B_1, df$B_2, df$B_3, df$B_4)
+                            )) %>% 
+            pull(player_id) %>% 
+            discard(is.na)
+                   
 # Create an expression to make the mutations to the table to add dummies
 cols_to_make_A = rlang::parse_exprs(
-  paste0('ifelse(',  players$player_id, '%in% c(A_1, A_2, A_3, A_4), 1,0)')
+  paste0('ifelse(',  players$player_id, '%in% c(A_1,A_2,A_3,A_4), 1,0)')
   )
 cols_to_make_B = rlang::parse_exprs(
-  paste0('ifelse(',  players$player_id, '%in% c(B_1, B_2, B_3, B_4), 1,0)')
+  paste0('ifelse(',  players$player_id, '%in% c(B_1,B_2,B_3,B_4), 1,0)')
 )
 
 
 
-df_dummies = df_abs_difference %>% mutate(!!!cols_to_make_A, !!!cols_to_make_B) %>% ungroup()
+df_dummies = df %>% mutate(!!!cols_to_make_A, !!!cols_to_make_B) %>% ungroup()
 
 
-names(df_dummies) = c(names(df_abs_difference), 
-                      str_c("A_", players %>% arrange(player_id) %>% pull(player_name)),
-                      str_c("B_", players %>% arrange(player_id) %>% pull(player_name)))
-
-df_dummies = df_dummies %>% filter(need_five)
+names(df_dummies) = c(names(df), 
+                      str_c("A_", model_ids %>% 
+                              left_join(players, by = "player_id") %>% 
+                              arrange(player_id) %>% 
+                              pull(player_name)
+                            ),
+                      str_c("B_", model_ids %>% 
+                              left_join(players, by = "player_id") %>% 
+                              arrange(player_id) %>% 
+                              pull(player_name)
+                      )
+                      )
+df_dummies = df_dummies %>%
   select(-c(game_id, "A_1", "A_2", "A_3", "A_4", "B_1", "B_2", "B_3", "B_4", 
                                         "A_Dewey", "B_Dewey"))
 
@@ -122,13 +170,13 @@ df_dummies$team_a_won = factor(df_dummies$team_a_won)
 model = glm(team_a_won ~ ., family = binomial(link = "probit"), 
     data = df_dummies)
 
+return(model)
 ## model summary
 summary(model)
 
 
-predict(model,
-        newdata = data.frame("A_Matthew" = c(0,1)),
-        type = "response")
+}
+
 
 # See how a given player influences the winrate relative to the dummy left out 
 player_influence = function(df, player_name){
