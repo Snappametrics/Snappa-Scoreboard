@@ -41,6 +41,7 @@ valid_players = player_stats %>%
 # more than 10 games
 
 
+
 valid_games = player_stats %>%
   select(game_id, player_id) %>%
   group_by(game_id) %>%
@@ -123,21 +124,21 @@ df_abs_difference = player_stats %>%
 
 
 run_probit_model = function(df) {
-browser()
 
 model_ids = tibble(player_id =  
                      unique(c(df$A_1, df$A_2, df$A_3, df$A_4,
                               df$B_1, df$B_2, df$B_3, df$B_4)
-                            )) %>% 
-            pull(player_id) %>% 
-            discard(is.na)
+                            ) %>% discard(is.na)) 
+            
                    
 # Create an expression to make the mutations to the table to add dummies
+
+
 cols_to_make_A = rlang::parse_exprs(
-  paste0('ifelse(',  players$player_id, '%in% c(A_1,A_2,A_3,A_4), 1,0)')
+  paste0('ifelse(',  model_ids %>% pull(player_id), '%in% c(A_1,A_2,A_3,A_4), 1,0)')
   )
 cols_to_make_B = rlang::parse_exprs(
-  paste0('ifelse(',  players$player_id, '%in% c(B_1,B_2,B_3,B_4), 1,0)')
+  paste0('ifelse(',  model_ids %>% pull(player_id), '%in% c(B_1,B_2,B_3,B_4), 1,0)')
 )
 
 
@@ -176,6 +177,8 @@ summary(model)
 
 
 }
+
+pct_model = run_probit_model(df_pct_difference)
 
 
 # See how a given player influences the winrate relative to the dummy left out 
