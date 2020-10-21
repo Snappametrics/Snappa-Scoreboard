@@ -121,9 +121,16 @@ df_abs_difference = player_stats %>%
   left_join(team_players_wide, by = "game_id")
 
 
-
+df_pure_dummies = tibble(game_id = valid_games) %>% 
+  left_join(team_players_wide) %>%
+  left_join(df_pivot %>% select(game_id, team_a_won)) %>% 
+  group_by(game_id)
+  
+  
+  
 
 run_probit_model = function(df) {
+
 
 model_ids = tibble(player_id =  
                      unique(c(df$A_1, df$A_2, df$A_3, df$A_4,
@@ -172,16 +179,15 @@ model = glm(team_a_won ~ ., family = binomial(link = "probit"),
     data = df_dummies)
 
 return(model)
-## model summary
-summary(model)
-
 
 }
 
 pct_model = run_probit_model(df_pct_difference)
 
 
+pure_dummies_model = run_probit_model(df_pure_dummies)
 # See how a given player influences the winrate relative to the dummy left out 
+
 player_influence = function(df, player_name){
   # generate a tibble that can be filled in with values for the contrast
   df_A = df %>% slice(0) %>%
