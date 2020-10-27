@@ -51,6 +51,17 @@ game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats")
 
 # Functions ---------------------------------------------------------------
 
+add_shot_count = function(df, shot_num){
+  add_count(df, .data$team, name = "n_players") %>% # Count the number of rows for each team
+  # Calculate the number of shots for each player by diving the team shots by 2
+  # Team shots calculated using ceiling/floor because A always goes first
+  mutate(baseline_shots = case_when(str_detect(.data$team, "A") ~ ceiling(shot_num/2),
+                                    str_detect(.data$team, "B") ~ floor(shot_num/2)),
+         # In cases where teams are uneven, we calculate the average shots a player had
+         shots = .data$baseline_shots*max(.data$n_players)/.data$n_players) %>% 
+  select(-baseline_shots, -n_players)
+}
+
 
 rebuttal_check <- function(a , b , round, points_to_win) {
   if (any(is.null(a),is.null(b))){
@@ -1405,7 +1416,6 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
-    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
