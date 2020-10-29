@@ -671,25 +671,24 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # and opponent_team_size and merge it to player_stats to be used as a 
   
 
-  
+  # Make a dataframe of team sizes
   team_sizes = player_stats %>% 
-    group_by(game_id, team) %>% 
-    summarize(team_size = n()) %>%
+    # Count team size for each game
+    count(game_id, team, name = "team_size") %>% 
+    # Pivot separate columns for team 
     pivot_wider(names_from = team, 
                 values_from = team_size, 
                 names_glue = "size_{team}")
 
-  games_list = team_player_stats[, "player_id"] %>%
-    sort() %>% 
+  equivalent_games = team_players$player_id %>%
     map(function(player){
-      player_stats %>% 
-        group_by(game_id) %>%
-        left_join(team_sizes) %>%
-        filter(player_id == player, 
-               if_else(team == "A", size_A, size_B) == team_size,
-               if_else(team == "B", size_A, size_B) == opponent_size
-               ) %>%
-        pull(game_id)
+      # Subset each player's stats  to each player's stats and identify equivalent games
+      player_stats[player_stats$player_id == player & player_stats$game_id != current_game, ] %>% 
+        # Join team sizes to player stats
+        inner_join(team_sizes) %>%
+        # Keep cases where the team sizes are equivalent
+        filter(if_else(team == "A", size_A, size_B) == team_size,
+               if_else(team == "B", size_A, size_B) == opponent_size)
 
     })
   
@@ -699,45 +698,51 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # While we're here, also tell the display not to care about winners maybe? I could also set
   # a value here so that I don't have to execute a query later, but the issue becomes 
   
-  if (isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
-                   game_complete))){
-    round_comparison = current_round
+  ##
+  ## Scenario 1: Game is in progress
+  ##
+  in_progress = isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
+                             game_complete))
+  if (in_progress){
     
     # Filter to scores which are:
+    #   - only scored by players on this team
     #   - less than or equal to the current round
     scores_comparison = past_scores %>% 
-      group_by(game_id, score_id) %>% 
-      mutate(shot_num = parse_round_num(round_num)) %>% 
-      filter(shot_num <= parse_round_num(current_round))
+      filter(player_id %in% team_players$player_id, # Only include players on this team
+             parse_round_num(round_num) <= parse_round_num(current_round))
+
+    ##
+    ## Scenario 2: Game is complete
+    ##
   } else {
     round_comparison = 999
     
     scores_comparison = past_scores
   }
-  
-  scores_slice = neers %>% 
-    filter(team == team_name) %>% 
-    pull(player_id) %>% 
-    sort() %>%
+
+  # List scores which occurred at or before the current game's round
+  equivalent_games_scores = team_players$player_id %>%
     imap(function(player, index){
-      past_scores %>% 
-        filter(game_id %in% games_list[[index]], 
-               as.numeric(str_sub(round_num, 1, -2)) <= round_comparison, 
-               player_id == player)
+      # Join each player's equivalent games to their scores from those games
+      inner_join(equivalent_games[[index]], 
+                scores_comparison, 
+                by = c("game_id", "player_id"))
     })
   
   # Bind that list together to make historical scores
-  historical_scores = bind_rows(scores_slice) %>% 
-    filter(game_id != current_game)
+  historical_scores = bind_rows(equivalent_games_scores) %>% 
+    # When in progress, keep the shot counter generated from current_shots
+    when(in_progress ~ (.) %>% mutate(shots = current_shots),
+         ~ (.))
   
   # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
   # That means I have to recreate player_stats using this table 
   
+  # Calculate game performance in equivalent games
   comparison_player_stats = historical_scores %>% 
-    # Join scores to snappaneers to get each player's team
-    left_join(neers, by = "player_id") %>% 
     # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, team, shots) %>% 
+    group_by(game_id, player_id, shots) %>% 
     # Calculate summary stats
     summarise(total_points = sum(points_scored),
               ones = sum((points_scored == 1)),
