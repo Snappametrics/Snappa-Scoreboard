@@ -158,7 +158,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                        style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
-                       h1(paste("Team", toupper(left_team)), style = "color: white; font-size: 7rem;"),
+                       h1(paste("Team", toupper(left_team)), style = "color: white; font-size: 5.5rem; font-weight: 700;"),
                        # Score
                        h2(textOutput(paste0("score_", left_team))),
                        # Score button
@@ -178,7 +178,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      # materialSwitch(
                      #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
                      # ),
-                     h1("Round", style = "font-size: 8rem;"),
+                     h1("Round", style = "font-size: 5rem; font-weight: 600;"),
                      uiOutput("round_num"),
                      uiOutput("round_control_buttons")
 
@@ -190,7 +190,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                       style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
                       # uiOutput("active_die_a"),
                       # Header
-                      h1(paste("Team", toupper(right_team)), style = "color: white; font-size: 7rem;"),
+                      h1(paste("Team", toupper(right_team)), style = "color: white; font-size: 5.5rem; font-weight: 700;"),
                       # Score
                       h2(textOutput(paste0("score_", right_team))),
                       # Score button
