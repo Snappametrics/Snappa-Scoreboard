@@ -92,10 +92,6 @@
     margin-bottom: 2rem;
 }
 
-#switch_sides {
-    font-size: 2.25rem;
-}
-
 #round_num {
     font-size:18rem; 
     line-height: 20rem;
@@ -151,11 +147,6 @@ label[for='foot'] {
 }
 
 
-#new_game, #finish_game {
-    margin-left: 2rem;
-    margin-right: 2rem;
-}
-
 #start_game, #scorer, #paddle, #score {
     font-size: 170%; 
 }
@@ -168,6 +159,7 @@ label[for='foot'] {
 
 .sw-dropdown-in {
     background-color: var(--grey-bg) !important;
+    width: 37vw !important;
 }
 
 .sw-show.sw-dropdown-content {
