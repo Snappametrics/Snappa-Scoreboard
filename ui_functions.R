@@ -905,7 +905,7 @@ team_summary_tab = function(df, game_over, score_difference, team){
       columns = vars(toss_efficiency),
       decimals = 0
     ) %>% 
-    fmt_missing(columns = contains("diff"), missing_text = "—") %>% 
+    fmt_missing(columns = contains("diff")) %>% 
     # Styling
     # Title
     tab_style(
