@@ -272,15 +272,17 @@ generate_round_num = function(df, g.id){
   
   
   # Reason on the possible sequence of shots according
-  # to the multiplier
+  # to the multiplier. This requires some "finer tuning" on B_seq than
+  # I'm really happy with, so this would be a nice thing to come back to and improve
+  # in the future
   if(multiplier > 1) {
     A_seq = A_geq
-    B_seq = c(0, seq(from = 1, to = (100 * multiplier - multiplier), by = multiplier))
+    B_seq = c(0, rep(seq(from = multiplier, to = (100 * multiplier), by = multiplier), each = 2))[-201]
   } else if (multiplier == 1){
     A_seq = A_geq
     B_seq = B_geq
   } else {
-    A_seq = seq(from = 1, to = (100 / multiplier), by = (1/multiplier))
+    A_seq = rep(seq(from = (1/multiplier), to = (100 / multiplier), by = (1/multiplier)), each = 2)
     B_seq = B_geq
   }
   
@@ -380,22 +382,18 @@ ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player 
 # Stats Pane --------------------------------------------------------------
 
   tabPanel("Career Stats", icon = icon("bar-chart"),
-           fluidRow(
-             column(6,
-                    
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
-                      gt_output("career_stats_table")
-                    )
-                    ),
-             column(6,
-                    wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
-                      plotOutput("scoring_heatmap", height = "500px",
-                                 hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
-                      uiOutput("heatmap_info")
-                    )
+           wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
+                              title = "Leaderboard", 
+                              gt_output("career_stats_table")
+             ),
+             wellPanel(style = str_c("background-color:", snappa_pal[1]), align = "center",
+                              title = "Heatmap",
+                       plotOutput("scoring_heatmap", height = "750px",
+                                  hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
+                       uiOutput("heatmap_info")
              )
+
            )
-  )
 
 
 
@@ -609,21 +607,44 @@ server <- function(input, output, session) {
       actionButton("ok_B", "OK")
   })
   
-  # output$active_die_a = renderUI({
-  #   icon("dice-d6")
-  #   
-  #   if(str_detect(round_num(), "A")){
-  #     die_col = "#fffff"
-  #   } else {
-  #     die_col = "#e26a6a"
-  #   }
-  #   tags$i(class = "fa fa-dice-d6", 
-  #          style = paste("color:", die_col))
-  # })
-  
+
   # Output the round number
-  output$round_num = renderText({
-    round_num()
+  output$round_num = renderUI({
+    team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+    h3(round_num(), style = str_c("color:", team_colours[[substr(round_num(), 2, 2)]],
+                                  "; font-size:18rem; line-height: 20rem"))
+  })
+  
+  output$round_control_buttons = renderUI({
+    team_colours = list("A" = "danger", "B" = "primary")
+    column(width=12, align = "center",
+           actionBttn("next_round", 
+                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg"),
+           actionBttn("previous_round", 
+                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg")
+    )
+  })
+  
+  output$active_die_A = renderUI({
+    
+    if(sum(vals$scores_db$points_scored) >= vals$score_to){
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                           if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+    } else {
+      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                             if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+      }
+  })
+  
+  output$active_die_B = renderUI({
+    
+    if(sum(vals$scores_db$points_scored) >= vals$score_to){
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                           if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+      } else {
+        img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                               if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+      }
   })
   
   # Output Team A's score
@@ -772,7 +793,7 @@ server <- function(input, output, session) {
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
-          "<p><span style='font-weight:500'>Frequency</span>: ", freq))
+          "<p><span style='font-weight:500'>How many occurrences?</span>: ", freq))
   })
   
   
@@ -977,6 +998,13 @@ observe({
 
     scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
                               div(
+                                fluidRow(id = "scoreboardrow", 
+                                         column(4, align = "center", 
+                                                uiOutput("active_die_A")),
+                                         column(4),
+                                         column(4, align = "center", 
+                                                uiOutput("active_die_B"))
+                                ),
                                 team_scoreboard_ui(), 
                                wellPanel(class = "buttons-row",
                                          fluidRow(column(width = 5, align = "left",
@@ -1063,7 +1091,6 @@ observe({
     if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
               pull() %>% 
               isFALSE()) {
-        
         lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
           pull()
       
@@ -1087,7 +1114,7 @@ observe({
         vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
         vals$game_id = lost_game
         vals$shot_num = parse_round_num(lost_game_stats$last_round)
-        
+
         vals$game_stats_db = lost_game_stats
         
         # Initialize the current game's player_stats table
@@ -1144,20 +1171,29 @@ observe({
 
   })
   
-  observeEvent(req(sum(vals$scores_db$points_scored) >= 21), {
+  observeEvent(req(sum(vals$scores_db$points_scored) >= vals$score_to), {
     sendSweetAlert(session, 
                    title = "Halftime", 
                    type = "info",
                    text = HTML(str_c("Change places!", 
                                      "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
-    showModal(
-      tags$div(id= "game_summary", 
-               game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
-                                                                points_b = vals$current_scores$team_B)))
-      )
-    )
-    
+
+    shinyjs::click("switch_sides")
+
   }, once = T, ignoreNULL = T)
+  
+  observeEvent(c(
+    input$ok_A,
+    input$ok_B
+  ), {
+    if(all(input$score == 3, !input$clink)){
+      insertUI(selector = "#round_num",
+               where = "afterEnd",
+               ui = HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
+      
+    }
+  },
+  ignoreNULL = T, ignoreInit = T)
   
 
 observeEvent(input$game_summary, {
@@ -1182,7 +1218,7 @@ observeEvent(input$game_summary, {
     lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
     
     players = dbGetQuery(con, "SELECT * FROM players")
-    
+  
     lost_players = lost_player_stats %>%
       left_join(players) %>%
       select(player_name, team) %>% 
@@ -1425,6 +1461,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
@@ -1503,7 +1540,6 @@ observeEvent(input$resume_no, {
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
                                    vals$current_scores$team_B,
                                    round_num(), vals$score_to)
-    
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
       team_in_rebuttal = str_sub(round_num(), start = -1)
@@ -1517,6 +1553,20 @@ observeEvent(input$resume_no, {
       )
     } else {
       
+    }
+    # A fix to issue 45 where games would be prompted to end even though
+    # a team has technically left rebuttal (meaning tag needs to be false)
+    
+    if (vals$rebuttal_tag == T & vals$rebuttal == F){
+      vals$rebuttal_tag = F
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " has exited rebuttal!")
+                            ), 
+                       duration = 20, closeButton = F
+                      )
     }
     validate(
       need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
@@ -1671,6 +1721,18 @@ observeEvent(input$resume_no, {
       )
     } else {
       
+    }
+    
+    if (vals$rebuttal_tag == T & vals$rebuttal == F){
+      vals$rebuttal_tag = F
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " has exited rebuttal!")
+      ), 
+      duration = 20, closeButton = F
+      )
     }
     
     validate(

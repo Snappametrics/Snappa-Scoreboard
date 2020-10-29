@@ -33,6 +33,9 @@ parse_round_num = function(round){
     map_dbl(eval)
 }
 
+rowAny <- function(x) {
+  rowSums(x) > 0
+} 
 
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
@@ -174,17 +177,9 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
                      # ),
                      h1("Round", style = "font-size: 8rem;"),
-                     h3(textOutput("round_num")),
-                     column(width=12, align = "center",
-                       actionBttn("next_round", 
-                                  label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg"),
-                       actionBttn("previous_round", 
-                                  label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg")
-                     ),
-                     # fluidRow(,
-                     #          ),
-                     br()
-                     
+                     uiOutput("round_num"),
+                     uiOutput("round_control_buttons")
+
               ),
               # Team B
              column(width = 4, align = "center",
@@ -330,7 +325,8 @@ recent_scores_tab = function(scores_data){
     # Format the sentence with markdown
     fmt_markdown(vars(sentence)) %>% 
     tab_theme_snappa() %>% 
-    tab_options(column_labels.hidden = T)
+    tab_options(column_labels.hidden = T,
+                heading.align = 'center')
 }
 
 #For the restart game screen, I'm going to make a UI to handle most of the modalDialog
@@ -1053,11 +1049,23 @@ leaderboard_table = function(players, player_stats, game_stats){
     ) %>% 
     ungroup() %>% 
     # Remove any NAs
-    filter_at(vars(-player_name), any_vars(!is.na(.))) %>% 
-    mutate(rank = rank(-total_points)) %>% 
+    filter(rowAny(
+      across(
+        .cols = everything(),
+        .fns = ~ !is.na(.x)
+      )
+    ))  %>% 
+    # Before ranking players according to total score, first sort them by games played
+    # (this prevents players from ending up on the wrong side of the dividing line due
+    #  to having less points than some who should be below)
+    mutate(played_5_games = (games_played >= 5)) %>% 
+    arrange(-played_5_games, -total_points) %>% 
+    mutate(rank = 1:n()) %>% 
     arrange(rank) %>% 
-    select(rank, player_name, games_played, win_pct, total_points, total_shots, points_per_game, toss_efficiency)
-  
+    select(rank, player_name, 
+           games_played, win_pct, 
+           points_per_game, off_ppg:toss_efficiency)
+
   dividing_line = tab_df %>% filter(games_played < 5) %>% pull(rank) %>% min()
   
   stats_eligible = tab_df %>% 
@@ -1073,21 +1081,19 @@ leaderboard_table = function(players, player_stats, game_stats){
       player_name = "Player",
       games_played = "Games Played",
       win_pct = "Win %", 
-      total_points = "Total Points",
-      total_shots = "Total Shots",
       points_per_game = "Points per Game\n(PPG)",
-      # off_ppg = "Offensive PPG",
-      # def_ppg = "Defensive PPG",
+      off_ppg = "Offensive PPG",
+      def_ppg = "Defensive PPG",
       toss_efficiency = "Toss Efficiency"
     ) %>% 
     # Format integers
     fmt_number(
-      columns = vars(rank, total_points, total_shots),
+      columns = vars(rank),
       decimals = 0
     ) %>% 
     # Format doubles
     fmt_number(
-      columns = vars(points_per_game),
+      columns = vars(points_per_game, off_ppg, def_ppg),
       decimals = 2
     ) %>% 
     # Format percentages
@@ -1124,17 +1130,17 @@ leaderboard_table = function(players, player_stats, game_stats){
         columns = vars(rank)
       )
     ) %>% 
-    cols_align(align = "right") %>% 
+    cols_align(align = "center") %>% 
     cols_align(align = "left", columns = c("player_name", "rank")) %>% 
     # Left Align Player and Rank
     # Column widths
     cols_width(
       vars(rank) ~ pct(8),
       vars(player_name) ~ pct(24),
-      vars(total_points, games_played, total_shots) ~ pct(19),
+      vars(games_played) ~ pct(19),
       vars(win_pct) ~ pct(14),
-      vars(toss_efficiency, points_per_game) ~ pct(28)
-    ) %>% 
+      vars(toss_efficiency, points_per_game, def_ppg, off_ppg) ~ pct(28)
+    ) %>%
     # Underline dope shit
     tab_style(
       style = list(cell_text(weight = "bold", color = snappa_pal[2])),
@@ -1151,8 +1157,12 @@ leaderboard_table = function(players, player_stats, game_stats){
         ),
         # Most points
         cells_body(
-          columns = vars(total_points),
-          rows = rank == which.max(stats_eligible$total_points)
+          columns = vars(def_ppg),
+          rows = rank == which.max(stats_eligible$def_ppg)
+        ),
+        cells_body(
+          columns = vars(off_ppg),
+          rows = rank == which.max(stats_eligible$off_ppg)
         ),
         # Highest ppg
         cells_body(
