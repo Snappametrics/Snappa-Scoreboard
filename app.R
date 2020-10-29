@@ -1083,7 +1083,7 @@ observe({
 
         vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
         vals$game_id = lost_game
-        vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
+        vals$shot_num = parse_round_num(lost_game_stats$last_round)
         
         vals$game_stats_db = lost_game_stats
         
