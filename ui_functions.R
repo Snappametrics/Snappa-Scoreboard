@@ -778,16 +778,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            points_per_round:toss_efficiency)
   
   historical_stats = comparison_player_stats %>% 
-    select(-team) %>% 
     # Join in player name
     inner_join(select(player_summary, player_id, team)) %>% 
     select(game_id, player_id, 
            shots, total_points, paddle_points, clink_points, sinks = threes, 
            points_per_round:toss_efficiency) %>%
     arrange(player_id, game_id) %>% 
-    group_by(player_id) %>% 
-    mutate(game_num = 1:n()) %>% 
-    ungroup() %>% 
     group_by(player_id) %>% 
     summarise(
       across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
