@@ -361,14 +361,14 @@ ui <- dashboardPagePlus(
         status = "info"
       )
     )
+    
+    # Right side header
     ),
-    dropdownMenu(
-      type = "tasks",
-      badgeStatus = "danger",
-      taskItem(value = 20, color = "aqua", "Recent Scores?"),
-      taskItem(value = 40, color = "green", "Design new layout"),
-      taskItem(value = 60, color = "yellow", "Another task"),
-      taskItem(value = 80, color = "red", "Write documentation")
+    tags$li(class = "dropdown", socialButton(
+        url = "https://github.com/mdewey131/Snappa-Scoreboard",
+        type = "github"
+    ),
+    style = "padding-top:9px;"
     )
     ),
   dashboardSidebar(

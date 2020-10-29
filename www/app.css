@@ -139,8 +139,9 @@ label[for='foot'] {
 }
 
 
-#start_game, #scorer, #paddle, #score {
+#start_game, #scorer, #paddle, #score, #clink, #foot {
     font-size: 170%; 
+    margin-bottom: 1.5vh;
 }
 
 .sw-dropdown {
@@ -429,7 +430,6 @@ input[type=radio]{
 
 .btn {
     padding: 8px 16px;
-    margin: 0px 0px 16px;
     font-size: 1em;
     font-weight: 500;
     border-radius: 10px;
