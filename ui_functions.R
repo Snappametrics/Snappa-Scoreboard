@@ -125,15 +125,15 @@ team_input_ui = function(team, player_choices){
   column(4, align = "center",
          
          wellPanel(
-           style = paste("opacity: 0.92; background:", team_colour),
+           style = paste("margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92; background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
            # Player 1
            selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', sample(player_choices)),  
-                          options = list(create = TRUE)),
+                          options = list(create = TRUE, hideSelected=T)),
            # Player 2
            selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', sample(player_choices)), 
-                          options = list(create = TRUE)),
+                          options = list(create = TRUE, hideSelected=T)),
            # Add Player 3 button
            actionBttn(paste0("extra_player_", team, "3"), 
                       label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
@@ -155,7 +155,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                      
                      wellPanel(
-                       style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
+                       style = paste("margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92; background:", team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
                        h1(paste("Team", toupper(left_team)), style = "color: white; font-size: 5.5rem; font-weight: 700;"),

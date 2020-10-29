@@ -192,6 +192,11 @@ label.control-label[for='score'] {
     font-size: 3rem;
 }
 
+.selectize-dropdown {
+    bottom: 100% !important; 
+    top:auto!important;
+}
+
 .selectize-input.items.has-options.full.has-items {
     line-height: normal;
 }
@@ -521,6 +526,7 @@ input[type=radio]{
     and (min-device-width : 768px) 
     and (max-device-width : 1024px) 
     and (orientation : landscape) {
+        
     .h1, .h2, .h3, h1, h2, h3 {
         margin: 0;
     }
