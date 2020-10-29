@@ -805,20 +805,24 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            # Format each difference for the table
            across(matches("points_diff"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 1), ")")),
            across(matches("(per_round|ppr)_diff$"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 2), ")")),
-           toss_efficiency_diff = map_chr(toss_efficiency_diff, ~case_when(. >= 0 ~ toss_percent_plus(.), 
-                                                                           . < 0 ~ toss_percent_minus(.)))) %>% 
+           toss_efficiency_diff = map_chr(toss_efficiency_diff, 
+                                          ~case_when(. >= 0 ~ toss_percent_plus(.), 
+                                                     . < 0 ~ toss_percent_minus(.)))) %>% 
     # Remove historical stats
     select(-ends_with("_avg"), -ends_with("wavg")) %>% 
     # Order columns
     select(starts_with("player"), team, winning, 
            contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
-           contains("per_round"), contains("off_"), contains("def_"), contains("toss")) 
+           contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
   
   df = select(player_summary_historical,
               -contains("clink"), -contains("sink"), -contains("points_per"))
   
   return(df)
 }
+
+
+
 
 team_summary_tab = function(df, game_over, score_difference, team){
   winning = unique(df$winning)
