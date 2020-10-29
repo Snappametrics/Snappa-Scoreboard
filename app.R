@@ -327,10 +327,14 @@ score_prog_plot = score_heatmap(score_progression)
 ui <- dashboardPagePlus(
   
   dashboardHeaderPlus(title = tagList(
+    # Corner logo
     span(class = "logo-lg", "Snappa Scoreboard"), 
     img(class = "logo-mini", src = "die_hex.png", style = "padding:.25vw;")),
+    
     enable_rightsidebar = TRUE,
     rightSidebarIcon = "gears",
+    
+    # Left side header
     left_menu = tagList(
       dropdownBlock(
         id = "mydropdown",
@@ -422,6 +426,11 @@ ui <- dashboardPagePlus(
                 team_input_ui("B", pull(players_tbl, player_name))
               )
               ),
+
+
+      # Scoreboard --------------------------------------------------------------
+
+
       
       tabItem(tabName = "scoreboard", #icon = icon("window-maximize"), 
                div(
