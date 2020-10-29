@@ -973,7 +973,8 @@ team_summary_tab = function(df, game_over, score_difference, team){
       label = "Toss Efficiency",
       columns = contains("toss")
     ) %>% 
-    tab_source_note("Comparison of current game to career average") %>% 
+    when(game_over ~ (.) %>% tab_source_note("Comparison of current game to career average"),
+         ~ (.) %>% tab_source_note("Player performance compared to past games at or before the current round")) %>% 
     # tab_source_note(md(str_c('<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[2], ';">Snappa</span>',
     #                          '<span style="font-size: 18px;font-weight: 700;color:', snappa_pal[4], ';">DB</span>'))) %>% 
     # Footnotes
