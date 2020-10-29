@@ -29,8 +29,8 @@ aggregate_player_stats = function(scores, players){
 parse_round_num = function(round){
   str_replace_all(round, c("([0-9]+)A" = "(\\1*2)-1",
                            "([0-9]+)B" = "(\\1*2)")) %>% 
-    parse(text = .) %>% 
-    eval()
+    map(., ~parse(text = .)) %>% 
+    map_dbl(eval)
 }
 
 
