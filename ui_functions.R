@@ -640,17 +640,24 @@ tab_theme_snappa = function(data,
 }
 
 make_summary_table = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
-  
   # Produce a team's performance summary and comparison to historical performance in equivalent games
   # 1. Get a list of games the player has played in
   # 2. Get a list of scores from historical games at the equivalent point in the game
   # 3. Calculate current game player stats
   # 4. Calculate historical player stats from 1 & 2
-  team_size = nrow(neers[neers$team == team_name, ]) # 20x as fast
+  
+  # List players on the given team
+  team_players = neers[neers$team == team_name, ]
+  # Store current team and opponent sizes
+  team_size = nrow(team_players) 
   opponent_size = nrow(neers[neers$team != team_name, ])
   
+  # Store current game id and the given team's current player stats
   current_game = unique(current_player_stats$game_id)
   team_player_stats = current_player_stats[current_player_stats$team == team_name, ]
+  current_shots = unique(current_player_stats[current_player_stats$team == team_name, "shots", drop=T])
+  
+  
   
   # Make a historical stats table that is only comparing games which are similar
   # to the current one.
