@@ -306,16 +306,17 @@ off_transition_list = offensive_scores %>%
         fill = list(points_scored = 0)) %>%
       distinct() %>%
       group_by(game_id) %>%
-      summarize(running_score = cumsum(points_scored))
-
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
+      
+    running_score = table$running_score %>% append(0, after = 0)
   # setting our matrix to 51x51 means we're looking at score transitions
   # between 0 and 50
     matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51)
 
     # Create a matrix that will be used for our transition counts
-    for (i in 2:length(table$running_score)){
-      old_score = table$running_score[i - 1]
-      new_score = table$running_score[i]
+    for (i in 2:length(running_score)){
+      old_score = running_score[i - 1]
+      new_score = running_score[i]
 
       matrix_this_game[old_score + 1, new_score + 1] =
         matrix_this_game[old_score+ 1, new_score + 1] + 1
@@ -368,7 +369,7 @@ def_transition_list = defensive_scores %>%
         fill = list(points_scored = 0)) %>%
       distinct() %>%
       group_by(game_id) %>%
-      summarize(running_score = cumsum(points_scored))
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
 
   # setting our matrix to 51x51 means we're looking at score transitions
   # between 0 and 50
@@ -400,7 +401,6 @@ def_transition_probs = def_transition_counts / colsums(def_transition_counts)
 
 transition_probabilities = function(player_stats, scores, player_id_1, player_id_2, 
                               player_id_3 = NA, player_id_4 = NA){
-  
   
   if (any(c(!is.numeric(player_id_1), !is.numeric(player_id_2)))) {
     stop("'player_id_1` and `player_id_2` must be integers")
@@ -455,7 +455,7 @@ scores_simplified = scores %>%
 # those games and only rely on the games from the overlap when we map
 
 offensive_scores = scores_simplified %>% 
-  filter(game_id %in% unique(game_team_pair$game_id)) %>%
+  filter(game_id %in% game_team_pair$game_id) %>%
   left_join(game_team_pair, by = "game_id") %>% 
   filter(str_extract(round_num, "[A-Z]") == team,
          scoring_team == team) %>%
@@ -480,17 +480,15 @@ total_rounds = game_team_pair %>%
   select(game_id, offensive, defensive)
 
 
-off_transition_list = offensive_scores %>%
+off_transition_list = game_team_pair %>% 
   pull(game_id) %>%
-  unique() %>%
   map(function(game){
-    rounds_in_game = total_rounds %>%
+      
+      rounds_in_game = total_rounds %>%
       filter(game_id == game) %>%
       pull(offensive)
-
-    if (rounds_in_game == 0){
-      browser()
-    }
+    
+    
     shots_per_round = game_shots_pair %>%
       filter(game_id == game) %>%
       pull(shots)
@@ -518,16 +516,16 @@ off_transition_list = offensive_scores %>%
         fill = list(points_scored = 0)) %>%
       distinct() %>%
       group_by(game_id) %>%
-      summarize(running_score = cumsum(points_scored))
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
 
   # setting our matrix to 51x51 means we're looking at score transitions
   # between 0 and 50
     matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51)
-
+    running_score = table$running_score %>% append(0, after = 0)
     # Create a matrix that will be used for our transition counts
-    for (i in 2:length(table$running_score)){
-      old_score = table$running_score[i - 1]
-      new_score = table$running_score[i]
+    for (i in 2:length(running_score)){
+      old_score = running_score[i - 1]
+      new_score = running_score[i]
 
       matrix_this_game[old_score + 1, new_score + 1] =
         matrix_this_game[old_score+ 1, new_score + 1] + 1
@@ -545,9 +543,8 @@ off_transition_probs = off_transition_counts / row_totals
 off_transition_probs[which(off_transition_probs %>% is.nan())] = 0
 
 
-def_transition_list = defensive_scores %>%
+def_transition_list = game_team_pair %>%
   pull(game_id) %>%
-  unique() %>%
   map(function(game){
     rounds_in_game = total_rounds %>%
       filter(game_id == game) %>%
@@ -560,7 +557,7 @@ def_transition_list = defensive_scores %>%
       filter(game_id == game) %>%
       pull(shots)
 
-    filtered_game = offensive_scores %>%
+    filtered_game = defensive_scores %>%
       filter(game_id == game)
     # declare factor variables
     filtered_game$round_num =
@@ -583,17 +580,20 @@ def_transition_list = defensive_scores %>%
         fill = list(points_scored = 0)) %>%
       distinct() %>%
       group_by(game_id) %>%
-      summarize(running_score = cumsum(points_scored))
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
 
   # setting our matrix to 51x51 means we're looking at score transitions
   # between 0 and 50
     matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51)
 
+  # In order to model the transition from the initial state, a score = 0,
+  # I add the first 0 to the vector
+    running_score = table$running_score %>% append(0, after = 0)
     # Create a matrix that will be used for our transition counts
-    for (i in 2:length(table$running_score)){
-      old_score = table$running_score[i - 1]
-      new_score = table$running_score[i]
-
+    for (i in 2:length(running_score)){
+      old_score = running_score[i - 1]
+      new_score = running_score[i]
+      
       matrix_this_game[old_score + 1, new_score + 1] =
         matrix_this_game[old_score+ 1, new_score + 1] + 1
 
@@ -698,9 +698,8 @@ total_rounds = game_team_pair %>%
   select(game_id, offensive, defensive)
 
 
-off_transition_list = offensive_scores %>% 
+off_transition_list = game_team_pair %>% 
    pull(game_id) %>%
-   unique() %>%
    map(function(game){
      rounds_in_game = total_rounds %>%
        filter(game_id == game) %>%
@@ -739,12 +738,13 @@ off_transition_list = offensive_scores %>%
    # setting our matrix to 51x51 means we're looking at score transitions
    # between 0 and 50
      matrix_this_game = matrix(data = 0, nrow = 8, ncol = 8)
-
+      
+     running_score = table$running_score %>% append(0, after = 0)
      # Create a matrix that will be used for our transition counts
-     for (i in 2:length(table$points_scored)){
-       old_score = table$points_scored[i - 1]
-       new_score = table$points_scored[i]
-
+      for (i in 2:length(running_score)){
+        old_score = running_score[i - 1]
+        new_score = running_score[i]
+      
        matrix_this_game[old_score + 1, new_score + 1] =
          matrix_this_game[old_score+ 1, new_score + 1] + 1
 
@@ -804,12 +804,12 @@ off_transition_probs[which(off_transition_probs %>% is.nan())] = 0
    # setting our matrix to 51x51 means we're looking at score transitions
    # between 0 and 50
      matrix_this_game = matrix(data = 0, nrow = 8, ncol = 8)
-
+    running_score = table$running_score %>% append(0, after = 0)
      # Create a matrix that will be used for our transition counts
-     for (i in 2:length(table$points_scored)){
-       old_score = table$points_scored[i - 1]
-       new_score = table$points_scored[i]
-
+      for (i in 2:length(running_score)){
+        old_score = running_score[i - 1]
+        new_score = running_score[i]
+      
        matrix_this_game[old_score + 1, new_score + 1] =
          matrix_this_game[old_score+ 1, new_score + 1] + 1
 
@@ -1275,7 +1275,7 @@ return(games_record)
 }
 
 # Test command
-games_list = markov_simulate_games(c(4,9), c(1,2), 1000)
+games_list = markov_simulate_games(c(1,2), c(1,2) , 1000)
 
 
 # See the win percentage of the teams
