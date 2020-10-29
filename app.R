@@ -20,8 +20,10 @@ library(shinyWidgets)
 library(shinydashboard)
 library(shinydashboardPlus)
 library(gt)
+library(ggrepel)
+library(ggtext)
+library(patchwork)
 library(extrafont)
-
 
 source("test_dbconnect.R")
 source("ui_functions.R")
@@ -49,8 +51,16 @@ game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats")
 
 # Functions ---------------------------------------------------------------
 
-
-
+add_shot_count = function(df, shot_num){
+  add_count(df, team, name = "n_players") %>% # Count the number of rows for each team
+  # Calculate the number of shots for each player by diving the team shots by 2
+  # Team shots calculated using ceiling/floor because A always goes first
+  mutate(baseline_shots = case_when(str_detect(team, "A") ~ ceiling(shot_num/2),
+                                    str_detect(team, "B") ~ floor(shot_num/2)),
+         # In cases where teams are uneven, we calculate the average shots a player had
+         shots = baseline_shots*max(n_players)/n_players) %>% 
+  select(-baseline_shots, -n_players)
+}
 
 
 rebuttal_check <- function(a , b , round, points_to_win) {
@@ -70,13 +80,14 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 
 validate_scores = function(player, shot, snappaneers, paddle, scores_table, round_vector = rounds, rebuttal = F){
   
+  # Identify the scorer's team and ID
   players_team = pull(filter(snappaneers, player_name == player), team) %>% toupper()
   scorer_id = pull(filter(snappaneers, player_name == player), player_id)
   
-  # Typical Offense
+  # Typical Offense: Scoring on one's shot
   typical_offense = str_detect(round_vector[shot], players_team)
   
-  # Typical Paddle
+  # Typical Paddle: Scoring on the other team's shot
   typical_paddle = all(str_detect(round_vector[shot], players_team, negate = T), 
                        paddle == T)
   
@@ -88,10 +99,12 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
   # If teams are even
   if(nrow(distinct(count(snappaneers, team), n)) == 1){
     
-    
+    # A valid score is either a paddle or a typical offense and the scorer has not already scored
+    # OR it's rebuttal
     valid_score = any(paddle,
                       all(typical_offense,
-                          not_already_scored))
+                          not_already_scored),
+                      rebuttal)
     
     if(not_already_scored){
       valid_score_message = "That entry doesn't make sense for this round/shooter combination"
@@ -121,10 +134,11 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
       valid_score_message = "That player scored a non-paddle point already!"
       
     } else { # If they have the larger team:
-      # They cannot have scored already
+      # They cannot have scored already OR it's rebuttal
       valid_score = any(all(typical_offense,
                             not_already_scored),
-                        paddle)
+                        paddle,
+                        rebuttal)
       
       valid_score_message = "That player scored a non-paddle point already!"
       
@@ -210,6 +224,15 @@ db_update_player_stats = function(player_stats){
   dbExecute(con, del_rows)
   
   dbWriteTable(con, "player_stats", player_stats, append = T)
+}
+
+db_update_round = function(round, game){
+  # Update round number in game_stats
+  dbExecute(con, 
+            sql(str_c("UPDATE game_stats 
+                 set last_round = '", round, "'
+                ",
+                      "WHERE game_id = ", game, ";")))
 }
 
 
@@ -398,35 +421,54 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "scoreboard", #icon = icon("window-maximize"), 
                div(
                  fluidRow(id = "scoreboardrow", 
-                          column(4, offset = 4, align = "center", 
-                                 actionBttn("switch_sides", 
-                                            "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
-                          column(4)),
+                          column(4, align = "center", 
+                                 uiOutput("active_die_A")),
+                          column(4),
+                          column(4, align = "center", 
+                                 uiOutput("active_die_B"))
+                 ),
                  team_scoreboard_ui(), 
                  
-                 div(id = "bottom_buttons",
-                     fluidRow(width = 4, offset = 4, align = "center",
-                              # Recent Scores
-                              dropdown(
-                                class = "recent_scores",
-                                inputId = "recent_scores_",
-                                gt_output("recent_scores"),
-                                style = "unite",
-                                size = "lg", 
-                                up = T,
-                                label = "Recent Scores",
-                                icon = icon("backward"),
-                                animate = animateOptions(
-                                  enter = animations$fading_entrances$fadeInUp,
-                                  exit = animations$fading_exits$fadeOutDown
-                                )
-                              )),
-                     fluidRow(
-                       column(width = 4, offset = 4, align = "center",
-                              actionBttn("new_game", "Restart", style = "unite", color = "warning"),
-                              actionBttn("finish_game", "Finish", style = "unite", color = "warning")
-                       )
-                     )
+                 wellPanel(class = "buttons-row",
+                           fluidRow(column(width = 5, align = "left",
+                                           actionBttn("game_summary", 
+                                                      "Game Summary",
+                                                      style = "bordered",
+                                                      color = "primary",
+                                                      icon = icon("chart-bar"),
+                                                      size = "sm"),
+                                           # Recent Scores
+                                           dropdown(
+                                             class = "recent_scores",
+                                             inputId = "recent_scores_",
+                                             gt_output("recent_scores"),
+                                             style = "bordered",
+                                             status = "primary",
+                                             size = "sm", 
+                                             up = T,
+                                             label = "Recent Scores",
+                                             icon = icon("backward"),
+                                             animate = animateOptions(
+                                               enter = animations$fading_entrances$fadeInUp,
+                                               exit = animations$fading_exits$fadeOutDown
+                                             )
+                                           )
+                           ),
+                           column(width = 2, align = "center",
+                                  actionBttn("switch_sides", 
+                                             "Switch Sides", style = "bordered", 
+                                             color = "primary", 
+                                             icon = icon("refresh"), size = "sm")
+                           ),
+                           column(width = 5, align = "right",
+                                  actionBttn("new_game", "Restart", 
+                                             icon = icon("plus"), size = "sm",
+                                             style = "bordered", color = "warning"),
+                                  actionBttn("finish_game", "Finish", 
+                                             icon = icon("check"), size = "sm",
+                                             style = "bordered", color = "warning")
+                           )
+                           )
                  )
                  
                )
@@ -452,7 +494,7 @@ ui <- dashboardPagePlus(
     )
   ),
   useShinyjs(),
-  
+
 
 # Start Screen ------------------------------------------------------------
 
@@ -540,17 +582,7 @@ server <- function(input, output, session) {
   #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
   # )
   
-  add_shot_count = function(df){
-    
-    add_count(df, .data$team, name = "n_players") %>% # Count the number of rows for each team
-      # Calculate the number of shots for each player by diving the team shots by 2
-      # Team shots calculated using ceiling/floor because A always goes first
-      mutate(baseline_shots = case_when(str_detect(.data$team, "A") ~ ceiling(vals$shot_num/2),
-                                        str_detect(.data$team, "B") ~ floor(vals$shot_num/2)),
-             # In cases where teams are uneven, we calculate the average shots a player had
-             shots = .data$baseline_shots*max(.data$n_players)/.data$n_players) %>% 
-      select(-baseline_shots, -n_players)
-  }
+  
   
   
     
@@ -604,7 +636,8 @@ server <- function(input, output, session) {
     want_B3 = F,
     want_B4 = F,
 
-    switch_counter = 1
+    switch_counter = 1,
+    game_over = F
   )
   
   
@@ -639,7 +672,7 @@ server <- function(input, output, session) {
       filter(player_name != "") %>% 
       left_join(vals$players_db, by = "player_name") %>% 
       # Add shot count
-      add_shot_count()
+      add_shot_count(shot_num = vals$shot_num)
   })
   
   # Vector of players, with current players removed
@@ -657,7 +690,7 @@ server <- function(input, output, session) {
   
   
   
-  
+
 
   
 
@@ -723,21 +756,44 @@ server <- function(input, output, session) {
       actionButton("ok_B", "OK")
   })
   
-  # output$active_die_a = renderUI({
-  #   icon("dice-d6")
-  #   
-  #   if(str_detect(round_num(), "A")){
-  #     die_col = "#fffff"
-  #   } else {
-  #     die_col = "#e26a6a"
-  #   }
-  #   tags$i(class = "fa fa-dice-d6", 
-  #          style = paste("color:", die_col))
-  # })
-  
+
   # Output the round number
-  output$round_num = renderText({
-    round_num()
+  output$round_num = renderUI({
+    team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+    h3(round_num(), style = str_c("color:", team_colours[[substr(round_num(), 2, 2)]],
+                                  "; font-size:18rem; line-height: 20rem"))
+  })
+  
+  output$round_control_buttons = renderUI({
+    team_colours = list("A" = "danger", "B" = "primary")
+    column(width=12, align = "center",
+           actionBttn("next_round", 
+                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg"),
+           actionBttn("previous_round", 
+                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg")
+    )
+  })
+  
+  output$active_die_A = renderUI({
+    
+    if(sum(vals$scores_db$points_scored) >= vals$score_to){
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                           if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+    } else {
+      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                             if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+      }
+  })
+  
+  output$active_die_B = renderUI({
+    
+    if(sum(vals$scores_db$points_scored) >= vals$score_to){
+    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                           if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+      } else {
+        img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                               if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+      }
   })
   
   # Output Team A's score
@@ -787,7 +843,80 @@ server <- function(input, output, session) {
       write.csv(vals$scores_db, con)
     }
   )
+
+# Game Summary Stats ------------------------------------------------------
   
+
+  
+  game_summary = function(df) {
+    
+    modalDialog(title = str_c("Score: ", df$points_a, " - ", df$points_b),  style = str_c("background-color: ", snappa_pal[1], ";"),
+      
+      # h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
+      # ,
+      # Tables
+      fluidRow(
+        column(6, align = "center",
+               gt_output("team_a_summary")
+        ),
+        column(6,align = "center",# offset = 2,
+               gt_output("team_b_summary")
+        )
+      ),
+      # Summary plot
+        plotOutput("summary_plot", height = "50vh"),
+      
+      footer = NULL,
+      easyClose = T,
+      size = "l"
+    )
+  }
+  
+  output$summary_plot = renderPlot({
+    game_summary_plot(player_stats = vals$player_stats_db,
+                      players = vals$players_db, 
+                      scores = vals$scores_db,
+                      game = vals$game_id)
+  })
+  
+  
+  
+  
+  
+  
+
+  output$team_a_summary = render_gt({
+    make_summary_table(current_player_stats = vals$player_stats_db, 
+                       player_stats = player_stats_tbl, 
+                       neers = snappaneers(), 
+                       team_name = "A", 
+                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                       past_scores = scores_tbl) %>%
+      team_summary_tab(.,
+                       game_over = vals$game_over, 
+                       team = "A",
+                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+  })  
+  
+  output$team_b_summary = render_gt({
+    make_summary_table(current_player_stats = vals$player_stats_db, 
+                       player_stats = player_stats_tbl, 
+                       neers = snappaneers(), 
+                       team_name = "B", 
+                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                       past_scores = scores_tbl) %>%
+      team_summary_tab(.,
+                       game_over = vals$game_over, 
+                       team = "B",
+                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+  })  
+  
+  
+  
+  
+  
+  
+
 
 # Stats Pane Outputs --------------------------------------------------------------
 
@@ -813,7 +942,7 @@ server <- function(input, output, session) {
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
-          "<p><span style='font-weight:500'>Frequency</span>: ", freq))
+          "<p><span style='font-weight:500'>How many occurrences?</span>: ", freq))
   })
   
   
@@ -932,12 +1061,12 @@ observe({
     
     if(switch_is_even){
       removeUI("#ScoreboardUI", immediate=T)
-      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
+      insertUI(selector = ".buttons-row", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
       # removeTab("navbar", target = "Scoreboard", session)
       # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
     } else {
       removeUI("#ScoreboardUI", immediate = T)
-      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui(), where = "beforeBegin")
+      insertUI(selector = ".buttons-row", ui = team_scoreboard_ui(), where = "beforeBegin")
       # removeTab("navbar", target = "Scoreboard", session)
       # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
     }
@@ -1014,47 +1143,7 @@ observe({
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
 
-# Add Scoreboard ----------------------------------------------------------
 
-    # scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
-    #                           div(
-    #                             fluidRow(id = "scoreboardrow", 
-    #                                      column(4, offset = 4, align = "center", 
-    #                                             actionBttn("switch_sides", 
-    #                                                        "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
-    #                                      column(4)),
-    #                             team_scoreboard_ui(), 
-    #                             
-    #                             div(id = "bottom_buttons",
-    #                                 fluidRow(width = 4, offset = 4, align = "center",
-    #                                          # Recent Scores
-    #                                          dropdown(
-    #                                            class = "recent_scores",
-    #                                            inputId = "recent_scores_",
-    #                                            gt_output("recent_scores"),
-    #                                            style = "unite",
-    #                                            size = "lg", 
-    #                                            up = T,
-    #                                            label = "Recent Scores",
-    #                                            icon = icon("backward"),
-    #                                            animate = animateOptions(
-    #                                              enter = animations$fading_entrances$fadeInUp,
-    #                                              exit = animations$fading_exits$fadeOutDown
-    #                                            )
-    #                                          )),
-    #                                 fluidRow(
-    #                                   column(width = 4, offset = 4, align = "center",
-    #                                          actionBttn("new_game", "Restart", style = "unite", color = "warning"),
-    #                                          actionBttn("finish_game", "Finish", style = "unite", color = "warning")
-    #                                   )
-    #                                 )
-    #                                 )
-    #                             
-    #                             )
-    #                           )
-    # insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
-    # hideTab("navbar", "Player Input")
-    
   
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
@@ -1115,9 +1204,8 @@ observe({
 
         vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
         vals$game_id = lost_game
-        
-        vals$shot_num = extract_team_sizes(vals$game_id) %>% generate_round_num(g.id = vals$game_id)
-       
+        vals$shot_num = parse_round_num(lost_game_stats$last_round)
+
         vals$game_stats_db = lost_game_stats
         
         # Initialize the current game's player_stats table
@@ -1184,9 +1272,9 @@ observe({
                    type = "info",
                    text = HTML(str_c("Change places!", 
                                      "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
-    
+
     shinyjs::click("switch_sides")
-    
+
   }, once = T, ignoreNULL = T)
   
   observeEvent(c(
@@ -1203,6 +1291,17 @@ observe({
   ignoreNULL = T, ignoreInit = T)
 
 
+observeEvent(input$game_summary, {
+  showModal(
+    tags$div(id= "game_summary", 
+             game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
+                                                              points_b = vals$current_scores$team_B)))
+    )
+  )
+  
+})
+
+  
   
 # Restart a game after indicating you would like to do so
   observeEvent(input$resume_yes, {
@@ -1265,6 +1364,9 @@ observeEvent(input$resume_no, {
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
       
+      # Update round in game stats
+      db_update_round(round = round_num(), game = vals$game_id)
+      
     
     
     
@@ -1302,6 +1404,9 @@ observeEvent(input$resume_no, {
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
                                    round = round_num(), points_to_win = vals$score_to)
+    
+    # Update round in game stats
+    db_update_round(round = round_num(), game = vals$game_id)
     
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
@@ -1451,6 +1556,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
@@ -1529,7 +1635,6 @@ observeEvent(input$resume_no, {
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
                                    vals$current_scores$team_B,
                                    round_num(), vals$score_to)
-    
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
       team_in_rebuttal = str_sub(round_num(), start = -1)
@@ -1543,6 +1648,20 @@ observeEvent(input$resume_no, {
       )
     } else {
       
+    }
+    # A fix to issue 45 where games would be prompted to end even though
+    # a team has technically left rebuttal (meaning tag needs to be false)
+    
+    if (vals$rebuttal_tag == T & vals$rebuttal == F){
+      vals$rebuttal_tag = F
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " has exited rebuttal!")
+                            ), 
+                       duration = 20, closeButton = F
+                      )
     }
     validate(
       need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
@@ -1638,7 +1757,7 @@ observeEvent(input$resume_no, {
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
-      
+
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
                               tibble(
@@ -1671,7 +1790,7 @@ observeEvent(input$resume_no, {
         showNotification(HTML(str_c("<span style='color:", snappa_pal[3], "'>That's some hot shit!</span>")),
                          duration = 10, closeButton = F)
       }
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
+      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
@@ -1697,6 +1816,18 @@ observeEvent(input$resume_no, {
       )
     } else {
       
+    }
+    
+    if (vals$rebuttal_tag == T & vals$rebuttal == F){
+      vals$rebuttal_tag = F
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " has exited rebuttal!")
+      ), 
+      duration = 20, closeButton = F
+      )
     }
     
     validate(
@@ -1766,6 +1897,9 @@ observeEvent(input$resume_no, {
   })
   
   observeEvent(input$finish_game_sure, {
+    
+    vals$game_over = T
+
     showModal(
       modalDialog(
                   h2("Well full send that data to the SnappaDB!"),
@@ -1808,7 +1942,7 @@ observeEvent(input$resume_no, {
       group_by(game_id) %>% 
       summarise(points_a = sum((team == "A")*total_points),
                 points_b = sum((team == "B")*total_points),
-                rounds = as.integer(vals$shot_num-1),
+                rounds = as.integer(vals$shot_num),
                 ones = sum(ones),
                 twos = sum(twos),
                 threes = sum(threes),
@@ -1821,7 +1955,7 @@ observeEvent(input$resume_no, {
         group_by(game_id) %>% 
         summarise(points_a = sum((team == "A")*total_points),
                   points_b = sum((team == "B")*total_points),
-                  rounds = as.integer(vals$shot_num-1),
+                  rounds = as.integer(vals$shot_num),
                   ones = sum(ones),
                   twos = sum(twos),
                   threes = sum(threes),
@@ -1883,6 +2017,12 @@ observeEvent(input$resume_no, {
                    title = "The die is cast",
                    text = "Data sent to SnappaDB",
                    type = "success")
+    
+
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary(vals$game_stats_db))
+    )
     
   })
   

@@ -1,0 +1,20 @@
+# Scoreboard Testing
+
+1. Run app
+2. Check **Career Stats** Panel
+3. Input Player names
+    - Add P3
+    - Add P4
+    - Remove P3
+4. Throw some dice
+5. Score 7 for both A players
+6. Pass the dice
+7. Score 1 for both B players
+8. Undo score for both B players
+9. Score 2 Clink points for B player
+10. Score 1 Paddle point for B player
+11. Pass the dice
+12. Score 2 Paddle Clink points for B player
+13. Score 7 Clink points for A player
+14. Pass the dice twice
+15. Send to SnappaDB

@@ -1,0 +1,932 @@
+---
+title: "Scoreboard Vignette"
+author: "Mark Barrett"
+date: "7/20/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+```
+
+This document outlines how the scoreboard works, and how the processes interact with each other.
+We will cover what I will term **Data** processes and **UI** processes, although they do blur together at points.
+The **Data** processes relate to the data used, and how data is read, created, and manipulated throughout the course of a game.
+The **UI** processes relate to the UI elements, and how the UX utilizes these elements throughout the course of a game.
+
+We will divide either section between processes in one of these phases:
+
+- App Startup
+- Game Start
+- In-game
+- Game Completion
+
+# Packages
+
+To start off, the scoreboard makes use of a number of different packages:
+
+```{r}
+# Step into the 'verse
+library(tidyverse)
+library(lubridate)
+
+# Tnteraction with the database
+library(DBI)
+library(RPostgres)
+library(dbplyr)
+
+# Shiny-related
+library(shiny)
+library(shinyjs)
+library(shinyWidgets)
+
+# Visualization-related
+library(gt)
+library(extrafont)
+```
+
+As outlined in the comments, we use three packages to interact with our database housed by AWS. 
+We use three Shiny packages for UI and UX functions.
+We use the package-conglomerate tidyverse, `gt`, and `extrafont` for working with data and creating visualizations.
+
+# UI
+
+## App Startup
+
+On startup, we are using a `navbarPage` layout, referencing our custom CSS styling (which seems like it **needs** to be in a `/www` folder to work), and calling ShinyJS.^[I know there is [a ShinyJS article](https://deanattali.com/shinyjs/advanced#usage-navbarpage) about the correct positioning of `useShinyjs` in `navbarPage`, and hopefully we will have updated this by the time anyone is reading this, but in case you're wondering why we're placing the function here - because it works...]
+
+```{r ui-start, eval=F}
+ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player Input",
+  theme = "app.css",
+  useShinyjs(),
+  
+#   ...
+#   ...
+```
+
+### Player Input Screen
+
+Here we make a `tabPanel` for the player inputs.  
+Player inputs are created using a custom function called `team_input_ui` which takes team and players arguments. 
+In a row below, we create the `start_game` button, as well as `validate_start` which is a reactive UI element that ensures player inputs are neither empty nor duplicated.
+Lastly there is a radio button to allow players to choose what score to play to, and some little `helpText` to inform players that they need to enter their names before `start_game` is enabled.
+The minimum is two players per team, and we allow for up to 4v4, with no expectation that the teams are balanced i.e. 2v3, 3v4 are allowed.
+We will go over the start validation more in the Data Game Start section later on.
+
+Firstly, here is the `team_input_ui` function (contained in the `ui_functions.R` file):
+
+```{r ui-functions}
+team_input_ui = function(team, player_choices){
+  
+  players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
+  player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
+  team_colour = if_else(team == "a", "#e26a6a", "#2574a9")
+  
+  column(4, align = "center",
+         
+         wellPanel(
+           style = paste("opacity: 0.92; background:", team_colour),
+           # Header
+           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 600%;"),
+           # Player 1
+           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  options = list(create = TRUE), width = "60%"),
+           # Player 2
+           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), options = list(create = TRUE), width = "60%"),
+           # Add Player 3 button
+           actionBttn(paste0("extra_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
+           
+           # CSS: Increase font size, change color to white, add top and bottom margins
+           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}",
+                                               player_inputs, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+         )
+  )
+}
+
+```
+
+The function puts a team name header at the top, creates `selectizeInputs` for player input, and an `actionBttn` (from ShinyWidgets) to allow adding additional players.
+The team name argument allows us to name our player inputs based on the team name, and also assign a team colour.
+The player inputs use the players already in the database's `players` table, with an option to create new players also.
+
+The style tags should probably be removed and added to our style sheet instead...
+
+Anyway, here is the tabPanel which houses the Player Input screen, using the above function to create the same UI for either team.
+
+
+```{r player-input, eval=F}
+# ...
+# ...
+
+tabPanel("Player Input", icon = icon("users"),
+         # Fluid Row - 3 columns
+         fluidRow(
+           team_input_ui("a", pull(players_tbl, player_name)),
+           
+           # Column 2 - empty
+           column(4),
+           
+           # Column 3 - Team B
+           team_input_ui("b", pull(players_tbl, player_name))
+           ),
+         
+         
+        # Second row - 3 columns
+         fluidRow(
+           # Column 1 - empty
+           column(4),
+           # Column 2
+           #    - Start game button
+           #    - Score to play to
+           column(4,  align = "center",
+                  disabled(actionBttn("start_game", 
+                                      label = "Throw some dice?", style = "pill", color = "primary")),
+                  uiOutput("validate_start"),
+                  br(),
+                  
+                  awesomeRadio(inputId = "play_to", 
+                               label = "What score are you playing to?", 
+                               choices = list("21" = 1, "32" = 2), 
+                               selected = 1, inline = T),
+                  br(),
+                  helpText("Note: All players must enter their name before the game can begin")
+                  ),
+           column(4)
+           )
+),
+
+# ...
+# ...
+
+```
+
+
+## Game Start
+
+Before the game can start, we validate the player inputs.  This is covered in the Data section.
+When the game start is validated, users can click the `game_start` button. 
+Once they do this, we use the cool functions `insertTab` and `hideTab` to bring the users to the Scoreboard screen.
+
+But first, the UI for a lot of the scoreboard is contained in a function called `team_scoreboard_ui`. 
+This function takes two arguments - `left_team` and `right_team` - to enable us to switch the teams to either side of the screen.
+The UI consists of a column for Team A, a column for displaying the round and round-tracking buttons, and a column for Team B.
+
+```{r team-scoreboard-ui}
+team_scoreboard_ui = function(left_team = "a", right_team = "b"){
+  
+  team_colours = list("a" = "#e26a6a", "b" = "#2574a9")
+  
+  div(id = "ScoreboardUI", 
+           
+           fluidRow(
+             # Left Team
+             column(width = 4, align = "center",
+                     
+                     wellPanel(
+                       style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
+                       # uiOutput("active_die_a"),
+                       # Header
+                       h1(paste("Team", toupper(left_team)), style = "align: center; color: white; font-size: 550%;"),
+                       # Score
+                       h2(textOutput(paste0("score_", left_team))),
+                       # Score button
+                       actionBttn(paste0(left_team, "_score_button"), 
+                                  label = "We scored!", color = "danger",
+                                  size = "lg"),
+                       br(),
+                       actionBttn(
+                         inputId = paste0("undo_score_", left_team),
+                         label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                       ),
+                       h3(textOutput(paste0("player_names_", left_team)))
+                     )
+              ), 
+              # Round
+              column(width = 4, align = "center",
+                     # materialSwitch(
+                     #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
+                     # ),
+                     
+                     h1("Round", style = "font-size: 600%;"),
+                     h3(textOutput("round_num")),
+                     fluidRow(actionBttn("previous_round", 
+                                         label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = "primary", size = "lg"),
+                              actionBttn("next_round", 
+                                         label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = "primary", size = "lg")),
+                     br(),
+              ),
+              # Team B
+             column(width = 4, align = "center",
+                    
+                    wellPanel(
+                      style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
+                      # uiOutput("active_die_a"),
+                      # Header
+                      h1(paste("Team", toupper(right_team)), style = "align: center; color: white; font-size: 550%;"),
+                      # Score
+                      h2(textOutput(paste0("score_", right_team))),
+                      # Score button
+                      actionBttn(paste0(right_team, "_score_button"), 
+                                 label = "We scored!", color = "danger",
+                                 size = "lg"),
+                      br(),
+                      actionBttn(
+                        inputId = paste0("undo_score_", right_team),
+                        label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                      ),
+                      h3(textOutput(paste0("player_names_", right_team)))
+                    )
+             )
+              )
+  )
+}
+
+
+```
+
+Here is how the whole Scoreboard UI is laid out:
+
+- The overarching `tabPanel` contains a `div`
+- Within this div we place a `fluidRow`, the Scoreboard UI created with a custom function, and another div labelled `bottom_buttons`.
+- The first `fluidRow` contains an `actionBttn` called `switch_sides` which is used to (you guessed it) switch the team's UI to the other side of the screen.
+- A custom function `team_scoreboard_ui` creates the majority of UI elements (above)
+- Beneath the scoreboard are buttons for checking `recent_scores`, starting a new game with `new_game`, and finishing the game with `finish_game`.
+
+With all that contained in a function, our remaining Scoreboard UI is created with the following:
+
+```{r game-start-ui, eval=F}
+# When we click "Start Game", 
+#   - Add new players to the players table
+#   - switch to the scoreboard
+#   - Set the score outputs and shot number to 0
+#   - Record the score we're playing to
+#   - Initialize the current game's player_stats table
+observeEvent(input$start_game, {
+
+# Add Scoreboard ----------------------------------------------------------
+
+  scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
+                            div(
+                              fluidRow(id = "scoreboardrow", 
+                                       column(4, align = "left"), 
+                                       column(4, align = "center", 
+                                              actionBttn("switch_sides", 
+                                                         "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
+                                       column(4)),
+                              team_scoreboard_ui(), 
+                              div(id = "bottom_buttons",
+                                  fluidRow(
+                                    column(width = 4, offset = 4, align = "center",
+                                           # Recent Scores
+                                           dropdown(
+                                             inputId = "recent_scores",
+                                             gt_output("recent_scores"),
+                                             style = "unite",
+                                             size = "lg", 
+                                             up = T,
+                                             label = "Recent Scores",
+                                             icon = icon("backward"),
+                                             animate = animateOptions(
+                                               enter = animations$fading_entrances$fadeInUp,
+                                               exit = animations$fading_exits$fadeOutDown
+                                             )
+                                           ))
+                                    
+                                  ),
+                                  fluidRow(
+                                    column(width = 4, offset = 4, align = "center",
+                                           actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
+                                           actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                                    )
+                                  )
+                                  )
+                              
+                              )
+                            )
+  insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
+  hideTab("navbar", "Player Input")
+  
+#   ...
+#   ...
+
+```
+
+## In-game
+
+One of the main drivers of this scoreboard's inception was the lack of an actual scoreboard to keep track of our games' scores.  
+Although the data collection aspect is particularly enticing too, we wanted to be able to display the score too.^[And yes, we did have a little flip-book style scoreboard for a while.]
+
+The way we went about displaying this was with reactive outputs. We needed one for both team's scores, and the round number. 
+They are pretty simple, just a `renderText` function linked to a value which is reactive.
+
+```{r}
+# Output the round number
+output$round_num = renderText({
+  round_num()
+})
+
+# Output Team A's score
+output$score_a = renderText({
+  vals$current_scores$team_a
+})
+```
+
+
+### Recent Scores
+
+Despite having the number of points in front of us, it turned out keeping track of score still wasn't as simple for our working memories as we had hoped.
+To solve this, we decided to create a little dropdown which displays recent scores.  
+We decided to use the `gt` package and output a single column as a sentence describing the recent score
+Admittedly, this could likely be done with `renderText` too, but I was excited to use `gt` and this seemed like a fine use for it!
+
+First up is the `recent_score_sentence` function which converts our data into a sentence:
+
+```{r}
+recent_score_sentence = function(scores_data){
+  scores_data %>% 
+    group_by(score_id) %>% 
+    transmute(score_sentence = str_c(player_name, 
+                                     " scored ",
+                                     points_scored,
+                                     " point(s)", 
+                                     na.omit(if_else(clink, " with a clink", NA_character_)),  
+                                     " for Team ", toupper(scoring_team),
+                                     " in round ", round_num, ".",
+                                     na.omit(if_else(paddle, str_c(" And it was a", na.omit(if_else(foot, " foot", NA_character_)), " paddle!"), NA_character_)))) %>% 
+    ungroup() %>% 
+    select(-score_id)
+}
+```
+
+With this, we pass the top 5 scores (ordered by `score_id`), join these to the `snappaneers()` object to get player names and teams, pass them through the score sentence function, and then to `gt()`.
+
+```{r}
+# Recent Scores
+output$recent_scores = render_gt({
+  
+  top_n(vals$scores_db, 5, score_id) %>% 
+    arrange(-score_id) %>% 
+    left_join(select(snappaneers(), player_id, player_name)) %>% 
+    recent_score_sentence() %>% 
+    gt() %>% 
+    tab_options(column_labels.hidden = T)
+})
+```
+
+
+
+# Data
+
+When we think about the data being used in the Scoreboard, it's important to recognize the different contexts in which the data may exist:
+
+- Database - the data is on the AWS server
+- Memory - the data is stored in the app's R environment, an example of which is shown below.
+- Reactive Values - the data is being held in the app, but is lost if the app crashes
+- Temporary object - the data is being held in the context that it is generated.  This is usually within a function.
+
+## App Startup
+
+```{r connect-to-db}
+source("dbconnect.R")
+
+# Round numbers 
+rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
+
+# Pull db tables for tibble templates
+players_tbl = tbl(con, "players") %>% collect()
+scores_tbl = tbl(con, "scores") %>% collect()
+player_stats_tbl = tbl(con, "player_stats") %>% collect()
+game_stats_tbl = tbl(con, "game_stats") %>% collect()
+```
+
+On startup, the app connects to the database and initializes the tables in memory.  
+We create a `rounds` vector which is used to display the round number of a given shot e.g. the first five rounds are `r rounds[1:5]`.
+
+Meanwhile on the server, we initialize a `reactiveValues` object which contains objects which are used throughout the course of the game. 
+These objects are:
+
+- ID values for incrementation
+  - `game_id`: Initialized as null, assigned a value later.
+  - `new_player_id`: The number of players in the **players** table + 1.
+  - `score_id`: Initialized as 0, incremented upon scoring event.
+  - `shot_num`: Initialized as 1, incremented on passing the round.
+- Database tables (copies)
+  - `game_stats`: Game-level data structure. The first 5 columns are pulled on startup, the remainder are generated at game end.
+  - `player_stats`: Player-level data structure for the current game. 
+  - `players`: Player-level data containing `player_id`. 
+  - `scores`: Score-level data structure for recording score events.
+- `current_scores`
+  - A 2-column tibble containing both teams' scores.
+- Rebuttal objects
+  - `rebuttal`: a boolean value which identifies if a team is in rebuttal.
+  - `rebuttal_tag`: a boolean value which is tagged to identify where teams were in rebuttal in the previous round.
+- Objects which identify expected player inputs
+  - Because the scoreboard has the option for extra player inputs, we need a mechanism to identify when those player inputs are expected. 
+  This came up to prevent empty player inputs from being recorded/causing problems.
+- Misc.
+  - `score_to`: a numeric value which identifies the score being played to in the current game.
+  - `trolls`: records players which have not scored any points (and thus are not in the `scores` table).
+  - `switch_counter`: This is a counter which aligns the scoreboard UI when teams switch sides.
+
+The code for creating this object looks like:
+
+```{r}
+# In shiny, this object is created with reactiveValues(), here we use a list
+#reactiveValues(
+vals = list(
+    # Initialize new game, player, and score IDs, as well as the shot number
+    game_id = NULL,
+    new_player_id = sum(dbGetQuery(con, "SELECT MAX(player_id) FROM players"),1),
+    score_id = as.integer(0),
+    shot_num = as.integer(1),
+    
+    # DB Tables
+    game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5),
+    player_stats_db = player_stats_tbl %>% slice(0),
+    players_db = players_tbl,
+    scores_db = scores_tbl %>% slice(0),
+
+    # dataframe of the players and their teams
+    # Current Scores
+    current_scores = tibble(
+      team_a = 0,
+      team_b = 0
+    ),
+    
+    rebuttal = NULL,
+    rebuttal_tag = F, 
+    
+    
+
+    # Values used in scoring events
+    score = NULL,
+    error_msg = NULL,
+    print = FALSE,
+    
+    score_to = NULL,
+    
+    # Holds the trolls (more for simplicity of code
+    # than direct need)
+    trolls = NULL,
+    
+    #Records when the extra player ui's are open and 
+    # allows the app to pay attention to empty strings
+    # only during select times
+    want_a3 = F,
+    want_a4 = F,
+    want_b3 = F,
+    want_b4 = F,
+    
+    switch_counter = 1
+  )
+```
+
+We also initialize a few little utility values:
+
+- A round counter which indexes our earlier `rounds` vector
+- A list of active player inputs
+- A tibble containing the player names, IDs, and respective teams of the current players
+- A reactive counter of active players
+
+```{r reactives, eval=F}
+
+# Increment round number
+round_num = reactive({
+  rounds[vals$shot_num]
+  })
+  
+# Active input buttons
+#   - List of player inputs which are not null
+active_player_inputs = reactive({
+  list("a1" = input$name_a1, "a2" = input$name_a2, "a3" = input$name_a3, "a4" = input$name_a4, 
+       "b1" = input$name_b1, "b2" = input$name_b2, "b3" = input$name_b3, "b4" = input$name_b4) %>% 
+    discard(is_null)
+})
+
+# Snappaneers - | Team | Player name | Player ID  |
+snappaneers = reactive({
+  
+  tibble(
+    # Team pulls the first letter from their input name
+    team = str_extract(names(active_player_inputs()), ".{1}"),
+    player_name = active_player_inputs() %>% flatten_chr()
+  ) %>% 
+    # Remove empty player inputs
+    filter(player_name != "") %>% 
+    left_join(vals$players_db, by = "player_name") %>% 
+    # Add shot count
+    add_shot_count()
+})
+
+
+# Length of active player inputs
+num_players = reactive({
+  length(active_player_inputs()[active_player_inputs() != ""])
+})
+```
+
+
+## Game Start
+
+There are two processes which occur when a user clicks **Throw some dice** - a validation of player inputs, and the initialization of objects used throughout the game.
+
+### Validation of player inputs
+
+There is only one condition required for a game to start - **No input can be an empty string**.
+
+Here at SnappaMetrics, we like to consider ourselves pretty open-minded but unfortunately we are not open to names which have no characters.
+No doubt, Elon Musk will invalidate our intolerance with a new child called `""` in a few years, but until then we are using the `shinyjs::disable` function to disable the `game_start` button when there are empty player inputs.
+We use `shiny::validate` to provide a useful error message while any player inputs remain empty.
+
+Notice that this object is an **output**.
+It is an output because we want to use the side effects of the `validate` function to provide the error message.
+The visual output of this object come from the `need` calls inside the `validate` function.
+
+
+```{r game-start-validate, eval=F}
+
+# Create a UI output which validates that there are four players and the names are unique
+output$validate_start = reactive({
+  # If one of the first two players on each team is removed, disable the button again.
+  # This goes above the validate check because  it needs to be updating before the validate
+  # check is failed, or else the logic isn't going to pass through
+  
+  if(any(input$name_a1 == "",
+         input$name_a2 == "",
+         input$name_b1 == "",
+         input$name_b2 == "")){
+    shinyjs::disable("start_game")
+  }
+  
+  validate(
+    need(input$name_a1 != "", label = "Player A1"),
+    need(input$name_a2 != "", label = "Player A2"), 
+    need(input$name_b1 != "", label = "Player B1"), 
+    need(input$name_b2 != "", label = "Player B2")
+    )
+  
+  #Record the players that you need to be looking for
+  # (i.e., which ui elements are open right now?)
+  
+  
+  # If the number of unique snappaneer names is the same as the number of active player inputs
+  #   => enable start button
+  
+  if(sum(length(unique(snappaneers()$player_name)), 
+         sum(
+           c(isTRUE(active_player_inputs()$a3 == "" & vals$want_a3), 
+           isTRUE(active_player_inputs()$a4 == "" & vals$want_a4), 
+           isTRUE(active_player_inputs()$b3 == "" & vals$want_b3), 
+           isTRUE(active_player_inputs()$b4 == "" & vals$want_b4)) 
+           )
+         ) == num_players()){ 
+    shinyjs::enable("start_game")
+  } 
+  
+  # If the number of unique snappaneer names is not the same as the number of active player inputs
+  #   => disable start button
+  if(sum(length(unique(snappaneers()$player_name)), 
+         sum(
+           c(isTRUE(active_player_inputs()$a3 == "" & vals$want_a3), 
+              isTRUE(active_player_inputs()$a4 == "" & vals$want_a4), 
+              isTRUE(active_player_inputs()$b3 == "" & vals$want_b3), 
+              isTRUE(active_player_inputs()$b4 == "" & vals$want_b4)
+              ) 
+         )
+  ) != num_players()){ 
+    
+  shinyjs::disable("start_game")
+  }
+  
+
+  })
+```
+
+### `start_game`
+
+After the game start validation, the `start_game` button is clickable. 
+`observeEvent` detects that the button has been clicked, `insertTab` adds the Scoreboard UI, and the player input page is no longer visible.
+If there are any players which are not already in our database, we use `purrr::iwalk` to add them (and subsequently increment `new_player_id`).
+
+Then each team's values in `current_scores` are set to 0. (TODO: This can be done in `restart_game` instead)
+The `game_id` and `score_to` (the score threshold) are set, and the `game_stats`, `player_stats`, and `scores` tables are set to a skeleton version of each table (using `slice(df, 0)`).
+
+```{r game-start, eval=F}
+# When we click "Start Game", 
+#   - Add new players to the players table
+#   - switch to the scoreboard
+#   - Set the score outputs and shot number to 0
+#   - Record the score we're playing to
+#   - Initialize the current game's player_stats table
+observeEvent(input$start_game, {
+
+# Add Scoreboard ----------------------------------------------------------
+
+  scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
+                            div(
+                              fluidRow(id = "scoreboardrow", 
+                                       column(4, align = "left"), 
+                                       column(4, align = "center", 
+                                              actionBttn("switch_sides", 
+                                                         "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
+                                       column(4)),
+                              team_scoreboard_ui(), 
+                              div(id = "bottom_buttons",
+                                  fluidRow(
+                                    column(width =4, offset = 4, align = "center",
+                                           # Recent Scores
+                                           dropdown(
+                                             inputId = "recent_scores",
+                                             gt_output("recent_scores"),
+                                             style = "unite",
+                                             size = "lg", 
+                                             up = T,
+                                             label = "Recent Scores",
+                                             icon = icon("backward"),
+                                             animate = animateOptions(
+                                               enter = animations$fading_entrances$fadeInUp,
+                                               exit = animations$fading_exits$fadeOutDown
+                                             )
+                                           ))
+                                    
+                                  ),
+                                  fluidRow(
+                                    column(width = 4, offset = 4, align = "center",
+                                           actionBttn("new_game", "Restart game", style = "unite", color = "warning"),
+                                           actionBttn("finish_game", "Finish game", style = "unite", color = "warning")
+                                    )
+                                  )
+                                  )
+                              
+                              )
+                            )
+  insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
+  hideTab("navbar", "Player Input")
+  
+
+  # Add new players to the players table
+  iwalk(snappaneers()$player_name, function(die_thrower, index){
+    # If the player is not in the players table
+    if(!(die_thrower %in% vals$players_db$player_name)){
+      
+      # Add a row to the players table with the new player's name and new ID
+      vals$players_db = bind_rows(vals$players_db,
+                               tibble(
+                                 player_id = vals$new_player_id,
+                                 player_name = die_thrower))
+      
+      # Increment the ID for the next new player
+      vals$new_player_id = vals$new_player_id+1
+      
+    } else {
+      invisible()
+    }
+  })
+  
+  # Set the score outputs and shot number to 0
+  vals$current_scores$team_a = 0
+  vals$current_scores$team_b = 0
+  vals$scores_db = slice(scores_tbl, 0)
+  vals$game_id = as.integer(sum(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"),1 , na.rm = T))
+  
+  vals$game_stats_db = bind_rows(vals$game_stats_db,
+            tibble(
+              game_id = vals$game_id,
+              num_players = nrow(snappaneers()),
+              game_start = as.character(now(tzone = "America/Los_Angeles")),
+              game_end = NA_character_,
+              night_dice = NA
+            ))
+  
+  # Record the score we're playing to
+  vals$score_to = case_when(input$play_to == 1 ~ 21,
+                            input$play_to == 2 ~ 32)
+  
+  
+  # Initialize the current game's player_stats table
+  vals$player_stats_db = slice(vals$player_stats_db, 0)
+
+})
+
+```
+
+
+## In-game
+
+Once we are in-game, users have the option to:
+
+- Keep track of the round with `next_round` / `previous_round`
+- Score for either team using `[TEAM]_score_button`
+- Undo their team's most recent score using `undo_score_[TEAM]`
+- Restart the game using `new_game`
+- Finish the game using `finish_game`
+
+### Round tracking
+
+Passing the round or returning to the previous round allows users to accurately track the round they are in. 
+The process is relatively simple, using `observeEvent` the round is incremented upon pressing `next_round` and decremented upon pressing `previous_round`.
+You will notice the event associated with `next_round` has a lot more going on.  
+The round number is used to check whether either team is in rebuttal, and to bring up a dialogue box when the game has reached its scoring threshold.
+
+```{r round-tracking, eval=F}
+# When next round button is pushed
+observeEvent(input$next_round, {
+  if (vals$rebuttal_tag == T){
+    if (vals$rebuttal == T){
+      click("finish_game")
+    } else {
+      vals$rebuttal_tag = F
+    }
+  } else{
+  }
+  
+  vals$shot_num = vals$shot_num+1
+
+  vals$rebuttal = rebuttal_check(a = vals$current_scores$team_a, b = vals$current_scores$team_b,
+                                 round = round_num(), points_to_win = vals$score_to)
+    
+  if (vals$rebuttal == T) {
+    vals$rebuttal_tag = T
+    showNotification(str_c("Rebuttal: ", "Team ", 
+                           str_sub(round_num(), start = -1),
+                           " needs ", str_c(
+                             abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                           " points to bring it back"
+                           )
+                    ) 
+  } else {
+  }
+    
+  })
+
+
+# When previous round button is pushed
+observeEvent(input$previous_round, {
+  validate(
+    need(vals$shot_num > 1, label = "Can't go below 0", message = "It's the first round still")
+  )
+  vals$shot_num = vals$shot_num-1
+})
+
+```
+
+
+### Scoring
+
+Programming the scoring was somewhat complex due to the nature of our rules.
+We are proud evangelists of the phrase *the rules protect the fun*, and as such we have engineered a lot of fun protection into this game.
+
+First, users must click the **score_button** for their team, located beneath the score for either team.
+Reacting to this event, we determine a list of `eligible_shooters` to determine which names to give to the `score_check` function to present as options when selecting the player that scored.
+
+```{r scoring1, eval=F}
+observeEvent(input$a_score_button, {
+  vals$error_msg <- NULL
+  
+  eligible_shooters = filter(snappaneers(), team == "a") %>% 
+    pull(player_name) %>% 
+    sample()
+  
+  showModal(
+    score_check(team = "a", 
+                players = eligible_shooters))
+})
+
+```
+
+We will go over `score_check` more in-depth in the UI section because it generates the UI used to enter scores, but it is important to know 
+
+```{r scoring2, eval=F}
+
+# Team A presses score button
+observeEvent(input$ok_a, {
+  # validate(
+  #   need(input$score < 8, label = "C'mon, you did not score that many points")
+  # )
+  # Check that the round/shooter combination makes sense / indicated a paddle
+  validate(
+    need(
+      any(
+        # Typical Offense
+        str_detect(rounds[vals$shot_num], "[Aa]") & 
+          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]"),
+        # Typical Paddle
+        str_detect(rounds[vals$shot_num], "[Bb]") &
+          str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") & 
+          input$paddle == T,
+        # Somebody messed up on the other team
+        str_detect(rounds[vals$shot_num], "[Aa]") &
+        str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") & 
+          input$paddle == T),
+      message = "That entry doesn't make sense for this round/shooter combination"),
+    if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
+        pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+      need(input$paddle == T,
+           message = "That person has already scored a non paddle point this round")
+      
+    }
+  )  
+
+  # set score
+  score = as.integer(input$score)
+  vals$score <- score
+  
+  
+  # Check score i not null, remove the dialog box
+  if (!is.null(vals$score)) {
+    removeModal()
+    vals$print <- TRUE
+    
+    # Update the team score
+    vals$current_scores$team_a = vals$current_scores$team_a + vals$score
+    
+    # Increment the score_id
+    vals$score_id = as.integer(vals$score_id+1)
+    
+    ## Identify scoring characteristics
+    # Player ID
+    scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
+    # Were they shooting?
+    scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
+    shooting_team_lgl = all(str_detect(round_num(), "[Aa]"), scorers_team == "a") # Are they on team A & did they score for team A?
+    
+    # Add the score to the scores table
+    vals$scores_db = bind_rows(vals$scores_db,
+                               tibble(
+                                 score_id = vals$score_id,
+                                 game_id = vals$game_id,
+                                 player_id = scorer_pid,
+                                 scoring_team = "a",
+                                 round_num = round_num(),
+                                 points_scored = score,
+                                 shooting = shooting_team_lgl,
+                                 paddle = any(input$foot, input$paddle),
+                                 clink = input$clink,
+                                 foot = input$foot
+                               ))
+    
+
+    # Update game stats table
+    vals$player_stats_db = vals$scores_db %>% 
+      # Join scores to snappaneers to get each player's team
+      left_join(snappaneers(), by = "player_id") %>% 
+      # Group by game and player, (team and shots are held consistent)
+      group_by(game_id, player_id, team, shots) %>% 
+      # Calculate summary stats
+      summarise(total_points = sum(points_scored),
+                ones = sum((points_scored == 1)),
+                twos = sum((points_scored == 2)),
+                threes = sum((points_scored == 3)),
+                impossibles = sum((points_scored > 3)),
+                paddle_points = sum(points_scored* (paddle | foot)),
+                clink_points = sum(points_scored*clink),
+                points_per_round = total_points / last(shots),
+                off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+                def_ppr = paddle_points/last(shots),
+                toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
+      ungroup()
+    
+    # Congratulate paddlers
+    if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
+      showNotification("That's some hot shit!", id = "paddle")
+    }
+    if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
+      showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
+    }
+  } else {
+    vals$error_msg <- "You did not input anything."
+  }
+  
+  # If the game is in rebuttal, remind players
+  # of the points needed to bring it back
+  vals$rebuttal = rebuttal_check(vals$current_scores$team_a, 
+                                 vals$current_scores$team_b,
+                                 round_num(), vals$score_to)
+  
+  #    if (!is.null(vals$rebuttal)) {
+  if (vals$rebuttal == T & vals$rebuttal_tag == T) {
+    showNotification(str_c("Rebuttal: ", "Team ", 
+                           str_sub(round_num(), start = -1),
+                           " needs ", str_c(
+                             abs(vals$current_scores$team_a - vals$current_scores$team_b) - 1),
+                           " points to bring it back"
+    )
+    )
+  } else {
+    
+  }
+  validate(
+    need((vals$current_scores$team_a == 18 && vals$current_scores$team_b == 12) || (vals$current_scores$team_a == 12 && vals$current_scores$team_b == 18), label = "eighteen_twelve")
+  )
+  
+  
+  sendSweetAlert(session, 
+                 title = "1812",
+                 text = "Everyone roll a die, lowest roll takes a shot.",
+                 type = "warning")
+
+})
+
+```
+
+
+
