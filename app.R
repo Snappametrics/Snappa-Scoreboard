@@ -1747,7 +1747,7 @@ observeEvent(input$resume_no, {
       group_by(game_id) %>% 
       summarise(points_a = sum((team == "A")*total_points),
                 points_b = sum((team == "B")*total_points),
-                rounds = as.integer(vals$shot_num-1),
+                rounds = as.integer(vals$shot_num),
                 ones = sum(ones),
                 twos = sum(twos),
                 threes = sum(threes),
@@ -1760,7 +1760,7 @@ observeEvent(input$resume_no, {
         group_by(game_id) %>% 
         summarise(points_a = sum((team == "A")*total_points),
                   points_b = sum((team == "B")*total_points),
-                  rounds = as.integer(vals$shot_num-1),
+                  rounds = as.integer(vals$shot_num),
                   ones = sum(ones),
                   twos = sum(twos),
                   threes = sum(threes),
