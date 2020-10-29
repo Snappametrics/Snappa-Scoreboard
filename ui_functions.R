@@ -129,9 +129,9 @@ team_input_ui = function(team, player_choices){
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
            # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  options = list(create = TRUE)),
+           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', sample(player_choices)),  options = list(create = TRUE)),
            # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), options = list(create = TRUE)),
+           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', sample(player_choices)), options = list(create = TRUE)),
            # Add Player 3 button
            actionBttn(paste0("extra_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
            
@@ -222,7 +222,7 @@ extra_player_ui = function(player, player_choices){
            # Fluid row
                # Add extra player text input 
                selectizeInput(inputId = paste0("name_", player), 
-                              label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
+                              label = paste('Player', player_num), c(`Player Name`='', sample(player_choices)), options = list(create = TRUE)),
              # Add remove player button outside fluid row
              actionBttn(
                inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
