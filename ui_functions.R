@@ -664,7 +664,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # and opponent_team_size and merge it to player_stats to be used as a 
   
 
-  # Make a dataframe of team sizes
+  # Make a dataframe of team sizes in past games
   team_sizes = player_stats %>% 
     # Count team size for each game
     count(game_id, team, name = "team_size") %>% 
