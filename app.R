@@ -1257,7 +1257,8 @@ observe({
                                        impossibles = NA_integer_,
                                        paddle_points = NA_integer_,
                                        clink_points = NA_integer_,
-                                       game_complete = F
+                                       game_complete = F,
+                                       last_round = "1A"
                                      ))
       
       
