@@ -23,7 +23,6 @@ library(ggrepel)
 library(ggtext)
 library(patchwork)
 library(extrafont)
-library(rlist)
 
 source("test_dbconnect.R")
 source("ui_functions.R")
@@ -326,7 +325,8 @@ score_prog_plot = score_heatmap(score_progression)
 # Define UI for application that draws a histogram
 ui <- navbarPage(title = "Snappa Scoreboard", id = "navbar", selected = "Player Input",
   theme = "app.css",
-  useShinyjs(),
+  useShinyjs(), 
+  windowTitle = "Snappa Scoreboard 0.6",
   
 
 # Start Screen ------------------------------------------------------------
