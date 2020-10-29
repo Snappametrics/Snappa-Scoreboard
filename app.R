@@ -1023,14 +1023,9 @@ observe({
   
   showModal(
     modalDialog(
-      title = "Incomplete Game",
+      title = "Hol' up, did you want to continue the previous game?",
       style = str_c("background-color:", snappa_pal[1], ";"),
       div(
-        p("There's an incomplete game in the snappa database, would 
-                  you like to restart it?", 
-          align = 'center'),
-        p("Warning: saying 'No' will delete the previous game from the database", 
-          align = 'center', style = "color: red;"),
         h3("Summary of the Previous Game", 
            align = 'center')
       ),
@@ -1044,14 +1039,24 @@ observe({
       
       footer = tagList(
                 fluidRow(
-                  actionBttn("resume_no",
-                             label = "No",
-                             style = "unite",
-                             color = "danger"),
-                  actionBttn("resume_yes",
-                             label = "Yes",
-                             style = "unite", 
-                             color = "warning")
+                  column(9, align = "left",
+                         helpText("Warning: 'No' will delete the game from the database", 
+                                  style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
+                         ),
+                  column(1,
+                         actionBttn("resume_no",
+                                    label = "No",
+                                    style = "material-flat",
+                                    color = "danger",
+                                    size = "md")
+                         ),
+                  column(1,
+                         actionBttn("resume_yes",
+                                    label = "Yes",
+                                    style = "material-flat", 
+                                    color = "warning",
+                                    size = "md")
+                         )
                 )
               ),
       size = "l",
