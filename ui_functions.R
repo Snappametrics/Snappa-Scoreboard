@@ -129,15 +129,17 @@ team_input_ui = function(team, player_choices){
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
            # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', sample(player_choices)),  options = list(create = TRUE)),
+           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', sample(player_choices)),  
+                          options = list(create = TRUE)),
            # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', sample(player_choices)), options = list(create = TRUE)),
+           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', sample(player_choices)), 
+                          options = list(create = TRUE)),
            # Add Player 3 button
-           actionBttn(paste0("extra_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
+           actionBttn(paste0("extra_player_", team, "3"), 
+                      label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
            
            # CSS: Increase font size, change color to white, add top and bottom margins
-           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}",
-                                               player_inputs, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
          )
   )
 }
