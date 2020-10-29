@@ -226,6 +226,15 @@ db_update_player_stats = function(player_stats){
   dbWriteTable(con, "player_stats", player_stats, append = T)
 }
 
+db_update_round = function(round, game){
+  # Update round number in game_stats
+  dbExecute(con, 
+            sql(str_c("UPDATE game_stats 
+                 set last_round = '", round, "'
+                ",
+                      "WHERE game_id = ", game, ";")))
+}
+
 
 # For use with restarting a lost game: First extract the table
 # with the teams and the number of players for each team for the given
@@ -1230,6 +1239,9 @@ observeEvent(input$resume_no, {
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db)
       
+      # Update round in game stats
+      db_update_round(round = round_num(), game = vals$game_id)
+      
     
     
     
@@ -1267,6 +1279,9 @@ observeEvent(input$resume_no, {
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
                                    round = round_num(), points_to_win = vals$score_to)
+    
+    # Update round in game stats
+    db_update_round(round = round_num(), game = vals$game_id)
     
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
