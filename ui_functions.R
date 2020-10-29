@@ -173,11 +173,6 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      # materialSwitch(
                      #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
                      # ),
-                      actionBttn("score_breakdown", 
-                                 "Check your current score summary",
-                                 style = "jelly",
-                                 color = "primary",
-                                 size = "lg"),
                      h1("Round", style = "font-size: 8rem;"),
                      h3(textOutput("round_num")),
                      column(width=12, align = "center",

@@ -891,12 +891,12 @@ observe({
     
     if(switch_is_even){
       removeUI("#ScoreboardUI", immediate=T)
-      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
+      insertUI(selector = ".buttons-row", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
       # removeTab("navbar", target = "Scoreboard", session)
       # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
     } else {
       removeUI("#ScoreboardUI", immediate = T)
-      insertUI(selector = "#bottom_buttons", ui = team_scoreboard_ui(), where = "beforeBegin")
+      insertUI(selector = ".buttons-row", ui = team_scoreboard_ui(), where = "beforeBegin")
       # removeTab("navbar", target = "Scoreboard", session)
       # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
     }
@@ -977,57 +977,51 @@ observe({
 
     scoreboard_tab = tabPanel("Scoreboard", icon = icon("window-maximize"), 
                               div(
-                                fluidRow(id = "scoreboardrow", 
-                                         column(4, offset = 4, align = "center", 
-                                                actionBttn("switch_sides", 
-                                                           "Switch Sides", style = "unite", color = "primary", icon = icon("refresh"), size = "sm")),
-                                         column(4)),
                                 team_scoreboard_ui(), 
-                                div(id = "bottom_buttons",
-                                    # fluidRow(
-                                    #   column(width =4, offset = 4, align = "center",
-                                    #          # Recent Scores
-                                    #          dropdown(
-                                    #            inputId = "recent_scores",
-                                    #            gt_output("recent_scores"),
-                                    #            style = "unite",
-                                    #            size = "lg", 
-                                    #            up = T,
-                                    #            label = "Recent Scores",
-                                    #            icon = icon("backward"),
-                                    #            animate = animateOptions(
-                                    #              enter = animations$fading_entrances$fadeInUp,
-                                    #              exit = animations$fading_exits$fadeOutDown
-                                    #            )
-                                    #          ))
-                                    #   
-                                    # ),
-                                    fluidRow(width = 4, offset = 4, align = "center",
-                                             # Recent Scores
-                                             dropdown(
-                                               class = "recent_scores",
-                                               inputId = "recent_scores_",
-                                               gt_output("recent_scores"),
-                                               style = "unite",
-                                               size = "lg", 
-                                               up = T,
-                                               label = "Recent Scores",
-                                               icon = icon("backward"),
-                                               animate = animateOptions(
-                                                 enter = animations$fading_entrances$fadeInUp,
-                                                 exit = animations$fading_exits$fadeOutDown
-                                               )
-                                             )),
-                                    fluidRow(
-                                      column(width = 4, offset = 4, align = "center",
-                                             actionBttn("new_game", "Restart", style = "unite", color = "warning"),
-                                             actionBttn("finish_game", "Finish", style = "unite", color = "warning")
-                                      )
-                                    )
-                                    )
-                                
+                               wellPanel(class = "buttons-row",
+                                         fluidRow(column(width = 5, align = "left",
+                                                          actionBttn("game_summary", 
+                                                                     "Game Summary",
+                                                                     style = "bordered",
+                                                                     color = "primary",
+                                                                     icon = icon("chart-bar"),
+                                                                     size = "sm"),
+                                                          # Recent Scores
+                                                          dropdown(
+                                                            class = "recent_scores",
+                                                            inputId = "recent_scores_",
+                                                            gt_output("recent_scores"),
+                                                            style = "bordered",
+                                                            status = "primary",
+                                                            size = "sm", 
+                                                            up = T,
+                                                            label = "Recent Scores",
+                                                            icon = icon("backward"),
+                                                            animate = animateOptions(
+                                                              enter = animations$fading_entrances$fadeInUp,
+                                                              exit = animations$fading_exits$fadeOutDown
+                                                            )
+                                                          )
+                                                   ),
+                                                   column(width = 2, align = "center",
+                                                          actionBttn("switch_sides", 
+                                                                     "Switch Sides", style = "bordered", 
+                                                                     color = "primary", 
+                                                                     icon = icon("refresh"), size = "sm")
+                                                   ),
+                                                   column(width = 5, align = "right",
+                                                          actionBttn("new_game", "Restart", 
+                                                                     icon = icon("plus"), size = "sm",
+                                                                     style = "bordered", color = "warning"),
+                                                          actionBttn("finish_game", "Finish", 
+                                                                     icon = icon("check"), size = "sm",
+                                                                     style = "bordered", color = "warning")
+                                                          )
+                                                   )
+                                         )
                                 )
                               )
+    
     insertTab("navbar", tab = scoreboard_tab, target = "Player Input", position = "after", select = T)  
     hideTab("navbar", "Player Input")
     
@@ -1166,7 +1160,7 @@ observe({
   }, once = T, ignoreNULL = T)
   
 
-observeEvent(input$score_breakdown, {
+observeEvent(input$game_summary, {
   showModal(
     tags$div(id= "game_summary", 
              game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
