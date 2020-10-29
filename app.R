@@ -489,18 +489,41 @@ ui <- dashboardPagePlus(
       ),
       
       tabItem(tabName = "career_stats",
-              fluidRow(
-                box(width = 6, height = "61vh", 
+              boxPlus(width = 12,
                     style = str_c("background:", snappa_pal[1]), align = "center",
                                  gt_output("career_stats_table")
                 ),
-                box(width = 6, height = "61vh", 
+                boxPlus(width = 12, 
                     style = str_c("background:", snappa_pal[1]), align = "center",
-                                 plotOutput("scoring_heatmap", height = "55vh",
+                                 plotOutput("scoring_heatmap", height = "75vw",
                                             hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
                                  uiOutput("heatmap_info")
                 )
-              )),
+              ),
+      tabItem(tabName = "player_stats",
+              # Filters
+              boxPlus(width = 12,
+                fluidRow(
+                  column(width = 3,
+                         # Player selection
+                         selectInput("player_select", label = "Player", selectize = F,
+                                     choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id 
+                                                            FROM players AS p 
+                                                            INNER JOIN player_stats AS ps 
+                                                            ON p.player_id = ps.player_id")) %>% 
+                                       deframe())
+                         )
+                  
+                )
+              ),
+              # Form plot
+              boxPlus(title = "Player Form",
+                      collapsible = T,
+                      closable = F,
+                      status = "primary",
+                plotOutput("form_plot")
+              )
+              ),
       tabItem(tabName = "idksubmenu")
     ),
     tags$head(
@@ -572,9 +595,11 @@ server <- function(input, output, session) {
         menuItem("Player Input", 
                  tabName = "player_input", 
                  icon = icon("users"), selected = T),
-        menuItem("Career Stats", 
+        menuItem("Leaderboard", 
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
+        menuItem("Player Stats", tabName = "player_stats",
+                 icon = icon("chart-line")),
         menuItem(text = "More stuff than we can add", tabName = "idksubmenu",
                  menuSubItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
                              newtab = T, 
