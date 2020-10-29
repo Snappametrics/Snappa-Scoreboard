@@ -395,6 +395,10 @@ ui <- dashboardPagePlus(
     ),
   dashboardBody(
     tabItems(
+
+      # Player Input ------------------------------------------------------------
+
+      
       tabItem(tabName = "player_input",
               fluidRow(
                 team_input_ui("A", pull(players_tbl, player_name)),
@@ -402,7 +406,8 @@ ui <- dashboardPagePlus(
                 # Column 2 - empty
                 column(4,  align = "center",
                        disabled(actionBttn("start_game", 
-                                           label = "Throw some dice?", style = "pill", color = "primary")),
+                                           label = "Throw dice?", style = "pill", color = "primary", 
+                                           icon = icon("dice"), size = "sm")),
                        uiOutput("validate_start"),
                        
                        helpText("Note: All players must enter their name before the game can begin"),
