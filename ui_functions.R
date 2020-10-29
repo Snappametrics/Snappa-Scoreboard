@@ -760,11 +760,11 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   player_info = team_player_stats %>% 
     # Filter player stats
     select(game_id, player_id, team) %>% 
-    inner_join(neers) 
+    inner_join(neers, by = c("player_id", "team")) 
   
-  # Calculate:
+  # Calculate current game performance
   #   - Team score
-  #   - Winning
+  #   - Which team is winning
   # Then join on player info
   player_summary = current_player_stats %>% 
     group_by(team) %>% 
