@@ -616,12 +616,12 @@ return(return_list)
 ```{r transition backup, include = F}
 # Sometimes, we don't have data for a team's probability of transitioning out
 # of a given state. In those cases, we'll use the general probability of moving
-# from one state to another. Not idea, but oh well
-transitions_backup = function(player_stats, scores, player_id_1, player_id_2, 
+# from one state to another. Not ideal, but oh well
+transition_backup = function(player_stats, scores, player_id_1, player_id_2, 
                               player_id_3 = NA, player_id_4 = NA){
   
   
-  if (any(c(!is.numeric(player_id_1), !is.numeric(player_id_2)))) {
+   if (any(c(!is.numeric(player_id_1), !is.numeric(player_id_2)))) {
     stop("'player_id_1` and `player_id_2` must be integers")
   }
   
@@ -668,6 +668,34 @@ scores_simplified = scores %>%
   group_by(game_id, round_num, scoring_team) %>%
   mutate(shot_order = row_number()) %>% 
   select(game_id, scoring_team, points_scored, round_num, shot_order)
+
+# As it turns out, there are more games in the game_team_pair than there 
+# are in scores. Missing data is a bummer sometimes. So we have to delete
+# those games and only rely on the games from the overlap when we map
+
+offensive_scores = scores_simplified %>% 
+  filter(game_id %in% unique(game_team_pair$game_id)) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") == team,
+         scoring_team == team) %>%
+  # Need a number for round_num, not the letter
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+defensive_scores = scores_simplified %>% 
+  filter(game_id %in% game_team_pair$game_id) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") != team, 
+         scoring_team == team) %>%
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+
+total_rounds = game_team_pair %>% 
+  left_join(game_stats %>% select(game_id, rounds), 
+            by = "game_id") %>%
+  mutate(offensive = ifelse(team == "A", ceiling(rounds / 2), floor(rounds / 2)),
+         defensive = ifelse(team == "A", floor(rounds / 2), ceiling(rounds / 2))) %>%
+  ungroup() %>%
+  select(game_id, offensive, defensive)
 
 
 off_transition_list = offensive_scores %>% 
@@ -990,8 +1018,15 @@ in_rebuttal = function(a, b, round, points_to_win){
                  all(b >= points_to_win, b - a >= 2, round == "B")) ~ F)
 }
 
+# Prelude to the games. Get the transition_probabilities and the backups
+team_A_transitions = transition_probabilities(player_stats, scores, 9, 22)
+team_B_transitions = transition_probabilities(player_stats, scores, 2, 4)
+team_A_backup = transition_backup(player_stats, scores, 9, 22)
+team_B_backup = transition_backup(player_stats, scores, 2, 4)
 
-markov_single_game = function(number){
+
+
+markov_single_game = function(A_team_size, B_team_size){
  # We'll track scores between teams according to a time series of each team's score.
   # The first score for both teams is 0
       team_A_history = c(0) 
@@ -1028,10 +1063,31 @@ markov_single_game = function(number){
       
       A_state = team_A_history %>% last() + 1
       current_probs_A = team_A_transitions$offensive[A_state,]
-      shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
+    
       
-      #Update A's history with the new score
-      team_A_history = team_A_history %>% append(shot_draw_A - 1)
+      # In the event that this didn't work OR the team is stuck somewhere, 
+      # replace the current
+      # transition with the backup
+      if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
+              any(current_probs_A %>% is.infinite()))){
+          A_state = if_else(
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1] >= 0,
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1],
+          0)
+        current_probs_A = team_A_backup$offensive[A_state + 1, ]
+        shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
+        points = shot_draw_A - 1
+        team_A_history = team_A_history %>% 
+          append(team_A_history[length(team_A_history)] + points)
+      } else {
+          shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
+          #Update A's history with the new score
+          team_A_history = team_A_history %>% 
+            append(shot_draw_A - 1)
+      }
+      
       
       # If A is in rebuttal this round and just exited, untag them
       A_score = team_A_history %>% last()
@@ -1047,14 +1103,25 @@ markov_single_game = function(number){
       
       B_state = team_B_history %>% last() + 1
       current_probs_B = team_B_transitions$defensive[B_state,]
-      # for debugging
-      if (all(current_probs_B == 0)){
-        browser()
-      }
-      shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
-      
-      team_B_history = team_B_history %>% append(shot_draw_B - 1)
-      
+      if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
+              any(current_probs_B %>% is.infinite()))){
+        B_state = if_else(
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1] >= 0,
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1],
+          0)
+        current_probs_B = team_B_backup$defensive[B_state + 1, ]
+        shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
+        points = shot_draw_B - 1
+        team_B_history = team_B_history %>% 
+          append(team_B_history[length(team_B_history)] + points)
+      } else {
+          shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
+          #Update A's history with the new score
+          team_B_history = team_B_history %>% 
+            append(shot_draw_B - 1)
+      }      
       
       A_score = team_A_history %>% last()
       B_score = team_B_history %>% last()
@@ -1086,15 +1153,26 @@ markov_single_game = function(number){
         
         B_state = team_B_history %>% last() + 1
         current_probs_B = team_B_transitions$offensive[B_state,]
-       # For Debugging 
-        if (all(current_probs_B == 0)){
-        browser()
-      }
-        
-        shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
-        
-        #Update A's history with the new score
-        team_B_history = team_B_history %>% append(shot_draw_B - 1)
+     
+       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
+               any(current_probs_B %>% is.infinite()))){
+        B_state = if_else(
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1] >= 0,
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1],
+          0)
+         current_probs_B = team_B_backup$defensive[B_state + 1, ]
+        shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
+        points = shot_draw_B - 1
+        team_B_history = team_B_history %>% 
+          append(team_B_history[length(team_B_history)] + points)
+      } else {
+          shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
+          #Update A's history with the new score
+          team_B_history = team_B_history %>% 
+            append(shot_draw_B - 1)
+      }      
         
         A_score = team_A_history %>% last()
         B_score = team_B_history %>% last()
@@ -1108,9 +1186,31 @@ markov_single_game = function(number){
       
         A_state = team_A_history %>% last() + 1
         current_probs_A = team_A_transitions$defensive[A_state,]
-        shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
         
-        team_A_history = team_A_history %>% append(shot_draw_A - 1)
+        if (any(current_probs_A %>% is.na())){
+        browser()
+      }
+
+    
+        if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
+                any(current_probs_A %>% is.infinite()))){
+        A_state = if_else(
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1] >= 0,
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1],
+          0)
+        current_probs_A = team_A_backup$defensive[A_state + 1, ]
+        shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
+        points = shot_draw_A - 1
+        team_A_history = team_A_history %>% 
+          append(team_A_history[length(team_A_history)] + points)
+      } else {
+          shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
+          #Update A's history with the new score
+          team_A_history = team_A_history %>% 
+            append(shot_draw_A - 1)
+      }
         
         A_score = team_A_history %>% last()
         B_score = team_B_history %>% last()
@@ -1131,17 +1231,21 @@ markov_single_game = function(number){
     A_scores = team_A_history[-1]
     B_scores = team_B_history[-1]
     
-    num_rounds = length(A_scores) / 4
+    num_rounds = length(A_scores) / (A_team_size + B_team_size)
     if (num_rounds %% 1 != 0){
+      num_rounds = num_rounds %>% ceiling()
       rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds)) %>%
-        head(-2)
+        head(-shots)
     } else {
       rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds))
     }
     names(A_scores) = rounds
     names(B_scores) = rounds
     
-    return(list(team_A = A_scores, team_B = B_scores))
+    return(list(team_A = A_scores, team_B = B_scores,
+                won = case_when(A_scores %>% last() > B_scores %>% last() ~ "A",
+                                A_scores %>% last() < B_scores %>% last() ~ "B"),
+                final_round = names(A_scores) %>% last()) )
   }
 
 
@@ -1150,24 +1254,49 @@ markov_single_game = function(number){
 
 ```{r simulate many games, echo = F}
 markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win = 21 ){
-
-shots = max(length(team_A %>% discard(is.na)), length(team_A %>% discard(is.na)))
+A_size = length(team_A) %>% discard(is.na)
+B_size = length(team_B) %>% discard(is.na)
+  
+shots = max(A_size, B_size)
 
 # obtain the transition probs
 team_A_transitions = transition_probabilities(player_stats, scores, team_A[1], team_A[2], team_A[3], team_A[4])
+team_A_backup = transition_backup(player_stats, scores, team_A[1], team_A[2], team_A[3], team_A[4])
 team_B_transitions = transition_probabilities(player_stats, scores, team_B[1], team_B[2], team_B[3], team_B[4])
-
+team_B_backup = transition_backup(player_stats, scores, team_B[1], team_B[2], team_B[3], team_B[4])
 
 # At this point, I run the same simulation as before, but now I map it over
 # a sequence to iterate
 
   games_record = c(seq(1, iterations)) %>% map(function(iteration_number){
-    markov_single_game(1)
+    markov_single_game(A_size, B_size)
 })
 return(games_record)
 }
 
 # Test command
-games_list = markov_simulate_games(c(1,2), c(4,9))
+games_list = markov_simulate_games(c(4,9), c(1,2), 1000)
 
+
+# See the win percentage of the teams
+who_won = games_list %>% 
+  map(function(list){
+    list$won
+  }) 
+
+team_A_winrate = length(who_won[who_won == "A"]) / length(games_list)
+team_B_winrate = length(who_won[who_won == "B"]) / length(games_list)
+
+
+
+# For sanity, test the stability of the estimations. I think that doing several
+# thousand simulations many times over and taking the average of those win rates is
+# the move
+
+
+
+seq(1,50) %>% map(function(number){
+  
+  games_list = markov_simulate_games(c(2,9), c(2,9), 500)
+})
 ```
