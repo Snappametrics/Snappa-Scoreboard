@@ -140,13 +140,13 @@ label[for='foot'] {
 
 
 #start_game, #scorer, #paddle, #score, #clink, #foot {
-    font-size: 170%; 
+    font-size: 2rem; 
     margin-bottom: 1.5vh;
 }
 
-.sw-dropdown {
+#game_summary, .sw-dropdown {
     display: inline-block;
-    margin-top: -2vh;
+    margin-top: 1.5vh;
     margin-bottom: 2vh;
 }
 
@@ -220,11 +220,6 @@ label.control-label[for='score'] {
 
 .checkbox-bs input[type="checkbox"] {
     transform: scale(2);
-}
-
-#game_summary .modal-dialog.modal-lg {
-    width: 90vw;
-    background-color: #f5f5f5;
 }
 
 
