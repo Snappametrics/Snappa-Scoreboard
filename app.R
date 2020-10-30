@@ -800,8 +800,8 @@ server <- function(input, output, session) {
   output$round_num = renderUI({
     team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
     HTML(str_c('<h3 style="font-size:18rem; line-height: 20rem;">', 
-               substr(round_num(), 1, 1), 
-               '<span style="color:', team_colours[[substr(round_num(), 2, 2)]], ';">', substr(round_num(), 2, 2), "</span>",
+               str_extract(round_num(), "[0-9]+"), 
+               '<span style="color:', team_colours[[str_extract(round_num(), "[AB]+")]], ';">', str_extract(round_num(), "[AB]+"), "</span>",
                "</h3>"))
   })
   
@@ -809,9 +809,9 @@ server <- function(input, output, session) {
     team_colours = list("A" = "danger", "B" = "primary")
     column(width=12, align = "center",
            actionBttn("next_round", 
-                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg"),
+                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
            actionBttn("previous_round", 
-                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = team_colours[[substr(round_num(), 2, 2)]], size = "lg")
+                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
     )
   })
   
@@ -819,10 +819,10 @@ server <- function(input, output, session) {
     
     if(sum(vals$scores_db$points_scored) >= vals$score_to){
     img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                           if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+                                           if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
     } else {
       img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                             if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+                                             if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
       }
   })
   
@@ -830,10 +830,10 @@ server <- function(input, output, session) {
     
     if(sum(vals$scores_db$points_scored) >= vals$score_to){
     img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                           if_else(substr(round_num(), 2,2) == "A", "block;", "none;")))
+                                           if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
       } else {
         img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                               if_else(substr(round_num(), 2,2) == "B", "block;", "none;")))
+                                               if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
       }
   })
   
