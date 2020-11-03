@@ -405,7 +405,9 @@ ui <- dashboardPagePlus(
       
       tabItem(tabName = "player_input",
               fluidRow(
-                team_input_ui("A", pull(players_tbl, player_name)),
+                team_input_ui("A", 
+                              player_choices = inner_join(count(player_stats_tbl, player_id, sort = T), players_tbl, by = "player_id") %>% 
+                                pull(player_name)),
                 
                 # Column 2 - empty
                 column(4,  align = "center",
@@ -423,7 +425,9 @@ ui <- dashboardPagePlus(
                 
                 
                 # Column 3 - Team B
-                team_input_ui("B", pull(players_tbl, player_name))
+                team_input_ui("B", 
+                              player_choices = inner_join(count(player_stats_tbl, player_id, sort = T), players_tbl, by = "player_id") %>% 
+                                pull(player_name))
               )
               ),
 
@@ -434,23 +438,21 @@ ui <- dashboardPagePlus(
       
       tabItem(tabName = "scoreboard", #icon = icon("window-maximize"), 
                div(
-                 fluidRow(id = "scoreboardrow", 
+                 fluidRow(id = "dice-row", 
                           column(4, align = "center", 
-                                 uiOutput("active_die_A")),
-                          column(4),
+                                 uiOutput("active_die_left")),
+                          column(4, align = "center",
+                                 actionBttn("switch_sides", 
+                                            "Switch Sides", style = "material-flat", 
+                                            color = "primary", 
+                                            icon = icon("refresh"), size = "sm")),
                           column(4, align = "center", 
-                                 uiOutput("active_die_B"))
-                 ),
+                                 uiOutput("active_die_right"))
+                          ),
                  team_scoreboard_ui(), 
                  
                  wellPanel(class = "buttons-row",
                            fluidRow(column(width = 5, align = "left",
-                                           actionBttn("game_summary", 
-                                                      "Game Summary",
-                                                      style = "bordered",
-                                                      color = "primary",
-                                                      icon = icon("chart-bar"),
-                                                      size = "sm"),
                                            # Recent Scores
                                            dropdown(
                                              class = "recent_scores",
@@ -809,26 +811,37 @@ server <- function(input, output, session) {
     team_colours = list("A" = "danger", "B" = "primary")
     column(width=12, align = "center",
            actionBttn("next_round", 
-                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
+                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), 
+                      color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
            actionBttn("previous_round", 
-                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
+                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = 
+                        team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
     )
   })
   
-  output$active_die_A = renderUI({
+  # Die icon indicating the active team
+  output$active_die_left = renderUI({
+    # switch_counter is a counter for how many times switch_sides 
+    # even means that B should be on the left side
+    switch_is_even = (vals$switch_counter %% 2 == 0)
     
-    if(sum(vals$scores_db$points_scored) >= vals$score_to){
-    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                           if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
+    
+    if(switch_is_even){
+      # If sides have been switched
+      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+                                             if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
     } else {
       img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
                                              if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
-      }
+    }
   })
   
-  output$active_die_B = renderUI({
+  output$active_die_right = renderUI({
+    # switch_counter is a counter for how many times switch_sides 
+    # even means that A should be on the right side
+    switch_is_even = (vals$switch_counter %% 2 == 0)
     
-    if(sum(vals$scores_db$points_scored) >= vals$score_to){
+    if(switch_is_even){
     img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
                                            if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
       } else {

@@ -129,10 +129,10 @@ team_input_ui = function(team, player_choices){
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
            # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', sample(player_choices)),  
+           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
                           options = list(create = TRUE, hideSelected=T)),
            # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', sample(player_choices)), 
+           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
                           options = list(create = TRUE, hideSelected=T)),
            # Add Player 3 button
            actionBttn(paste0("extra_player_", team, "3"), 
