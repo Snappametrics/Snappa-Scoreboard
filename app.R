@@ -382,14 +382,21 @@ ui <- dashboardPagePlus(
     background = "dark",
     rightSidebarTabContent(
       id = 1,
-      title = "Tab 1",
+      title = "Game Options",
       icon = "desktop",
       active = TRUE,
-      sliderInput(
-        "obs",
-        "Number of observations:",
-        min = 0, max = 1000, value = 500
-      )
+      actionBttn("game_summary", 
+                 "Game Summary",
+                 style = "material-flat",
+                 color = "primary",
+                 icon = icon("chart-bar"),
+                 size = "sm"),
+      actionBttn("new_game", "Restart", 
+                 icon = icon("plus"), size = "sm",
+                 style = "material-flat", color = "warning"),
+      actionBttn("finish_game", "Finish", 
+                 icon = icon("check"), size = "sm",
+                 style = "material-flat", color = "warning")
     ),
     rightSidebarTabContent(
       id = 2,
@@ -470,19 +477,9 @@ ui <- dashboardPagePlus(
                                              )
                                            )
                            ),
-                           column(width = 2, align = "center",
-                                  actionBttn("switch_sides", 
-                                             "Switch Sides", style = "bordered", 
-                                             color = "primary", 
-                                             icon = icon("refresh"), size = "sm")
+                           column(width = 2, align = "center"
                            ),
-                           column(width = 5, align = "right",
-                                  actionBttn("new_game", "Restart", 
-                                             icon = icon("plus"), size = "sm",
-                                             style = "bordered", color = "warning"),
-                                  actionBttn("finish_game", "Finish", 
-                                             icon = icon("check"), size = "sm",
-                                             style = "bordered", color = "warning")
+                           column(width = 5, align = "right"
                            )
                            )
                  )
