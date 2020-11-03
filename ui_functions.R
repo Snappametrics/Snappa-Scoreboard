@@ -224,7 +224,7 @@ extra_player_ui = function(player, player_choices){
            # Fluid row
                # Add extra player text input 
                selectizeInput(inputId = paste0("name_", player), 
-                              label = paste('Player', player_num), c(`Player Name`='', sample(player_choices)), options = list(create = TRUE)),
+                              label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
              # Add remove player button outside fluid row
              actionBttn(
                inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
