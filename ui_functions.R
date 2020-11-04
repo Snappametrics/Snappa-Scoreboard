@@ -405,7 +405,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
                         text_family = "Inter",
                         base_size = 12, 
                         text_color = "gray20",
-                        bg_color = snappa_pal[1], line_color = "grey",
+                        bg_color = snappa_pal[1], line_colour = "#DEDDDD",
                         plot_margin = margin(20,20,20,20),
                         plots_pane = FALSE,
                         md = FALSE){
@@ -418,7 +418,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
                             color = text_color),
         title = element_text(family = title_family,
                              color = text_color),
-        line = element_line(color = "#DEDDDD"),
+        line = element_line(color = line_colour),
         
         plot.title = element_text(face = "bold",
                                   size = base_size * 2,
@@ -439,7 +439,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
         axis.text.y.left = element_text(hjust = 0),
         axis.title = element_text(size = base_size * 1.6,
                                   hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color),
+        axis.line = element_line(color = line_colour),
         
         legend.title = element_text(size = base_size * 1.3),
         legend.text = element_text(size = base_size * 1.1)
@@ -452,7 +452,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
                             color = text_color),
         title = ggtext::element_markdown(family = title_family,
                                          color = text_color),
-        line = element_line(color = "#DEDDDD"),
+        line = element_line(color = line_colour),
         
         plot.title = ggtext::element_markdown(face = "bold",
                                               size = base_size * 2,
@@ -473,7 +473,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
         axis.text.y.left = element_text(hjust = 0),
         axis.title = ggtext::element_markdown(size = base_size * 1.6,
                                               hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color),
+        axis.line = element_line(color = line_colour),
         
         legend.title = ggtext::element_markdown(size = base_size * 1.3),
         legend.text = element_text(size = base_size * 1.1)
@@ -484,7 +484,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
         text = element_text(family = text_family,
                             color = text_color),
         title = element_text(family = title_family),
-        line = element_line(color = "#DEDDDD"),
+        line = element_line(color = line_colour),
         
         plot.title = ggtext::element_markdown(face = "bold",
                                               lineheight = 1.2),
@@ -500,7 +500,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
                                        color = bg_color),
         axis.text.y.left = element_text(hjust = 0),
         axis.title = ggtext::element_markdown(hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color)
+        axis.line = element_line(color = line_colour)
       )
   } else {
     ggplot2::theme_minimal(base_size = base_size) +
@@ -508,7 +508,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
         text = element_text(family = text_family,
                             color = text_color),
         title = element_text(family = title_family),
-        line = element_line(color = "#DEDDDD"),
+        line = element_line(color = line_colour),
         
         plot.title = element_text(face = "bold",
                                   lineheight = 1.2),
@@ -524,7 +524,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
                                        color = bg_color),
         axis.text.y.left = element_text(hjust = 0),
         axis.title = element_text(hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color)
+        axis.line = element_line(color = line_colour)
       )
   }
 }
