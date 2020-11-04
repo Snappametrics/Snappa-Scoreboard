@@ -38,8 +38,14 @@
 
 #shiny-notification-panel {
     background-color: var(--grey-bg);
-    width: 40vw;
-    height: 10vh;
+    min-width: max-content;
+    max-width: 35vw;
+    border: 2px solid var(--gray-4);
+    border-radius: 7px;
+}
+
+.shiny-notification-content-text {
+    min-width: 35vw;
 }
 
 .shiny-notification {
@@ -48,7 +54,6 @@
     font-size: 2.5rem;
     font-weight: 600;
     border: none;
-    text-align: right;
 }
 
 .content {
