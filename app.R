@@ -423,7 +423,7 @@ ui <- dashboardPagePlus(
                                            icon = icon("dice"), size = "sm")),
                        uiOutput("validate_start"),
                        
-                       helpText("Note: All players must enter their name before the game can begin"),
+                       helpText("Note: All players must enter their name before the game can begin")
                        # 
                        # awesomeRadio(inputId = "play_to", 
                        #              label = "What score are you playing to?", 
@@ -493,7 +493,7 @@ ui <- dashboardPagePlus(
                     style = str_c("background:", snappa_pal[1]), align = "center",
                                  gt_output("career_stats_table")
                 ),
-                boxPlus(width = 12, 
+                boxPlus(width = 12,
                     style = str_c("background:", snappa_pal[1]), align = "center",
                                  plotOutput("scoring_heatmap", height = "75vw",
                                             hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
@@ -508,13 +508,13 @@ ui <- dashboardPagePlus(
                   column(width = 3,
                          # Player selection
                          selectInput("player_select", label = "Player", selectize = F,
-                                     choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id 
-                                                            FROM players AS p 
-                                                            INNER JOIN player_stats AS ps 
-                                                            ON p.player_id = ps.player_id")) %>% 
+                                     choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
+                                                            FROM players AS p
+                                                            INNER JOIN player_stats AS ps
+                                                            ON p.player_id = ps.player_id")) %>%
                                        deframe())
                          )
-                  
+
                 )
               ),
               # Form plot
@@ -528,12 +528,12 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "edit_teams",
               fluidRow(
                 team_edit_column("A"),
-                
+
                 # Column 2 - empty
                 column(4,  align = "center"),
                 team_edit_column("B")
               )
-      ),
+      )
     
     ),
     tags$head(
@@ -613,7 +613,8 @@ server <- function(input, output, session) {
                  icon = icon("bar-chart")),
         menuItem("Player Stats", tabName = "player_stats",
                  icon = icon("chart-line")),
-        menuItem(text = "More stuff than we can add", tabName = "idksubmenu",
+        menuItem(text = "More stuff than we can add", 
+                 tabName = "idksubmenu",
                  menuSubItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
                              newtab = T, 
                              text = "Yeah we got submenus too"))
@@ -625,7 +626,7 @@ server <- function(input, output, session) {
   
   observeEvent(input$sidebarItemExpanded == "idksubmenu",
                {insertUI(where = "afterEnd",
-                         HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay style="display:none;"></audio>'), 
+                         HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay style="display:none;"></audio>'),
                          selector = "#start_game")}, ignoreNULL = T, ignoreInit = T)
   
 
