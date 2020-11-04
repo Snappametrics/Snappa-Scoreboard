@@ -339,7 +339,7 @@ ui <- dashboardPagePlus(
       dropdownBlock(
         id = "mydropdown",
         title = "Game Point",
-        icon = icon("sliders"),
+        icon = "sliders",
         sliderInput(
           inputId = "score_to",
           label = "What score are you playing to?",
