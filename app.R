@@ -715,7 +715,8 @@ server <- function(input, output, session) {
   
   # Vector of players, with current players removed
   current_choices = reactive({
-    anti_join(players_tbl, snappaneers(), by = "player_name") %>% 
+    inner_join(count(player_stats_tbl, player_id, sort = T), players_tbl, by = "player_id") %>% 
+    anti_join(., snappaneers(), by = "player_name") %>% 
       pull(player_name)
   })
   
