@@ -51,6 +51,24 @@ game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats")
 
 # Functions ---------------------------------------------------------------
 
+game_notification = function(rebuttal = F, round, current_scores){
+  if(rebuttal){
+
+    team_in_rebuttal = str_extract(round, "[AB]+")
+    text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+    showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
+                                team_in_rebuttal, "</span>",
+                                " needs ",
+                                  abs(current_scores$team_A - current_scores$team_B) - 1,
+                                " points to bring it back")
+    ), duration = 20, closeButton = F)
+  } else {
+    showNotification(HTML(str_c("<i class='fa fa-sign-language' style='padding: 1vh;'></i><span>That's some hot shit!</span>")),
+                     duration = 10, closeButton = F)
+  }
+  
+}
+
 add_shot_count = function(df, shot_num){
   add_count(df, team, name = "n_players") %>% # Count the number of rows for each team
   # Calculate the number of shots for each player by diving the team shots by 2
@@ -1525,15 +1543,11 @@ observeEvent(input$resume_no, {
     
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
-      team_in_rebuttal = str_sub(round_num(), start = -1)
-      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
-      showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
-                                  team_in_rebuttal, "</span>",
-                                  " needs ", str_c(
-                                    abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
-                                  " points to bring it back")
-      ), duration = 20, closeButton = F
-      )
+      
+      game_notification(rebuttal = T, 
+                        round = round_num(),
+                        current_scores = vals$current_scores)
+      
     } else {
     }
       
@@ -1844,8 +1858,7 @@ observeEvent(input$resume_no, {
 
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
-        showNotification(HTML(str_c("<span style='color:", snappa_pal[2], "'>That's some hot shit!</span>")), id = "paddle",
-                         duration = 10, closeButton = F)
+        game_notification()
       }
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
@@ -1863,15 +1876,9 @@ observeEvent(input$resume_no, {
 
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
-      team_in_rebuttal = str_sub(round_num(), start = -1)
-      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
-      showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
-                             team_in_rebuttal, "</span>",
-                             " needs ", str_c(
-                               abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
-                             " points to bring it back")
-      ), duration = 20, closeButton = F
-      )
+      game_notification(rebuttal = T, 
+                        round = round_num(),
+                        current_scores = vals$current_scores)
     } else {
       
     }
@@ -2013,8 +2020,7 @@ observeEvent(input$resume_no, {
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
-        showNotification(HTML(str_c("<span style='color:", snappa_pal[3], "'>That's some hot shit!</span>")),
-                         duration = 10, closeButton = F)
+        game_notification()
       }
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
@@ -2031,15 +2037,9 @@ observeEvent(input$resume_no, {
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
-      team_in_rebuttal = str_sub(round_num(), start = -1)
-      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
-      showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
-                                  team_in_rebuttal, "</span>",
-                                  " needs ", str_c(
-                                    abs(vals$current_scores$team_A - vals$current_scores$team_B) - 1),
-                                  " points to bring it back")
-      ), duration = 20, closeButton = F
-      )
+      game_notification(rebuttal = T, 
+                        round = round_num(),
+                        current_scores = vals$current_scores)
     } else {
       
     }
