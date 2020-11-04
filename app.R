@@ -527,6 +527,11 @@ ui <- dashboardPagePlus(
 
                 )
               ),
+              fluidRow(
+                box(
+                  uiOutput("player_stats_headers")
+                )
+              ),
               # Form plot
               boxPlus(title = "Player Form",
                       collapsible = T,
@@ -1076,6 +1081,43 @@ server <- function(input, output, session) {
       theme(axis.text.x = element_blank())
     
   })
+  
+  output$player_stats_headers = renderUI({
+    player_stats = dbGetQuery(con, 
+                              sql(str_c("SELECT games_played, win_pct, sinks FROM basic_career_stats ", 
+                                        "WHERE player_id = ", input$player_select))
+                              )
+    
+    fluidRow(
+      # Games Played
+      column(
+        width = 4,
+        descriptionBlock(
+          header = player_stats$games_played, 
+          text = "GAMES PLAYED"
+        )
+      ),
+      # Win %
+      column(
+        width = 4,
+        descriptionBlock(
+          header = scales::percent(player_stats$win_pct), 
+          text = "WIN PERCENTAGE"
+        )
+      ),
+      # Sinks
+      column(
+        width = 4,
+        descriptionBlock(
+          header = player_stats$sinks, 
+          text = "LIFETIME SINKS"
+        )
+      )
+    )
+
+  })
+  
+  
   
   
 
