@@ -733,6 +733,8 @@ server <- function(input, output, session) {
   
 
 # Outputs -----------------------------------------------------------------
+  
+
 
 # Score Validation --------------------------------------------------------
 
@@ -1168,13 +1170,9 @@ observe({
     if(switch_is_even){
       removeUI("#ScoreboardUI", immediate=T)
       insertUI(selector = ".buttons-row", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
-      # removeTab("navbar", target = "Scoreboard", session)
-      # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui("b", "a"), select = T)
     } else {
       removeUI("#ScoreboardUI", immediate = T)
       insertUI(selector = ".buttons-row", ui = team_scoreboard_ui(), where = "beforeBegin")
-      # removeTab("navbar", target = "Scoreboard", session)
-      # insertTab("navbar", target = "Player Input", tab = team_scoreboard_ui(), select = T)
     }
     
 
