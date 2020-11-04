@@ -147,6 +147,10 @@ team_input_ui = function(team, player_choices){
 team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   
   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+  
+  well_panel_style = "margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92; background:"
+  h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
+  
 
   div(id = "ScoreboardUI", 
            
@@ -155,10 +159,10 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                      
                      wellPanel(
-                       style = paste("margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92; background:", team_colours[[left_team]]),
+                       style = paste(well_panel_style, team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
-                       h1(paste("Team", toupper(left_team)), style = "color: white; font-size: 5.5rem; font-weight: 700;"),
+                       h1(paste("Team", toupper(left_team)), style = h1_style),
                        # Score
                        h2(textOutput(paste0("score_", left_team))),
                        # Score button
@@ -175,9 +179,6 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
               ), 
               # Round
               column(width = 4, align = "center",
-                     # materialSwitch(
-                     #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
-                     # ),
                      h1("Round", style = "font-size: 5rem; font-weight: 600;"),
                      uiOutput("round_num"),
                      uiOutput("round_control_buttons")
@@ -187,10 +188,9 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                     
                     wellPanel(
-                      style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
-                      # uiOutput("active_die_a"),
+                      style = paste(well_panel_style, team_colours[[right_team]]),
                       # Header
-                      h1(paste("Team", toupper(right_team)), style = "color: white; font-size: 5.5rem; font-weight: 700;"),
+                      h1(paste("Team", toupper(right_team)), style = h1_style),
                       # Score
                       h2(textOutput(paste0("score_", right_team))),
                       # Score button
