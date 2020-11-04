@@ -596,6 +596,8 @@ server <- function(input, output, session) {
         menuItem("Career Stats", 
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
+        menuItem("Player Stats", tabName = "player_stats",
+                 icon = icon("chart-line")),
         menuItem("Edit Teams", 
                  tabName = "edit_teams",
                  icon = icon("edit")),
