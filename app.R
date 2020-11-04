@@ -501,6 +501,10 @@ ui <- dashboardPagePlus(
                 )
 
               ),
+
+# Player Stats ------------------------------------------------------------
+
+      
       tabItem(tabName = "player_stats",
               # Filters
               boxPlus(width = 12,
@@ -513,7 +517,14 @@ ui <- dashboardPagePlus(
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id")) %>%
                                        deframe())
-                         )
+                         ),
+                  column(width = 3,
+                         # Stat selection
+                         selectInput("stat_select", label = "Stat", selectize = F,
+                                     choices = c("Total Points" = "total_points", 
+                                                 "Paddle Points" = "paddle_points", 
+                                                 "Toss Efficiency" = "toss_efficiency"), 
+                                     selected = "total_points"))
 
                 )
               ),
@@ -990,7 +1001,7 @@ server <- function(input, output, session) {
   
 
 
-# Stats Pane Outputs --------------------------------------------------------------
+# Stats Outputs --------------------------------------------------------------
 
   output$career_stats_table = render_gt({
     ps_cols = c("game_id", "player_id", "team", "shots", "total_points", "ones", "twos", "threes", "paddle_points",
@@ -1021,8 +1032,8 @@ server <- function(input, output, session) {
   player_form_data = reactive({
     
     recent_games = filter(player_stats_tbl, player_id == input$player_select) %>% 
-      mutate(avg_points = mean(total_points),
-             max_points = max(total_points)) %>% 
+      mutate(avg_points = mean(!!sym(input$stat_select)),
+             max_points = max(!!sym(input$stat_select))) %>% 
       arrange(game_id) %>% 
       slice_max(order_by = game_id, n = 5) %>% 
       mutate(game_num = row_number())
@@ -1050,8 +1061,8 @@ server <- function(input, output, session) {
   # Player form plot
   output$player_form = renderPlot({
     pluck(player_form_data(), "data") %>% 
-      ggplot(., aes(x = game_num, y = total_points))+
-      geom_col(aes(fill = (total_points > avg_points)), width = .5, show.legend = F)+
+      ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
+      geom_col(aes(fill = (!!sym(input$stat_select) > avg_points)), width = .5, show.legend = F)+
       geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
                        xend = max(game_num)+.45, yend = avg_points), 
                    lty = "dashed", size = 1)+
