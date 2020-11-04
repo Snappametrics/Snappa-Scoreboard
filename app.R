@@ -345,27 +345,7 @@ ui <- dashboardPagePlus(
           label = "What score are you playing to?",
           min = 21, max = 50, value = 21
         )
-      ),
-      dropdownBlock(
-        id = "mydropdown2",
-        title = "Dropdown 2",
-        icon = icon("sliders"),
-        prettySwitch(
-          inputId = "switch4",
-          label = "Fill switch with status:",
-          fill = TRUE,
-          status = "primary"
-        ),
-        prettyCheckboxGroup(
-          inputId = "checkgroup2",
-          label = "Click me!",
-          thick = TRUE,
-          choices = c("Click me !", "Me !", "Or me !"),
-          animation = "pulse",
-          status = "info"
       )
-    )
-    
     # Right side header
     ),
     tags$li(class = "dropdown", socialButton(
