@@ -405,6 +405,9 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
           A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
         }
         current_probs_A = team_A_backup$offensive[A_state + 1, ]
+        if (all(current_probs_A == 0)){
+          current_probs_A = team_A_backup$offensive[1, ]
+        }
         shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
         points = shot_draw_A - 1
         team_A_history = team_A_history %>% 
@@ -431,6 +434,7 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       
       B_state = team_B_history %>% last() + 1
       current_probs_B = team_B_transitions$defensive[B_state,]
+      
       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
               any(current_probs_B %>% is.infinite()))){
         if (length(team_B_history) == 1){
@@ -439,6 +443,18 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
           B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
         }
         current_probs_B = team_B_backup$defensive[B_state + 1, ]
+        
+        # So, there's still a possibility that this ends up being 0. This is,
+        # at least in part, an artifact of the problem of moving scores
+        # based only on scoring points, and not accurately tracking the 
+        # true time series of points. There's simply no way that Matthew and I,
+        # with as many games as we have, have never transitioned from 2 points
+        # to something else on defense. For now, I just use the probability of
+        # a transition from 0 points 
+        if (all(current_probs_B == 0)){
+          current_probs_B = team_B_backup$defensive[1, ]
+        }
+        
         shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
         points = shot_draw_B - 1
         team_B_history = team_B_history %>% 
@@ -485,7 +501,11 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
               any(current_probs_B %>% is.infinite()))){
 
         B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
-        current_probs_B = team_B_backup$defensive[B_state + 1, ]
+        current_probs_B = team_B_backup$offensive[B_state + 1, ]
+        if (all(current_probs_B == 0)){
+          current_probs_B = team_B_backup$offensive[1, ]
+        }
+        
         shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
         points = shot_draw_B - 1
         team_B_history = team_B_history %>% 
@@ -510,17 +530,14 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       A_state = team_A_history %>% last() + 1
       current_probs_A = team_A_transitions$defensive[A_state,]
       
-      if (any(current_probs_A %>% is.na())){
-        browser()
-      }
-      
-      
       if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
               any(current_probs_A %>% is.infinite()))){
         
         A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
-        
         current_probs_A = team_A_backup$defensive[A_state + 1, ]
+        if (all(current_probs_A == 0)){
+          current_probs_A = team_A_backup$defensive[1, ]
+        }
         shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
         points = shot_draw_A - 1
         team_A_history = team_A_history %>% 
@@ -594,4 +611,39 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
   return(games_record)
 }
 
-hi_there = markov_simulate_games(c(2,9, NA, NA), c(2, 9, NA, NA), 500)
+hi_there = markov_simulate_games(c(2,9, NA, NA), c(2, 9, NA, NA), 1000)
+
+# Answer the basic questions
+# Who won more? What's their win rate?
+wins = hi_there %>% map_chr( function(element){
+  element$won
+}) 
+A_winrate = length(wins[wins == "A"])/length(wins)
+B_winrate = 1 - A_winrate
+
+# In the games where the winningest team won, what was the modal score?
+winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
+                  "A",
+                  "B")
+
+# Using a matrix here so that I can treat each pairing of points as a unique
+# value, rather than each team's individual total (meaning that I am truly 
+# looking for the pair of scores which are modal in the set of games that 
+# the winning team won)
+
+scores_matrices = seq(1, length(hi_there)) %>% map(function(game_number){
+  if (hi_there[[game_number]]$won != winners){
+    matrix = matrix(0, nrow = 51, ncol = 51)
+  } else {
+    team_A_score = hi_there[[game_number]]$team_A %>% last()
+    team_B_score = hi_there[[game_number]]$team_B %>% last()
+    matrix = matrix(0, nrow = 51, ncol = 51)
+    matrix[team_A_score, team_B_score] = 1
+  }
+  return(matrix)
+})
+
+scores_matrix = scores_matrices %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
+modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
+modal_A_score = modal_score_position[1]
+modal_B_score = modal_score_position[2]
