@@ -351,7 +351,7 @@ in_rebuttal = function(a, b, round, points_to_win){
 
 # Still a rather complex function, but for now I'm leaving it
 markov_single_game = function(A_team_size, B_team_size, shots, team_A_transitions, team_A_backup,
-                              team_B_transitions, team_B_backup){
+                              team_B_transitions, team_B_backup, points_to_win){
   # We'll track scores between teams according to a time series of each team's score.
   # The first score for both teams is 0
   team_A_history = c(0) 
@@ -381,7 +381,7 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       }
     }
     
-    
+
     
     for (i in 1:shots){
       
@@ -395,12 +395,15 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       # transition with the backup
       if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
               any(current_probs_A %>% is.infinite()))){
-        A_state = if_else(
-          team_A_history[length(team_A_history)] - 
-            team_A_history[length(team_A_history) - 1] >= 0,
-          team_A_history[length(team_A_history)] - 
-            team_A_history[length(team_A_history) - 1],
-          0)
+        # In the event that your game has just started, you can just
+        # assume the state to be 0. This will likely only be an issue
+        # for the team that is on defense in round 1, where subtracting
+        # the most recent score from the one before doesn't work
+        if (length(team_A_history) == 1){
+          A_state = 0
+        } else {
+          A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
+        }
         current_probs_A = team_A_backup$offensive[A_state + 1, ]
         shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
         points = shot_draw_A - 1
@@ -430,12 +433,11 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       current_probs_B = team_B_transitions$defensive[B_state,]
       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
               any(current_probs_B %>% is.infinite()))){
-        B_state = if_else(
-          team_B_history[length(team_B_history)] - 
-            team_B_history[length(team_B_history) - 1] >= 0,
-          team_B_history[length(team_B_history)] - 
-            team_B_history[length(team_B_history) - 1],
-          0)
+        if (length(team_B_history) == 1){
+          B_state = 0
+        } else {
+          B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
+        }
         current_probs_B = team_B_backup$defensive[B_state + 1, ]
         shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
         points = shot_draw_B - 1
@@ -481,12 +483,8 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       
       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
               any(current_probs_B %>% is.infinite()))){
-        B_state = if_else(
-          team_B_history[length(team_B_history)] - 
-            team_B_history[length(team_B_history) - 1] >= 0,
-          team_B_history[length(team_B_history)] - 
-            team_B_history[length(team_B_history) - 1],
-          0)
+
+        B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
         current_probs_B = team_B_backup$defensive[B_state + 1, ]
         shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
         points = shot_draw_B - 1
@@ -519,12 +517,9 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       
       if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
               any(current_probs_A %>% is.infinite()))){
-        A_state = if_else(
-          team_A_history[length(team_A_history)] - 
-            team_A_history[length(team_A_history) - 1] >= 0,
-          team_A_history[length(team_A_history)] - 
-            team_A_history[length(team_A_history) - 1],
-          0)
+        
+        A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
+        
         current_probs_A = team_A_backup$defensive[A_state + 1, ]
         shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
         points = shot_draw_A - 1
@@ -584,16 +579,17 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
   
   # At this point, I run the same simulation as before, but now I map it over
   # a sequence to iterate
-  A_size = length(team_A) %>% discard(is.na)
-  B_size = length(team_B) %>% discard(is.na)
+  A_size = length(team_A %>% discard(is.na))
+  B_size = length(team_B %>% discard(is.na))
   
   shots = max(A_size, B_size)
   
-  browser()
+  
   games_record = c(seq(1, iterations)) %>% map(function(iteration_number){
     markov_single_game(A_size, B_size, shots, 
                        team_A_transitions, team_A_backup, 
-                       team_B_transitions, team_B_backup)
+                       team_B_transitions, team_B_backup,
+                       points_to_win = points_to_win)
   })
   return(games_record)
 }
