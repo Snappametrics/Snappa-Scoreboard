@@ -365,6 +365,7 @@ ui <- dashboardPagePlus(
       title = "Game Options",
       icon = "desktop",
       active = TRUE,
+      align = "center",
       actionBttn("game_summary", 
                  "Game Summary",
                  style = "material-flat",
