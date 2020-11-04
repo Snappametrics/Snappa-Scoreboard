@@ -520,7 +520,7 @@ ui <- dashboardPagePlus(
                       collapsible = T,
                       closable = F,
                       status = "primary",
-                plotOutput("form_plot")
+                plotOutput("player_form")
               )
               ),
       tabItem(tabName = "idksubmenu")
@@ -996,44 +996,50 @@ server <- function(input, output, session) {
           "<p><span style='font-weight:500'>How many occurrences?</span>: ", freq))
   })
   
+  # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
     
     recent_games = filter(player_stats_tbl, player_id == input$player_select) %>% 
       mutate(avg_points = mean(total_points),
              max_points = max(total_points)) %>% 
-      slice_max(order_by = game_id, n = 5)
+      arrange(game_id) %>% 
+      slice_max(order_by = game_id, n = 5) %>% 
+      mutate(game_num = row_number())
     
     career_high = unique(recent_games$max_points)
-    game_range = range(recent_games$game_id) + c(-.5, .5)
-    
+
     list("data" = recent_games,
-         "career_high" = career_high,
-         "game_range" = game_range)
+         "career_high" = career_high)
     
   })
   
   teammate_count = reactive({
     player_stats_tbl %>% 
+      # Group by game and team
       group_by(game_id, team) %>% 
-      filter(input$player_select %in% player_id, player_id != input$player_select) %>% 
+      # Select obs where the player is on the team, but select their teammates
+      filter(input$player_select %in% player_id, 
+             player_id != input$player_select) %>% 
       ungroup() %>% 
+      # Count the number of times the player has been the selected player's teammate
       count(player_id) %>% 
       inner_join(vals$players_db, by = "player_id")
   })
   
-  output$form_plot = renderPlot({
+  # Player form plot
+  output$player_form = renderPlot({
     pluck(player_form_data(), "data") %>% 
-      ggplot(., aes(x = game_id, y = total_points))+
+      ggplot(., aes(x = game_num, y = total_points))+
       geom_col(aes(fill = (total_points > avg_points)), width = .5, show.legend = F)+
-      geom_segment(aes(x = min(game_id)-.45, y = avg_points, 
-                       xend = max(game_id)+.45, yend = avg_points), 
+      geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
+                       xend = max(game_num)+.45, yend = avg_points), 
                    lty = "dashed", size = 1)+
-      geom_text(aes(y = avg_points+.5, x = max(game_id)+.5), 
+      geom_text(aes(y = avg_points+.5, x = min(game_num)), 
                 label = "Career Avg.", family = "Inter")+
       labs(x = "Last 5 games", y = "Points")+
       scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
-                         limits = c(0, pluck(player_form_data(), "career_high")))+
-      scale_x_continuous(limits = pluck(player_form_data(), "game_range"), expand = expansion())+
+                         limits = c(0, pluck(player_form_data(), "career_high")*1.25))+
+      scale_x_continuous(limits = c(.5,5.5), expand = expansion())+
       scale_fill_manual(values = snappa_pal[c(2, 5)])+
       theme_snappa()+
       theme(axis.text.x = element_blank())
