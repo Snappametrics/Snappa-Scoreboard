@@ -338,31 +338,31 @@ ui <- dashboardPagePlus(
     left_menu = tagList(
       dropdownBlock(
         id = "mydropdown",
-        title = "Dropdown 1",
+        title = "Game Point",
         icon = icon("sliders"),
         sliderInput(
-          inputId = "n",
-          label = "Could be good?",
-          min = 10, max = 100, value = 30
+          inputId = "score_to",
+          label = "What score are you playing to?",
+          min = 21, max = 50, value = 21
         )
-    ),
-    dropdownBlock(
-      id = "mydropdown2",
-      title = "Dropdown 2",
-      icon = icon("sliders"),
-      prettySwitch(
-        inputId = "switch4",
-        label = "Fill switch with status:",
-        fill = TRUE,
-        status = "primary"
       ),
-      prettyCheckboxGroup(
-        inputId = "checkgroup2",
-        label = "Click me!",
-        thick = TRUE,
-        choices = c("Click me !", "Me !", "Or me !"),
-        animation = "pulse",
-        status = "info"
+      dropdownBlock(
+        id = "mydropdown2",
+        title = "Dropdown 2",
+        icon = icon("sliders"),
+        prettySwitch(
+          inputId = "switch4",
+          label = "Fill switch with status:",
+          fill = TRUE,
+          status = "primary"
+        ),
+        prettyCheckboxGroup(
+          inputId = "checkgroup2",
+          label = "Click me!",
+          thick = TRUE,
+          choices = c("Click me !", "Me !", "Or me !"),
+          animation = "pulse",
+          status = "info"
       )
     )
     
@@ -424,12 +424,13 @@ ui <- dashboardPagePlus(
                        uiOutput("validate_start"),
                        
                        helpText("Note: All players must enter their name before the game can begin"),
+                       # 
+                       # awesomeRadio(inputId = "play_to", 
+                       #              label = "What score are you playing to?", 
+                       #              choices = list("21" = 1, "32" = 2), 
+                       #              selected = 1, inline = T)
+                       ),
                        
-                       awesomeRadio(inputId = "play_to", 
-                                    label = "What score are you playing to?", 
-                                    choices = list("21" = 1, "32" = 2), 
-                                    selected = 1, inline = T)),
-                
                 
                 # Column 3 - Team B
                 team_input_ui("B", 
@@ -498,6 +499,7 @@ ui <- dashboardPagePlus(
                                             hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
                                  uiOutput("heatmap_info")
                 )
+
               ),
       tabItem(tabName = "player_stats",
               # Filters
@@ -523,7 +525,16 @@ ui <- dashboardPagePlus(
                 plotOutput("player_form")
               )
               ),
-      tabItem(tabName = "idksubmenu")
+      tabItem(tabName = "edit_teams",
+              fluidRow(
+                team_edit_column("A"),
+                
+                # Column 2 - empty
+                column(4,  align = "center"),
+                team_edit_column("B")
+              )
+      ),
+    
     ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
@@ -585,6 +596,9 @@ server <- function(input, output, session) {
         menuItem("Career Stats", 
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
+        menuItem("Edit Teams", 
+                 tabName = "edit_teams",
+                 icon = icon("edit")),
         menuItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
                  text = "More stuff than we can add", newtab = T)
       )
@@ -683,7 +697,10 @@ server <- function(input, output, session) {
 
 # Player Inputs, Snappaneers, Other Reactives --------------------------------------
 
-  
+  # A reactive for the current score that we're playing to
+  score_to = reactive({
+    input$score_to
+  })
   
   # Increment round number
   round_num = reactive({
@@ -724,8 +741,6 @@ server <- function(input, output, session) {
   num_players = reactive({
     length(active_player_inputs()[active_player_inputs() != ""])
   })
-  
-
   
   
   
@@ -1072,13 +1087,20 @@ server <- function(input, output, session) {
   })
   
   
-  
-  
-  
+# # Generates outputs for the edit teams page
+output$edit_team_A <- renderUI({
+  tagList(team_edit_ui("A", pull(players_tbl, player_name), active_player_inputs()))
+})
+
+output$edit_team_B <- renderUI({
+   tagList(team_edit_ui("B", pull(players_tbl, player_name), active_player_inputs()))
+})
+    
 
 # Events ------------------------------------------------------------------
 
   
+
 
 # Check Existing Game -----------------------------------------------------
 
@@ -1247,9 +1269,7 @@ observe({
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
-
-
-  
+    
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
@@ -1358,12 +1378,6 @@ observe({
     }
     
     
-
-    # Record the score we're playing to
-    vals$score_to = case_when(input$play_to == 1 ~ 21,
-                              input$play_to == 2 ~ 32)
-    
-    
     
 
   })
@@ -1372,7 +1386,7 @@ observe({
 # Halftime ----------------------------------------------------------------
 
   
-  observeEvent(req(sum(vals$scores_db$points_scored) >= vals$score_to), {
+  observeEvent(req(sum(vals$scores_db$points_scored) >= score_to()), {
     sendSweetAlert(session, 
                    title = "Halftime", 
                    type = "info",
@@ -1509,7 +1523,7 @@ observeEvent(input$resume_no, {
     }
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
-                                   round = round_num(), points_to_win = vals$score_to)
+                                   round = round_num(), points_to_win = score_to())
     
     # Update round in game stats
     db_update_round(round = round_num(), game = vals$game_id)
@@ -1546,8 +1560,8 @@ observeEvent(input$resume_no, {
     vals$want_A3 = T
     
     # Get add player button inputs
-    vals <- paste0("#",getInputs("extra_player_A3"))
-    add_player_input(vals, "A", 3, current_choices(), session)
+    val <- paste0("#",getInputs("extra_player_A3"))
+    add_player_input("start", val, "A", 3, current_choices(), session)
     
   })
   
@@ -1555,7 +1569,7 @@ observeEvent(input$resume_no, {
   #   - Insert add new player action button
   #   - Remove A3 player name input
   observeEvent(input$remove_A3, {
-    remove_p3_input("A", session)
+    remove_p3_input("start", "A", session)
 
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
@@ -1577,7 +1591,7 @@ observeEvent(input$resume_no, {
     # Get UI inputs for extra player button
     vals <- paste0("#",getInputs("extra_player_A4"))
     
-    add_player_input(vals, "A", 4, current_choices(), session)
+    add_player_input("start", vals, "A", 4, current_choices(), session)
     
   })
   
@@ -1585,7 +1599,7 @@ observeEvent(input$resume_no, {
   #   - Insert add new player action button
   #   - Remove A4 player name input
   observeEvent(input$remove_A4, {
-    remove_p4_input("A", session)
+    remove_p4_input("start", "A", session)
     
     vals$want_A4 = F
     
@@ -1603,14 +1617,14 @@ observeEvent(input$resume_no, {
     # Get inputs for add player button
     vals <- paste0("#",getInputs("extra_player_B3"))
     
-    add_player_input(vals, "B", 3, current_choices(), session)
+    add_player_input("start", vals, "B", 3, current_choices(), session)
   })
 
   # Remove B3
   #   - Insert add new player action button
   #   - Remove B3 player name input
   observeEvent(input$remove_B3, {
-    remove_p3_input("B", session)
+    remove_p3_input("start", "B", session)
     
     #Don't consider these elements when looking at
     # total length of players. Prevents the game
@@ -1631,7 +1645,7 @@ observeEvent(input$resume_no, {
     # Get add player button inputs
     vals <- paste0("#",getInputs("extra_player_B4"))
     
-    add_player_input(vals, "B", 4, current_choices(), session)
+    add_player_input("start", vals, "B", 4, current_choices(), session)
   })
   
 
@@ -1639,18 +1653,127 @@ observeEvent(input$resume_no, {
   #   - Insert add new player action button
   #   - Remove B4 player name input
   observeEvent(input$remove_B4, {
-    remove_p4_input("B", session)
+    remove_p4_input("start", "B", session)
     # Tells later checks to not worry about this
     # empty slot in active_player_names
     vals$want_B4 = F
 
   })  
-    
+  
+  
 
-  
-  
-  
+# Dynamic UI for the Edit Teams Tab ---------------------------------------
+
+  # New Player A3
+  #   - Add A3 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_A3, {
+    # Set input want to true
+    vals$want_A3 = T
     
+    # Get add player button inputs
+    val <- paste0("#",getInputs("edit_add_A3"))
+    add_player_input("edit", val, "A", 3, current_choices(), session)
+    
+  })
+  
+  # Remove A3
+  #   - Insert add new player action button
+  #   - Remove A3 player name input
+  observeEvent(input$edit_remove_A3, {
+    browser()
+    remove_p3_input("edit", "A", session)
+    
+    #Don't consider these elements when looking at
+    # total length of players. Prevents the game
+    # from getting locked out after players have
+    # been added
+    vals$want_A3 = F
+    vals$want_A4 = F
+    
+  })
+  
+  
+  # New Player A4
+  #   - Add A4 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_A4, {
+    # Set input want to true
+    vals$want_A4 = T
+    
+    # Get UI inputs for extra player button
+    vals <- paste0("#",getInputs("edit_add_A4"))
+    
+    add_player_input("edit", vals, "A", 4, current_choices(), session)
+    
+  })
+  
+  # Remove A4
+  #   - Insert add new player action button
+  #   - Remove A4 player name input
+  observeEvent(input$edit_remove_A4, {
+    remove_p4_input("edit", "A", session)
+    
+    vals$want_A4 = F
+    
+  })  
+  
+  
+  # New Player B3
+  #   - Add B3 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_B3, {
+    
+    # Set want check to true
+    vals$want_B3 = T
+    
+    # Get inputs for add player button
+    vals <- paste0("#",getInputs("edit_add_B3"))
+    
+    add_player_input("edit", vals, "B", 3, current_choices(), session)
+  })
+  
+  # Remove B3
+  #   - Insert add new player action button
+  #   - Remove B3 player name input
+  observeEvent(input$edit_remove_B3, {
+    remove_p3_input("edit", "B", session)
+    
+    #Don't consider these elements when looking at
+    # total length of players. Prevents the game
+    # from getting locked out after players have
+    # been added
+    vals$want_B3 = F
+    vals$want_B4 = F
+    
+  })
+  
+  # New Player B4
+  #   - Add B4 text input
+  #   - Remove the add new player action button
+  observeEvent(input$edit_add_B4, {
+    # Set want check to true
+    vals$want_B4 = T
+    
+    # Get add player button inputs
+    vals <- paste0("#",getInputs("edit_add_B4"))
+    
+    add_player_input("edit", vals, "B", 4, current_choices(), session)
+  })
+  
+  
+  # Remove B4
+  #   - Insert add new player action button
+  #   - Remove B4 player name input
+  observeEvent(input$edit_remove_B4, {
+    remove_p4_input("edit", "B", session)
+    # Tells later checks to not worry about this
+    # empty slot in active_player_names
+    vals$want_B4 = F
+    
+  })  
+  
+  
   
 
 # Scoring -----------------------------------------------------------------
@@ -1662,7 +1785,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
-    
+
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
@@ -1677,7 +1800,7 @@ observeEvent(input$resume_no, {
   
   # Team A presses score button
   observeEvent(input$ok_A, {
-  
+
     # set score
     score = as.integer(input$score)
     vals$score <- score
@@ -1740,7 +1863,9 @@ observeEvent(input$resume_no, {
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
                                    vals$current_scores$team_B,
-                                   round_num(), vals$score_to)
+                                   round_num(), score_to())
+    
+
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
       team_in_rebuttal = str_sub(round_num(), start = -1)
@@ -1907,7 +2032,7 @@ observeEvent(input$resume_no, {
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
                                    vals$current_scores$team_B,
-                                   round_num(), vals$score_to)
+                                   round_num(), score_to())
     
     #    if (!is.null(vals$rebuttal)) {
     if (vals$rebuttal == T & vals$rebuttal_tag == T) {
@@ -1983,6 +2108,18 @@ observeEvent(input$resume_no, {
   })
   
   
+
+# Add/Edit Team Events ----------------------------------------------------
+
+
+observeEvent(input$add_player_A3, {
+  
+})  
+  
+  
+  
+  
+  
   
 
 # End of the game ---------------------------------------------------------
@@ -2028,8 +2165,8 @@ observeEvent(input$resume_no, {
 
     # CODE TO USE IN RESUME GAME VALIDATION
     #
-    # validate(need(any(vals$current_scores$team_a >= vals$score_to,
-    #                   vals$current_scores$team_b >= vals$score_to),
+    # validate(need(any(vals$current_scores$team_a >= score_to(),
+    #                   vals$current_scores$team_b >= score_to()),
     #               message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
     #               label = "check_game_over"))
 
@@ -2039,7 +2176,7 @@ observeEvent(input$resume_no, {
     # Checking vals$rebuttal here is redundant if we have already clicked next round, but this is necessary in games where
     # players clicked "finish game" since rebuttal is checked on the next round button
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
-                                   round = round_num(), points_to_win = vals$score_to)
+                                   round = round_num(), points_to_win = score_to())
     
     
 
