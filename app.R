@@ -515,7 +515,7 @@ ui <- dashboardPagePlus(
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id")) %>%
-                                       deframe())
+                                       deframe() %>% sample())
                          ),
                   column(width = 3,
                          # Stat selection
