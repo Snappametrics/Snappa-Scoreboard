@@ -528,7 +528,7 @@ ui <- dashboardPagePlus(
                 )
               ),
               fluidRow(
-                box(
+                box(width = 12, status = "success",
                   uiOutput("player_stats_headers")
                 )
               ),
@@ -538,6 +538,13 @@ ui <- dashboardPagePlus(
                       closable = F,
                       status = "primary",
                 plotOutput("player_form")
+              ),
+              # Top Teammates
+              boxPlus(title = "Top Teammates",
+                      collapsible = T,
+                      closable = F,
+                      status = "primary",
+                      gt_output("teammate_tab")
               )
               ),
       tabItem(tabName = "edit_teams",
