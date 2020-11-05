@@ -168,6 +168,10 @@ label[for='foot'] {
     background-color: var(--grey-bg);
 }
 
+.dropdown-menu {
+    min-width: 25vw;
+}
+
 
 .bttn-unite.bttn-md { 
     font-size: 200%;

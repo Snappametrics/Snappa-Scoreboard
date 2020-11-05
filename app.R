@@ -355,13 +355,25 @@ ui <- dashboardPagePlus(
     # Left side header
     left_menu = tagList(
       dropdownBlock(
-        id = "mydropdown",
+        id = "game_point",
         title = "Game Point",
         icon = "sliders",
         sliderInput(
           inputId = "score_to",
           label = "What score are you playing to?",
           min = 21, max = 50, value = 21
+        )
+      ),
+      # Arena Select
+      dropdownBlock(
+        id = "arena_select_block",
+        title = "Arena Select",
+        icon = "globe", 
+        radioButtons(
+          inputId = "arena_select",
+          label = "Arena",
+          selected = "Greenhaus",
+          choices = c("Greenhaus", "Ventura"), inline = T
         )
       )
     # Right side header
