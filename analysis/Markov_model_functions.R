@@ -300,21 +300,29 @@ transition_probabilities = function(player_stats, scores, type, player_id_1, pla
   matrix_rank = if_else(type == "scores", 51, 8)
   
   off_transition_counts = transitions[[1]]$offense
-  for (i in 2:length(transitions)){
-    off_transition_counts = off_transition_counts + transitions[[i]]$offense
-  } 
-  row_totals = map_dbl(seq(1, matrix_rank), function(number) { 
+  if (length(transitions) > 1){
+    for (i in 2:length(transitions)){
+      off_transition_counts = off_transition_counts + transitions[[i]]$offense
+    }
+  } else { 
+    invisible() 
+    }
+    row_totals = map_dbl(seq(1, matrix_rank), function(number) { 
                                  off_transition_counts[number,] %>% sum()
                                  }
                        )
-  off_transition_probs = off_transition_counts / row_totals
-  off_transition_probs[which(off_transition_probs %>% is.nan())] = 0
+    off_transition_probs = off_transition_counts / row_totals
+    off_transition_probs[which(off_transition_probs %>% is.nan())] = 0
   
   
   def_transition_counts = transitions[[1]]$defense
+  if (length(transitions) > 1){
   for (i in 2:length(transitions)){
     def_transitions_counts = def_transition_counts + transitions[[i]]$defense
-  } 
+  }
+  } else {
+    invisible()
+  }
   row_totals = map_dbl(seq(1, matrix_rank), function(number) { 
     def_transition_counts[number,] %>% sum()
   }
