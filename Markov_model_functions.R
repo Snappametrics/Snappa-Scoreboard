@@ -2,24 +2,9 @@
 # Rmd file every time I want to run the model. It's also a space to clean
 # up the script that runs the simulation into more discrete functions
 
-
-library(DBI)
-library(RPostgres)
 library(lubridate)
 library(dbplyr)
 library(tidyverse)
-
-source("dbconnect.R")
-
-# Get data
-players = dbReadTable(con, "players")
-player_stats = dbReadTable(con, "player_stats")
-scores = dbReadTable(con, "scores")
-game_stats = dbReadTable(con, "game_stats")
-
-# Get out of con
-rm(con)
-
 
 # This function creates all the "helper" tables that are needed in team_transitions
 # and elsewhere in the funcitons. It is just easier to keep them all in one
@@ -611,39 +596,43 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
   return(games_record)
 }
 
-hi_there = markov_simulate_games(c(2,9, NA, NA), c(2, 9, NA, NA), 1000)
+###### Analysis #####
+## This is no longer the focus of this script. However, these functions
+# will be useful once the model is integrated into the app
 
-# Answer the basic questions
-# Who won more? What's their win rate?
-wins = hi_there %>% map_chr( function(element){
-  element$won
-}) 
-A_winrate = length(wins[wins == "A"])/length(wins)
-B_winrate = 1 - A_winrate
-
-# In the games where the winningest team won, what was the modal score?
-winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
-                  "A",
-                  "B")
-
-# Using a matrix here so that I can treat each pairing of points as a unique
-# value, rather than each team's individual total (meaning that I am truly 
-# looking for the pair of scores which are modal in the set of games that 
-# the winning team won)
-
-scores_matrices = seq(1, length(hi_there)) %>% map(function(game_number){
-  if (hi_there[[game_number]]$won != winners){
-    matrix = matrix(0, nrow = 51, ncol = 51)
-  } else {
-    team_A_score = hi_there[[game_number]]$team_A %>% last()
-    team_B_score = hi_there[[game_number]]$team_B %>% last()
-    matrix = matrix(0, nrow = 51, ncol = 51)
-    matrix[team_A_score, team_B_score] = 1
-  }
-  return(matrix)
-})
-
-scores_matrix = scores_matrices %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
-modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
-modal_A_score = modal_score_position[1]
-modal_B_score = modal_score_position[2]
+# hi_there = markov_simulate_games(c(2,9, NA, NA), c(2, 9, NA, NA), 1000)
+# 
+# # Answer the basic questions
+# # Who won more? What's their win rate?
+# wins = hi_there %>% map_chr( function(element){
+#   element$won
+# }) 
+# A_winrate = length(wins[wins == "A"])/length(wins)
+# B_winrate = 1 - A_winrate
+# 
+# # In the games where the winningest team won, what was the modal score?
+# winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
+#                   "A",
+#                   "B")
+# 
+# # Using a matrix here so that I can treat each pairing of points as a unique
+# # value, rather than each team's individual total (meaning that I am truly 
+# # looking for the pair of scores which are modal in the set of games that 
+# # the winning team won)
+# 
+# scores_matrices = seq(1, length(hi_there)) %>% map(function(game_number){
+#   if (hi_there[[game_number]]$won != winners){
+#     matrix = matrix(0, nrow = 51, ncol = 51)
+#   } else {
+#     team_A_score = hi_there[[game_number]]$team_A %>% last()
+#     team_B_score = hi_there[[game_number]]$team_B %>% last()
+#     matrix = matrix(0, nrow = 51, ncol = 51)
+#     matrix[team_A_score, team_B_score] = 1
+#   }
+#   return(matrix)
+# })
+# 
+# scores_matrix = scores_matrices %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
+# modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
+# modal_A_score = modal_score_position[1]
+# modal_B_score = modal_score_position[2]
