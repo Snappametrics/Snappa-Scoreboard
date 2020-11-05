@@ -1049,17 +1049,39 @@ server <- function(input, output, session) {
     
   })
   
-  teammate_count = reactive({
-    player_stats_tbl %>% 
-      # Group by game and team
-      group_by(game_id, team) %>% 
-      # Select obs where the player is on the team, but select their teammates
-      filter(input$player_select %in% player_id, 
-             player_id != input$player_select) %>% 
-      ungroup() %>% 
-      # Count the number of times the player has been the selected player's teammate
-      count(player_id) %>% 
-      inner_join(vals$players_db, by = "player_id")
+  teammate_stats = reactive({
+    dbGetQuery(con, 
+               sql(str_c(
+                 "SELECT * FROM teammate_stats ",
+                 "WHERE player_id = ", input$player_select
+               )))
+  })
+  
+  output$teammate_tab = render_gt({
+    teammate_stats() %>% 
+      gt() %>% 
+      tab_header(title = "Performance with _______") %>% 
+      cols_hide(vars(player_id, teammate_id)) %>% 
+      cols_label(teammate = "Teammate",
+                 games_played = "Games Played",
+                 win_pct = "Wins (%)",
+                 avg_points = "Avg. Points",
+                 avg_paddle_points = "Avg. Paddle Points") %>% 
+      fmt_number(
+        columns = starts_with("avg"),
+        decimals = 2
+      ) %>% 
+      fmt_percent(
+        columns = vars(win_pct),
+        decimals = 1
+      ) %>% 
+      # Styling
+      # Title
+      tab_style(
+        style = list(cell_text(align = "left", v_align = "bottom", weight = "bold", size = px(18))),
+        locations = cells_title(groups = "title")
+      )%>% 
+      tab_theme_snappa()
   })
   
   # Player form plot
