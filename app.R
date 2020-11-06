@@ -1541,13 +1541,40 @@ observeEvent(input$game_summary, {
       select(player_input, player_name) %>% 
       deframe()
     
-
-    iwalk(input_list, function(name, id){
+    removeModal()
+    #Look at the number of lost players on each team to be certain of the values 
+    # that you want
+    
+    
+    size_A = lost_players %>% filter(team == "A") %>% length()
+    size_B = lost_players %>% filter(team == "B") %>% length()
+    
+    # Check to see if you should be signaling to the app to care about extra
+    # players
+     if (size_A == 3){
+      shinyjs::click("extra_player_A3")
+    } else if (size_A == 4){
+      shinyjs::click("extra_player_A3")
+      shinyjs::click("extra_player_A4")
+    } else {
+      invisible()
+    }
+    
+    if (size_B == 3){
+      shinyjs::click("extra_player_B3")
+    } else if (size_B == 4){
+      shinyjs::click("extra_player_B3")
+      shinyjs::click("extra_player_B4")
+    } else {
+      invisible()
+    }
+    
+    delay(100, iwalk(input_list, function(name, id){
+    
       updateSelectizeInput(session, inputId = id, selected = name)
     
-    })
-    removeModal()
-    delay(25, shinyjs::click("start_game"))
+    }))
+    shinyjs::click("start_game")
     
   })
 

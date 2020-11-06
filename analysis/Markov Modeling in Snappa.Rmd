@@ -1,0 +1,1302 @@
+---
+title: "Modeling Team Score Progression"
+author: "Michael Dewey"
+date: "10/24/2020"
+output: html_document
+---
+
+# Modeling Team Score Progression With A (Team-Specific) Markov Chain
+
+Because snappa is a game where the score advances according to discrete shots,
+it naturally lends itself to modeling situations that take advantage of its 
+discrete and evenly-spaced structure. In particular, the score progression of a 
+given team would seem to lend itself well to a simple univariate Markov Chain
+model. In this page, I provide the theoretical foundation behind modeling 
+scores in this way, the steps to implement it for our data (including cleaning),
+and an evaluation of how we can test the model's predictive error.
+## Foundations behind Markov Chains
+Formally, a Markov chain is a stochastic (i.e., random) process which is 
+"memoryless", meaning that the value of a variable at time t depends only
+on the value of the variable at time t-1. Such a process is memoryless in the 
+sense that our predictive power over the outcome at time t is equally good 
+whether we consider the entire time series up to this point, $y_{1:t-1}$, or
+just $y_{t-1}$ itself. This is represented in probabilities as follows:
+
+$$P(Y_t | Y_{t-1} = y_{t-1}, Y_{t-2} = y_{t-2}, ... , Y_1 = y_1) = P(Y_t | Y_{t-1} = y_{t-1})$$
+
+For our purposes, we will be modeling a simple state parameter which governs the 
+evolution of a team's score in the time series $(Y_t, t \geq 1)$ . Let $\tau$ 
+refer to a generic team. A given team's score at time t is modeled by
+$$Y_{\ \tau, \ t} = Y_{\ \tau, \  t-1} + m_{ \ \tau, \  t}$$
+The value $m_{\ \tau, \ t}$ is a random non-negative integer representing the scoring
+points that team $\tau$ scores in round $t$. This model satisfies the memoryless
+property: once we know $Y_{\tau, t-1}$, we cannot improve on the certainty of an
+estimation of $Y_{\ \tau, \ t}$. As with all Markov chains, this model has a recursive
+structure that we can exploit to make the model's evolution more obvious. 
+Note that $Y_{\ \tau, \ t-1}$ evolves according to the same equation as $Y_{\ \tau, \ t}$,
+meaning that 
+$$ 
+\begin{aligned}
+  Y_{\ \tau,\  t} &= Y_{\ \tau,\  t-1} + m_{\ \tau, \ t} \\\
+  &= (Y_{\ \tau, \ t-2} + m_{\ \tau,\ t-1}) + m_{\ \tau,\ t} 
+\end{aligned}
+$$
+Continuing this same recursion, we eventually arrive at the beginning of the 
+time series
+$$ \begin{aligned}
+Y_{\ \tau,\ t} &= m_{\ \tau,\ t} + m_{ \ \tau, \ t - 1} + m_{\ \tau, \ t - 2} + m_{ \ \tau, \ 1} \\
+&= \sum^t_{i = 1} m_{\ \tau,\ i} 
+\end{aligned} $$
+
+In short, the score of a team at time t is the sum of their points across all
+time periods!
+
+To understand the ways that scores can change over time, and introduce probability
+into the modeling, Markov chains utilize transition matrices. The Markov process
+that we are modeling is nonstationary (aka "non-homogeneous"), which will mean that
+we have more than one transition matrix. In fact, I reason that two matrices per 
+team- one for defense and one for offense- is enough to make the model "interesting"
+while also keeping it simple. This is for two reasons. First, I expect that there
+are systematic differences between scoring patterns on offense and defense. Indeed,
+this proves to be the case: there is not a single team with a higher transition
+probability $p_{\ 0, \ 0}$, meaning that teams
+are less likely to have consecutive nonscoring shots, on offense as compared to 
+defense. This is because players have more agency over scoring when they are on
+offense defense. Players on defense need players on offense to throw a valid shot 
+before they can even attempt to paddle. Somewhat formally, I'll explain this
+intuition mathematically. Suppose we're looking at the probability of
+player i, who is on offense, scoring on the current shot. The probability can
+be expressed as 
+$$ \begin{aligned}
+P(\ i \ \ \ scores) = P(i \ \ scores | i \ \ shoots \ \  a \ \  valid \ \ shot) &* P(i \ \ shoots \ \ a  \ \ valid \ \ shot) \\
+&+ \\
+P(i \ \ scores | i \ \ does \ \  not \ \ shoot \ \ a  \ \ valid \ \ shot) &* P(i \ \ does \ \ not\ \   shoot \ \ a \ \ valid \ \ shot )
+\end{aligned}$$
+Although the probability that i scores on a non-valid shot is not *technically* zero,
+since players can make airballs "live", I argue that it is small enough to make 
+a minimal difference to our overall probability^[sadly, we do not currently have
+the interface to track this as a percentage, so it remains latent]. Regardless,
+it would be fair to say that this probability is approximately equal to the first
+term of the sum. Meanwhile, team B's probability of scoring on this shot is
+given by 
+$$ 
+P(B \ \ scores) \approx P(anyone \ \ on \ \ B \ \ paddles | \ \ i \ \ shoots \ \ a \ \ valid \ \ shot ) * P(i \ \ shoots \ \ a \ \ valid \ \ shot)
+$$
+Thus, my argument that $P(i \ \ scores) > P(B \ \ scores)$ in this framework would
+be tantamount to saying $P(i \ \  scores | \ \ i \ \ shoots \ \ a \ \ valid \ \ shot) > P(anyone \ \ on \ \ B \ \ paddles | \ \ i \ \ shoots \ \ a \ \ valid \ \ shot )$
+
+
+An extension of this model could also
+attempt to estimate transition probabilities, stratified by the size of the 
+opposing team, since that would seem to alter the probability that B paddles, 
+but I don't pursue that here out of concern of reducing the sample size for each
+matrix I would estimate.
+
+Our transition matrix for team $\tau$ at a given point in the offense/defense 
+cycle, s, is given as
+
+$$A_{\ \tau,  \ s} = \begin{vmatrix}
+p_{\ 0, 0} & p_{\ 0 , 1} & \ \ ... \ \  & p_{ \ 0, \ 7}  \\
+p_{\ 1, 0} & p_{\ 1 , 1} &\ \ ... \ \  & p_{ \ 1, \ 7} \\
+\vdots & \vdots & \ddots  &  \vdots  \\
+p_{\ 7, 0} & p_{\ 7 , 1} & \ \ ... \ \  & p_{ \ 7, \ 7}  \\
+\end{vmatrix} $$
+
+where $p_{\ i, \ j}$ represents $P(m_{ \tau, \  t} = j \ | \ m_{\tau, \ t-1} = i )$.
+Thus, the evolution of scores over time is determined by probabilistic transitions
+within this matrix. A team who hasn't scored on their last shot is randomly assigned
+a new point value according to the conditional distribution 
+$P(m_{\ \tau, \ t} | m_{\ \ tau, \ t} = 0})$. A model which utilizes these 
+probabilities does so by simulating 
+We estimate the probabilities of the transition matrix according to maximum 
+likelihood. Since each row of our matrix represents the different possibilities
+for $Y_t$ conditional on $Y_{t-1}$, our transition matrix is a table of probabilities
+drawn from a multinomial distribution. As a result, the Maximum Likelihood Estimator
+(aka MLE) for the unknown parameter $p_{\ i , \ j }$ is given by^[as I did earlier,
+I leave out $\tau$ and s here for ease of notation, though they should be present]
+$$ \hat{p}_{\ i, \ j} = \frac{\# (i \ \  in \ \  t-1, \ \ j \ \ in \ \  t \ \ )}{total \ \  \# \ \  of \ \  shots} $$
+We will build the estimated transition matrix, which is the transition matrix
+where all probabilities are replaced with the maximum likelihood estimate, in 
+the sections that follow. 
+
+## Building the model
+We will follow through the model by restricting our attention to the team with
+the highest number of games in the snappa db
+
+```{r packages and data, echo = F, include = F}
+library(DBI)
+library(RPostgres)
+library(lubridate)
+library(dbplyr)
+
+# Get con
+source("dbconnect.R")
+
+# Get data
+players = dbReadTable(con, "players")
+player_stats = dbReadTable(con, "player_stats")
+scores = dbReadTable(con, "scores")
+game_stats = dbReadTable(con, "game_stats")
+
+# Get out of con
+rm(con)
+```
+
+```{r echo = T, message = F}
+# Getting the counts of each team combination over time. Take player stats
+# and use it to generate a table of players per team per game 
+library(tidyverse)
+
+team_combinations = player_stats %>% 
+  group_by(game_id, team) %>%
+  arrange(player_id) %>%
+  mutate(position = row_number()) %>%
+  distinct() %>% 
+  pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
+
+# Team names are included here because we're going to want to make reference to it when building
+# our transition matrix. However, we don't want it when we're looking for the distinct teams
+
+teams_distinct = team_combinations %>%
+  ungroup() %>%
+  select(-c(game_id, team)) %>%
+  distinct() 
+
+# now, find the list of games for each team. This map is used to get around
+# having to do these kinds of calulations rowwise
+games_per_team = teams_distinct %>%
+  pmap( function(...){
+    vec = c(...)
+    
+    #Want to get the games/team so that I can find the maximum. Writing the 
+    # filtering condition in this way is the same as looking for equality, 
+    # but gets around actually looking for equality which involves removing NA
+    # values in less-than-desirable ways
+    
+    team_combinations %>% 
+      filter(all(vec  %in% c(`1`, `2`, `3`, `4`), c(`1`, `2`, `3`, `4`) %in% vec )) %>%
+      pull(game_id) 
+    } 
+    )
+
+# Find the numbers of games per list element (this is only done here because we're 
+# interested in seeing which team we're focusing on. The map above would be 
+# sufficient in a function which retrieves the Markov chain for a given team)
+number_games = games_per_team %>%
+  map_int(function(games){
+    length(games)
+  })
+
+# The team I'm looking for is the one with the maximum number from the vector just
+# returned
+team_number = which(number_games == max(number_games))
+```
+We're going to look at team 31, which is Dewey and Matthew, who have 
+played a total of 31 out of our 195 games^[in fact, this team tied with Matthew and Shaunt
+as the next most common team].
+
+In order to get our transition probabilities, we need to look at all of the shots
+that were taken in every game, creating two modified versions of our `scores` 
+table where:
+
+-each table tracks a side-either offense or defense
+-every shot is recorded with non-scoring shots having a value of 0
+
+we then reason on this table, creating a table with two vectors, `t-1` and `t` 
+
+```{r echo = T}
+# Create our table to take as filter values into scores
+game_team_pair = team_combinations %>% 
+  filter(all(c(2, 9, NA, NA)  %in% c(`1`, `2`, `3`, `4`), c(`1`, `2`, `3`, `4`) %in% c(2, 9, NA, NA))) %>%
+  select(game_id, team) 
+
+# We need to know how many shots occurred within each round of play in each game
+# to accurately assess the total number of observations 
+
+game_shots_pair = player_stats %>%
+    filter(game_id %in% game_team_pair$game_id) %>%
+    group_by(game_id, team) %>% 
+    summarize(team_size = n()) %>%
+    summarize(shots = max(team_size))
+
+# Now, we need to take our two slices of the scores,
+# which I'm first going to simplify and clean for 
+# joining . In order to give the scores table the ability to 'complete' the data
+# for shots in a given round, I add in a variable which calculates the running total of 
+# scores in that round
+scores_simplified = scores %>% 
+  arrange(game_id, score_id) %>%
+  group_by(game_id, round_num, scoring_team) %>%
+  mutate(shot_order = row_number()) %>% 
+  select(game_id, scoring_team, points_scored, round_num, shot_order)
+
+# As it turns out, there are more games in the game_team_pair than there 
+# are in scores. Missing data is a bummer sometimes. So we have to delete
+# those games and only rely on the games from the overlap when we map
+
+offensive_scores = scores_simplified %>% 
+  filter(game_id %in% unique(game_team_pair$game_id)) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") == team,
+         scoring_team == team) %>%
+  # Need a number for round_num, not the letter
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+defensive_scores = scores_simplified %>% 
+  filter(game_id %in% game_team_pair$game_id) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") != team, 
+         scoring_team == team) %>%
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+# We need to know the total number of rounds that we have to fill in with our
+# shot counter
+total_rounds = game_team_pair %>% 
+  left_join(game_stats %>% select(game_id, rounds), 
+            by = "game_id") %>%
+  mutate(offensive = ifelse(team == "A", ceiling(rounds / 2), floor(rounds / 2)),
+         defensive = ifelse(team == "A", floor(rounds / 2), ceiling(rounds / 2))) %>%
+  ungroup() %>%
+  select(game_id, offensive, defensive)
+
+# I have to set each column as a factor variable,
+# but the levels of the factor are dependent on the 
+# game in question. So, we map over each scores table
+# and change the variables to factors 
+
+
+# ###### Generating a matrix with transition counts for all possible scores
+## THIS IS THE PROPER WAY TO DO IT FROM THEORY
+
+off_transition_list = offensive_scores %>%
+  pull(game_id) %>%
+  unique() %>%
+  map(function(game){
+    rounds_in_game = total_rounds %>%
+      filter(game_id == game) %>%
+      pull(offensive)
+
+    if (rounds_in_game == 0){
+      browser()
+    }
+    shots_per_round = game_shots_pair %>%
+      filter(game_id == game) %>%
+      pull(shots)
+
+    filtered_game = offensive_scores %>%
+      filter(game_id == game)
+    # declare factor variables
+    filtered_game$round_num =
+      factor(
+        filtered_game$round_num,
+        levels = seq(1, rounds_in_game))
+    filtered_game$shot_order =
+      factor(
+        filtered_game$shot_order,
+        levels = seq(1, shots_per_round))
+
+    # For some reason, if you run this it duplicates the data frame some number
+    # of times.  I don't know what's causing this, but for the meantime I will
+    # call distinct and be done with it
+    table = filtered_game %>%
+      complete(
+        expand(filtered_game,
+               round_num,
+               shot_order),
+        fill = list(points_scored = 0)) %>%
+      distinct() %>%
+      group_by(game_id) %>%
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
+      
+    running_score = table$running_score %>% append(0, after = 0)
+  # setting our matrix to 51x51 means we're looking at score transitions
+  # between 0 and 50
+    matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51)
+
+    # Create a matrix that will be used for our transition counts
+    for (i in 2:length(running_score)){
+      old_score = running_score[i - 1]
+      new_score = running_score[i]
+
+      matrix_this_game[old_score + 1, new_score + 1] =
+        matrix_this_game[old_score+ 1, new_score + 1] + 1
+
+    }
+    return(matrix_this_game)
+  })
+
+
+off_transition_counts = off_transition_list %>% reduce(`+`, .init = matrix(data = 0, nrow = 51, ncol = 51))
+row_totals = map_dbl(seq(1,51), function(number) { off_transition_counts[number,] %>% sum()})
+off_transition_probs = off_transition_counts / row_totals
+
+
+def_transition_list = defensive_scores %>%
+  pull(game_id) %>%
+  unique() %>%
+  map(function(game){
+    rounds_in_game = total_rounds %>%
+      filter(game_id == game) %>%
+      pull(defensive)
+
+    if (rounds_in_game == 0){
+      browser()
+    }
+    shots_per_round = game_shots_pair %>%
+      filter(game_id == game) %>%
+      pull(shots)
+
+    filtered_game = offensive_scores %>%
+      filter(game_id == game)
+    # declare factor variables
+    filtered_game$round_num =
+      factor(
+        filtered_game$round_num,
+        levels = seq(1, rounds_in_game))
+    filtered_game$shot_order =
+      factor(
+        filtered_game$shot_order,
+        levels = seq(1, shots_per_round))
+
+    # For some reason, if you run this it duplicates the data frame some number
+    # of times.  I don't know what's causing this, but for the meantime I will
+    # call distinct and be done with it
+    table = filtered_game %>%
+      complete(
+        expand(filtered_game,
+               round_num,
+               shot_order),
+        fill = list(points_scored = 0)) %>%
+      distinct() %>%
+      group_by(game_id) %>%
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
+
+  # setting our matrix to 51x51 means we're looking at score transitions
+  # between 0 and 50
+    matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51)
+
+    # Create a matrix that will be used for our transition counts
+    for (i in 2:length(table$running_score)){
+      old_score = table$running_score[i - 1]
+      new_score = table$running_score[i]
+
+      matrix_this_game[old_score + 1, new_score + 1] =
+        matrix_this_game[old_score+ 1, new_score + 1] + 1
+
+    }
+    return(matrix_this_game)
+  })
+
+
+def_transition_counts = def_transition_list %>% reduce(`+`, .init = matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51))
+row_totals = map_dbl(seq(1,51), function(number) { off_transition_counts[number,] %>% sum()})
+def_transition_probs = def_transition_counts / colsums(def_transition_counts)
+
+```
+
+```{r transition probability function, echo = F, include = F}
+# Building the functions that handle the model for any choice of team. 
+# This first function returns a list with the transition probabilities 
+# for offense and defense 
+
+transition_probabilities = function(player_stats, scores, player_id_1, player_id_2, 
+                              player_id_3 = NA, player_id_4 = NA){
+  
+  if (any(c(!is.numeric(player_id_1), !is.numeric(player_id_2)))) {
+    stop("'player_id_1` and `player_id_2` must be integers")
+  }
+  
+  if (all(any(c(!is.na(player_id_3), 
+                !is.na(player_id_4))
+              ),
+          any(c(!is.numeric(player_id_3), 
+                !is.numeric(player_id_4))
+              ))
+      ){
+    stop("player_id_3 and player_id_4 must be integers, if provided") 
+  }
+  
+  teams_vector = c(player_id_1, player_id_2, player_id_3, player_id_4)
+  
+  team_combinations = player_stats %>% 
+  group_by(game_id, team) %>%
+  arrange(player_id) %>%
+  mutate(position = row_number()) %>%
+  distinct() %>% 
+  pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
+  
+  
+  game_team_pair = team_combinations %>% 
+  filter(all(teams_vector %in% c(`1`, `2`, `3`, `4`), c(`1`, `2`, `3`, `4`) %in% teams_vector)) %>%
+  select(game_id, team) 
+
+# We need to know how many shots occurred within each round of play in each game
+# to accurately assess the total number of observations 
+
+game_shots_pair = player_stats %>%
+    filter(game_id %in% game_team_pair$game_id) %>%
+    group_by(game_id, team) %>% 
+    summarize(team_size = n()) %>%
+    summarize(shots = max(team_size))
+
+# Now, we need to take our two slices of the scores,
+# which I'm first going to simplify and clean for 
+# joining . In order to give the scores table the ability to 'complete' the data
+# for shots in a given round, I add in a variable which calculates the running total of 
+# scores in that round
+scores_simplified = scores %>% 
+  arrange(game_id, score_id) %>%
+  group_by(game_id, round_num, scoring_team) %>%
+  mutate(shot_order = row_number()) %>% 
+  select(game_id, scoring_team, points_scored, round_num, shot_order)
+
+# As it turns out, there are more games in the game_team_pair than there 
+# are in scores. Missing data is a bummer sometimes. So we have to delete
+# those games and only rely on the games from the overlap when we map
+
+offensive_scores = scores_simplified %>% 
+  filter(game_id %in% game_team_pair$game_id) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") == team,
+         scoring_team == team) %>%
+  # Need a number for round_num, not the letter
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+defensive_scores = scores_simplified %>% 
+  filter(game_id %in% game_team_pair$game_id) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") != team, 
+         scoring_team == team) %>%
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+# We need to know the total number of rounds that we have to fill in with our
+# shot counter
+total_rounds = game_team_pair %>% 
+  left_join(game_stats %>% select(game_id, rounds), 
+            by = "game_id") %>%
+  mutate(offensive = ifelse(team == "A", ceiling(rounds / 2), floor(rounds / 2)),
+         defensive = ifelse(team == "A", floor(rounds / 2), ceiling(rounds / 2))) %>%
+  ungroup() %>%
+  select(game_id, offensive, defensive)
+
+
+off_transition_list = game_team_pair %>% 
+  pull(game_id) %>%
+  map(function(game){
+      
+      rounds_in_game = total_rounds %>%
+      filter(game_id == game) %>%
+      pull(offensive)
+    
+    
+    shots_per_round = game_shots_pair %>%
+      filter(game_id == game) %>%
+      pull(shots)
+
+    filtered_game = offensive_scores %>%
+      filter(game_id == game)
+    # declare factor variables
+    filtered_game$round_num =
+      factor(
+        filtered_game$round_num,
+        levels = seq(1, rounds_in_game))
+    filtered_game$shot_order =
+      factor(
+        filtered_game$shot_order,
+        levels = seq(1, shots_per_round))
+
+    # For some reason, if you run this it duplicates the data frame some number
+    # of times.  I don't know what's causing this, but for the meantime I will
+    # call distinct and be done with it
+    table = filtered_game %>%
+      complete(
+        expand(filtered_game,
+               round_num,
+               shot_order),
+        fill = list(points_scored = 0)) %>%
+      distinct() %>%
+      group_by(game_id) %>%
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
+
+  # setting our matrix to 51x51 means we're looking at score transitions
+  # between 0 and 50
+    matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51)
+    running_score = table$running_score %>% append(0, after = 0)
+    # Create a matrix that will be used for our transition counts
+    for (i in 2:length(running_score)){
+      old_score = running_score[i - 1]
+      new_score = running_score[i]
+
+      matrix_this_game[old_score + 1, new_score + 1] =
+        matrix_this_game[old_score+ 1, new_score + 1] + 1
+
+    }
+    return(matrix_this_game)
+  })
+
+
+off_transition_counts = off_transition_list %>% reduce(`+`, .init = matrix(data = 0, nrow = 51, ncol = 51))
+row_totals = map_dbl(seq(1,51), function(number) { off_transition_counts[number,] %>% sum()})
+# Debugging
+
+off_transition_probs = off_transition_counts / row_totals
+off_transition_probs[which(off_transition_probs %>% is.nan())] = 0
+
+
+def_transition_list = game_team_pair %>%
+  pull(game_id) %>%
+  map(function(game){
+    rounds_in_game = total_rounds %>%
+      filter(game_id == game) %>%
+      pull(defensive)
+
+    if (rounds_in_game == 0){
+      browser()
+    }
+    shots_per_round = game_shots_pair %>%
+      filter(game_id == game) %>%
+      pull(shots)
+
+    filtered_game = defensive_scores %>%
+      filter(game_id == game)
+    # declare factor variables
+    filtered_game$round_num =
+      factor(
+        filtered_game$round_num,
+        levels = seq(1, rounds_in_game))
+    filtered_game$shot_order =
+      factor(
+        filtered_game$shot_order,
+        levels = seq(1, shots_per_round))
+
+    # For some reason, if you run this it duplicates the data frame some number
+    # of times.  I don't know what's causing this, but for the meantime I will
+    # call distinct and be done with it
+    table = filtered_game %>%
+      complete(
+        expand(filtered_game,
+               round_num,
+               shot_order),
+        fill = list(points_scored = 0)) %>%
+      distinct() %>%
+      group_by(game_id) %>%
+      summarize(running_score = cumsum(points_scored), .groups = "drop")
+
+  # setting our matrix to 51x51 means we're looking at score transitions
+  # between 0 and 50
+    matrix_this_game = matrix(data = 0, nrow = 51, ncol = 51)
+
+  # In order to model the transition from the initial state, a score = 0,
+  # I add the first 0 to the vector
+    running_score = table$running_score %>% append(0, after = 0)
+    # Create a matrix that will be used for our transition counts
+    for (i in 2:length(running_score)){
+      old_score = running_score[i - 1]
+      new_score = running_score[i]
+      
+      matrix_this_game[old_score + 1, new_score + 1] =
+        matrix_this_game[old_score+ 1, new_score + 1] + 1
+
+    }
+    return(matrix_this_game)
+  })
+
+
+def_transition_counts = def_transition_list %>% reduce(`+`, .init = matrix(data = 0, nrow = 51, ncol = 51))
+row_totals = map_dbl(seq(1,51), function(number) { off_transition_counts[number,] %>% sum()})
+def_transition_probs = def_transition_counts / row_totals
+def_transition_probs[which(def_transition_probs %>% is.nan())] = 0
+
+return_list = list("offensive" = off_transition_probs,
+                   "defensive" = def_transition_probs)
+return(return_list)
+}
+```
+
+```{r transition backup, include = F}
+# Sometimes, we don't have data for a team's probability of transitioning out
+# of a given state. In those cases, we'll use the general probability of moving
+# from one state to another. Not ideal, but oh well
+transition_backup = function(player_stats, scores, player_id_1, player_id_2, 
+                              player_id_3 = NA, player_id_4 = NA){
+  
+  
+   if (any(c(!is.numeric(player_id_1), !is.numeric(player_id_2)))) {
+    stop("'player_id_1` and `player_id_2` must be integers")
+  }
+  
+  if (all(any(c(!is.na(player_id_3), 
+                !is.na(player_id_4))
+              ),
+          any(c(!is.numeric(player_id_3), 
+                !is.numeric(player_id_4))
+              ))
+      ){
+    stop("player_id_3 and player_id_4 must be integers, if provided") 
+  }
+  
+  teams_vector = c(player_id_1, player_id_2, player_id_3, player_id_4)
+  
+  team_combinations = player_stats %>% 
+  group_by(game_id, team) %>%
+  arrange(player_id) %>%
+  mutate(position = row_number()) %>%
+  distinct() %>% 
+  pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
+  
+  
+  game_team_pair = team_combinations %>% 
+  filter(all(teams_vector %in% c(`1`, `2`, `3`, `4`), c(`1`, `2`, `3`, `4`) %in% teams_vector)) %>%
+  select(game_id, team) 
+
+# We need to know how many shots occurred within each round of play in each game
+# to accurately assess the total number of observations 
+
+game_shots_pair = player_stats %>%
+    filter(game_id %in% game_team_pair$game_id) %>%
+    group_by(game_id, team) %>% 
+    summarize(team_size = n()) %>%
+    summarize(shots = max(team_size))
+
+# Now, we need to take our two slices of the scores,
+# which I'm first going to simplify and clean for 
+# joining . In order to give the scores table the ability to 'complete' the data
+# for shots in a given round, I add in a variable which calculates the running total of 
+# scores in that round
+scores_simplified = scores %>% 
+  arrange(game_id, score_id) %>%
+  group_by(game_id, round_num, scoring_team) %>%
+  mutate(shot_order = row_number()) %>% 
+  select(game_id, scoring_team, points_scored, round_num, shot_order)
+
+# As it turns out, there are more games in the game_team_pair than there 
+# are in scores. Missing data is a bummer sometimes. So we have to delete
+# those games and only rely on the games from the overlap when we map
+
+offensive_scores = scores_simplified %>% 
+  filter(game_id %in% unique(game_team_pair$game_id)) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") == team,
+         scoring_team == team) %>%
+  # Need a number for round_num, not the letter
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+defensive_scores = scores_simplified %>% 
+  filter(game_id %in% game_team_pair$game_id) %>%
+  left_join(game_team_pair, by = "game_id") %>% 
+  filter(str_extract(round_num, "[A-Z]") != team, 
+         scoring_team == team) %>%
+  mutate(round_num = as.integer(str_sub(round_num, 1, -2)))
+
+
+total_rounds = game_team_pair %>% 
+  left_join(game_stats %>% select(game_id, rounds), 
+            by = "game_id") %>%
+  mutate(offensive = ifelse(team == "A", ceiling(rounds / 2), floor(rounds / 2)),
+         defensive = ifelse(team == "A", floor(rounds / 2), ceiling(rounds / 2))) %>%
+  ungroup() %>%
+  select(game_id, offensive, defensive)
+
+
+off_transition_list = game_team_pair %>% 
+   pull(game_id) %>%
+   map(function(game){
+     rounds_in_game = total_rounds %>%
+       filter(game_id == game) %>%
+       pull(offensive)
+
+     if (rounds_in_game == 0){
+       browser()
+     }
+     shots_per_round = game_shots_pair %>%
+       filter(game_id == game) %>%
+       pull(shots)
+
+     filtered_game = offensive_scores %>%
+       filter(game_id == game)
+     # declare factor variables
+     filtered_game$round_num =
+       factor(
+         filtered_game$round_num,
+         levels = seq(1, rounds_in_game))
+     filtered_game$shot_order =
+       factor(
+         filtered_game$shot_order,
+         levels = seq(1, shots_per_round))
+
+     # For some reason, if you run this it duplicates the data frame some number
+     # of times.  I don't know what's causing this, but for the meantime I will
+     # call distinct and be done with it
+     table = filtered_game %>%
+       complete(
+         expand(filtered_game,
+                round_num,
+                shot_order),
+         fill = list(points_scored = 0)) %>%
+       distinct()
+
+   # setting our matrix to 51x51 means we're looking at score transitions
+   # between 0 and 50
+     matrix_this_game = matrix(data = 0, nrow = 8, ncol = 8)
+      
+     running_score = table$running_score %>% append(0, after = 0)
+     # Create a matrix that will be used for our transition counts
+      for (i in 2:length(running_score)){
+        old_score = running_score[i - 1]
+        new_score = running_score[i]
+      
+       matrix_this_game[old_score + 1, new_score + 1] =
+         matrix_this_game[old_score+ 1, new_score + 1] + 1
+
+     }
+     return(matrix_this_game)
+   })
+
+
+ off_transition_counts = off_transition_list %>% reduce(`+`,
+                                                        .init = matrix(data = 0, nrow = 8, ncol = 8))
+ row_totals = map_dbl(seq(1,8), function(number) { off_transition_counts[number,] %>% sum()})
+# Debugging
+
+off_transition_probs = off_transition_counts / row_totals
+off_transition_probs[which(off_transition_probs %>% is.nan())] = 0
+
+
+ #### Transition counts for defensive rounds
+ def_transition_list = defensive_scores %>%
+   pull(game_id) %>%
+   unique() %>%
+   map(function(game){
+     rounds_in_game = total_rounds %>%
+       filter(game_id == game) %>%
+       pull(defensive)
+
+     if (rounds_in_game == 0){
+       browser()
+     }
+     shots_per_round = game_shots_pair %>%
+       filter(game_id == game) %>%
+       pull(shots)
+
+     filtered_game = defensive_scores %>%
+       filter(game_id == game)
+     # declare factor variables
+     filtered_game$round_num =
+       factor(
+         filtered_game$round_num,
+         levels = seq(1, rounds_in_game))
+     filtered_game$shot_order =
+       factor(
+         filtered_game$shot_order,
+         levels = seq(1, shots_per_round))
+
+     # For some reason, if you run this it duplicates the data frame some number
+     # of times.  I don't know what's causing this, but for the meantime I will
+     # call distinct and be done with it
+     table = filtered_game %>%
+       complete(
+         expand(filtered_game,
+                round_num,
+                shot_order),
+         fill = list(points_scored = 0)) %>%
+       distinct()
+
+   # setting our matrix to 51x51 means we're looking at score transitions
+   # between 0 and 50
+     matrix_this_game = matrix(data = 0, nrow = 8, ncol = 8)
+    running_score = table$running_score %>% append(0, after = 0)
+     # Create a matrix that will be used for our transition counts
+      for (i in 2:length(running_score)){
+        old_score = running_score[i - 1]
+        new_score = running_score[i]
+      
+       matrix_this_game[old_score + 1, new_score + 1] =
+         matrix_this_game[old_score+ 1, new_score + 1] + 1
+
+     }
+     return(matrix_this_game)
+   })
+
+def_transition_counts = def_transition_list %>% reduce(`+`,
+                                                        .init = matrix(data = 0, nrow = 8, ncol = 8))
+ row_totals = map_dbl(seq(1,8), function(number) { def_transition_counts[number,] %>% sum()})
+# Debugging
+
+def_transition_probs = def_transition_counts / row_totals
+def_transition_probs[which(def_transition_probs %>% is.nan())] = 0
+
+return_list = list("offensive" = off_transition_probs,
+                   "defensive" = def_transition_probs)
+return(return_list)
+}
+```
+
+```{r designing a simulation of a game, echo = F, message = F, warnings = F}
+# We should run players through a game
+
+
+# Define the rebuttal check function for this simplified game. Originally I had been
+# using the one from the scoreboard, but that function really leverages the reactive
+# environment in a way that makes working it into here unintuitive. Instead
+# I'll just pass a simple check to see if the game is in rebuttal
+
+in_rebuttal = function(a, b, round, points_to_win){
+  case_when(all(a >= points_to_win, a - b >= 2, round == "A") ~ T, 
+            all(b >= points_to_win, b - a >= 2, round == "B") ~ T,
+            !any(all(a >= points_to_win, a - b >= 2, round == "A"),
+                 all(b >= points_to_win, b - a >= 2, round == "B")) ~ F)
+}
+
+# 1. Obtain the teams and the transition probabilities. 
+## When this is made into a function, we should have a specified A,B order
+## just to make the function's framework that much easier
+
+team_B = c(2, 4,NA,NA)
+team_A = c(3, 9, NA, NA)
+
+# Figure out the number of shots per round
+shots = max(length(team_A %>% discard(is.na)), length(team_A %>% discard(is.na)))
+
+# obtain the transition probs
+team_A_transitions = transition_probabilities(player_stats, scores, team_A[1], team_A[2], team_A[3], team_A[4])
+team_B_transitions = transition_probabilities(player_stats, scores, team_B[1], team_B[2], team_B[3], team_B[4])
+
+
+# We'll track scores between teams according to a time series of each team's score.
+# The first score for both teams is 0
+team_A_history = c(0) 
+team_B_history = c(0)
+
+# Set a points to win value (for rebuttal_check)
+points_to_win = 21
+
+# Initialize the game conditions
+game_over = F
+game_over_A = F
+game_over_B = F
+rebuttal_tag_A = F
+rebuttal_tag_B = F
+A_in_rebuttal = F
+B_in_rebuttal = F
+
+while (all(game_over_A == F, game_over_B == F)){
+
+# Simulate A's offense. Each team gets separate draws at values from their respective
+# matrix. Because we're looking at each team and don't need to be as dynamic as
+# we usually would with rebuttal check. 
+
+round = "A"
+  
+
+  if (rebuttal_tag_B){
+    B_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+    if (B_in_rebuttal){
+      game_over_A = T
+      break()
+    }
+  }
+  
+  
+      
+for (i in 1:shots){
+  
+  
+  A_state = team_A_history %>% last() + 1
+  current_probs_A = team_A_transitions$offensive[A_state,]
+  shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
+  
+  #Update A's history with the new score
+  team_A_history = team_A_history %>% append(shot_draw_A - 1)
+  
+  # If A is in rebuttal this round and just exited, untag them
+  A_score = team_A_history %>% last()
+  B_score = team_B_history %>% last()
+  if (rebuttal_tag_A){
+    A_in_rebuttal = (B_score - A_score >= 2)
+    if (!A_in_rebuttal){
+      # Escaped rebuttal
+      rebuttal_tag_A = F
+    }
+  }
+  
+  
+  B_state = team_B_history %>% last() + 1
+  current_probs_B = team_B_transitions$defensive[B_state,]
+  shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
+  
+  team_B_history = team_B_history %>% append(shot_draw_B - 1)
+  
+  
+  A_score = team_A_history %>% last()
+  B_score = team_B_history %>% last()
+  
+  
+    
+}
+# Tag B for rebuttal, if the round gets back to A and this tag is still
+# true, then the game is over. Only check this on the last shot
+   
+ B_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+    if (B_in_rebuttal){
+      rebuttal_tag_B = T
+    }
+
+  
+# Start B's Round
+round = "B"
+  
+if (rebuttal_tag_A){
+      A_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+      if (A_in_rebuttal){
+        game_over_B = T
+        break()
+      }
+    }  
+# Simulate B's round
+for (i in 1:shots){
+    
+  B_state = team_B_history %>% last() + 1
+  current_probs_B = team_B_transitions$offensive[B_state,]
+  shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
+  
+  #Update A's history with the new score
+  team_B_history = team_B_history %>% append(shot_draw_B - 1)
+  
+  A_score = team_A_history %>% last()
+  B_score = team_B_history %>% last()
+  if (rebuttal_tag_B){
+    B_in_rebuttal = (A_score - B_score >= 2)
+    if (!B_in_rebuttal){
+      # Escaped rebuttal
+      rebuttal_tag_B = F
+    }
+  }
+
+  A_state = team_A_history %>% last() + 1
+  current_probs_A = team_A_transitions$defensive[A_state,]
+  shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
+  
+  team_A_history = team_A_history %>% append(shot_draw_A - 1)
+  
+  A_score = team_A_history %>% last()
+  B_score = team_B_history %>% last()
+  
+  
+  
+  
+}
+  # Check if A is in rebuttal at the end of the round
+
+    A_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+    if (A_in_rebuttal){
+      rebuttal_tag_A = T
+    }
+  
+}
+
+
+# Some post game diagnostics to check the simulation
+A_scores = team_A_history[-1]
+B_scores = team_B_history[-1]
+
+rounds = str_c(rep(1:15, each = 4), rep(c("A", "A", "B", "B"), 15 ))
+
+names(A_scores) = rounds
+names(B_scores) = rounds
+
+```
+
+
+
+``` {r building a simulation function, echo = F, include = F}
+
+# As I did with the transition counts, I'm now going to make a simulation function
+in_rebuttal = function(a, b, round, points_to_win){
+  case_when(all(a >= points_to_win, a - b >= 2, round == "A") ~ T, 
+            all(b >= points_to_win, b - a >= 2, round == "B") ~ T,
+            !any(all(a >= points_to_win, a - b >= 2, round == "A"),
+                 all(b >= points_to_win, b - a >= 2, round == "B")) ~ F)
+}
+
+# Prelude to the games. Get the transition_probabilities and the backups
+team_A_transitions = transition_probabilities(player_stats, scores, 9, 22)
+team_B_transitions = transition_probabilities(player_stats, scores, 2, 4)
+team_A_backup = transition_backup(player_stats, scores, 9, 22)
+team_B_backup = transition_backup(player_stats, scores, 2, 4)
+
+
+
+markov_single_game = function(A_team_size, B_team_size){
+ # We'll track scores between teams according to a time series of each team's score.
+  # The first score for both teams is 0
+      team_A_history = c(0) 
+      team_B_history = c(0)
+    
+    # Initialize the game conditions
+      game_over = F
+      rebuttal_tag_A = F
+      rebuttal_tag_B = F
+      A_in_rebuttal = F
+      B_in_rebuttal = F
+    
+    while (game_over == F){
+    
+    # Simulate A's offense. Each team gets separate draws at values from their respective
+    # matrix. Because we're looking at each team and don't need to be as dynamic as
+    # we usually would with rebuttal check. 
+    
+    round = "A"
+      
+    
+      if (rebuttal_tag_B){
+        B_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+        if (B_in_rebuttal){
+          game_over = T
+          break()
+        }
+      }
+      
+      
+          
+    for (i in 1:shots){
+      
+      
+      A_state = team_A_history %>% last() + 1
+      current_probs_A = team_A_transitions$offensive[A_state,]
+    
+      
+      # In the event that this didn't work OR the team is stuck somewhere, 
+      # replace the current
+      # transition with the backup
+      if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
+              any(current_probs_A %>% is.infinite()))){
+          A_state = if_else(
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1] >= 0,
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1],
+          0)
+        current_probs_A = team_A_backup$offensive[A_state + 1, ]
+        shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
+        points = shot_draw_A - 1
+        team_A_history = team_A_history %>% 
+          append(team_A_history[length(team_A_history)] + points)
+      } else {
+          shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
+          #Update A's history with the new score
+          team_A_history = team_A_history %>% 
+            append(shot_draw_A - 1)
+      }
+      
+      
+      # If A is in rebuttal this round and just exited, untag them
+      A_score = team_A_history %>% last()
+      B_score = team_B_history %>% last()
+      if (rebuttal_tag_A){
+        A_in_rebuttal = (B_score - A_score >= 2)
+        if (!A_in_rebuttal){
+          # Escaped rebuttal
+          rebuttal_tag_A = F
+        }
+      }
+      
+      
+      B_state = team_B_history %>% last() + 1
+      current_probs_B = team_B_transitions$defensive[B_state,]
+      if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
+              any(current_probs_B %>% is.infinite()))){
+        B_state = if_else(
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1] >= 0,
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1],
+          0)
+        current_probs_B = team_B_backup$defensive[B_state + 1, ]
+        shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
+        points = shot_draw_B - 1
+        team_B_history = team_B_history %>% 
+          append(team_B_history[length(team_B_history)] + points)
+      } else {
+          shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
+          #Update A's history with the new score
+          team_B_history = team_B_history %>% 
+            append(shot_draw_B - 1)
+      }      
+      
+      A_score = team_A_history %>% last()
+      B_score = team_B_history %>% last()
+      
+      
+        
+    }
+    # Tag B for rebuttal, if the round gets back to A and this tag is still
+    # true, then the game is over. Only check this on the last shot
+       
+     B_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+        if (B_in_rebuttal){
+          rebuttal_tag_B = T
+        }
+    
+      
+    # Start B's Round
+    round = "B"
+    
+    if (rebuttal_tag_A){
+          A_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+          if (A_in_rebuttal){
+            game_over = T
+            break()
+          }
+        }  
+  # Simulate B's round
+    for (i in 1:shots){
+        
+        B_state = team_B_history %>% last() + 1
+        current_probs_B = team_B_transitions$offensive[B_state,]
+     
+       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
+               any(current_probs_B %>% is.infinite()))){
+        B_state = if_else(
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1] >= 0,
+          team_B_history[length(team_B_history)] - 
+            team_B_history[length(team_B_history) - 1],
+          0)
+         current_probs_B = team_B_backup$defensive[B_state + 1, ]
+        shot_draw_B = which(rmultinom(1,1, current_probs_B) == 1)
+        points = shot_draw_B - 1
+        team_B_history = team_B_history %>% 
+          append(team_B_history[length(team_B_history)] + points)
+      } else {
+          shot_draw_B = which(rmultinom(1,1,current_probs_B) == 1)
+          #Update A's history with the new score
+          team_B_history = team_B_history %>% 
+            append(shot_draw_B - 1)
+      }      
+        
+        A_score = team_A_history %>% last()
+        B_score = team_B_history %>% last()
+        if (rebuttal_tag_B){
+          B_in_rebuttal = (A_score - B_score >= 2)
+          if (!B_in_rebuttal){
+            # Escaped rebuttal
+            rebuttal_tag_B = F
+          }
+        }
+      
+        A_state = team_A_history %>% last() + 1
+        current_probs_A = team_A_transitions$defensive[A_state,]
+        
+        if (any(current_probs_A %>% is.na())){
+        browser()
+      }
+
+    
+        if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
+                any(current_probs_A %>% is.infinite()))){
+        A_state = if_else(
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1] >= 0,
+          team_A_history[length(team_A_history)] - 
+            team_A_history[length(team_A_history) - 1],
+          0)
+        current_probs_A = team_A_backup$defensive[A_state + 1, ]
+        shot_draw_A = which(rmultinom(1,1, current_probs_A) == 1)
+        points = shot_draw_A - 1
+        team_A_history = team_A_history %>% 
+          append(team_A_history[length(team_A_history)] + points)
+      } else {
+          shot_draw_A = which(rmultinom(1,1,current_probs_A) == 1)
+          #Update A's history with the new score
+          team_A_history = team_A_history %>% 
+            append(shot_draw_A - 1)
+      }
+        
+        A_score = team_A_history %>% last()
+        B_score = team_B_history %>% last()
+        
+      
+      
+      
+    }
+    # Check if A is in rebuttal at the end of the round
+  
+      A_in_rebuttal = in_rebuttal(A_score, B_score, round, points_to_win)
+      if (A_in_rebuttal){
+        rebuttal_tag_A = T
+      }
+    
+  }
+    # Now that the game is over, collect the relevant information and dip
+    A_scores = team_A_history[-1]
+    B_scores = team_B_history[-1]
+    
+    num_rounds = length(A_scores) / (A_team_size + B_team_size)
+    if (num_rounds %% 1 != 0){
+      num_rounds = num_rounds %>% ceiling()
+      rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds)) %>%
+        head(-shots)
+    } else {
+      rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds))
+    }
+    names(A_scores) = rounds
+    names(B_scores) = rounds
+    
+    return(list(team_A = A_scores, team_B = B_scores,
+                won = case_when(A_scores %>% last() > B_scores %>% last() ~ "A",
+                                A_scores %>% last() < B_scores %>% last() ~ "B"),
+                final_round = names(A_scores) %>% last()) )
+  }
+
+
+```
+
+
+```{r simulate many games, echo = F}
+markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win = 21 ){
+A_size = length(team_A) %>% discard(is.na)
+B_size = length(team_B) %>% discard(is.na)
+  
+shots = max(A_size, B_size)
+
+# obtain the transition probs
+team_A_transitions = transition_probabilities(player_stats, scores, team_A[1], team_A[2], team_A[3], team_A[4])
+team_A_backup = transition_backup(player_stats, scores, team_A[1], team_A[2], team_A[3], team_A[4])
+team_B_transitions = transition_probabilities(player_stats, scores, team_B[1], team_B[2], team_B[3], team_B[4])
+team_B_backup = transition_backup(player_stats, scores, team_B[1], team_B[2], team_B[3], team_B[4])
+
+# At this point, I run the same simulation as before, but now I map it over
+# a sequence to iterate
+
+  games_record = c(seq(1, iterations)) %>% map(function(iteration_number){
+    markov_single_game(A_size, B_size)
+})
+return(games_record)
+}
+
+# Test command
+games_list = markov_simulate_games(c(1,2), c(1,2) , 1000)
+
+
+# See the win percentage of the teams
+who_won = games_list %>% 
+  map(function(list){
+    list$won
+  }) 
+
+team_A_winrate = length(who_won[who_won == "A"]) / length(games_list)
+team_B_winrate = length(who_won[who_won == "B"]) / length(games_list)
+
+
+
+# For sanity, test the stability of the estimations. I think that doing several
+# thousand simulations many times over and taking the average of those win rates is
+# the move
+
+
+
+seq(1,50) %>% map(function(number){
+  
+  games_list = markov_simulate_games(c(2,9), c(2,9), 500)
+})
+```
