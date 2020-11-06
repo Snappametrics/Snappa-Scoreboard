@@ -240,6 +240,11 @@ label.control-label[for='score'] {
     transform: scale(2);
 }
 
+.awesome-checkbox {
+    margin-top: 2.5vh;
+    margin-bottom: 2.5vh;
+}
+
 
 
 /* End my CSS */
