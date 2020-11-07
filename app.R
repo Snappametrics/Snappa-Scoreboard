@@ -1593,9 +1593,12 @@ observeEvent(input$game_summary, {
     #Look at the number of lost players on each team to be certain of the values 
     # that you want
     
-    
-    size_A = lost_players %>% filter(team == "A") %>% length()
-    size_B = lost_players %>% filter(team == "B") %>% length()
+    size_A = lost_players %>% filter(team == "A") %>%
+      summarize(sum = n()) %>%
+        deframe()
+    size_B = lost_players %>% filter(team == "B") %>% 
+      summarize(sum = n()) %>%
+        deframe()
     
     # Check to see if you should be signaling to the app to care about extra
     # players
@@ -1622,6 +1625,7 @@ observeEvent(input$game_summary, {
       updateSelectizeInput(session, inputId = id, selected = name)
     
     }))
+    
     shinyjs::click("start_game")
     
   })
