@@ -96,18 +96,19 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 }
 
 
-validate_scores = function(player, shot, snappaneers, paddle, scores_table, round_vector = rounds, rebuttal = F){
+validate_scores = function(player, shot, snappaneers, paddle, 
+                           scores_table, round_vector = rounds, rebuttal = F){
   
   # Identify the scorer's team and ID
-  players_team = pull(filter(snappaneers, player_name == player), team) %>% toupper()
-  scorer_id = pull(filter(snappaneers, player_name == player), player_id)
+  players_team = snappaneers[snappaneers$player_name == player, "team", drop=TRUE]
+  scorer_id = snappaneers[snappaneers$player_name == player, "player_id", drop=TRUE]
   
   # Typical Offense: Scoring on one's shot
   typical_offense = str_detect(round_vector[shot], players_team)
   
   # Typical Paddle: Scoring on the other team's shot
   typical_paddle = all(str_detect(round_vector[shot], players_team, negate = T), 
-                       paddle == T)
+                       paddle)
   
   # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
   # Players can only score once on a non-paddle shot
@@ -133,8 +134,8 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
   } else { # If teams are uneven:
     
     # Check if the scorer is on the team with fewer players (i.e. can score multiple non-paddle points)
-    scorer_team_players = nrow(filter(snappaneers, team == players_team))
-    other_team_players = nrow(filter(snappaneers, team != players_team))
+    scorer_team_players = nrow(snappaneers[snappaneers$team == players_team])
+    other_team_players = nrow(snappaneers[snappaneers$team != players_team])
     
     if((scorer_team_players < other_team_players)|rebuttal){ # If their team has fewer players OR Rebuttal:
       
