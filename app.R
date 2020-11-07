@@ -1395,12 +1395,15 @@ observe({
       }
     })
     
+    # Check if the last game was finished
     # Switch to the scoreboard
-    # updateTabsetPanel(session, "switcher", selected = "scoreboard")
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
     if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
               pull() %>% 
               isFALSE()) {
+      
+      # LAST GAME WAS NOT FINISHED
+      
         lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
           pull()
       
@@ -1431,6 +1434,8 @@ observe({
         vals$player_stats_db = lost_player_stats
         
     } else {
+      
+      # LAST GAME WAS FINISHED
       
       # Set the score outputs and shot number to 0
       vals$current_scores$team_A = 0
