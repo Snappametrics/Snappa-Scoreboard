@@ -97,18 +97,19 @@ rebuttal_check <- function(a , b , round, points_to_win) {
 }
 
 
-validate_scores = function(player, shot, snappaneers, paddle, scores_table, round_vector = rounds, rebuttal = F){
+validate_scores = function(player, shot, snappaneers, paddle, 
+                           scores_table, round_vector = rounds, rebuttal = F){
   
   # Identify the scorer's team and ID
-  players_team = pull(filter(snappaneers, player_name == player), team) %>% toupper()
-  scorer_id = pull(filter(snappaneers, player_name == player), player_id)
+  players_team = snappaneers[snappaneers$player_name == player, "team", drop=TRUE]
+  scorer_id = snappaneers[snappaneers$player_name == player, "player_id", drop=TRUE]
   
   # Typical Offense: Scoring on one's shot
   typical_offense = str_detect(round_vector[shot], players_team)
   
   # Typical Paddle: Scoring on the other team's shot
   typical_paddle = all(str_detect(round_vector[shot], players_team, negate = T), 
-                       paddle == T)
+                       paddle)
   
   # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
   # Players can only score once on a non-paddle shot
@@ -134,8 +135,8 @@ validate_scores = function(player, shot, snappaneers, paddle, scores_table, roun
   } else { # If teams are uneven:
     
     # Check if the scorer is on the team with fewer players (i.e. can score multiple non-paddle points)
-    scorer_team_players = nrow(filter(snappaneers, team == players_team))
-    other_team_players = nrow(filter(snappaneers, team != players_team))
+    scorer_team_players = nrow(snappaneers[snappaneers$team == players_team])
+    other_team_players = nrow(snappaneers[snappaneers$team != players_team])
     
     if((scorer_team_players < other_team_players)|rebuttal){ # If their team has fewer players OR Rebuttal:
       
@@ -356,7 +357,7 @@ ui <- dashboardPagePlus(
     # Left side header
     left_menu = tagList(
       dropdownBlock(
-        id = "mydropdown",
+        id = "game_point",
         title = "Game Point",
         icon = "sliders",
         sliderInput(
@@ -365,7 +366,7 @@ ui <- dashboardPagePlus(
           min = 21, max = 50, value = 21
         )
       )
-    # Right side header
+      # Right side header
     ),
     tags$li(class = "dropdown", socialButton(
         url = "https://github.com/mdewey131/Snappa-Scoreboard",
@@ -418,6 +419,16 @@ ui <- dashboardPagePlus(
                 
                 # Column 2 - empty
                 column(4,  align = "center",
+                       pickerInput(
+                         inputId = "arena_select",
+                         label = "Arena",
+                         selected = "Greenhaus",
+                         choices = c("Greenhaus", "Ventura"),
+                         options = pickerOptions(
+                           mobile = T,
+                           showTick = T
+                         )
+                       ),
                        disabled(actionBttn("start_game", 
                                            label = "Throw dice?", style = "pill", color = "primary", 
                                            icon = icon("dice"), size = "sm")),
@@ -516,7 +527,7 @@ ui <- dashboardPagePlus(
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id")) %>%
-                                       deframe())
+                                       deframe() %>% sample())
                          ),
                   column(width = 3,
                          # Stat selection
@@ -528,12 +539,24 @@ ui <- dashboardPagePlus(
 
                 )
               ),
+              fluidRow(
+                box(width = 12, status = "success",
+                  uiOutput("player_stats_headers")
+                )
+              ),
               # Form plot
               boxPlus(title = "Player Form",
                       collapsible = T,
                       closable = F,
                       status = "primary",
                 plotOutput("player_form")
+              ),
+              # Top Teammates
+              boxPlus(title = "Top Teammates",
+                      collapsible = T,
+                      closable = F,
+                      status = "primary",
+                      gt_output("teammate_tab")
               )
               ),
 
@@ -1056,17 +1079,39 @@ server <- function(input, output, session) {
     
   })
   
-  teammate_count = reactive({
-    player_stats_tbl %>% 
-      # Group by game and team
-      group_by(game_id, team) %>% 
-      # Select obs where the player is on the team, but select their teammates
-      filter(input$player_select %in% player_id, 
-             player_id != input$player_select) %>% 
-      ungroup() %>% 
-      # Count the number of times the player has been the selected player's teammate
-      count(player_id) %>% 
-      inner_join(vals$players_db, by = "player_id")
+  teammate_stats = reactive({
+    dbGetQuery(con, 
+               sql(str_c(
+                 "SELECT * FROM teammate_stats ",
+                 "WHERE player_id = ", input$player_select
+               )))
+  })
+  
+  output$teammate_tab = render_gt({
+    teammate_stats() %>% 
+      gt() %>% 
+      tab_header(title = "Performance with _______") %>% 
+      cols_hide(vars(player_id, teammate_id)) %>% 
+      cols_label(teammate = "Teammate",
+                 games_played = "Games Played",
+                 win_pct = "Wins (%)",
+                 avg_points = "Avg. Points",
+                 avg_paddle_points = "Avg. Paddle Points") %>% 
+      fmt_number(
+        columns = starts_with("avg"),
+        decimals = 2
+      ) %>% 
+      fmt_percent(
+        columns = vars(win_pct),
+        decimals = 1
+      ) %>% 
+      # Styling
+      # Title
+      tab_style(
+        style = list(cell_text(align = "left", v_align = "bottom", weight = "bold", size = px(18))),
+        locations = cells_title(groups = "title")
+      )%>% 
+      tab_theme_snappa()
   })
   
   # Player form plot
@@ -1088,6 +1133,43 @@ server <- function(input, output, session) {
       theme(axis.text.x = element_blank())
     
   })
+  
+  output$player_stats_headers = renderUI({
+    player_stats = dbGetQuery(con, 
+                              sql(str_c("SELECT games_played, win_pct, sinks FROM basic_career_stats ", 
+                                        "WHERE player_id = ", input$player_select))
+                              )
+    
+    fluidRow(
+      # Games Played
+      column(
+        width = 4,
+        descriptionBlock(
+          header = player_stats$games_played, 
+          text = "GAMES PLAYED"
+        )
+      ),
+      # Win %
+      column(
+        width = 4,
+        descriptionBlock(
+          header = scales::percent(player_stats$win_pct), 
+          text = "WIN PERCENTAGE"
+        )
+      ),
+      # Sinks
+      column(
+        width = 4,
+        descriptionBlock(
+          header = player_stats$sinks, 
+          text = "LIFETIME SINKS"
+        )
+      )
+    )
+
+  })
+  
+  
   
   team_transition_names = reactive({
     team_A = snappaneers() %>%
@@ -1120,7 +1202,7 @@ server <- function(input, output, session) {
                           current_scores_A = vals$current_scores$team_A,
                           current_scores_B = vals$current_scores$team_B)
   })
-  
+
 
 # Restart Game Outputs ----------------------------------------------------
 
@@ -1357,12 +1439,15 @@ observe({
       }
     })
     
+    # Check if the last game was finished
     # Switch to the scoreboard
-    # updateTabsetPanel(session, "switcher", selected = "scoreboard")
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
     if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
               pull() %>% 
               isFALSE()) {
+      
+      # LAST GAME WAS NOT FINISHED
+      
         lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
           pull()
       
@@ -1393,6 +1478,8 @@ observe({
         vals$player_stats_db = lost_player_stats
         
     } else {
+      
+      # LAST GAME WAS FINISHED
       
       # Set the score outputs and shot number to 0
       vals$current_scores$team_A = 0
@@ -1447,7 +1534,7 @@ observe({
                    title = "Halftime", 
                    type = "info",
                    text = HTML(str_c("Change places!", 
-                                     "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
+                                     "<audio preload='auto' src='change_places.mp3' type='audio/mp3'></audio>")), html = T)
 
     shinyjs::click("switch_sides")
 
@@ -1460,7 +1547,7 @@ observe({
     if(all(input$score == 3, !input$clink)){
       insertUI(selector = "#round_num",
                where = "afterEnd",
-               ui = HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
+               ui = HTML('<audio preload="auto" src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
       
     }
   },

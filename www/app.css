@@ -81,6 +81,10 @@
     z-index:1;
 }
 
+.bootstrap-select .dropdown-toggle .filter-option {
+    text-align: center!important;
+}
+
 /* Scoreboard */
 
 #previous_round {
@@ -168,6 +172,10 @@ label[for='foot'] {
     background-color: var(--grey-bg);
 }
 
+.dropdown-menu {
+    min-width: 25vw;
+}
+
 
 .bttn-unite.bttn-md { 
     font-size: 200%;
@@ -234,6 +242,11 @@ label.control-label[for='score'] {
 
 .checkbox-bs input[type="checkbox"] {
     transform: scale(2);
+}
+
+.awesome-checkbox {
+    margin-top: 2.5vh;
+    margin-bottom: 2.5vh;
 }
 
 
