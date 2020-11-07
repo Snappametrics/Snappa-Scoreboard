@@ -27,7 +27,7 @@ library(extrafont)
 
 source("test_dbconnect.R")
 source("ui_functions.R")
-source("analysis/Markov_model_functions.R")
+source("markov_model/Markov_model_functions.R")
 
 # Prior to app startup ----------------------------------------------------
 
@@ -1852,7 +1852,6 @@ observeEvent(input$resume_no, {
   #   - Insert add new player action button
   #   - Remove A3 player name input
   observeEvent(input$edit_remove_A3, {
-    browser()
     remove_p3_input("edit", "A", session)
     
     #Don't consider these elements when looking at
@@ -1956,7 +1955,6 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
-    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
