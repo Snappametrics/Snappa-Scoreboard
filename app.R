@@ -1114,7 +1114,7 @@ server <- function(input, output, session) {
   game_simulations = reactive({
     markov_simulate_games(team_transition_names()$team_A, 
                           team_transition_names()$team_B,
-                          iterations = 50,
+                          iterations = 1000,
                           points_to_win = score_to(),
                           transitions_list = readRDS("analysis/transition_probabilities.Rdata"),
                           current_scores_A = vals$current_scores$team_A,
