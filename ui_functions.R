@@ -1342,26 +1342,40 @@ markov_summary_data = function(simulations){
   winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
                     "A",
                     "B")
+  if (length(winners) == 2){
+    tie = TRUE
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+        matrix[team_A_score, team_B_score] = 1
+        
+        return(list("scores" = matrix,
+                    "final" = final_scores))
+      })    
+  } else {
   # Using a matrix here so that I can treat each pairing of points as a unique
   # value, rather than each team's individual total (meaning that I am truly
   # looking for the pair of scores which are modal in the set of games that
   # the winning team won)
-  per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
-    if (simulations[[game_number]]$won != winners){
-      team_A_score = simulations[[game_number]]$team_A %>% last()
-      team_B_score = simulations[[game_number]]$team_B %>% last()
-      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-      matrix = matrix(0, nrow = 51, ncol = 51)
-    } else {
-      team_A_score = simulations[[game_number]]$team_A %>% last()
-      team_B_score = simulations[[game_number]]$team_B %>% last()
-      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-      matrix = matrix(0, nrow = 51, ncol = 51)
-      matrix[team_A_score, team_B_score] = 1
-    }
-    return(list("scores" = matrix,
-                "final" = final_scores))
-  })
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+      if (simulations[[game_number]]$won != winners){
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+      } else {
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+        matrix[team_A_score, team_B_score] = 1
+      }
+      return(list("scores" = matrix,
+                  "final" = final_scores))
+    })
+  }
   
   scores_matrix = per_game_data$scores %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
   modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
@@ -1374,7 +1388,7 @@ markov_summary_data = function(simulations){
       per_game_data[[number]]$final
     })
    
-  return(list("final_scores" = final_scores))
+  return(list("final_scores" = final_scores_table))
 }
 
 markov_visualizations = function(simulations){
@@ -1382,10 +1396,11 @@ markov_visualizations = function(simulations){
   summary = markov_summary_data(simulations)
   
   # Create a histogram of each team's final score on a common x-axis
-  ggplot(data = summary$final_scores) %>%
+  # This should be one of the interactive graphs that allows us to roll our cursor over
+  ggplot(data = summary$final_scores) +
     # Team A
-    geom_histogram(aes(x = `A`), color = "red") %>%
-    geom_histogram(aes(x = `B`), color = "blue")
+    geom_histogram(aes(x = `A`), fill = "red", alpha = 0.45) +
+    geom_histogram(aes(x = `B`), fill = "blue", alpha = 0.45)
   
   
   
