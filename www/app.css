@@ -81,6 +81,10 @@
     z-index:1;
 }
 
+.bootstrap-select .dropdown-toggle .filter-option {
+    text-align: center!important;
+}
+
 /* Scoreboard */
 
 #previous_round {
