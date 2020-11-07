@@ -2059,11 +2059,21 @@ observeEvent(input$resume_no, {
     )
     
     
-    sendSweetAlert(session, 
+    inputSweetAlert(session, 
+                    inputId = "casualty",
                    title = "1812",
                    text = "Everyone roll a die, lowest roll takes a shot.",
-                   type = "warning")
+                   type = "warning",
+                   input = "radio",
+                   inputOptions = snappaneers()$player_name)
 
+  })
+  
+  observeEvent(input$casualty, {
+    casualty = select(snappaneers(), starts_with("player")) %>% deframe() %>% pluck(input$casualty)
+    dbExecute(con, 
+              sql(str_c("INSERT INTO casualties_of_1812(game_id, player_id)
+                        VALUES (", vals$game_id, ", ", casualty, ");")))
   })
   
 
