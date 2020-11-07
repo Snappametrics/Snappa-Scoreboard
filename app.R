@@ -27,6 +27,7 @@ library(extrafont)
 
 source("test_dbconnect.R")
 source("ui_functions.R")
+source("analysis/Markov_model_functions.R")
 
 # Prior to app startup ----------------------------------------------------
 
@@ -558,6 +559,8 @@ ui <- dashboardPagePlus(
                       gt_output("teammate_tab")
               )
               ),
+
+# Edit teams --------------------------------------------------------
       tabItem(tabName = "edit_teams",
               fluidRow(
                 team_edit_column("A"),
@@ -566,7 +569,14 @@ ui <- dashboardPagePlus(
                 column(4,  align = "center"),
                 team_edit_column("B")
               )
-      )
+      ),
+
+# Win Probability Model ---------------------------------------------
+    tabItem(tabName = "markov_model_summary",
+            
+            
+            
+            )
     
     ),
     tags$head(
@@ -634,6 +644,8 @@ server <- function(input, output, session) {
         menuItem("Edit Teams", 
                  tabName = "edit_teams",
                  icon = icon("edit")),
+        menuItem("Win Probabilities", tabName = "markov_model_summary",
+                 icon = icon("flask")),
         menuItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
                  text = "More stuff than we can add", newtab = T)
       )
@@ -1159,7 +1171,38 @@ server <- function(input, output, session) {
   
   
   
+  team_transition_names = reactive({
+    team_A = snappaneers() %>%
+      filter(team == "A") %>% 
+      arrange(player_id) %>% 
+      mutate(n = row_number()) %>% 
+      pivot_wider(id_cols = team, names_from = n, values_from = player_id) %>%
+      ungroup() %>%
+      select(-team)
+    
+    team_B = snappaneers() %>%
+      filter(team == "B") %>% 
+      arrange(player_id) %>%
+      mutate(n = row_number()) %>% 
+      pivot_wider(id_cols = team, names_from = n, values_from = player_id) %>%
+      ungroup %>%
+      select(-team)
+    
+    return(list("team_A" = team_A,
+                "team_B" = team_B))
+      
+  })
   
+  game_simulations = reactive({
+    markov_simulate_games(team_transition_names()$team_A, 
+                          team_transition_names()$team_B,
+                          iterations = 50,
+                          points_to_win = score_to(),
+                          transitions_list = readRDS("analysis/transition_probabilities.Rdata"),
+                          current_scores_A = vals$current_scores$team_A,
+                          current_scores_B = vals$current_scores$team_B)
+  })
+
 
 # Restart Game Outputs ----------------------------------------------------
 
@@ -1908,7 +1951,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
-
+    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 

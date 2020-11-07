@@ -490,6 +490,11 @@ glance_ui_game = function(game.id){
  return(ui_output)
 }
 
+arrange_markov_output = function(viz_elements){
+  
+  
+  
+}
 
 # Stats Output ------------------------------------------------------------
 
@@ -1321,6 +1326,72 @@ score_heatmap = function(df){
   
   
 }
+
+
+
+markov_summary_data = function(simulations){
+  # Answer the basic questions
+  # Who won more? What's their win rate?
+  wins = simulations %>% map_chr( function(element){
+    element$won
+  })
+  A_winrate = length(wins[wins == "A"])/length(wins)
+  B_winrate = 1 - A_winrate
+
+  # In the games where the winningest team won, what was the modal score?
+  winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
+                    "A",
+                    "B")
+  # Using a matrix here so that I can treat each pairing of points as a unique
+  # value, rather than each team's individual total (meaning that I am truly
+  # looking for the pair of scores which are modal in the set of games that
+  # the winning team won)
+  per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+    if (simulations[[game_number]]$won != winners){
+      team_A_score = simulations[[game_number]]$team_A %>% last()
+      team_B_score = simulations[[game_number]]$team_B %>% last()
+      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+      matrix = matrix(0, nrow = 51, ncol = 51)
+    } else {
+      team_A_score = simulations[[game_number]]$team_A %>% last()
+      team_B_score = simulations[[game_number]]$team_B %>% last()
+      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+      matrix = matrix(0, nrow = 51, ncol = 51)
+      matrix[team_A_score, team_B_score] = 1
+    }
+    return(list("scores" = matrix,
+                "final" = final_scores))
+  })
+  
+  scores_matrix = per_game_data$scores %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
+  modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
+  modal_A_score = modal_score_position[1]
+  modal_B_score = modal_score_position[2]
+  
+  
+  final_scores_table = seq(1, length(per_game_data)) %>% 
+    map_df(function(number){
+      per_game_data[[number]]$final
+    })
+   
+  return(list("final_scores" = final_scores))
+}
+
+markov_visualizations = function(simulations){
+  browser()
+  summary = markov_summary_data(simulations)
+  
+  # Create a histogram of each team's final score on a common x-axis
+  ggplot(data = summary$final_scores) %>%
+    # Team A
+    geom_histogram(aes(x = `A`), color = "red") %>%
+    geom_histogram(aes(x = `B`), color = "blue")
+  
+  
+  
+}
+
+
 
 
 
