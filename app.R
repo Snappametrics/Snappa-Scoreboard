@@ -1505,7 +1505,8 @@ observe({
                                        paddle_points = NA_integer_,
                                        clink_points = NA_integer_,
                                        game_complete = F,
-                                       last_round = "1A"
+                                       last_round = "1A",
+                                       arena = input$arena_select
                                      ))
       
       
