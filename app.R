@@ -1491,7 +1491,7 @@ observe({
                    title = "Halftime", 
                    type = "info",
                    text = HTML(str_c("Change places!", 
-                                     "<audio src='change_places.mp3' type='audio/mp3' autoplay></audio>")), html = T)
+                                     "<audio preload='auto' src='change_places.mp3' type='audio/mp3'></audio>")), html = T)
 
     shinyjs::click("switch_sides")
 
@@ -1504,7 +1504,7 @@ observe({
     if(all(input$score == 3, !input$clink)){
       insertUI(selector = "#round_num",
                where = "afterEnd",
-               ui = HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
+               ui = HTML('<audio preload="auto" src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
       
     }
   },
