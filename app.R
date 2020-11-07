@@ -363,20 +363,8 @@ ui <- dashboardPagePlus(
           label = "What score are you playing to?",
           min = 21, max = 50, value = 21
         )
-      ),
-      # Arena Select
-      dropdownBlock(
-        id = "arena_select_block",
-        title = "Arena Select",
-        icon = "globe", 
-        radioButtons(
-          inputId = "arena_select",
-          label = "Arena",
-          selected = "Greenhaus",
-          choices = c("Greenhaus", "Ventura"), inline = T
-        )
       )
-    # Right side header
+      # Right side header
     ),
     tags$li(class = "dropdown", socialButton(
         url = "https://github.com/mdewey131/Snappa-Scoreboard",
@@ -429,6 +417,16 @@ ui <- dashboardPagePlus(
                 
                 # Column 2 - empty
                 column(4,  align = "center",
+                       pickerInput(
+                         inputId = "arena_select",
+                         label = "Arena",
+                         selected = "Greenhaus",
+                         choices = c("Greenhaus", "Ventura"),
+                         options = pickerOptions(
+                           mobile = T,
+                           showTick = T
+                         )
+                       ),
                        disabled(actionBttn("start_game", 
                                            label = "Throw dice?", style = "pill", color = "primary", 
                                            icon = icon("dice"), size = "sm")),
