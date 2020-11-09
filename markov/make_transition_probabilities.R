@@ -78,5 +78,5 @@ teams_vector = unique_team_combinations %>%
 
 names(all_transitions) = teams_vector
 
-save(all_transitions, file = "markov/transition_probabilities.Rdata")
+saveRDS(all_transitions, file = "markov/transition_probabilities.Rdata")
 

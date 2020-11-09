@@ -27,7 +27,7 @@ library(extrafont)
 
 source("test_dbconnect.R")
 source("ui_functions.R")
-source("analysis/Markov_model_functions.R")
+source("markov/Markov_model_functions.R")
 
 # Prior to app startup ----------------------------------------------------
 
@@ -1116,7 +1116,7 @@ server <- function(input, output, session) {
                           team_transition_names()$team_B,
                           iterations = 1000,
                           points_to_win = score_to(),
-                          transitions_list = readRDS("analysis/transition_probabilities.Rdata"),
+                          transitions_list = readRDS("markov/transition_probabilities.Rdata"),
                           current_scores_A = vals$current_scores$team_A,
                           current_scores_B = vals$current_scores$team_B)
   })

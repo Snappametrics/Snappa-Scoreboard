@@ -586,7 +586,7 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
                                  current_scores_B = 0){
  
   # obtain the transition probs
-  if (is.null(transition_list)){
+  if (is.null(transitions_list)){
     team_A_transitions = transition_probabilities(player_stats, scores, "scores", team_A[1], team_A[2], team_A[3], team_A[4])
     team_A_backup = transition_probabilities(player_stats, scores, "states", team_A[1], team_A[2], team_A[3], team_A[4])
     team_B_transitions = transition_probabilities(player_stats, scores, "scores", team_B[1], team_B[2], team_B[3], team_B[4])
