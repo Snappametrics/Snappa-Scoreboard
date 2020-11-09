@@ -20,7 +20,7 @@ library(tidyverse)
 
 source("dbconnect.R")
 # I take the functions for the Markov modeling from the script of functions
-source("analysis/Markov_model_functions.R")
+source("markov/Markov_model_functions.R")
 
 
 # Get data
@@ -70,12 +70,13 @@ all_transitions = unique_team_combinations %>%
 teams_vector = unique_team_combinations %>%
   mutate(team_vector = str_c("(", `1`, ",", `2`, 
                              if_else(!is.na(`3`), str_c(", ", `3`), ""),
-                             if_else(!is.na(`4`), str_c(", ", `4`), "")
+                             if_else(!is.na(`4`), str_c(", ", `4`), ""),
+                             ")"
                              )
          ) %>%
   pull(team_vector)
 
 names(all_transitions) = teams_vector
 
-save(all_transitions, file = "analysis/transition_probabilities.Rdata")
+save(all_transitions, file = "markov/transition_probabilities.Rdata")
 
