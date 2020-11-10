@@ -550,17 +550,43 @@ ui <- dashboardPagePlus(
 
 # Win Probability Model ---------------------------------------------
     tabItem(tabName = "markov_model_summary",
-            
-            
-            
-            )
+            # Might be worth it to turn this entire thing into a uiOutput
+            # so that I can use vals$ to set the minimum on the simulation_scores
+            boxPlus(title = "Simulation Parameters",
+                    width = 12,
+                    collapsable = T, 
+                    closable = F,
+                    
+                    fluidRow(
+                      column(width = 4, align = "left", 
+                        numericInput("simulation_scores_A", label = "Team A Starting Score",
+                          value = 0, min = 0, max = 50)
+                      ),
+                      column(width = 4, align = "center",
+                        sliderInput("num_simulations", "Number of Simulations",
+                                    min = 1, max = 1000, value = 50)
+                      ),
+                      column(width = 4, align = "right",
+                        numericInput("simulation_scores_B", label = "Team B Starting Score",
+                          value = 0, min = 0, max = 50)
+                      )
+                    
+                    )
+            ),
+          tags$div(class = "simulation_results",
+                   uiOutput("simulation_blurb"),
+                   plotOutput("simulation_probability_bar")
+          )
+        
     
-    ),
+        
+    )
+),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
     )
   ),
-  useShinyjs(),
+  useShinyjs()
 
 
 # Start Screen ------------------------------------------------------------
@@ -1089,6 +1115,10 @@ server <- function(input, output, session) {
     
   })
   
+
+# Markov Model Reactives/Outputs ------------------------------------------
+
+  
   team_transition_names = reactive({
     team_A = snappaneers() %>%
       filter(team == "A") %>% 
@@ -1098,29 +1128,92 @@ server <- function(input, output, session) {
       ungroup() %>%
       select(-team)
     
+    # Make each team a simple vector 
+    team_A = as.vector(team_A)
+    while (length(team_A) < 4){
+      team_A = append(team_A, NA)
+    }
+    
     team_B = snappaneers() %>%
       filter(team == "B") %>% 
       arrange(player_id) %>%
       mutate(n = row_number()) %>% 
       pivot_wider(id_cols = team, names_from = n, values_from = player_id) %>%
-      ungroup %>%
+      ungroup() %>%
       select(-team)
     
+    team_B = as.vector(team_B)     
+    while (length(team_B) < 4) {
+      team_B = append(team_B, NA)
+    }
     return(list("team_A" = team_A,
                 "team_B" = team_B))
       
+  })
+
+
+  
+  markov_setup = reactive({
+    return(list("A_score" = ifelse(is.null(input$simulation_scores_A) , 0, input$simulation_scores_A),
+                "B_score" = ifelse(is.null(input$simulation_scores_B) , 0, input$simulation_scores_B),
+                "iterations" = ifelse(is.null(input$num_simulations) , 50, input$num_simulations)
+                )
+           )
   })
   
   game_simulations = reactive({
     markov_simulate_games(team_transition_names()$team_A, 
                           team_transition_names()$team_B,
-                          iterations = 1000,
+                          iterations = markov_setup()$iterations ,
                           points_to_win = score_to(),
                           transitions_list = readRDS("markov/transition_probabilities.Rdata"),
-                          current_scores_A = vals$current_scores$team_A,
-                          current_scores_B = vals$current_scores$team_B)
+                          current_scores_A = markov_setup()$A_score,
+                          current_scores_B = markov_setup()$B_score)
+  })
+  markov_summary = reactive({
+    markov_summary_data(game_simulations())
   })
   
+  markov_ui_elements = reactive({
+    visuals = markov_visualizations(markov_summary())
+    if (length(markov_summary()$winner) == 1){
+      winning_team = if_else(markov_summary()$winner == "A",
+                             "Team A",
+                             "Team B")
+      winning_color = ifelse(winning_team == "Team A",
+                             snappa_pal[2],
+                             snappa_pal[3])
+      
+    } else{
+      winning_team =  "neither team"
+      winning_color = "grey"
+    } 
+    return(list("viz" = visuals,
+                "team" = winning_team,
+                "color" = winning_color)
+           )
+      })
+      
+output$simulation_blurb = renderUI({
+      fluidRow(
+        column(12,
+               align = "left",
+               h3(HTML(str_c("Across ", vals$markov$simulations, " games, ",
+                        "<span style='color:", markov_ui_elements()$color, "'>",
+                        markov_ui_elements()$team, "</span> ",
+                        "wins an estimated ", markov_summary()$winrate,
+                        "% of games.")
+                )
+               )
+        )
+      )
+})
+output$simulation_probability_bar = 
+  renderPlot({markov_ui_elements()$viz$win_probability
+    
+})
+  
+
 
 # Restart Game Outputs ----------------------------------------------------
 
