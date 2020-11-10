@@ -553,39 +553,43 @@ ui <- dashboardPagePlus(
             # Might be worth it to turn this entire thing into a uiOutput
             # so that I can use vals$ to set the minimum on the simulation_scores
             boxPlus(title = "Simulation Parameters",
-                    width = 12,
-                    collapsable = T, 
-                    closable = F,
-                    
-                    fluidRow(
-                      column(width = 4, align = "left", 
-                        numericInput("simulation_scores_A", label = "Team A Starting Score",
-                          value = 0, min = 0, max = 50)
-                      ),
-                      column(width = 4, align = "center",
-                        sliderInput("num_simulations", "Number of Simulations",
-                                    min = 1, max = 1000, value = 100),
-                        actionBttn("simulation_go",
-                                   "Run the Simulations!",
-                                   color = 'primary',
-                                   style = 'material-circle',
-                                   size = "lg")     
-                      ),
-                      column(width = 4, align = "right",
-                        numericInput("simulation_scores_B", label = "Team B Starting Score",
-                          value = 0, min = 0, max = 50)
-                      )
-                    )
+                width = 12,
+                collapsable = T, 
+                closable = F,
+                fluidRow(
+                  column(width = 4, align = "left", 
+                    numericInput("simulation_scores_A", label = "Team A Starting Score",
+                      value = 0, min = 0, max = 50)
+                  ),
+                  column(width = 4, align = "center",
+                    sliderInput("num_simulations", "Number of Simulations",
+                                min = 1, max = 1000, value = 100),
+                    actionBttn("simulation_go",
+                               "Run the Simulations!",
+                               color = 'primary',
+                               style = 'material-circle',
+                               size = "lg")     
+                  ),
+                  column(width = 4, align = "right",
+                    numericInput("simulation_scores_B", label = "Team B Starting Score",
+                      value = 0, min = 0, max = 50)
+                  )
+                )
                     
             ),
-          tags$div(class = "simulation_results",
-                              uiOutput("simulation_blurb"),
-                              plotOutput("simulation_probability_bar" )
-                  
-          )
-        
-    
-        
+        tags$div(class = "simulation_results",
+            uiOutput("simulation_blurb"),
+            plotOutput("simulation_probability_bar" ),
+            ##TODO: Lower the spacing in-between these two elements. Currently it's far too large
+            boxPlus(title = "Team Score Shares by Game",
+                    collapsible = T,
+                    closable = F,
+                    plotOutput("simulation_score_shares")),
+            boxPlus(title = "Overlap of Total Scores",
+                    collapsible = T,
+                    closable = F,
+                    plotOutput("simulation_overlap"))
+            )
     )
 ),
     tags$head(
@@ -1246,10 +1250,18 @@ set_plot_width <- function(session, output_width_name){
 output$simulation_probability_bar = 
   renderPlot({markov_ui_elements()$viz$win_probability},
              width = set_plot_width(session, "output_simulation_probability_bar_width"),
-             height = 50 ,
+             height = 75 ,
     bg = "#ecf0f5"
 )
   
+
+output$simulation_score_shares =
+  renderPlot({markov_ui_elements()$viz$shares
+    })
+
+simulation_overlap = 
+  renderPlot({markov_ui_elements()$viz$overlap
+  })
 
 
 # Restart Game Outputs ----------------------------------------------------
