@@ -1402,9 +1402,18 @@ markov_summary_data = function(simulations){
     # search already, because only one such A and B score pairing will have
     # the smallest distance between them
     if (length(modal_row) > 1){
-      modal_row = which(
-        modal_score_position[modal_row, 1] == max(modal_score_position[modal_row, 1])
+      if (all(winners == "A")){
+        modal_row = which(
+          modal_score_position[modal_row, 1] == max(modal_score_position[modal_row, 1])
         )
+      } else {
+        #Technically this settles tie games with multiple modals in B's favor,
+        # but this is such a ridiculous outcome that I'm not going to worry about
+        # doing any more for now
+        modal_row = which(
+          modal_score_position[modal_row, 2] == max(modal_score_position[modal_row, 2])
+        )
+      } 
     }
     modal_A_score = modal_score_position[modal_row, 1] - 1
     modal_B_score = modal_score_position[modal_row, 2] - 1
@@ -1456,12 +1465,12 @@ markov_visualizations = function(summary){
   # To make this raw data more useful, I expand this out so that my grouping
   # id (game_id) will work
   score_shares = ggplot(data = score_counts) + 
-      geom_bar(aes(x = game_id, fill = fct_rev(team)), position = "fill") + 
-      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed") + 
-      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed") +
+      geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill") + 
+      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", size = 1) + 
+      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", size = 1) +
     ylab("Share of Total Points") + 
     xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
-    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
     theme_snappa() +
     scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) +
     theme(legend.position = "none")
@@ -1482,21 +1491,23 @@ markov_visualizations = function(summary){
     filter(won == 1) %>%
     ggplot() + 
     geom_bar(aes(y = won, fill = fct_rev(team)), position = "fill") +
-    geom_vline(xintercept = 0.5, color = "white", linetype = "dashed") + 
+    geom_vline(xintercept = 0.5, color = "white", linetype = "dotted") + 
     ylab("") +
     xlab(" ") + 
     scale_y_continuous(breaks = NULL) +
-    scale_x_continuous(breaks = NULL) + 
+    scale_x_continuous(breaks = 0.50, labels = scales::percent_format(1)) + 
     scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) + 
-    coord_fixed(0.05) + 
+    coord_fixed(0.01) + 
     theme(panel.background = element_rect(fill = "transparent", colour = NA),
           plot.background = element_rect(fill = "transparent", colour = NA),
           panel.grid = element_blank(),
           panel.border = element_blank(),
           plot.margin = unit(c(0, 0, 0, 0), "null"),
           panel.spacing = unit(c(0, 0, 0, 0), "null"),
-          axis.ticks = element_blank(),
-          axis.text = element_blank(),
+          axis.ticks.x = element_line(),
+          axis.ticks.y = element_blank(),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_blank(),
           axis.title = element_blank(),
           axis.line = element_blank(),
           legend.position = "none",
