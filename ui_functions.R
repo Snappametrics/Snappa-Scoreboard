@@ -1353,7 +1353,8 @@ markov_summary_data = function(simulations){
         
         return(list("scores" = matrix,
                     "final" = final_scores))
-      })    
+      })
+    winrate = 0.50
   } else {
   # Using a matrix here so that I can treat each pairing of points as a unique
   # value, rather than each team's individual total (meaning that I am truly
@@ -1372,9 +1373,12 @@ markov_summary_data = function(simulations){
         matrix = matrix(0, nrow = 51, ncol = 51)
         matrix[team_A_score, team_B_score] = 1
       }
+      
+  
       return(list("scores" = matrix,
                   "final" = final_scores))
     })
+    winrate = c("A" = A_winrate, "B" = B_winrate)[winners]
   }
   
   scores_matrix = per_game_data$scores %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
@@ -1388,21 +1392,74 @@ markov_summary_data = function(simulations){
       per_game_data[[number]]$final
     })
    
-  return(list("final_scores" = final_scores_table))
+  return(list("final_scores" = final_scores_table,
+              "wins" = wins,
+              "winner" = winners,
+              "winrate" = winrate * 100))
 }
 
-markov_visualizations = function(simulations){
-  browser()
-  summary = markov_summary_data(simulations)
+markov_visualizations = function(summary){
   
   # Create a histogram of each team's final score on a common x-axis
   # This should be one of the interactive graphs that allows us to roll our cursor over
-  ggplot(data = summary$final_scores) +
+ scores_overlap = ggplot(data = summary$final_scores) +
     # Team A
     geom_histogram(aes(x = `A`), fill = "red", alpha = 0.45) +
-    geom_histogram(aes(x = `B`), fill = "blue", alpha = 0.45)
+    geom_histogram(aes(x = `B`), fill = "blue", alpha = 0.45) +
+   theme_snappa()
+  
+  # Idea, use the final score summary data to make stacked geom_bars for each
+  # game, kind of like what I had in my thesis. Here, I'll separate according 
+  # to the margin of victory, so that we look from the most A favored games
+  # to the most B favored
+  
+  score_counts = summary$final_scores %>% 
+    mutate(difference = A - B) %>%
+    arrange(difference) %>%
+    mutate(game_id = row_number()) %>%
+    pivot_longer(cols = c(A,B), names_to = "team", values_to = "points")
+  score_counts = score_counts[rep(row.names(score_counts), score_counts$points), ]
+  # To make this raw data more useful, I expand this out so that my grouping
+  # id (game_id) will work
+  score_shares = ggplot(data = score_counts) + 
+      geom_bar(aes(x = game_id, fill = fct_rev(team)), position = "fill") + 
+      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed") + 
+      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed") +
+    ylab("Share of Total Points") + 
+    xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    theme_snappa() +
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) +
+    theme(legend.position = "none")
+  
+  winners_tbl = tibble(won = summary$wins) %>%
+    mutate(game_id = row_number(), team = won) 
+  
+  winners_tbl = complete(winners_tbl,
+                         expand(winners_tbl, game_id, team),
+                         fill = list(won = "C")) %>%
+    mutate(won = case_when(won == team ~ 1,
+                    won != team ~ 0)
+    )
   
   
+  
+  win_probability_bar = winners_tbl %>% 
+    filter(won == 1) %>%
+    ggplot() + 
+    geom_bar(aes(y = won, fill = fct_rev(team)), position = "fill") +
+    geom_vline(xintercept = 0.5, color = "white", linetype = "dashed") + 
+    ylab("") +
+    xlab("Proportion of Games Won") + 
+    scale_y_continuous(breaks = NULL) +
+    scale_x_continuous(labels = scales::percent_format(accuracy = 1)) + 
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) + 
+    theme_snappa() + coord_fixed(0.1) + 
+    theme(legend.position = "none")
+  
+  return(list("overlap" = scores_overlap,
+              "shares" = score_shares,
+              "win_probability" = win_probability_bar))
   
 }
 
