@@ -1349,7 +1349,7 @@ markov_summary_data = function(simulations){
         team_B_score = simulations[[game_number]]$team_B %>% last()
         final_scores = tibble("A" = team_A_score, "B" = team_B_score)
         matrix = matrix(0, nrow = 51, ncol = 51)
-        matrix[team_A_score, team_B_score] = 1
+        matrix[team_A_score + 1, team_B_score + 1] = 1
         
         return(list("scores" = matrix,
                     "final" = final_scores))
@@ -1360,6 +1360,7 @@ markov_summary_data = function(simulations){
   # value, rather than each team's individual total (meaning that I am truly
   # looking for the pair of scores which are modal in the set of games that
   # the winning team won)
+    tie = F
     per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
       if (simulations[[game_number]]$won != winners){
         team_A_score = simulations[[game_number]]$team_A %>% last()
@@ -1371,7 +1372,7 @@ markov_summary_data = function(simulations){
         team_B_score = simulations[[game_number]]$team_B %>% last()
         final_scores = tibble("A" = team_A_score, "B" = team_B_score)
         matrix = matrix(0, nrow = 51, ncol = 51)
-        matrix[team_A_score, team_B_score] = 1
+        matrix[team_A_score + 1, team_B_score + 1] = 1
       }
       
   
@@ -1383,8 +1384,8 @@ markov_summary_data = function(simulations){
   
   scores_matrix = per_game_data$scores %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
   modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
-  modal_A_score = modal_score_position[1]
-  modal_B_score = modal_score_position[2]
+  modal_A_score = modal_score_position[1] - 1
+  modal_B_score = modal_score_position[2] - 1
   
   
   final_scores_table = seq(1, length(per_game_data)) %>% 
@@ -1395,7 +1396,10 @@ markov_summary_data = function(simulations){
   return(list("final_scores" = final_scores_table,
               "wins" = wins,
               "winner" = winners,
-              "winrate" = winrate * 100))
+              "winrate" = winrate * 100,
+              "tie" = tie,
+              "modal_A" = modal_A_score,
+              "modal_B" = modal_B_score))
 }
 
 markov_visualizations = function(summary){
