@@ -550,8 +550,8 @@ ui <- dashboardPagePlus(
 
 # Win Probability Model ---------------------------------------------
     tabItem(tabName = "markov_model_summary",
-            # Might be worth it to turn this entire thing into a uiOutput
-            # so that I can use vals$ to set the minimum on the simulation_scores
+            #TODO: make the scores inputs a dynamic output so that
+            # you can use vals$current_scores to fill them
             boxPlus(title = "Simulation Parameters",
                 width = 12,
                 collapsable = T, 
@@ -579,8 +579,8 @@ ui <- dashboardPagePlus(
             ),
         tags$div(class = "simulation_results",
             uiOutput("simulation_blurb"),
-            plotOutput("simulation_probability_bar" ),
-            ##TODO: Lower the spacing in-between these two elements. Currently it's far too large
+            plotOutput("simulation_probability_bar",
+                       height = 100),
             boxPlus(title = "Team Score Shares by Game",
                     collapsible = T,
                     closable = F,
@@ -1259,7 +1259,7 @@ output$simulation_score_shares =
   renderPlot({markov_ui_elements()$viz$shares
     })
 
-simulation_overlap = 
+output$simulation_overlap = 
   renderPlot({markov_ui_elements()$viz$overlap
   })
 
