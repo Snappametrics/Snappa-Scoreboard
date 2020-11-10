@@ -1382,24 +1382,37 @@ markov_summary_data = function(simulations){
     winrate = c("A" = A_winrate, "B" = B_winrate)[winners]
   }
   
-  scores_matrix = per_game_data$scores %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
+  # Initialize an empty matrix
+  scores_matrix = matrix(0, nrow = 51, ncol = 51)                     
+  for (i in 1:length(simulations)){
+    scores_matrix = scores_matrix + per_game_data[[i]]$scores 
+  }
+        
   modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
   modal_A_score = modal_score_position[1] - 1
   modal_B_score = modal_score_position[2] - 1
   
+  if(abs(modal_A_score - modal_B_score) < 2){
+    browser()
+  }
   
   final_scores_table = seq(1, length(per_game_data)) %>% 
     map_df(function(number){
       per_game_data[[number]]$final
     })
+  
+  modal_frequency = final_scores_table %>%
+    filter(A == modal_A_score, B == modal_B_score) %>%
+    nrow()
    
   return(list("final_scores" = final_scores_table,
               "wins" = wins,
               "winner" = winners,
-              "winrate" = winrate * 100,
+              "winrate" = winrate,
               "tie" = tie,
               "modal_A" = modal_A_score,
-              "modal_B" = modal_B_score))
+              "modal_B" = modal_B_score,
+              "modal_freq" = modal_frequency))
 }
 
 markov_visualizations = function(summary){
@@ -1454,12 +1467,24 @@ markov_visualizations = function(summary){
     geom_bar(aes(y = won, fill = fct_rev(team)), position = "fill") +
     geom_vline(xintercept = 0.5, color = "white", linetype = "dashed") + 
     ylab("") +
-    xlab("Proportion of Games Won") + 
+    xlab(" ") + 
     scale_y_continuous(breaks = NULL) +
-    scale_x_continuous(labels = scales::percent_format(accuracy = 1)) + 
+    scale_x_continuous(breaks = NULL) + 
     scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) + 
-    theme_snappa() + coord_fixed(0.1) + 
-    theme(legend.position = "none")
+    coord_fixed(0.05) + 
+    theme(panel.background = element_rect(fill = "transparent", colour = NA),
+          plot.background = element_rect(fill = "transparent", colour = NA),
+          panel.grid = element_blank(),
+          panel.border = element_blank(),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          panel.spacing = unit(c(0, 0, 0, 0), "null"),
+          axis.ticks = element_blank(),
+          axis.text = element_blank(),
+          axis.title = element_blank(),
+          axis.line = element_blank(),
+          legend.position = "none",
+          axis.ticks.length = unit(0, "null"),
+          legend.spacing = unit(0, "null"))
   
   return(list("overlap" = scores_overlap,
               "shares" = score_shares,
