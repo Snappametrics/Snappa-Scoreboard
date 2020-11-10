@@ -558,32 +558,31 @@ ui <- dashboardPagePlus(
                     closable = F,
                     
                     fluidRow(
-                      column(width = 3, align = "left", 
+                      column(width = 4, align = "left", 
                         numericInput("simulation_scores_A", label = "Team A Starting Score",
                           value = 0, min = 0, max = 50)
                       ),
-                      column(width = 3, align = "center",
+                      column(width = 4, align = "center",
                         sliderInput("num_simulations", "Number of Simulations",
-                                    min = 1, max = 1000, value = 50)
+                                    min = 1, max = 1000, value = 100),
+                        actionBttn("simulation_go",
+                                   "Run the Simulations!",
+                                   color = 'primary',
+                                   style = 'material-circle',
+                                   size = "lg")     
                       ),
-                      column(width = 3, align = "right",
+                      column(width = 4, align = "right",
                         numericInput("simulation_scores_B", label = "Team B Starting Score",
                           value = 0, min = 0, max = 50)
                       )
-                    ),
-                  fluidRow(
-                    column(3, align = "center",
-                      actionBttn("simulation_go",
-                                 "Run the Simulations!",
-                                 color = 'primary',
-                                 style = 'material-circle')     
                     )
-                  )
                     
             ),
           tags$div(class = "simulation_results",
-                   uiOutput("simulation_blurb"),
-                   plotOutput("simulation_probability_bar")
+                              uiOutput("simulation_blurb"),
+                              plotOutput("simulation_probability_bar",
+                                         height = "auto", width = "100%")
+                  
           )
         
     
@@ -750,7 +749,7 @@ server <- function(input, output, session) {
     switch_counter = 1,
     game_over = F,
     
-    markov_vals = list("iterations" = 50,
+    markov_vals = list("iterations" = 100,
                        "A_score" = 0,
                        "B_score" = 0)
   )
@@ -1187,8 +1186,8 @@ server <- function(input, output, session) {
                              snappa_pal[3])
       
     } else{
-      winning_team =  "neither team"
-      winning_color = "grey"
+      winning_team =  "both teams"
+      winning_color = "green"
     } 
     return(list("viz" = visuals,
                 "team" = winning_team,
@@ -1198,6 +1197,7 @@ server <- function(input, output, session) {
   
 # Update the simulation parameters when the values are changed
 observeEvent(input$simulation_go, {
+  browser()
   vals$markov_vals = list("iterations" = input$num_simulations,
                           "A_score" = input$simulation_scores_A,
                           "B_score" = input$simulation_scores_B)
@@ -1206,16 +1206,18 @@ observeEvent(input$simulation_go, {
 output$simulation_blurb = renderUI({
       fluidRow(
         column(12,
-               align = "left",
-               h3(HTML(str_c("Across ", vals$markov_vals$simulations, " games, ",
+               align = "center",
+               h3(HTML(str_c("Across ", vals$markov_vals$iterations, " games, ",
                         "<span style='color:", markov_ui_elements()$color, "'>",
                         markov_ui_elements()$team, "</span> ",
-                        "wins an estimated ", markov_summary()$winrate,
+                        ifelse(markov_summary()$tie == T, "win ", "wins "), 
+                        "an estimated ", round(markov_summary()$winrate * 100, 2),
                         "% of games.")
                        
                 )
                ),
-              h5(HTML(str_c(ifelse(markov_summary()$tie == F, 
+              ##TODO: Move this to its own output below the main probability bar
+              h3(HTML(str_c(ifelse(markov_summary()$tie == F, 
                                    str_c("In the games that ",
                                       "<span style='color:", markov_ui_elements()$color, "'>",
                                       markov_ui_elements()$team, "</span>", " wins, "),
@@ -1224,7 +1226,10 @@ output$simulation_blurb = renderUI({
                             "<span style='color:", snappa_pal[2], "'>",
                             markov_summary()$modal_A, "</span>", " - ",
                             "<span style='color:", snappa_pal[3], "'>",
-                            markov_summary()$modal_B, "</span>"
+                            markov_summary()$modal_B, "</span>", ", ",
+                            "which is observed in ", markov_summary()$modal_freq,
+                            ", or ", round((markov_summary()$modal_freq / vals$markov_vals$iterations) * 100, 2),
+                            "%, of games."
                         )
               )
             )
@@ -1980,7 +1985,6 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
-    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
