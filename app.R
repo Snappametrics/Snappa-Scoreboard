@@ -558,20 +558,28 @@ ui <- dashboardPagePlus(
                     closable = F,
                     
                     fluidRow(
-                      column(width = 4, align = "left", 
+                      column(width = 3, align = "left", 
                         numericInput("simulation_scores_A", label = "Team A Starting Score",
                           value = 0, min = 0, max = 50)
                       ),
-                      column(width = 4, align = "center",
+                      column(width = 3, align = "center",
                         sliderInput("num_simulations", "Number of Simulations",
                                     min = 1, max = 1000, value = 50)
                       ),
-                      column(width = 4, align = "right",
+                      column(width = 3, align = "right",
                         numericInput("simulation_scores_B", label = "Team B Starting Score",
                           value = 0, min = 0, max = 50)
                       )
-                    
+                    ),
+                  fluidRow(
+                    column(3, align = "center",
+                      actionBttn("simulation_go",
+                                 "Run the Simulations!",
+                                 color = 'primary',
+                                 style = 'material-circle')     
                     )
+                  )
+                    
             ),
           tags$div(class = "simulation_results",
                    uiOutput("simulation_blurb"),
@@ -740,7 +748,11 @@ server <- function(input, output, session) {
     want_B4 = F,
 
     switch_counter = 1,
-    game_over = F
+    game_over = F,
+    
+    markov_vals = list("iterations" = 50,
+                       "A_score" = 0,
+                       "B_score" = 0)
   )
   
   
@@ -1150,25 +1162,15 @@ server <- function(input, output, session) {
                 "team_B" = team_B))
       
   })
-
-
-  
-  markov_setup = reactive({
-    return(list("A_score" = ifelse(is.null(input$simulation_scores_A) , 0, input$simulation_scores_A),
-                "B_score" = ifelse(is.null(input$simulation_scores_B) , 0, input$simulation_scores_B),
-                "iterations" = ifelse(is.null(input$num_simulations) , 50, input$num_simulations)
-                )
-           )
-  })
   
   game_simulations = reactive({
     markov_simulate_games(team_transition_names()$team_A, 
                           team_transition_names()$team_B,
-                          iterations = markov_setup()$iterations ,
+                          iterations = vals$markov_vals$iterations ,
                           points_to_win = score_to(),
                           transitions_list = readRDS("markov/transition_probabilities.Rdata"),
-                          current_scores_A = markov_setup()$A_score,
-                          current_scores_B = markov_setup()$B_score)
+                          current_scores_A = vals$markov_vals$A_score,
+                          current_scores_B = vals$markov_vals$B_score)
   })
   markov_summary = reactive({
     markov_summary_data(game_simulations())
@@ -1193,12 +1195,19 @@ server <- function(input, output, session) {
                 "color" = winning_color)
            )
       })
+  
+# Update the simulation parameters when the values are changed
+observeEvent(input$simulation_go, {
+  vals$markov_vals = list("iterations" = input$num_simulations,
+                          "A_score" = input$simulation_scores_A,
+                          "B_score" = input$simulation_scores_B)
+} )
       
 output$simulation_blurb = renderUI({
       fluidRow(
         column(12,
                align = "left",
-               h3(HTML(str_c("Across ", vals$markov$simulations, " games, ",
+               h3(HTML(str_c("Across ", vals$markov_vals$simulations, " games, ",
                         "<span style='color:", markov_ui_elements()$color, "'>",
                         markov_ui_elements()$team, "</span> ",
                         "wins an estimated ", markov_summary()$winrate,
@@ -1215,7 +1224,7 @@ output$simulation_blurb = renderUI({
                             "<span style='color:", snappa_pal[2], "'>",
                             markov_summary()$modal_A, "</span>", " - ",
                             "<span style='color:", snappa_pal[3], "'>",
-                            markov_summary()$modal_B, "</span>", " - "
+                            markov_summary()$modal_B, "</span>"
                         )
               )
             )
