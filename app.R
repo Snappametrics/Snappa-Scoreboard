@@ -135,8 +135,8 @@ validate_scores = function(player, shot, snappaneers, paddle,
   } else { # If teams are uneven:
     
     # Check if the scorer is on the team with fewer players (i.e. can score multiple non-paddle points)
-    scorer_team_players = nrow(snappaneers[snappaneers$team == players_team])
-    other_team_players = nrow(snappaneers[snappaneers$team != players_team])
+    scorer_team_players = nrow(snappaneers[snappaneers$team == players_team, ])
+    other_team_players = nrow(snappaneers[snappaneers$team != players_team, ])
     
     if((scorer_team_players < other_team_players)|rebuttal){ # If their team has fewer players OR Rebuttal:
       
