@@ -1445,11 +1445,14 @@ markov_visualizations = function(summary){
   
   # Create a histogram of each team's final score on a common x-axis
   # This should be one of the interactive graphs that allows us to roll our cursor over
+  browser()
  scores_overlap = ggplot(data = summary$final_scores) +
     # Team A
-    geom_histogram(aes(x = `A`), fill = "red", alpha = 0.45) +
-    geom_histogram(aes(x = `B`), fill = "blue", alpha = 0.45) +
-   theme_snappa()
+    geom_histogram(aes(x = `A`), fill = snappa_pal[2], alpha = 0.9) +
+    geom_histogram(aes(x = `B`), fill = snappa_pal[3], alpha = 0.7) +
+   theme_snappa() + 
+   xlab("Total Points") + 
+   ylab("Number of Points")
   
   # Idea, use the final score summary data to make stacked geom_bars for each
   # game, kind of like what I had in my thesis. Here, I'll separate according 
