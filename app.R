@@ -24,6 +24,14 @@ library(ggrepel)
 library(ggtext)
 library(patchwork)
 library(extrafont)
+library(waiter)
+# Make sure that waiter is updated to the version currently on Github.
+# The CRAN version does NOT include `waiter_on_busy()`, which is
+# the waiter that I really want 
+if (packageVersion("waiter") < '0.1.4'){
+  remotes::install_github("JohnCoene/waiter")
+  library(waiter)
+}
 
 source("test_dbconnect.R")
 source("ui_functions.R")
@@ -344,7 +352,6 @@ score_prog_plot = score_heatmap(score_progression)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPagePlus(
-  
   dashboardHeaderPlus(title = tagList(
     # Corner logo
     span(class = "logo-lg", "Snappa Scoreboard"), 
@@ -552,14 +559,14 @@ ui <- dashboardPagePlus(
     tabItem(tabName = "markov_model_summary",
             #TODO: make the scores inputs a dynamic output so that
             # you can use vals$current_scores to fill them
-            boxPlus(title = "Simulation Parameters",
+        tags$div(id = "waiter",
+                boxPlus(title = "Simulation Parameters",
                 width = 12,
                 collapsable = T, 
                 closable = F,
                 fluidRow(
                   column(width = 4, align = "left", 
-                    numericInput("simulation_scores_A", label = "Team A Starting Score",
-                      value = 0, min = 0, max = 50)
+                    uiOutput("simulation_score_A")
                   ),
                   column(width = 4, align = "center",
                     sliderInput("num_simulations", "Number of Simulations",
@@ -567,12 +574,11 @@ ui <- dashboardPagePlus(
                     actionBttn("simulation_go",
                                "Run the Simulations!",
                                color = 'primary',
-                               style = 'material-circle',
+                               style = 'pill',
                                size = "lg")     
                   ),
                   column(width = 4, align = "right",
-                    numericInput("simulation_scores_B", label = "Team B Starting Score",
-                      value = 0, min = 0, max = 50)
+                    uiOutput("simulation_score_B")
                   )
                 )
                     
@@ -590,13 +596,17 @@ ui <- dashboardPagePlus(
                     closable = F,
                     plotOutput("simulation_overlap"))
             )
+      )
     )
 ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
     )
   ),
-  useShinyjs()
+  useShinyjs(),
+  # This is supposed to go at the top tho
+  use_waiter()
+
 
 
 # Start Screen ------------------------------------------------------------
@@ -640,7 +650,11 @@ ui <- dashboardPagePlus(
 
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
-  
+  w = Waiter$new(
+                 html = tagList(
+                   spin_pixel(),
+                   "Casting Many Dice"
+                 ))
   output$sidebar_menu <- renderUI({
     
     
@@ -752,9 +766,9 @@ server <- function(input, output, session) {
     switch_counter = 1,
     game_over = F,
     
-    markov_vals = list("iterations" = 100,
-                       "A_score" = 0,
-                       "B_score" = 0)
+    markov_vals = list("iterations" = NULL,
+                       "A_score" = NULL,
+                       "B_score" = NULL)
   )
   
   
@@ -1171,15 +1185,21 @@ server <- function(input, output, session) {
                           iterations = vals$markov_vals$iterations ,
                           points_to_win = score_to(),
                           transitions_list = readRDS("markov/transition_probabilities.Rdata"),
-                          current_scores_A = vals$markov_vals$A_score,
-                          current_scores_B = vals$markov_vals$B_score)
+                          current_scores_A = vals$current_scores$team_A,
+                          current_scores_B = vals$current_scores$team_B)
   })
   markov_summary = reactive({
     markov_summary_data(game_simulations())
   })
-  
+
   markov_ui_elements = reactive({
+    if (is.null(vals$markov_vals$A_score)){
+      invisible()
+    } else {
+      w$show()
+    }
     visuals = markov_visualizations(markov_summary())
+    
     if (length(markov_summary()$winner) == 1){
       winning_team = if_else(markov_summary()$winner == "A",
                              "Team A",
@@ -1191,7 +1211,11 @@ server <- function(input, output, session) {
     } else{
       winning_team =  "both teams"
       winning_color = "green"
-    } 
+    }
+    
+    on.exit({
+      w$hide()
+    })
     return(list("viz" = visuals,
                 "team" = winning_team,
                 "color" = winning_color)
@@ -1200,12 +1224,29 @@ server <- function(input, output, session) {
   
 # Update the simulation parameters when the values are changed
 observeEvent(input$simulation_go, {
-  browser()
   vals$markov_vals = list("iterations" = input$num_simulations,
                           "A_score" = input$simulation_scores_A,
                           "B_score" = input$simulation_scores_B)
+  # waiter_show(
+  #   id = "waiter", 
+  #   html = tagList( 
+  #     spin_pixel(),
+  #     str_c("Casting the dice ", vals$markov_vals$iterations, " times."),
+  #   )
+  # )
+  # 
+  # waiter_hide_on_render(id = "simulation_score_shares")
 } )
-      
+#Output to make the team score inputs reactive
+output$simulation_score_A = renderUI({
+  numericInput("simulation_scores_A", label = "Team A Starting Score",
+               value = vals$current_scores$team_A, min = 0, max = 50)
+})
+output$simulation_score_B = renderUI({
+  numericInput("simulation_scores_B", label = "Team B Starting Score",
+               value = vals$current_scores$team_B, min = 0, max = 50)
+})
+
 output$simulation_blurb = renderUI({
       fluidRow(
         column(12,
