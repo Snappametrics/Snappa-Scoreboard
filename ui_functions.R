@@ -490,11 +490,6 @@ glance_ui_game = function(game.id){
  return(ui_output)
 }
 
-arrange_markov_output = function(viz_elements){
-  
-  
-  
-}
 
 # Stats Output ------------------------------------------------------------
 
@@ -1389,9 +1384,31 @@ markov_summary_data = function(simulations){
   }
         
   modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
+  
+  # As one may expect, this sometimes comes up with more than one 
+  # modal score! In that case, we have to tread a little more carefully.
+  # What I'll do is take advantage of the structure of the matrix to figure
+  # out which games look the best for everyone. What I'll do is look at the 
+  # score total that's the closest
+  if (length(modal_score_position) < 3){
   modal_A_score = modal_score_position[1] - 1
   modal_B_score = modal_score_position[2] - 1
-  
+  } else{
+    modal_score_position = cbind(modal_score_position, 
+                                 abs(modal_score_position[, 1] - modal_score_position[, 2])) 
+    modal_row = which(modal_score_position[, 3] == min(modal_score_position[, 3]))
+    # If this is more than one, take the one with the highest A value. That will
+    # automatically break any ties. There cannot be duplicate A values in this 
+    # search already, because only one such A and B score pairing will have
+    # the smallest distance between them
+    if (length(modal_row) > 1){
+      modal_row = which(
+        modal_score_position[modal_row, 1] == max(modal_score_position[modal_row, 1])
+        )
+    }
+    modal_A_score = modal_score_position[modal_row, 1] - 1
+    modal_B_score = modal_score_position[modal_row, 2] - 1
+  }
   if(abs(modal_A_score - modal_B_score) < 2){
     browser()
   }
