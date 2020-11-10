@@ -580,8 +580,7 @@ ui <- dashboardPagePlus(
             ),
           tags$div(class = "simulation_results",
                               uiOutput("simulation_blurb"),
-                              plotOutput("simulation_probability_bar",
-                                         height = "auto", width = "100%")
+                              plotOutput("simulation_probability_bar" )
                   
           )
         
@@ -1236,10 +1235,20 @@ output$simulation_blurb = renderUI({
         )
       )
 })
+
+# A little reactive styling for this bar, which looks really bad if it doesn't
+# span nearly the entire page
+set_plot_width <- function(session, output_width_name){
+  function() { 
+    session$clientData[[output_width_name]] 
+  }
+}
 output$simulation_probability_bar = 
-  renderPlot({markov_ui_elements()$viz$win_probability
-    
-})
+  renderPlot({markov_ui_elements()$viz$win_probability},
+             width = set_plot_width(session, "output_simulation_probability_bar_width"),
+             height = 50 ,
+    bg = "#ecf0f5"
+)
   
 
 
