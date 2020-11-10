@@ -1203,8 +1203,22 @@ output$simulation_blurb = renderUI({
                         markov_ui_elements()$team, "</span> ",
                         "wins an estimated ", markov_summary()$winrate,
                         "% of games.")
+                       
                 )
-               )
+               ),
+              h5(HTML(str_c(ifelse(markov_summary()$tie == F, 
+                                   str_c("In the games that ",
+                                      "<span style='color:", markov_ui_elements()$color, "'>",
+                                      markov_ui_elements()$team, "</span>", " wins, "),
+                                   str_c("In the games played, ")),
+                            "the most common final score is ", 
+                            "<span style='color:", snappa_pal[2], "'>",
+                            markov_summary()$modal_A, "</span>", " - ",
+                            "<span style='color:", snappa_pal[3], "'>",
+                            markov_summary()$modal_B, "</span>", " - "
+                        )
+              )
+            )
         )
       )
 })
