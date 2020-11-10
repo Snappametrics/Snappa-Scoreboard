@@ -1185,8 +1185,8 @@ server <- function(input, output, session) {
                           iterations = vals$markov_vals$iterations ,
                           points_to_win = score_to(),
                           transitions_list = readRDS("markov/transition_probabilities.Rdata"),
-                          current_scores_A = vals$current_scores$team_A,
-                          current_scores_B = vals$current_scores$team_B)
+                          current_scores_A = vals$markov_vals$A_score,
+                          current_scores_B = vals$markov_vals$B_score)
   })
   markov_summary = reactive({
     markov_summary_data(game_simulations())
