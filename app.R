@@ -1144,7 +1144,7 @@ server <- function(input, output, session) {
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
       # Bars
-      geom_col(aes(fill = won_game, width = .5, show.legend = F))+
+      geom_col(aes(fill = won_game), width = .5)+
       # Career avg. line
       geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
                        xend = max(game_num)+.45, yend = avg_points), 
