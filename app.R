@@ -553,7 +553,7 @@ ui <- dashboardPagePlus(
     tabItem(tabName = "markov_model_summary",
             #TODO: make the scores inputs a dynamic output so that
             # you can use vals$current_scores to fill them
-        tags$div(id = "waiter",
+        div(id = "waiter",
                 boxPlus(title = "Simulation Parameters",
                 width = 12,
                 collapsable = T, 
@@ -580,7 +580,7 @@ ui <- dashboardPagePlus(
                 )
                     
             ),
-        tags$div(class = "simulation_results",
+        div(class = "simulation_results",
             uiOutput("simulation_blurb"),
             plotOutput("simulation_probability_bar",
                        height = 100),
@@ -1196,7 +1196,8 @@ server <- function(input, output, session) {
     if (is.null(vals$markov_vals$A_score)){
       invisible()
     } else {
-      w$show()
+     
+       w$show()
     }
     visuals = markov_visualizations(markov_summary())
     
@@ -1294,9 +1295,9 @@ output$simulation_blurb = renderUI({
                            ".",
                            str_c(", which is observed in ",
                                  markov_summary()$modal_freq,
-                                ", or ", 
+                                "games, or ", 
                                 round((markov_summary()$modal_freq / vals$markov_vals$iterations) * 100, 2),
-                                "%, of games."
+                                "% of the time."
                                 )
                           )
                     )
