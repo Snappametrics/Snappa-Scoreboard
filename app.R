@@ -1067,19 +1067,33 @@ server <- function(input, output, session) {
           "<p><span style='font-weight:500'>How many occurrences?</span>: ", freq))
   })
   
+  player_game_stats = reactive({
+    inner_join(vals$players_db, 
+               dbGetQuery(con, "SELECT * FROM player_stats"), 
+               by = "player_id") %>%
+      inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
+                 by = "game_id") %>% 
+      # Identify which games were won
+      mutate(winning = if_else(points_a > points_b, "A", "B"),
+             won_game = (team == winning))
+  })
+  
   # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
-    
     recent_games = filter(player_stats_tbl, player_id == input$player_select) %>% 
       mutate(avg_points = mean(!!sym(input$stat_select)),
              max_points = max(!!sym(input$stat_select))) %>% 
       arrange(game_id) %>% 
-      slice_max(order_by = game_id, n = 5) %>% 
-      mutate(game_num = row_number())
+      when(input$sample_select != "All" ~ (.) %>% 
+             slice_max(order_by = game_id, n = as.numeric(input$sample_select)), 
+           ~ (.)) %>% 
+      mutate(game_num = row_number()) %>% 
+      inner_join(select(player_game_stats(), player_id, game_id, won_game))
     
     career_high = unique(recent_games$max_points)
 
     list("data" = recent_games,
+         "x_lims" = c(min(recent_games$game_num)-.5, max(recent_games$game_num)+.5),
          "career_high" = career_high)
     
   })
