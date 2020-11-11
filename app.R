@@ -24,10 +24,13 @@ library(ggrepel)
 library(ggtext)
 library(patchwork)
 library(extrafont)
+library(waiter)
+
 
 source("test_dbconnect.R")
 source("ui_functions.R")
-source("markov_model/Markov_model_functions.R")
+source("markov/Markov_model_functions.R")
+
 
 # Prior to app startup ----------------------------------------------------
 
@@ -345,7 +348,6 @@ score_prog_plot = score_heatmap(score_progression)
 
 # Define UI for application that draws a histogram
 ui <- dashboardPagePlus(
-  
   dashboardHeaderPlus(title = tagList(
     # Corner logo
     span(class = "logo-lg", "Snappa Scoreboard"), 
@@ -578,17 +580,59 @@ ui <- dashboardPagePlus(
 
 # Win Probability Model ---------------------------------------------
     tabItem(tabName = "markov_model_summary",
-            
-            
-            
+            #TODO: make the scores inputs a dynamic output so that
+            # you can use vals$current_scores to fill them
+        div(id = "waiter",
+                boxPlus(title = "Simulation Parameters",
+                width = 12,
+                collapsable = T, 
+                closable = F,
+                fluidRow(
+                  column(width = 4, align = "left", 
+                    uiOutput("simulation_score_A")
+                  ),
+                  column(width = 4, align = "center",
+                    awesomeRadio("num_simulations", "Number of Simulations",
+                                choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
+                                inline = T),
+                    br(),
+                    br(),
+                    actionBttn("simulation_go",
+                               "Run the Simulations!",
+                               color = 'primary',
+                               style = 'pill',
+                               size = "lg")     
+                  ),
+                  column(width = 4, align = "right",
+                    uiOutput("simulation_score_B")
+                  )
+                )
+                    
+            ),
+        div(class = "simulation_results",
+            uiOutput("simulation_blurb"),
+            plotOutput("simulation_probability_bar",
+                       height = 100),
+            boxPlus(title = "Team Score Shares by Game",
+                    collapsible = T,
+                    closable = F,
+                    plotOutput("simulation_score_shares")),
+            boxPlus(title = "Overlap of Total Scores",
+                    collapsible = T,
+                    closable = F,
+                    plotOutput("simulation_overlap"))
             )
-    
-    ),
+      )
+    )
+),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
     )
   ),
   useShinyjs(),
+  # This is supposed to go at the top tho
+  use_waiter()
+
 
 
 # Start Screen ------------------------------------------------------------
@@ -632,7 +676,14 @@ ui <- dashboardPagePlus(
 
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
-  
+  # This is an initial value which will be overwritten when you run
+  # the simulations
+  w = Waiter$new(
+    html = tagList(
+      spin_pixel(),
+      str_c("Yeeting Imaginary Dice Into The Sky"
+      )
+    ))
   output$sidebar_menu <- renderUI({
     
     
@@ -742,7 +793,11 @@ server <- function(input, output, session) {
     want_B4 = F,
 
     switch_counter = 1,
-    game_over = F
+    game_over = F,
+    
+    markov_vals = list("iterations" = 1,
+                       "A_score" = 0,
+                       "B_score" = 0)
   )
   
   
@@ -1215,6 +1270,11 @@ server <- function(input, output, session) {
   })
   
   
+
+
+# Markov Model Reactives/Outputs ------------------------------------------
+
+
   
   team_transition_names = reactive({
     team_A = snappaneers() %>%
@@ -1225,14 +1285,24 @@ server <- function(input, output, session) {
       ungroup() %>%
       select(-team)
     
+    # Make each team a simple vector 
+    team_A = as.vector(team_A)
+    while (length(team_A) < 4){
+      team_A = append(team_A, NA)
+    }
+    
     team_B = snappaneers() %>%
       filter(team == "B") %>% 
       arrange(player_id) %>%
       mutate(n = row_number()) %>% 
       pivot_wider(id_cols = team, names_from = n, values_from = player_id) %>%
-      ungroup %>%
+      ungroup() %>%
       select(-team)
     
+    team_B = as.vector(team_B)     
+    while (length(team_B) < 4) {
+      team_B = append(team_B, NA)
+    }
     return(list("team_A" = team_A,
                 "team_B" = team_B))
       
@@ -1241,11 +1311,155 @@ server <- function(input, output, session) {
   game_simulations = reactive({
     markov_simulate_games(team_transition_names()$team_A, 
                           team_transition_names()$team_B,
-                          iterations = 50,
+                          iterations = vals$markov_vals$iterations ,
                           points_to_win = score_to(),
-                          transitions_list = readRDS("analysis/transition_probabilities.Rdata"),
-                          current_scores_A = vals$current_scores$team_A,
-                          current_scores_B = vals$current_scores$team_B)
+                          transitions_list = readRDS("markov/transition_probabilities.Rdata"),
+                          current_scores_A = vals$markov_vals$A_score,
+                          current_scores_B = vals$markov_vals$B_score)
+  })
+
+
+  markov_summary = reactive({
+    markov_summary_data(game_simulations())
+  })
+
+  markov_ui_elements = reactive({
+    if (is.null(vals$markov_vals$A_score)){
+      invisible()
+    } else {
+     
+       w$show()
+    }
+    visuals = markov_visualizations(markov_summary())
+    
+    if (length(markov_summary()$winner) == 1){
+      winning_team = if_else(markov_summary()$winner == "A",
+                             "Team A",
+                             "Team B")
+      winning_color = ifelse(winning_team == "Team A",
+                             snappa_pal[2],
+                             snappa_pal[3])
+      
+    } else{
+      winning_team =  "both teams"
+      winning_color = "green"
+    }
+    
+    on.exit({
+      w$hide()
+    })
+    return(list("viz" = visuals,
+                "team" = winning_team,
+                "color" = winning_color)
+           )
+      })
+  
+# Update the simulation parameters when the values are changed
+observeEvent(input$simulation_go, {
+  vals$markov_vals = list("iterations" = as.integer(input$num_simulations),
+                          "A_score" = input$simulation_scores_A,
+                          "B_score" = input$simulation_scores_B)
+
+} )
+#Output to make the team score inputs reactive
+output$simulation_score_A = renderUI({
+  numericInput("simulation_scores_A", label = "Team A Starting Score",
+               value = vals$current_scores$team_A, min = 0, max = 50)
+})
+output$simulation_score_B = renderUI({
+  numericInput("simulation_scores_B", label = "Team B Starting Score",
+               value = vals$current_scores$team_B, min = 0, max = 50)
+})
+
+output$simulation_blurb = renderUI({
+      fluidRow(
+        column(12,
+               align = "center",
+               h3(
+                 HTML(
+                   str_c("Across ", vals$markov_vals$iterations,
+                          ifelse(vals$markov_vals$iterations == 1, " game ", " games ") ,
+                          "which ",
+                          ifelse(vals$markov_vals$iterations == 1,"begins ", "begin "),
+                          "at ", 
+                          "<span style='color:", snappa_pal[2], "'>",
+                          vals$markov_vals$A_score, "</span>", " - ",
+                          "<span style='color:", snappa_pal[3], "'>",
+                          vals$markov_vals$B_score, "</span>", ", ",
+                          "<span style='color:", markov_ui_elements()$color, "'>",
+                          markov_ui_elements()$team, "</span> ",
+                          ifelse(markov_summary()$tie == T, "win ", "wins"), 
+                          ifelse(vals$markov_vals$iterations == 1,
+                                 ".", 
+                                 str_c(" an estimated ", 
+                                 round(markov_summary()$winrate * 100, 2),
+                                "% of games.")
+                                )
+                   )
+                       
+                )
+               ),
+              ##TODO: Move this to its own output below the main probability bar
+              h3(
+                HTML(
+                  str_c(
+                    ifelse(markov_summary()$tie == F, 
+                            str_c("In the ",
+                              ifelse(vals$markov_vals$iterations == 1, "game ", "games "
+                                     ),
+                            "that ",
+                            "<span style='color:", markov_ui_elements()$color, "'>",
+                            markov_ui_elements()$team, "</span>", 
+                            ifelse(vals$markov_vals$iterations == 1, " won, ", " wins, "
+                                   )),
+                            str_c("In the games played, ")
+                           ),
+                    ifelse(vals$markov_vals$iterations == 1,
+                           "the final score is ",
+                           "the most common final score is "
+                           ), 
+                    "<span style='color:", snappa_pal[2], "'>",
+                    markov_summary()$modal_A, "</span>", " - ",
+                    "<span style='color:", snappa_pal[3], "'>",
+                    markov_summary()$modal_B, "</span>",
+                    ifelse(vals$markov_vals$iterations == 1,
+                           ".",
+                           str_c(", which is observed in ",
+                                 markov_summary()$modal_freq,
+                                " games, or ", 
+                                round((markov_summary()$modal_freq / vals$markov_vals$iterations) * 100, 2),
+                                "% of the time."
+                                )
+                          )
+                    )
+                  )
+              )
+        )
+      )
+})
+
+# A little reactive styling for this bar, which looks really bad if it doesn't
+# span nearly the entire page
+set_plot_width <- function(session, output_width_name){
+  function() { 
+    session$clientData[[output_width_name]] 
+  }
+}
+output$simulation_probability_bar = 
+  renderPlot({markov_ui_elements()$viz$win_probability},
+             width = set_plot_width(session, "output_simulation_probability_bar_width"),
+             height = 75 ,
+    bg = "#ecf0f5"
+)
+  
+
+
+output$simulation_score_shares =
+  renderPlot({markov_ui_elements()$viz$shares
+    })
+
+output$simulation_overlap = 
+  renderPlot({markov_ui_elements()$viz$overlap
   })
 
 

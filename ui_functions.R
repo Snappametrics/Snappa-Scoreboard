@@ -490,11 +490,8 @@ glance_ui_game = function(game.id){
  return(ui_output)
 }
 
-arrange_markov_output = function(viz_elements){
-  
-  
-  
-}
+
+
 
 # Stats Output ------------------------------------------------------------
 
@@ -1342,52 +1339,193 @@ markov_summary_data = function(simulations){
   winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
                     "A",
                     "B")
+  if (length(winners) == 2){
+    tie = TRUE
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+        matrix[team_A_score + 1, team_B_score + 1] = 1
+        
+        return(list("scores" = matrix,
+                    "final" = final_scores))
+      })
+    winrate = 0.50
+  } else {
   # Using a matrix here so that I can treat each pairing of points as a unique
   # value, rather than each team's individual total (meaning that I am truly
   # looking for the pair of scores which are modal in the set of games that
   # the winning team won)
-  per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
-    if (simulations[[game_number]]$won != winners){
-      team_A_score = simulations[[game_number]]$team_A %>% last()
-      team_B_score = simulations[[game_number]]$team_B %>% last()
-      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-      matrix = matrix(0, nrow = 51, ncol = 51)
-    } else {
-      team_A_score = simulations[[game_number]]$team_A %>% last()
-      team_B_score = simulations[[game_number]]$team_B %>% last()
-      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-      matrix = matrix(0, nrow = 51, ncol = 51)
-      matrix[team_A_score, team_B_score] = 1
-    }
-    return(list("scores" = matrix,
-                "final" = final_scores))
-  })
+    tie = F
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+      if (simulations[[game_number]]$won != winners){
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+      } else {
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+        matrix[team_A_score + 1, team_B_score + 1] = 1
+      }
+      
   
-  scores_matrix = per_game_data$scores %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
+      return(list("scores" = matrix,
+                  "final" = final_scores))
+    })
+    winrate = c("A" = A_winrate, "B" = B_winrate)[winners]
+  }
+  
+  # Initialize an empty matrix
+  scores_matrix = matrix(0, nrow = 51, ncol = 51)                     
+  for (i in 1:length(simulations)){
+    scores_matrix = scores_matrix + per_game_data[[i]]$scores 
+  }
+        
   modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
-  modal_A_score = modal_score_position[1]
-  modal_B_score = modal_score_position[2]
   
+  # As one may expect, this sometimes comes up with more than one 
+  # modal score! In that case, we have to tread a little more carefully.
+  # What I'll do is take advantage of the structure of the matrix to figure
+  # out which games look the best for everyone. What I'll do is look at the 
+  # score total that's the closest
+  if (length(modal_score_position) < 3){
+  modal_A_score = modal_score_position[1] - 1
+  modal_B_score = modal_score_position[2] - 1
+  } else{
+    modal_score_position = cbind(modal_score_position, 
+                                 abs(modal_score_position[, 1] - modal_score_position[, 2])) 
+    modal_row = which(modal_score_position[, 3] == min(modal_score_position[, 3]))
+    # If this is more than one, take the one with the highest A value. That will
+    # automatically break any ties. There cannot be duplicate A values in this 
+    # search already, because only one such A and B score pairing will have
+    # the smallest distance between them
+    if (length(modal_row) > 1){
+      if (all(winners == "A")){
+        modal_row = which(
+          modal_score_position[modal_row, 1] == max(modal_score_position[modal_row, 1])
+        )
+      } else {
+        #Technically this settles tie games with multiple modals in B's favor,
+        # but this is such a ridiculous outcome that I'm not going to worry about
+        # doing any more for now
+        modal_row = which(
+          modal_score_position[modal_row, 2] == max(modal_score_position[modal_row, 2])
+        )
+      } 
+    }
+    modal_A_score = modal_score_position[modal_row, 1] - 1
+    modal_B_score = modal_score_position[modal_row, 2] - 1
+  }
+  if(abs(modal_A_score - modal_B_score) < 2){
+    browser()
+  }
   
   final_scores_table = seq(1, length(per_game_data)) %>% 
     map_df(function(number){
       per_game_data[[number]]$final
     })
+  
+  modal_frequency = final_scores_table %>%
+    filter(A == modal_A_score, B == modal_B_score) %>%
+    nrow()
    
-  return(list("final_scores" = final_scores))
+  return(list("final_scores" = final_scores_table,
+              "wins" = wins,
+              "winner" = winners,
+              "winrate" = winrate,
+              "tie" = tie,
+              "modal_A" = modal_A_score,
+              "modal_B" = modal_B_score,
+              "modal_freq" = modal_frequency))
 }
 
-markov_visualizations = function(simulations){
-  browser()
-  summary = markov_summary_data(simulations)
+markov_visualizations = function(summary){
   
   # Create a histogram of each team's final score on a common x-axis
-  ggplot(data = summary$final_scores) %>%
+  # This should be one of the interactive graphs that allows us to roll our cursor over
+ scores_overlap = ggplot(data = summary$final_scores) +
     # Team A
-    geom_histogram(aes(x = `A`), color = "red") %>%
-    geom_histogram(aes(x = `B`), color = "blue")
+    geom_histogram(aes(x = `A`), fill = snappa_pal[2], alpha = 0.9) +
+    geom_histogram(aes(x = `B`), fill = snappa_pal[3], alpha = 0.7) +
+   theme_snappa() + 
+   xlab("Total Points") + 
+   ylab("Number of Games")
+  
+  # Idea, use the final score summary data to make stacked geom_bars for each
+  # game, kind of like what I had in my thesis. Here, I'll separate according 
+  # to the margin of victory, so that we look from the most A favored games
+  # to the most B favored
+  
+  score_counts = summary$final_scores %>% 
+    mutate(difference = A - B) %>%
+    arrange(difference) %>%
+    mutate(game_id = row_number()) %>%
+    pivot_longer(cols = c(A,B), names_to = "team", values_to = "points")
+  score_counts = score_counts[rep(row.names(score_counts), score_counts$points), ]
+  # To make this raw data more useful, I expand this out so that my grouping
+  # id (game_id) will work
+  
+  # These geom bars look kind of bad without a line if the number of 
+  # obs is less than about 500. Setting the width to 1 fixes this
+  
+
+  score_shares = ggplot(data = score_counts) + 
+      geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
+      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", size = 1) + 
+      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", size = 1) +
+    ylab("Share of Total Points") + 
+    xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
+    theme_snappa() +
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) +
+    theme(legend.position = "none")
+  
+  winners_tbl = tibble(won = summary$wins) %>%
+    mutate(game_id = row_number(), team = won) 
+  
+  winners_tbl = complete(winners_tbl,
+                         expand(winners_tbl, game_id, team),
+                         fill = list(won = "C")) %>%
+    mutate(won = case_when(won == team ~ 1,
+                    won != team ~ 0)
+    )
   
   
+  
+  win_probability_bar = winners_tbl %>% 
+    filter(won == 1) %>%
+    ggplot() + 
+    geom_bar(aes(y = won, fill = fct_rev(team)), position = "fill") +
+    geom_vline(xintercept = 0.5, color = "white", linetype = "dotted") + 
+    ylab("") +
+    xlab(" ") + 
+    scale_y_continuous(breaks = NULL) +
+    scale_x_continuous(breaks = 0.50, labels = scales::percent_format(1)) + 
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) + 
+    coord_fixed(0.01) + 
+    theme(panel.background = element_rect(fill = "transparent", colour = NA),
+          plot.background = element_rect(fill = "transparent", colour = NA),
+          panel.grid = element_blank(),
+          panel.border = element_blank(),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          panel.spacing = unit(c(0, 0, 0, 0), "null"),
+          axis.ticks.x = element_line(),
+          axis.ticks.y = element_blank(),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title = element_blank(),
+          axis.line = element_blank(),
+          legend.position = "none",
+          axis.ticks.length = unit(0, "null"),
+          legend.spacing = unit(0, "null"))
+  
+  return(list("overlap" = scores_overlap,
+              "shares" = score_shares,
+              "win_probability" = win_probability_bar))
   
 }
 

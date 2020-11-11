@@ -318,7 +318,7 @@ transition_probabilities = function(player_stats, scores, type, player_id_1, pla
   def_transition_counts = transitions[[1]]$defense
   if (length(transitions) > 1){
   for (i in 2:length(transitions)){
-    def_transitions_counts = def_transition_counts + transitions[[i]]$defense
+    def_transition_counts = def_transition_counts + transitions[[i]]$defense
   }
   } else {
     invisible()
@@ -344,11 +344,12 @@ in_rebuttal = function(a, b, round, points_to_win){
 
 # Still a rather complex function, but for now I'm leaving it
 markov_single_game = function(A_team_size, B_team_size, shots, team_A_transitions, team_A_backup,
-                              team_B_transitions, team_B_backup, points_to_win){
+                              team_B_transitions, team_B_backup, points_to_win,
+                              scores_A, scores_B){
   # We'll track scores between teams according to a time series of each team's score.
   # The first score for both teams is 0
-  team_A_history = c(0) 
-  team_B_history = c(0)
+  team_A_history = c(scores_A) 
+  team_B_history = c(scores_B)
   
   # Initialize the game conditions
   game_over = F
@@ -380,8 +381,13 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       
       
       A_state = team_A_history %>% last() + 1
-      current_probs_A = team_A_transitions$offensive[A_state,]
       
+      
+      if (A_state >= 52){
+        current_probs_A = 0
+      } else {
+        current_probs_A = team_A_transitions$offensive[A_state,]
+      }
       
       # In the event that this didn't work OR the team is stuck somewhere, 
       # replace the current
@@ -397,6 +403,7 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
         } else {
           A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
         }
+        
         current_probs_A = team_A_backup$offensive[A_state + 1, ]
         if (all(current_probs_A == 0)){
           current_probs_A = team_A_backup$offensive[1, ]
@@ -426,7 +433,18 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       
       
       B_state = team_B_history %>% last() + 1
-      current_probs_B = team_B_transitions$defensive[B_state,]
+      
+      
+      # Occasionally, games run away and we get 51+ point game projections
+      # Not likely empirically, but anything goes when games are allowed to be close.
+      # I'll just put a condition in to handle that case by working off of the
+      # states probabilities 
+      if (B_state >= 52){
+        current_probs_B = 0
+      } else {
+        current_probs_B = team_B_transitions$defensive[B_state,]
+      }
+      
       
       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
               any(current_probs_B %>% is.infinite()))){
@@ -435,6 +453,7 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
         } else {
           B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
         }
+
         current_probs_B = team_B_backup$defensive[B_state + 1, ]
         
         # So, there's still a possibility that this ends up being 0. This is,
@@ -488,12 +507,17 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
     for (i in 1:shots){
       
       B_state = team_B_history %>% last() + 1
-      current_probs_B = team_B_transitions$offensive[B_state,]
+      if (B_state >= 52){
+        current_probs_B = 0
+      } else {
+        current_probs_B = team_B_transitions$offensive[B_state,]
+      }
       
       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
               any(current_probs_B %>% is.infinite()))){
 
         B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
+        
         current_probs_B = team_B_backup$offensive[B_state + 1, ]
         if (all(current_probs_B == 0)){
           current_probs_B = team_B_backup$offensive[1, ]
@@ -521,12 +545,16 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       }
       
       A_state = team_A_history %>% last() + 1
-      current_probs_A = team_A_transitions$defensive[A_state,]
-      
+      if (A_state >= 52){
+        current_probs_A = 0
+      } else {
+        current_probs_A = team_A_transitions$defensive[A_state,]
+      }    
       if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
               any(current_probs_A %>% is.infinite()))){
         
         A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
+  
         current_probs_A = team_A_backup$defensive[A_state + 1, ]
         if (all(current_probs_A == 0)){
           current_probs_A = team_A_backup$defensive[1, ]
@@ -561,14 +589,15 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
   A_scores = team_A_history[-1]
   B_scores = team_B_history[-1]
   
-  num_rounds = length(A_scores) / (A_team_size + B_team_size)
+  num_rounds = length(A_scores) / (shots * 2)
   if (num_rounds %% 1 != 0){
     num_rounds = num_rounds %>% ceiling()
-    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds)) %>%
+    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c(rep("A", shots), rep("B", shots)), num_rounds)) %>%
       head(-shots)
   } else {
-    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds))
+    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c(rep("A", shots), rep("B", shots)), num_rounds))
   }
+
   names(A_scores) = rounds
   names(B_scores) = rounds
   
@@ -579,14 +608,42 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
 }
 
 
-markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win = 21 ){
- 
-  # obtain the transition probs
-  team_A_transitions = transition_probabilities(player_stats, scores, "scores", team_A[1], team_A[2], team_A[3], team_A[4])
-  team_A_backup = transition_probabilities(player_stats, scores, "states", team_A[1], team_A[2], team_A[3], team_A[4])
-  team_B_transitions = transition_probabilities(player_stats, scores, "scores", team_B[1], team_B[2], team_B[3], team_B[4])
-  team_B_backup = transition_probabilities(player_stats, scores, "states", team_B[1], team_B[2], team_B[3], team_B[4])
+markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win = 21,
+                                 transitions_list = NULL,
+                                 current_scores_A = 0,
+                                 current_scores_B = 0){
+  # Prevents anything from being displayed in the app if the markov_vals reactive
+  # is passed as a null.
+  if (any(is.null(current_scores_A), is.null(current_scores_B))){
+    stop("Click the button above to run your simulations")
+  }
   
+  # obtain the transition probs
+  if (is.null(transitions_list)){
+    team_A_transitions = transition_probabilities(player_stats, scores, "scores", team_A[1], team_A[2], team_A[3], team_A[4])
+    team_A_backup = transition_probabilities(player_stats, scores, "states", team_A[1], team_A[2], team_A[3], team_A[4])
+    team_B_transitions = transition_probabilities(player_stats, scores, "scores", team_B[1], team_B[2], team_B[3], team_B[4])
+    team_B_backup = transition_probabilities(player_stats, scores, "states", team_B[1], team_B[2], team_B[3], team_B[4])
+  } else {
+    
+    team_A_name = str_c("(", team_A[1], ",", team_A[2], 
+                        if_else(!is.na(team_A[3]), str_c(", ", team_A[3]), ""),
+                        if_else(!is.na(team_A[4]), str_c(", ", team_A[4]), ""),
+                        ")"
+      )
+      
+      
+    team_B_name = str_c("(", team_B[1], ",", team_B[2], 
+                        if_else(!is.na(team_B[3]), str_c(", ", team_B[3]), ""),
+                        if_else(!is.na(team_B[4]), str_c(", ", team_B[4]), ""),
+                        ")"
+    )
+      
+    team_A_transitions = transitions_list[[team_A_name]]$scores
+    team_A_backup = transitions_list[[team_A_name]]$states
+    team_B_transitions = transitions_list[[team_B_name]]$scores
+    team_B_backup = transitions_list[[team_B_name]]$states
+  }  
   # At this point, I run the same simulation as before, but now I map it over
   # a sequence to iterate
   A_size = length(team_A %>% discard(is.na))
@@ -599,7 +656,10 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
     markov_single_game(A_size, B_size, shots, 
                        team_A_transitions, team_A_backup, 
                        team_B_transitions, team_B_backup,
-                       points_to_win = points_to_win)
+                       points_to_win = points_to_win,
+                       current_scores_A,
+                       current_scores_B
+                      )
   })
   return(games_record)
 }
