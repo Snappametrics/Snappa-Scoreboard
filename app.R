@@ -25,13 +25,7 @@ library(ggtext)
 library(patchwork)
 library(extrafont)
 library(waiter)
-# Make sure that waiter is updated to the version currently on Github.
-# The CRAN version does NOT include `waiter_on_busy()`, which is
-# the waiter that I really want 
-if (packageVersion("waiter") < '0.1.4'){
-  remotes::install_github("JohnCoene/waiter")
-  library(waiter)
-}
+
 
 source("test_dbconnect.R")
 source("ui_functions.R")
@@ -569,8 +563,11 @@ ui <- dashboardPagePlus(
                     uiOutput("simulation_score_A")
                   ),
                   column(width = 4, align = "center",
-                    sliderInput("num_simulations", "Number of Simulations",
-                                min = 1, max = 1000, value = 100),
+                    awesomeRadio("num_simulations", "Number of Simulations",
+                                choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
+                                inline = T),
+                    br(),
+                    br(),
                     actionBttn("simulation_go",
                                "Run the Simulations!",
                                color = 'primary',
@@ -650,11 +647,14 @@ ui <- dashboardPagePlus(
 
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
+  # This is an initial value which will be overwritten when you run
+  # the simulations
   w = Waiter$new(
-                 html = tagList(
-                   spin_pixel(),
-                   "Casting Many Dice"
-                 ))
+    html = tagList(
+      spin_pixel(),
+      str_c("Yeeting Imaginary Dice Into The Sky"
+      )
+    ))
   output$sidebar_menu <- renderUI({
     
     
@@ -766,9 +766,9 @@ server <- function(input, output, session) {
     switch_counter = 1,
     game_over = F,
     
-    markov_vals = list("iterations" = NULL,
-                       "A_score" = NULL,
-                       "B_score" = NULL)
+    markov_vals = list("iterations" = 1,
+                       "A_score" = 0,
+                       "B_score" = 0)
   )
   
   
@@ -1224,18 +1224,10 @@ server <- function(input, output, session) {
   
 # Update the simulation parameters when the values are changed
 observeEvent(input$simulation_go, {
-  vals$markov_vals = list("iterations" = input$num_simulations,
+  vals$markov_vals = list("iterations" = as.integer(input$num_simulations),
                           "A_score" = input$simulation_scores_A,
                           "B_score" = input$simulation_scores_B)
-  # waiter_show(
-  #   id = "waiter", 
-  #   html = tagList( 
-  #     spin_pixel(),
-  #     str_c("Casting the dice ", vals$markov_vals$iterations, " times."),
-  #   )
-  # )
-  # 
-  # waiter_hide_on_render(id = "simulation_score_shares")
+
 } )
 #Output to make the team score inputs reactive
 output$simulation_score_A = renderUI({
@@ -1251,32 +1243,65 @@ output$simulation_blurb = renderUI({
       fluidRow(
         column(12,
                align = "center",
-               h3(HTML(str_c("Across ", vals$markov_vals$iterations, " games, ",
-                        "<span style='color:", markov_ui_elements()$color, "'>",
-                        markov_ui_elements()$team, "</span> ",
-                        ifelse(markov_summary()$tie == T, "win ", "wins "), 
-                        "an estimated ", round(markov_summary()$winrate * 100, 2),
-                        "% of games.")
+               h3(
+                 HTML(
+                   str_c("Across ", vals$markov_vals$iterations,
+                          ifelse(vals$markov_vals$iterations == 1, " game ", " games ") ,
+                          "which ",
+                          ifelse(vals$markov_vals$iterations == 1,"begins ", "begin "),
+                          "at ", 
+                          "<span style='color:", snappa_pal[2], "'>",
+                          vals$markov_vals$A_score, "</span>", " - ",
+                          "<span style='color:", snappa_pal[3], "'>",
+                          vals$markov_vals$B_score, "</span>", ", ",
+                          "<span style='color:", markov_ui_elements()$color, "'>",
+                          markov_ui_elements()$team, "</span> ",
+                          ifelse(markov_summary()$tie == T, "win ", "wins"), 
+                          ifelse(vals$markov_vals$iterations == 1,
+                                 ".", 
+                                 str_c(" an estimated ", 
+                                 round(markov_summary()$winrate * 100, 2),
+                                "% of games.")
+                                )
+                   )
                        
                 )
                ),
               ##TODO: Move this to its own output below the main probability bar
-              h3(HTML(str_c(ifelse(markov_summary()$tie == F, 
-                                   str_c("In the games that ",
-                                      "<span style='color:", markov_ui_elements()$color, "'>",
-                                      markov_ui_elements()$team, "</span>", " wins, "),
-                                   str_c("In the games played, ")),
-                            "the most common final score is ", 
-                            "<span style='color:", snappa_pal[2], "'>",
-                            markov_summary()$modal_A, "</span>", " - ",
-                            "<span style='color:", snappa_pal[3], "'>",
-                            markov_summary()$modal_B, "</span>", ", ",
-                            "which is observed in ", markov_summary()$modal_freq,
-                            ", or ", round((markov_summary()$modal_freq / vals$markov_vals$iterations) * 100, 2),
-                            "%, of games."
-                        )
+              h3(
+                HTML(
+                  str_c(
+                    ifelse(markov_summary()$tie == F, 
+                            str_c("In the ",
+                              ifelse(vals$markov_vals$iterations == 1, "game ", "games "
+                                     ),
+                            "that ",
+                            "<span style='color:", markov_ui_elements()$color, "'>",
+                            markov_ui_elements()$team, "</span>", 
+                            ifelse(vals$markov_vals$iterations == 1, " won, ", " wins, "
+                                   )),
+                            str_c("In the games played, ")
+                           ),
+                    ifelse(vals$markov_vals$iterations == 1,
+                           "the final score is ",
+                           "the most common final score is "
+                           ), 
+                    "<span style='color:", snappa_pal[2], "'>",
+                    markov_summary()$modal_A, "</span>", " - ",
+                    "<span style='color:", snappa_pal[3], "'>",
+                    markov_summary()$modal_B, "</span>", ", ",
+                    ifelse(vals$markov_vals$iterations == 1,
+                           ".",
+                           str_c(", which is observed in ",
+                                 markov_summary()$modal_freq,
+                                ", or ", 
+                                round((markov_summary()$modal_freq / vals$markov_vals$iterations) * 100, 2),
+                                "%, of games."
+                                )
+                          )
+                    )
+                  )
               )
-            )
         )
       )
 })
