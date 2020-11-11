@@ -35,7 +35,7 @@ rm(con)
 # helper_tables makes `team_combinations`, which will actually be the basis
 # of the map that I perform. After this map, I will also mutate this
 # to have a running_id for each team. That way, the app can reference
-# the unique_team_combinations table to see which 
+# the unique_team_combinations table to see which teams are which
 
 unique_team_combinations = 
   helper_tables(player_stats, scores, c(1,2,NA,NA))$team_combinations %>%
