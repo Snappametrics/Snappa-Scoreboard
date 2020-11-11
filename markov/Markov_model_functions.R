@@ -589,14 +589,15 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
   A_scores = team_A_history[-1]
   B_scores = team_B_history[-1]
   
-  num_rounds = length(A_scores) / (A_team_size + B_team_size)
+  num_rounds = length(A_scores) / (shots * 2)
   if (num_rounds %% 1 != 0){
     num_rounds = num_rounds %>% ceiling()
-    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds)) %>%
+    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c(rep("A", shots), rep("B", shots)), num_rounds)) %>%
       head(-shots)
   } else {
-    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds))
+    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c(rep("A", shots), rep("B", shots)), num_rounds))
   }
+
   names(A_scores) = rounds
   names(B_scores) = rounds
   
