@@ -535,7 +535,12 @@ ui <- dashboardPagePlus(
                                      choices = c("Total Points" = "total_points", 
                                                  "Paddle Points" = "paddle_points", 
                                                  "Toss Efficiency" = "toss_efficiency"), 
-                                     selected = "total_points"))
+                                     selected = "total_points")),
+                  column(width = 3,
+                         # Sample size selection
+                         selectInput("sample_select", label = "Last __ games", selectize = F,
+                                     choices = c(5, 10, 20, "All"), 
+                                     selected = 5))
 
                 )
               ),
