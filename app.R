@@ -1290,12 +1290,12 @@ output$simulation_blurb = renderUI({
                     "<span style='color:", snappa_pal[2], "'>",
                     markov_summary()$modal_A, "</span>", " - ",
                     "<span style='color:", snappa_pal[3], "'>",
-                    markov_summary()$modal_B, "</span>", ", ",
+                    markov_summary()$modal_B, "</span>",
                     ifelse(vals$markov_vals$iterations == 1,
                            ".",
                            str_c(", which is observed in ",
                                  markov_summary()$modal_freq,
-                                "games, or ", 
+                                " games, or ", 
                                 round((markov_summary()$modal_freq / vals$markov_vals$iterations) * 100, 2),
                                 "% of the time."
                                 )
