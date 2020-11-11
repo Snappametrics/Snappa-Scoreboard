@@ -1156,7 +1156,9 @@ server <- function(input, output, session) {
     
     if(input$stat_select == "toss_efficiency"){
       plot = plot +
-        labs(x = x_title, y = "Toss Efficiency", caption = "- - - -  Career Avg.")+
+        labs(x = x_title, y = "Toss Efficiency", 
+             caption = str_c("- - - -  Career Avg. (", 
+                             scales::percent(unique(pluck(player_form_data(), "data")[["avg_points"]])), ")"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), 
                            labels = scales::percent,
                            expand = expansion(),
@@ -1164,7 +1166,9 @@ server <- function(input, output, session) {
       
     } else {
       plot = plot +
-        labs(x = x_title, y = "Points", caption = "- - - -  Career Avg.")+
+        labs(x = x_title, y = "Points", 
+             caption = str_c("- - - -  Career Avg. (", 
+                             scales::comma(unique(pluck(player_form_data(), "data")[["avg_points"]]), accuracy = 1), " points)"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
                            limits = c(0, pluck(player_form_data(), "career_high")*1.25))
     }
