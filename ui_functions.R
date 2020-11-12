@@ -1420,9 +1420,6 @@ markov_summary_data = function(simulations){
     modal_A_score = modal_score_position[modal_row, 1] - 1
     modal_B_score = modal_score_position[modal_row, 2] - 1
   }
-  if(abs(modal_A_score - modal_B_score) < 2){
-    browser()
-  }
   
   final_scores_table = seq(1, length(per_game_data)) %>% 
     map_df(function(number){
