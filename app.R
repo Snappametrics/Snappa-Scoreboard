@@ -27,7 +27,7 @@ library(extrafont)
 library(waiter)
 
 
-source("test_dbconnect.R")
+source("dbconnect.R")
 source("ui_functions.R")
 source("markov/Markov_model_functions.R")
 
