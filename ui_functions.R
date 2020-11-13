@@ -1469,7 +1469,7 @@ markov_visualizations = function(summary){
   # These geom bars look kind of bad without a line if the number of 
   # obs is less than about 500. Setting the width to 1 fixes this
   
-
+  
   score_shares = ggplot(data = score_counts) + 
       geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
       geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", size = 1) + 
