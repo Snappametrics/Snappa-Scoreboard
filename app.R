@@ -1880,14 +1880,13 @@ observeEvent(input$game_summary, {
     }
     
     delay(10, iwalk(input_list, function(name, id){
-    
+      
       updateSelectizeInput(session, inputId = id, selected = name)
-    
+      
     })
     )
-    shinyjs::click("start_game")
     
-  })
+    delay(200, shinyjs::click("start_game"))
 
   
 # Close the modal dialog if you say no and remove
