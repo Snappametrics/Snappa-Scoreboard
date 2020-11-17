@@ -27,7 +27,7 @@ library(extrafont)
 library(waiter)
 
 
-source("dbconnect.R")
+source("test_dbconnect.R")
 source("ui_functions.R")
 source("markov/Markov_model_functions.R")
 
@@ -572,8 +572,13 @@ ui <- dashboardPagePlus(
               fluidRow(
                 team_edit_column("A"),
 
-                # Column 2 - empty
-                column(4,  align = "center"),
+                # Column 2 - for submitting players
+                column(4,  align = "center",
+                       disabled(actionBttn("add_players", 
+                                           label = "Submit New Teams", style = "pill", color = "primary", 
+                                           icon = icon("dice"), size = "md")),
+                       uiOutput("validate_new_players")),
+                
                 team_edit_column("B")
               )
       ),
@@ -1344,6 +1349,7 @@ server <- function(input, output, session) {
       winning_team =  "both teams"
       winning_color = "green"
     }
+      #TODO: Add an exit condition for the game taking too long
     
     on.exit({
       w$hide()
@@ -1879,13 +1885,13 @@ observeEvent(input$game_summary, {
       invisible()
     }
     
-    iwalk(input_list, function(name, id){
+    delay(10, iwalk(input_list, function(name, id){
     
       updateSelectizeInput(session, inputId = id, selected = name)
     
     })
-    
-    delay(20, shinyjs::click("start_game"))
+    )
+    shinyjs::click("start_game")
     
   })
 
