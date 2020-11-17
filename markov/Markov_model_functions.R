@@ -16,7 +16,6 @@ helper_tables = function(player_stats, scores, team_vector){
     group_by(game_id, team) %>%
     arrange(player_id) %>%
     mutate(position = row_number()) %>%
-    distinct() %>% 
     pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
   
   team_vector = team_vector %>% sort()
@@ -140,8 +139,15 @@ transition_list = tables$game_team_pair %>%
     # careful arrangement of the combined table to get the proper running scores
     # value for that game. At least I don't have to declare off/def as a factor
     
-    offense_filtered = filtered_game %>% filter(off_def == "offense")
-    defense_filtered = filtered_game %>% filter(off_def == "defense")
+    offense_filtered = filtered_game %>% 
+      filter(off_def == "offense") %>%
+      ungroup() %>%
+      select(round_num, shot_order, off_def, points_scored)
+    
+    defense_filtered = filtered_game %>% 
+      filter(off_def == "defense") %>%
+      ungroup() %>%
+      select(round_num, shot_order, off_def, points_scored)
     
     offensive_rounds = rounds_in_game$offensive
     defensive_rounds = rounds_in_game$defensive
@@ -170,16 +176,17 @@ transition_list = tables$game_team_pair %>%
                round_num,
                shot_order,
                off_def),
-        fill = list(points_scored = 0)) %>%
-      distinct() 
+        fill = list(points_scored = 0,
+                    off_def = "offense")) 
+
     expanded_game_defense = defense_filtered %>%
       complete(
         expand(defense_filtered,
                round_num,
                shot_order,
                off_def),
-        fill = list(points_scored = 0)) %>%
-      distinct()
+        fill = list(points_scored = 0,
+                    off_def = "defense"))
     
     
     expanded_game = bind_rows(expanded_game_offense,
