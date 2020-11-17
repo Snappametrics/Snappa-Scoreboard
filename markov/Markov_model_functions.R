@@ -192,11 +192,36 @@ transition_list = tables$game_team_pair %>%
     expanded_game = bind_rows(expanded_game_offense,
                               expanded_game_defense)
     
+    # Use the information from game_team_pair to figure out ordering
+    team = tables$game_team_pair %>%
+      filter(game_id == game) %>%
+      pull(team)
+
+    # I need to make sure that the running score is actually correctly accounting
+    # for the order of play in each game. While I have the game, also
+    # make sure to add an extra value to the table 
+    if (team == "A"){
+      expanded_game = expanded_game %>% 
+        arrange(round_num, desc(off_def), shot_order) %>%
+        select(off_def, points_scored)
+      expanded_game = bind_rows(tibble(off_def = "offense", points_scored = 0),
+                                expanded_game)
+    } else {
+      expanded_game = expanded_game %>% 
+        arrange(round_num, off_def, shot_order) %>%
+        select(off_def, points_scored)
+      expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
+                                expanded_game)
+    }
     
-    # Use offense/defense to figure out whether the team is A or B
-    team = expanded_game %>% pull(scoring_team) %>% unique()
-    # Throw out games which do not return something here -> zero obs
-    if (length(team) == 0){
+    
+    
+    score_side_table = expanded_game %>%
+                        summarize(running_score = cumsum(points_scored),
+                                  off_def = off_def,
+                                  .groups = "drop")
+    # If this is only one observation long, then this game isn't in scores, so dip
+    if (nrow(score_side_table) == 1){
       if (type == "scores") {
         offense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
         defense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
@@ -206,73 +231,47 @@ transition_list = tables$game_team_pair %>%
       }
       return(list("offense" = offense_matrix,
                   "defense" = defense_matrix))
-    } else { 
-    
-    # I need to make sure that the running score is actually correctly accounting
-    # for the order of play in each game. While I have the game, also
-    # make sure to add an extra value to the table 
-    if (team == "A"){
-      expanded_game = expanded_game %>% 
-        arrange(round_num, desc(off_def), shot_order) %>%
-        select(game_id, off_def, points_scored)
-      expanded_game = bind_rows(tibble(game_id = game, off_def = "offense", points_scored = 0),
-                                expanded_game)
     } else {
-      expanded_game = expanded_game %>% 
-        arrange(round_num, off_def, shot_order) %>%
-        select(game_id, off_def, points_scored)
-      expanded_game = bind_rows(tibble(game_id = game, off_def = "defense", points_scored = 0),
-                                expanded_game)
-    }
-    
-    
-    
-    score_side_table = expanded_game %>%
-                        group_by(game_id) %>%
-                        summarize(running_score = cumsum(points_scored),
-                                  off_def = off_def,
-                                  .groups = "drop")
-    
-    # setting our matrix to 51x51 means we're looking at score transitions
-    # between 0 and 50
-    
-    if (type == "scores"){
-      offense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
-      defense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
-      # Create a matrix that will be used for our transition counts
-      for (i in 2:length(score_side_table$running_score)){
-        old_score = score_side_table$running_score[i - 1]
-        new_score = score_side_table$running_score[i]
-        
-        if (score_side_table$off_def[i] == "offense"){
-          offense_matrix[old_score + 1, new_score + 1] =
-            offense_matrix[old_score+ 1, new_score + 1] + 1
-        } else { 
-          defense_matrix[old_score + 1, new_score + 1] = 
-            defense_matrix[old_score + 1, new_score + 1] + 1
-        }
+      # setting our matrix to 51x51 means we're looking at score transitions
+      # between 0 and 50
+  
+      if (type == "scores"){
+        offense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
+        defense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
+        # Create a matrix that will be used for our transition counts
+        for (i in 2:length(score_side_table$running_score)){
+          old_score = score_side_table$running_score[i - 1]
+          new_score = score_side_table$running_score[i]
           
-      }
-    } else {
-      offense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
-      defense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
-      for (i in 3:length(score_side_table$running_score)){
-        old_state = score_side_table$running_score[i - 1] - 
-          score_side_table$running_score[i - 2]
-        new_state = score_side_table$running_score[i] - 
-          score_side_table$running_score[i - 1]
-        
-        if (score_side_table$off_def[i] == "offense"){
-          offense_matrix[old_state + 1, new_state + 1] =
-            offense_matrix[old_state+ 1, new_state + 1] + 1
-        } else { 
-          defense_matrix[old_state + 1, new_state + 1] = 
-            defense_matrix[old_state + 1, new_state + 1] + 1
+          if (score_side_table$off_def[i] == "offense"){
+            offense_matrix[old_score + 1, new_score + 1] =
+              offense_matrix[old_score+ 1, new_score + 1] + 1
+          } else { 
+            defense_matrix[old_score + 1, new_score + 1] = 
+              defense_matrix[old_score + 1, new_score + 1] + 1
+          }
+            
         }
-        
-      }
-    } 
-  return(list("offense" = offense_matrix,
+      } else {
+        offense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
+        defense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
+        for (i in 3:length(score_side_table$running_score)){
+          old_state = score_side_table$running_score[i - 1] - 
+            score_side_table$running_score[i - 2]
+          new_state = score_side_table$running_score[i] - 
+            score_side_table$running_score[i - 1]
+          
+          if (score_side_table$off_def[i] == "offense"){
+            offense_matrix[old_state + 1, new_state + 1] =
+              offense_matrix[old_state+ 1, new_state + 1] + 1
+          } else { 
+            defense_matrix[old_state + 1, new_state + 1] = 
+              defense_matrix[old_state + 1, new_state + 1] + 1
+          }
+          
+        }
+      } 
+    return(list("offense" = offense_matrix,
               "defense" = defense_matrix))
     }
   })
@@ -314,7 +313,8 @@ transition_probabilities = function(player_stats, scores, type, player_id_1, pla
   } else { 
     invisible() 
     }
-    row_totals = map_dbl(seq(1, matrix_rank), function(number) { 
+    
+  row_totals = map_dbl(seq(1, matrix_rank), function(number) { 
                                  off_transition_counts[number,] %>% sum()
                                  }
                        )
