@@ -1879,13 +1879,13 @@ observeEvent(input$game_summary, {
       invisible()
     }
     
-    iwalk(input_list, function(name, id){
+    delay(10, iwalk(input_list, function(name, id){
     
       updateSelectizeInput(session, inputId = id, selected = name)
     
     })
-    
-    delay(20, shinyjs::click("start_game"))
+    )
+    shinyjs::click("start_game")
     
   })
 
