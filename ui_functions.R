@@ -180,13 +180,13 @@ team_edit_ui = function(team, player_choices, active_players){
   
   team_list = imap(current_players, ~{
     tagList(
-      tags$style(type = "text/css", str_c("#edit_name_", team, str_sub(.y, -1), "-selectized ", "{color: white; margin-top:30px;margin-bottom:30px;} ",
-                                          "#edit_name_", team, str_sub(.y, -1), "{color: white; margin-top:30px;margin-bottom:30px;}")),
       selectizeInput(paste0('edit_name_', team, str_sub(.y, -1)), paste0('Player ', str_sub(.y, -1)), c(`Player Name`='', .x), 
                      selected = .x, options = list(create = TRUE)
       ),
+      tags$style(type = "text/css", str_c("#edit_name_", team, str_sub(.y, -1), "-selectized ", "{color: white; margin-top:30px;margin-bottom:30px;} ",
+                                          "#edit_name_", team, str_sub(.y, -1), "{color: white; margin-top:30px;margin-bottom:30px;}")),
       br()
-    )
+    )  
   })
   if (add_player_number < 5) {
     team_list[[add_player_number]] = tagList(
