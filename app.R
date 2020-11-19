@@ -362,6 +362,7 @@ ui <- dashboardPagePlus(
         id = "game_point",
         title = "Game Point",
         icon = "sliders",
+        badgeStatus = NULL,
         sliderInput(
           inputId = "score_to",
           label = "What score are you playing to?",
@@ -1887,7 +1888,7 @@ observeEvent(input$game_summary, {
     )
     
     delay(200, shinyjs::click("start_game"))
-
+})
   
 # Close the modal dialog if you say no and remove
 # the old game from the DB
