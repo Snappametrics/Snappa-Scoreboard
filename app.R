@@ -574,9 +574,9 @@ ui <- dashboardPagePlus(
 
                 # Column 2 - for submitting players
                 column(4,  align = "center",
-                       actionBttn("add_players", 
+                       disabled(actionBttn("add_players", 
                                            label = "Submit New Teams", style = "pill", color = "primary", 
-                                           icon = icon("dice"), size = "md"),
+                                           icon = icon("dice"), size = "md")),
                        uiOutput("validate_new_players")),
                 
                 team_edit_column("B")
@@ -1471,26 +1471,38 @@ output$simulation_overlap =
 
 # Restart Game Outputs ----------------------------------------------------
 output$validate_new_players = reactive({
-  # This one works a lot like validate_start, except it gets to be simpler
-  # because less things need to be tracked, and players are allowed to freely
-  # leave
+  # This solution is "bad" in the sense that using parse is quite error
+  # prone and not great, but I'm constructing this quite narrowly for now
+  # and it will work. In the future, maybe I just make the map's inputs
+  # the names of the objects I want and then I evaluate those. For now 
+  # this will do
 
-  # This condition needs to be flexible to the number of players that we need. 
-  # that is to say, it needs to not care about "TEAM3" when player 3 is in the game
+set_conditions =  setdiff(c("A3", "A4", "B3", "B4"), 
+                          names(active_player_inputs())
+                          ) %>%
+                  map_lgl(function(name){
+                    eval(
+                  rlang::parse_expr( 
+                  str_c("any(vals$want_", name, " == F, ",
+                            "all(vals$want_", name, " == T, ",
+                            "!is.null(input$edit_name_", name, "), ",
+                            "input$edit_name_", name, "!= '')
+                        )"
+                       )
+                  )
+                )
+              })
   
-  if (all(any(input$edit_name_A3 != "", !vals$want_A3), 
-          any(input$edit_name_A4 != "", !vals$want_A4),
-          any(input$edit_name_B3 != "", !vals$want_B3),
-          any(input$edit_name_B4 != "", !vals$want_B4))) {
-    shinyjs::enable("add_players")
-  } else {
-    shinyjs::disable("add_players")
-  }
+if (any(!set_conditions)){
+  shinyjs::disable("add_players")
+} else{
+  shinyjs::enable("add_players")
+}
+  
 })
 
 # The observer that handles adding new players into the game
 observeEvent(input$add_players, {
-  browser()
   
 })
 
@@ -2247,6 +2259,7 @@ observeEvent(input$resume_no, {
 
   
   observeEvent(input$A_score_button, {
+    browser()
     vals$error_msg <- NULL
     
     eligible_shooters = filter(snappaneers(), team == "A") %>% 
