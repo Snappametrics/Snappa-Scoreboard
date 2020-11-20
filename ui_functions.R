@@ -335,27 +335,27 @@ remove_p3_input = function(current_tab, team, session){
  
    if (current_tab == "start") {
      
-    add_p3_button = paste0("#add_remove_", team, "3")
-    ui_name = paste0("extra_player_", team,"3")
+    input_line = paste0("#add_remove_", team, "3")
+    add_p3_button = paste0("extra_player_", team,"3")
     selectize_name_3 =  paste0("name_", team, "3")
     selectize_name_4 = paste0("name_", team, "4")
     
   }  else if (current_tab == "edit"){
     
-    add_p3_button = paste0("#edit_new_", team, "3")
-    ui_name = paste0("edit_add_", team,"3")
+    input_line = paste0("#edit_new_", team, "3")
+    add_p3_button = paste0("edit_add_", team,"3")
     selectize_name_3 =  paste0("edit_name_", team, "3")
     selectize_name_4 = paste0("edit_name_", team, "4")
   }
     
   
-    insertUI(selector = add_p3_button,
+    insertUI(selector = input_line,
              where = "afterEnd",
-             ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
+             ui = actionBttn(add_p3_button, label = "+ Add Player", style = "unite", color = "danger")
     )
     
     
-    removeUI(selector = add_p3_button)
+    removeUI(selector = input_line)
     
     updateSelectizeInput(session, selectize_name_3, selected = character(0))
     updateSelectizeInput(session, selectize_name_4, selected = character(0))
@@ -366,22 +366,22 @@ remove_p3_input = function(current_tab, team, session){
 
 remove_p4_input = function(current_tab, team, session){
   if (current_tab == "start") {
-    add_p4_button = paste0("#add_remove_", team, "4")
-    ui_name = paste0("extra_player_", team, "4")
+    input_line = paste0("#add_remove_", team, "4")
+    add_p4_button = paste0("extra_player_", team, "4")
     selectize_name = paste0("name_", team, "4")
   } else if (current_tab == "edit") {
-    add_p4_button = paste0("edit_new_", team, "4")
-    ui_name = paste0("edit_add_", team, "4")
+    input_line = paste0("edit_new_", team, "4")
+    add_p4_button = paste0("edit_add_", team, "4")
     selectize_name = paste0("edit_name_", team, "4")
   }
       
   # Insert add player button
-  insertUI(selector = add_p4_button,
+  insertUI(selector = input_line,
            where = "afterEnd",
-           ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
+           ui = actionBttn(add_p4_button, label = "+ Add Player", style = "unite", color = "danger")
   )
   # Remove player text input
-  removeUI(selector = add_p4_button)
+  removeUI(selector = input_line)
   
   # Tells later checks to not worry about this
   # empty slot in active_player_names
