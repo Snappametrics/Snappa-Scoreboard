@@ -370,7 +370,7 @@ remove_p4_input = function(current_tab, team, session){
     add_p4_button = paste0("extra_player_", team, "4")
     selectize_name = paste0("name_", team, "4")
   } else if (current_tab == "edit") {
-    input_line = paste0("edit_new_", team, "4")
+    input_line = paste0("#edit_new_", team, "4")
     add_p4_button = paste0("edit_add_", team, "4")
     selectize_name = paste0("edit_name_", team, "4")
   }
