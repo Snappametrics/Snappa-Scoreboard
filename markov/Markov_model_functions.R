@@ -16,7 +16,6 @@ helper_tables = function(player_stats, scores, team_vector){
     group_by(game_id, team) %>%
     arrange(player_id) %>%
     mutate(position = row_number()) %>%
-    distinct() %>% 
     pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
   
   team_vector = team_vector %>% sort()
@@ -140,8 +139,15 @@ transition_list = tables$game_team_pair %>%
     # careful arrangement of the combined table to get the proper running scores
     # value for that game. At least I don't have to declare off/def as a factor
     
-    offense_filtered = filtered_game %>% filter(off_def == "offense")
-    defense_filtered = filtered_game %>% filter(off_def == "defense")
+    offense_filtered = filtered_game %>% 
+      filter(off_def == "offense") %>%
+      ungroup() %>%
+      select(round_num, shot_order, off_def, points_scored)
+    
+    defense_filtered = filtered_game %>% 
+      filter(off_def == "defense") %>%
+      ungroup() %>%
+      select(round_num, shot_order, off_def, points_scored)
     
     offensive_rounds = rounds_in_game$offensive
     defensive_rounds = rounds_in_game$defensive
@@ -170,26 +176,52 @@ transition_list = tables$game_team_pair %>%
                round_num,
                shot_order,
                off_def),
-        fill = list(points_scored = 0)) %>%
-      distinct() 
+        fill = list(points_scored = 0,
+                    off_def = "offense")) 
+
     expanded_game_defense = defense_filtered %>%
       complete(
         expand(defense_filtered,
                round_num,
                shot_order,
                off_def),
-        fill = list(points_scored = 0)) %>%
-      distinct()
+        fill = list(points_scored = 0,
+                    off_def = "defense"))
     
     
     expanded_game = bind_rows(expanded_game_offense,
                               expanded_game_defense)
     
+    # Use the information from game_team_pair to figure out ordering
+    team = tables$game_team_pair %>%
+      filter(game_id == game) %>%
+      pull(team)
+
+    # I need to make sure that the running score is actually correctly accounting
+    # for the order of play in each game. While I have the game, also
+    # make sure to add an extra value to the table 
+    if (team == "A"){
+      expanded_game = expanded_game %>% 
+        arrange(round_num, desc(off_def), shot_order) %>%
+        select(off_def, points_scored)
+      expanded_game = bind_rows(tibble(off_def = "offense", points_scored = 0),
+                                expanded_game)
+    } else {
+      expanded_game = expanded_game %>% 
+        arrange(round_num, off_def, shot_order) %>%
+        select(off_def, points_scored)
+      expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
+                                expanded_game)
+    }
     
-    # Use offense/defense to figure out whether the team is A or B
-    team = expanded_game %>% pull(scoring_team) %>% unique()
-    # Throw out games which do not return something here -> zero obs
-    if (length(team) == 0){
+    
+    
+    score_side_table = expanded_game %>%
+                        summarize(running_score = cumsum(points_scored),
+                                  off_def = off_def,
+                                  .groups = "drop")
+    # If this is only one observation long, then this game isn't in scores, so dip
+    if (nrow(score_side_table) == 1){
       if (type == "scores") {
         offense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
         defense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
@@ -199,73 +231,47 @@ transition_list = tables$game_team_pair %>%
       }
       return(list("offense" = offense_matrix,
                   "defense" = defense_matrix))
-    } else { 
-    
-    # I need to make sure that the running score is actually correctly accounting
-    # for the order of play in each game. While I have the game, also
-    # make sure to add an extra value to the table 
-    if (team == "A"){
-      expanded_game = expanded_game %>% 
-        arrange(round_num, desc(off_def), shot_order) %>%
-        select(game_id, off_def, points_scored)
-      expanded_game = bind_rows(tibble(game_id = game, off_def = "offense", points_scored = 0),
-                                expanded_game)
     } else {
-      expanded_game = expanded_game %>% 
-        arrange(round_num, off_def, shot_order) %>%
-        select(game_id, off_def, points_scored)
-      expanded_game = bind_rows(tibble(game_id = game, off_def = "defense", points_scored = 0),
-                                expanded_game)
-    }
-    
-    
-    
-    score_side_table = expanded_game %>%
-                        group_by(game_id) %>%
-                        summarize(running_score = cumsum(points_scored),
-                                  off_def = off_def,
-                                  .groups = "drop")
-    
-    # setting our matrix to 51x51 means we're looking at score transitions
-    # between 0 and 50
-    
-    if (type == "scores"){
-      offense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
-      defense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
-      # Create a matrix that will be used for our transition counts
-      for (i in 2:length(score_side_table$running_score)){
-        old_score = score_side_table$running_score[i - 1]
-        new_score = score_side_table$running_score[i]
-        
-        if (score_side_table$off_def[i] == "offense"){
-          offense_matrix[old_score + 1, new_score + 1] =
-            offense_matrix[old_score+ 1, new_score + 1] + 1
-        } else { 
-          defense_matrix[old_score + 1, new_score + 1] = 
-            defense_matrix[old_score + 1, new_score + 1] + 1
-        }
+      # setting our matrix to 51x51 means we're looking at score transitions
+      # between 0 and 50
+  
+      if (type == "scores"){
+        offense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
+        defense_matrix = matrix(data = 0, nrow = 51, ncol = 51)
+        # Create a matrix that will be used for our transition counts
+        for (i in 2:length(score_side_table$running_score)){
+          old_score = score_side_table$running_score[i - 1]
+          new_score = score_side_table$running_score[i]
           
-      }
-    } else {
-      offense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
-      defense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
-      for (i in 3:length(score_side_table$running_score)){
-        old_state = score_side_table$running_score[i - 1] - 
-          score_side_table$running_score[i - 2]
-        new_state = score_side_table$running_score[i] - 
-          score_side_table$running_score[i - 1]
-        
-        if (score_side_table$off_def[i] == "offense"){
-          offense_matrix[old_state + 1, new_state + 1] =
-            offense_matrix[old_state+ 1, new_state + 1] + 1
-        } else { 
-          defense_matrix[old_state + 1, new_state + 1] = 
-            defense_matrix[old_state + 1, new_state + 1] + 1
+          if (score_side_table$off_def[i] == "offense"){
+            offense_matrix[old_score + 1, new_score + 1] =
+              offense_matrix[old_score+ 1, new_score + 1] + 1
+          } else { 
+            defense_matrix[old_score + 1, new_score + 1] = 
+              defense_matrix[old_score + 1, new_score + 1] + 1
+          }
+            
         }
-        
-      }
-    } 
-  return(list("offense" = offense_matrix,
+      } else {
+        offense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
+        defense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
+        for (i in 3:length(score_side_table$running_score)){
+          old_state = score_side_table$running_score[i - 1] - 
+            score_side_table$running_score[i - 2]
+          new_state = score_side_table$running_score[i] - 
+            score_side_table$running_score[i - 1]
+          
+          if (score_side_table$off_def[i] == "offense"){
+            offense_matrix[old_state + 1, new_state + 1] =
+              offense_matrix[old_state+ 1, new_state + 1] + 1
+          } else { 
+            defense_matrix[old_state + 1, new_state + 1] = 
+              defense_matrix[old_state + 1, new_state + 1] + 1
+          }
+          
+        }
+      } 
+    return(list("offense" = offense_matrix,
               "defense" = defense_matrix))
     }
   })
@@ -307,7 +313,8 @@ transition_probabilities = function(player_stats, scores, type, player_id_1, pla
   } else { 
     invisible() 
     }
-    row_totals = map_dbl(seq(1, matrix_rank), function(number) { 
+    
+  row_totals = map_dbl(seq(1, matrix_rank), function(number) { 
                                  off_transition_counts[number,] %>% sum()
                                  }
                        )
@@ -318,7 +325,7 @@ transition_probabilities = function(player_stats, scores, type, player_id_1, pla
   def_transition_counts = transitions[[1]]$defense
   if (length(transitions) > 1){
   for (i in 2:length(transitions)){
-    def_transitions_counts = def_transition_counts + transitions[[i]]$defense
+    def_transition_counts = def_transition_counts + transitions[[i]]$defense
   }
   } else {
     invisible()
@@ -344,11 +351,12 @@ in_rebuttal = function(a, b, round, points_to_win){
 
 # Still a rather complex function, but for now I'm leaving it
 markov_single_game = function(A_team_size, B_team_size, shots, team_A_transitions, team_A_backup,
-                              team_B_transitions, team_B_backup, points_to_win){
+                              team_B_transitions, team_B_backup, points_to_win,
+                              scores_A, scores_B){
   # We'll track scores between teams according to a time series of each team's score.
   # The first score for both teams is 0
-  team_A_history = c(0) 
-  team_B_history = c(0)
+  team_A_history = c(scores_A) 
+  team_B_history = c(scores_B)
   
   # Initialize the game conditions
   game_over = F
@@ -380,8 +388,13 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       
       
       A_state = team_A_history %>% last() + 1
-      current_probs_A = team_A_transitions$offensive[A_state,]
       
+      
+      if (A_state >= 52){
+        current_probs_A = 0
+      } else {
+        current_probs_A = team_A_transitions$offensive[A_state,]
+      }
       
       # In the event that this didn't work OR the team is stuck somewhere, 
       # replace the current
@@ -397,6 +410,7 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
         } else {
           A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
         }
+        
         current_probs_A = team_A_backup$offensive[A_state + 1, ]
         if (all(current_probs_A == 0)){
           current_probs_A = team_A_backup$offensive[1, ]
@@ -426,7 +440,18 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       
       
       B_state = team_B_history %>% last() + 1
-      current_probs_B = team_B_transitions$defensive[B_state,]
+      
+      
+      # Occasionally, games run away and we get 51+ point game projections
+      # Not likely empirically, but anything goes when games are allowed to be close.
+      # I'll just put a condition in to handle that case by working off of the
+      # states probabilities 
+      if (B_state >= 52){
+        current_probs_B = 0
+      } else {
+        current_probs_B = team_B_transitions$defensive[B_state,]
+      }
+      
       
       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
               any(current_probs_B %>% is.infinite()))){
@@ -435,6 +460,7 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
         } else {
           B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
         }
+
         current_probs_B = team_B_backup$defensive[B_state + 1, ]
         
         # So, there's still a possibility that this ends up being 0. This is,
@@ -488,12 +514,17 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
     for (i in 1:shots){
       
       B_state = team_B_history %>% last() + 1
-      current_probs_B = team_B_transitions$offensive[B_state,]
+      if (B_state >= 52){
+        current_probs_B = 0
+      } else {
+        current_probs_B = team_B_transitions$offensive[B_state,]
+      }
       
       if (any(all(current_probs_B == 0), any(current_probs_B == 1 ),
               any(current_probs_B %>% is.infinite()))){
 
         B_state =team_B_history[length(team_B_history)] - team_B_history[length(team_B_history) - 1] 
+        
         current_probs_B = team_B_backup$offensive[B_state + 1, ]
         if (all(current_probs_B == 0)){
           current_probs_B = team_B_backup$offensive[1, ]
@@ -521,12 +552,16 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
       }
       
       A_state = team_A_history %>% last() + 1
-      current_probs_A = team_A_transitions$defensive[A_state,]
-      
+      if (A_state >= 52){
+        current_probs_A = 0
+      } else {
+        current_probs_A = team_A_transitions$defensive[A_state,]
+      }    
       if (any(all(current_probs_A == 0), any(current_probs_A == 1 ),
               any(current_probs_A %>% is.infinite()))){
         
         A_state =team_A_history[length(team_A_history)] - team_A_history[length(team_A_history) - 1] 
+  
         current_probs_A = team_A_backup$defensive[A_state + 1, ]
         if (all(current_probs_A == 0)){
           current_probs_A = team_A_backup$defensive[1, ]
@@ -561,14 +596,15 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
   A_scores = team_A_history[-1]
   B_scores = team_B_history[-1]
   
-  num_rounds = length(A_scores) / (A_team_size + B_team_size)
+  num_rounds = length(A_scores) / (shots * 2)
   if (num_rounds %% 1 != 0){
     num_rounds = num_rounds %>% ceiling()
-    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds)) %>%
+    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c(rep("A", shots), rep("B", shots)), num_rounds)) %>%
       head(-shots)
   } else {
-    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c("A", "A", "B", "B"), num_rounds))
+    rounds = str_c(rep(1:num_rounds, each = shots * 2), rep(c(rep("A", shots), rep("B", shots)), num_rounds))
   }
+
   names(A_scores) = rounds
   names(B_scores) = rounds
   
@@ -579,14 +615,42 @@ markov_single_game = function(A_team_size, B_team_size, shots, team_A_transition
 }
 
 
-markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win = 21 ){
- 
-  # obtain the transition probs
-  team_A_transitions = transition_probabilities(player_stats, scores, "scores", team_A[1], team_A[2], team_A[3], team_A[4])
-  team_A_backup = transition_probabilities(player_stats, scores, "states", team_A[1], team_A[2], team_A[3], team_A[4])
-  team_B_transitions = transition_probabilities(player_stats, scores, "scores", team_B[1], team_B[2], team_B[3], team_B[4])
-  team_B_backup = transition_probabilities(player_stats, scores, "states", team_B[1], team_B[2], team_B[3], team_B[4])
+markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win = 21,
+                                 transitions_list = NULL,
+                                 current_scores_A = 0,
+                                 current_scores_B = 0){
+  # Prevents anything from being displayed in the app if the markov_vals reactive
+  # is passed as a null.
+  if (any(is.null(current_scores_A), is.null(current_scores_B))){
+    stop("Click the button above to run your simulations")
+  }
   
+  # obtain the transition probs
+  if (is.null(transitions_list)){
+    team_A_transitions = transition_probabilities(player_stats, scores, "scores", team_A[1], team_A[2], team_A[3], team_A[4])
+    team_A_backup = transition_probabilities(player_stats, scores, "states", team_A[1], team_A[2], team_A[3], team_A[4])
+    team_B_transitions = transition_probabilities(player_stats, scores, "scores", team_B[1], team_B[2], team_B[3], team_B[4])
+    team_B_backup = transition_probabilities(player_stats, scores, "states", team_B[1], team_B[2], team_B[3], team_B[4])
+  } else {
+    
+    team_A_name = str_c("(", team_A[1], ",", team_A[2], 
+                        if_else(!is.na(team_A[3]), str_c(", ", team_A[3]), ""),
+                        if_else(!is.na(team_A[4]), str_c(", ", team_A[4]), ""),
+                        ")"
+      )
+      
+      
+    team_B_name = str_c("(", team_B[1], ",", team_B[2], 
+                        if_else(!is.na(team_B[3]), str_c(", ", team_B[3]), ""),
+                        if_else(!is.na(team_B[4]), str_c(", ", team_B[4]), ""),
+                        ")"
+    )
+      
+    team_A_transitions = transitions_list[[team_A_name]]$scores
+    team_A_backup = transitions_list[[team_A_name]]$states
+    team_B_transitions = transitions_list[[team_B_name]]$scores
+    team_B_backup = transitions_list[[team_B_name]]$states
+  }  
   # At this point, I run the same simulation as before, but now I map it over
   # a sequence to iterate
   A_size = length(team_A %>% discard(is.na))
@@ -599,7 +663,10 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
     markov_single_game(A_size, B_size, shots, 
                        team_A_transitions, team_A_backup, 
                        team_B_transitions, team_B_backup,
-                       points_to_win = points_to_win)
+                       points_to_win = points_to_win,
+                       current_scores_A,
+                       current_scores_B
+                      )
   })
   return(games_record)
 }
