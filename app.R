@@ -544,11 +544,7 @@ ui <- dashboardPagePlus(
 
                 )
               ),
-              fluidRow(
-                box(width = 12, status = "success",
-                  uiOutput("player_stats_headers")
-                )
-              ),
+              uiOutput("player_stats_headers"),
               # Form plot
               boxPlus(title = "Player Form",
                       collapsible = T,
@@ -1181,16 +1177,18 @@ server <- function(input, output, session) {
   
   output$player_stats_headers = renderUI({
     player_stats = dbGetQuery(con, 
-                              sql(str_c("SELECT games_played, win_pct, sinks FROM basic_career_stats ", 
+                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks FROM basic_career_stats ", 
                                         "WHERE player_id = ", input$player_select))
                               )
-    
+
+    # stat_list = 
     fluidRow(
+      box(width = 6, status = "success", title = "General Stats", collapsible = T,
       # Games Played
       column(
         width = 4,
         descriptionBlock(
-          header = player_stats$games_played, 
+          header = player_stats$games_played,
           text = "GAMES PLAYED"
         )
       ),
@@ -1198,7 +1196,7 @@ server <- function(input, output, session) {
       column(
         width = 4,
         descriptionBlock(
-          header = scales::percent(player_stats$win_pct), 
+          header = scales::percent(player_stats$win_pct),
           text = "WIN PERCENTAGE"
         )
       ),
@@ -1206,10 +1204,30 @@ server <- function(input, output, session) {
       column(
         width = 4,
         descriptionBlock(
-          header = player_stats$sinks, 
-          text = "LIFETIME SINKS"
+          header = player_stats$sinks,
+          text = "SINK(S)"
         )
       )
+      ),
+      box(width = 6, status = "success", title = "Paddle Stats", collapsible = T,
+      # Paddle points
+      column(
+        width = 6,
+        descriptionBlock(
+          header = player_stats$paddle_points,
+          text = "PADDLE POINTS"
+        )
+      ),
+      # Paddle Sinks
+      column(
+        width = 6,
+        descriptionBlock(
+          header = player_stats$paddle_sinks,
+          text = "PADDLE SINK(S)"
+        )
+      )
+      
+    )
     )
 
   })
