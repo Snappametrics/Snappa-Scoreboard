@@ -152,7 +152,9 @@ team_edit_column = function(team){
   
   # Because the ui elements here need to be dynamically generated, I generate them
   # first and then pass it on to the ui nested in the column
-
+  players = str_c("#edit_name_", team, 1:4, "-selectized", collapse = ", ")
+  inputs = str_c("#edit_name_", team, 1:4, collapse = ", ")
+  
   column(4, align = "center",
                 wellPanel(
                   style = paste("opacity: 0.92; background:", team_colour),
@@ -160,8 +162,10 @@ team_edit_column = function(team){
                   h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
                   uiOutput(
                     outputId = paste0("edit_team_", team)
-                  )
-                  
+                  )#,
+                  # tags$style(type = "text/css", paste(players, " {color: white; margin-top:30px;margin-bottom:30px;}",
+                  #                                     inputs, " {color: white; margin-top:30px;margin-bottom:30px;}"))
+                  # 
                 )
         )
 }
@@ -177,21 +181,21 @@ team_edit_ui = function(team, player_choices, active_players){
   
   current_players = active_players[str_detect(names(active_players), team)]
   add_player_number = length(current_players) + 1
-  
+
   team_list = imap(current_players, ~{
-    tagList(
+    fluidRow(
       selectizeInput(paste0('edit_name_', team, str_sub(.y, -1)), paste0('Player ', str_sub(.y, -1)), c(`Player Name`='', .x), 
                      selected = .x, options = list(create = TRUE)
       ),
-      tags$style(type = "text/css", str_c("#edit_name_", team, str_sub(.y, -1), "-selectized ", "{color: white; margin-top:30px;margin-bottom:30px;} ",
-                                          "#edit_name_", team, str_sub(.y, -1), "{color: white; margin-top:30px;margin-bottom:30px;}")),
+      # tags$style(type = "text/css", str_c("edit_name_", .y, "-selectized", " {color: white; margin-top:30px;margin-bottom:30px;} ",
+      #                                     "edit_name_", .y, " {color: white; margin-top:30px;margin-bottom:30px;}")),
       br()
-    )  
+    )
   })
   if (add_player_number < 5) {
-    team_list[[add_player_number]] = tagList(
+    team_list[[add_player_number]] = 
       actionBttn(paste0("edit_add_", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger")
-    )
+    
   } else {
     invisible()
   }
@@ -290,7 +294,8 @@ extra_player_ui = function(current_tab, player, player_choices){
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
-               actionBttn(inputId = remove_type,  label = "X", style = "jelly",
+            fluidRow(   
+            actionBttn(inputId = remove_type,  label = "X", style = "jelly",
                               color = "danger", size = "sm"),
                # Add extra player text input 
                selectizeInput(inputId = input_type, 
@@ -300,7 +305,7 @@ extra_player_ui = function(current_tab, player, player_choices){
              
              # CSS
              tags$style(paste0(div_id, " {margin-left:auto; margin-right:auto; position: relative;}")),
-
+            ), 
            # If the extra player is not the fourth on a team yet, add another add player button
            if(player_num < 4){
              actionBttn(extra_type, 

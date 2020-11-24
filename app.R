@@ -1531,7 +1531,9 @@ observeEvent(input$add_players, {
   
 # # Generates outputs for the edit teams page
 output$edit_team_A <- renderUI({
-  tagList(team_edit_ui("A", pull(players_tbl, player_name), active_player_inputs()))
+  tagList(team_edit_ui("A", pull(players_tbl, player_name), active_player_inputs())
+  )
+          
 })
 
 output$edit_team_B <- renderUI({
