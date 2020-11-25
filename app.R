@@ -1135,10 +1135,10 @@ server <- function(input, output, session) {
     recent_games = filter(player_stats_tbl, player_id == input$player_select) %>% 
       mutate(avg_points = mean(!!sym(input$stat_select)),
              max_points = max(!!sym(input$stat_select))) %>% 
-      arrange(game_id) %>% 
       when(input$sample_select != "All" ~ (.) %>% 
              slice_max(order_by = game_id, n = as.numeric(input$sample_select)), 
            ~ (.)) %>% 
+      arrange(game_id) %>% 
       mutate(game_num = row_number()) %>% 
       inner_join(select(player_game_stats(), player_id, game_id, won_game))
     
