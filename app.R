@@ -1187,11 +1187,14 @@ server <- function(input, output, session) {
   
   # Player form plot
   output$player_form = renderPlot({
+    
+    stat_name = str_to_title(str_replace(input$stat_select, "_", " "))
 
     # X axis title conditional on number of games chosen
-    x_title = if_else(input$sample_select == "All", 
-                      str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
-                      paste("Last", input$sample_select, "games"))
+    plot_title = str_c(stat_name, ": ", 
+                    if_else(input$sample_select == "All", 
+                            str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
+                    paste("Last", input$sample_select, "games")))
     
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
@@ -1208,7 +1211,7 @@ server <- function(input, output, session) {
     
     if(input$stat_select == "toss_efficiency"){
       plot = plot +
-        labs(x = x_title, y = "Toss Efficiency", 
+        labs(x = expression(More ~ Recent ~ Games %->% ""), y = "Toss Efficiency", 
              caption = str_c("- - - -  Career Avg. (", 
                              scales::percent(unique(pluck(player_form_data(), "data")[["avg_points"]])), ")"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), 
@@ -1218,7 +1221,8 @@ server <- function(input, output, session) {
       
     } else {
       plot = plot +
-        labs(x = x_title, y = "Points", 
+        labs(x = expression(More ~ Recent ~ Games %->% ""), y = stat_name, 
+             title = plot_title,
              caption = str_c("- - - -  Career Avg. (", 
                              scales::comma(unique(pluck(player_form_data(), "data")[["avg_points"]]), accuracy = 1), " points)"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
@@ -1227,7 +1231,8 @@ server <- function(input, output, session) {
     plot+
       theme_snappa()+
       theme(axis.text.x = element_blank(),
-            legend.position = "bottom")
+            legend.position = "bottom",
+            legend.key.height = unit(.25, "cm"))
     
   })
   
