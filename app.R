@@ -698,9 +698,7 @@ server <- function(input, output, session) {
                  tabName = "edit_teams",
                  icon = icon("edit")),
         menuItem("Win Probabilities", tabName = "markov_model_summary",
-                 icon = icon("flask")),
-        menuItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
-                 text = "More stuff than we can add", newtab = T)
+                 icon = icon("flask"))
       )
       
     } else {
@@ -712,30 +710,14 @@ server <- function(input, output, session) {
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
         menuItem("Player Stats", tabName = "player_stats",
-                 icon = icon("chart-line")),
-        menuItem(text = "More stuff than we can add", 
-                 tabName = "idksubmenu",
-                 menuSubItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
-                             newtab = T, 
-                             text = "Yeah we got submenus too"))
+                 icon = icon("chart-line"))
       )
       
     }
     
   })
   
-  observeEvent(input$sidebarItemExpanded == "idksubmenu",
-               {insertUI(where = "afterEnd",
-                         HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay style="display:none;"></audio>'),
-                         selector = "#start_game")}, ignoreNULL = T, ignoreInit = T)
-  
 
-  #Change the html of an icon
-  # html(id = "one_point", 
-  #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
-  # )
-  
-  
   
   
     
