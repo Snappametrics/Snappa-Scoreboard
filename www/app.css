@@ -60,6 +60,13 @@
     overflow: auto;
 }
 
+.well {
+    margin-top: 2vh;
+    padding-top: 2vh;
+    padding-bottom:5vh;
+    opacity: 0.9;
+}
+
 
 
 
