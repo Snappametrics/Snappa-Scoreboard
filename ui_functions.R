@@ -1482,6 +1482,20 @@ game_summary_plot = function(player_stats, players, scores, game){
 
 
 snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
+options(reactable.theme = reactableTheme(
+  color = "gray20",
+  backgroundColor = snappa_pal[1],
+  borderColor = "#DEDDDD")
+)
+
+library(htmltools)
+
+# Render a bar chart with a label on the left
+bar_chart <- function(label, width = "100%", height = "14px", fill = "#00bfc4", background = NULL) {
+  bar <- div(style = list(background = fill, width = width, height = height))
+  chart <- div(style = list(flexGrow = 1, marginLeft = "6px", background = background), bar)
+  div(style = list(display = "flex", alignItems = "center"), label, chart)
+}
 
 theme_snappa = function(title_family = "Inter SemiBold",
                         text_family = "Inter",
