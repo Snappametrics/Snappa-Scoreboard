@@ -122,12 +122,11 @@ team_input_ui = function(team, player_choices){
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
-  well_panel_style = "margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92;"
-  
+
   column(4, align = "center",
          
          wellPanel(
-           style = paste(well_panel_style, "background:", team_colour),
+           style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
            # Player 1
