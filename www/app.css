@@ -176,6 +176,8 @@ label[for='foot'] {
     min-width: 25vw;
 }
 
+/* Buttons */
+
 
 .bttn-unite.bttn-md { 
     font-size: 200%;
@@ -247,6 +249,16 @@ label.control-label[for='score'] {
 .awesome-checkbox {
     margin-top: 2.5vh;
     margin-bottom: 2.5vh;
+}
+
+.btn {
+    padding: .25vh 1.5vh;
+    background: var(--blue);
+    border: none;
+}
+
+.description-block {
+    height: 8vh;
 }
 
 

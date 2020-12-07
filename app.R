@@ -547,11 +547,7 @@ ui <- dashboardPagePlus(
 
                 )
               ),
-              fluidRow(
-                box(width = 12, status = "success",
-                  uiOutput("player_stats_headers")
-                )
-              ),
+              uiOutput("player_stats_headers"),
               # Form plot
               boxPlus(title = "Player Form",
                       collapsible = T,
@@ -702,9 +698,7 @@ server <- function(input, output, session) {
                  tabName = "edit_teams",
                  icon = icon("edit")),
         menuItem("Win Probabilities", tabName = "markov_model_summary",
-                 icon = icon("flask")),
-        menuItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
-                 text = "More stuff than we can add", newtab = T)
+                 icon = icon("flask"))
       )
       
     } else {
@@ -716,30 +710,14 @@ server <- function(input, output, session) {
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
         menuItem("Player Stats", tabName = "player_stats",
-                 icon = icon("chart-line")),
-        menuItem(text = "More stuff than we can add", 
-                 tabName = "idksubmenu",
-                 menuSubItem(href = "https://rinterface.com/shiny/shinydashboardPlus/", 
-                             newtab = T, 
-                             text = "Yeah we got submenus too"))
+                 icon = icon("chart-line"))
       )
       
     }
     
   })
   
-  observeEvent(input$sidebarItemExpanded == "idksubmenu",
-               {insertUI(where = "afterEnd",
-                         HTML('<audio src="sploosh.mp3" type="audio/mp3" autoplay style="display:none;"></audio>'),
-                         selector = "#start_game")}, ignoreNULL = T, ignoreInit = T)
-  
 
-  #Change the html of an icon
-  # html(id = "one_point", 
-  #      html = '<img src="off_the_table.png" alt="off_table" class = "center">'
-  # )
-  
-  
   
   
     
@@ -1139,10 +1117,10 @@ server <- function(input, output, session) {
     recent_games = filter(player_stats_tbl, player_id == input$player_select) %>% 
       mutate(avg_points = mean(!!sym(input$stat_select)),
              max_points = max(!!sym(input$stat_select))) %>% 
-      arrange(game_id) %>% 
       when(input$sample_select != "All" ~ (.) %>% 
              slice_max(order_by = game_id, n = as.numeric(input$sample_select)), 
            ~ (.)) %>% 
+      arrange(game_id) %>% 
       mutate(game_num = row_number()) %>% 
       inner_join(select(player_game_stats(), player_id, game_id, won_game))
     
@@ -1191,11 +1169,14 @@ server <- function(input, output, session) {
   
   # Player form plot
   output$player_form = renderPlot({
+    
+    stat_name = str_to_title(str_replace(input$stat_select, "_", " "))
 
     # X axis title conditional on number of games chosen
-    x_title = if_else(input$sample_select == "All", 
-                      str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
-                      paste("Last", input$sample_select, "games"))
+    plot_title = str_c(stat_name, ": ", 
+                    if_else(input$sample_select == "All", 
+                            str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
+                    paste("Last", input$sample_select, "games")))
     
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
@@ -1212,7 +1193,7 @@ server <- function(input, output, session) {
     
     if(input$stat_select == "toss_efficiency"){
       plot = plot +
-        labs(x = x_title, y = "Toss Efficiency", 
+        labs(x = expression(More ~ Recent ~ Games %->% ""), y = "Toss Efficiency", 
              caption = str_c("- - - -  Career Avg. (", 
                              scales::percent(unique(pluck(player_form_data(), "data")[["avg_points"]])), ")"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), 
@@ -1222,7 +1203,8 @@ server <- function(input, output, session) {
       
     } else {
       plot = plot +
-        labs(x = x_title, y = "Points", 
+        labs(x = expression(More ~ Recent ~ Games %->% ""), y = stat_name, 
+             title = plot_title,
              caption = str_c("- - - -  Career Avg. (", 
                              scales::comma(unique(pluck(player_form_data(), "data")[["avg_points"]]), accuracy = 1), " points)"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
@@ -1231,22 +1213,25 @@ server <- function(input, output, session) {
     plot+
       theme_snappa()+
       theme(axis.text.x = element_blank(),
-            legend.position = "bottom")
+            legend.position = "bottom",
+            legend.key.height = unit(.25, "cm"))
     
   })
   
   output$player_stats_headers = renderUI({
     player_stats = dbGetQuery(con, 
-                              sql(str_c("SELECT games_played, win_pct, sinks FROM basic_career_stats ", 
+                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks FROM basic_career_stats ", 
                                         "WHERE player_id = ", input$player_select))
                               )
-    
+
+    # stat_list = 
     fluidRow(
+      box(width = 6, status = "success", title = "General Stats", collapsible = T,
       # Games Played
       column(
         width = 4,
         descriptionBlock(
-          header = player_stats$games_played, 
+          header = player_stats$games_played,
           text = "GAMES PLAYED"
         )
       ),
@@ -1254,7 +1239,7 @@ server <- function(input, output, session) {
       column(
         width = 4,
         descriptionBlock(
-          header = scales::percent(player_stats$win_pct), 
+          header = scales::percent(player_stats$win_pct),
           text = "WIN PERCENTAGE"
         )
       ),
@@ -1262,10 +1247,30 @@ server <- function(input, output, session) {
       column(
         width = 4,
         descriptionBlock(
-          header = player_stats$sinks, 
-          text = "LIFETIME SINKS"
+          header = player_stats$sinks,
+          text = "SINK(S)"
         )
       )
+      ),
+      box(width = 6, status = "success", title = "Paddle Stats", collapsible = T,
+      # Paddle points
+      column(
+        width = 6,
+        descriptionBlock(
+          header = player_stats$paddle_points,
+          text = "PADDLE POINTS"
+        )
+      ),
+      # Paddle Sinks
+      column(
+        width = 6,
+        descriptionBlock(
+          header = player_stats$paddle_sinks,
+          text = "PADDLE SINK(S)"
+        )
+      )
+      
+    )
     )
 
   })
