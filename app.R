@@ -714,7 +714,7 @@ server <- function(input, output, session) {
         menuItem("Player Input", 
                  tabName = "player_input", 
                  icon = icon("users"), selected = T),
-        menuItem("Leaderboard", 
+        menuItem("Career Stats", 
                  tabName = "career_stats", 
                  icon = icon("bar-chart")),
         menuItem("Player Stats", tabName = "player_stats",
