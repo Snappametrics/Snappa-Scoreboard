@@ -425,8 +425,7 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "player_input",
               fluidRow(
                 team_input_ui("A", 
-                              player_choices = inner_join(count(player_stats_tbl, player_id, sort = T), players_tbl, by = "player_id") %>% 
-                                pull(player_name)),
+                              player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]),
                 
                 # Column 2 - empty
                 column(4,  align = "center",
@@ -434,7 +433,7 @@ ui <- dashboardPagePlus(
                          inputId = "arena_select",
                          label = "Arena",
                          selected = "Greenhaus",
-                         choices = c("Greenhaus", "Ventura"),
+                         choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo"),
                          options = pickerOptions(
                            mobile = T,
                            showTick = T
@@ -456,8 +455,7 @@ ui <- dashboardPagePlus(
                 
                 # Column 3 - Team B
                 team_input_ui("B", 
-                              player_choices = inner_join(count(player_stats_tbl, player_id, sort = T), players_tbl, by = "player_id") %>% 
-                                pull(player_name))
+                              player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1])
               )
               ),
 
