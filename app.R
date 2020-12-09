@@ -1076,7 +1076,7 @@ server <- function(input, output, session) {
   
   output$summary_plot = renderPlot({
     game_summary_plot(player_stats = vals$player_stats_db,
-                      players = vals$players_db, 
+                      players = vals$players_tbl(), 
                       scores = vals$scores_db,
                       game = vals$game_id)
   })
@@ -1148,8 +1148,8 @@ server <- function(input, output, session) {
   })
   
   player_game_stats = reactive({
-    inner_join(vals$players_db, 
-               dbGetQuery(con, "SELECT * FROM player_stats"), 
+    inner_join(vals$players_tbl(), 
+               vals$player_stats_tbl(), 
                by = "player_id") %>%
       inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
                  by = "game_id") %>% 
@@ -1160,7 +1160,7 @@ server <- function(input, output, session) {
   
   # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
-    recent_games = filter(player_stats_tbl, player_id == input$player_select) %>% 
+    recent_games = filter(vals$player_stats_tbl(), player_id == input$player_select) %>% 
       mutate(avg_points = mean(!!sym(input$stat_select)),
              max_points = max(!!sym(input$stat_select))) %>% 
       when(input$sample_select != "All" ~ (.) %>% 
@@ -1520,7 +1520,7 @@ output$simulation_overlap =
   # For debugging
   
   output$db_output_players = renderTable({
-    vals$players_db
+    vals$players_tbl()
   })
   output$db_output_scores = renderTable({
     vals$scores_db
@@ -1538,11 +1538,11 @@ output$simulation_overlap =
   
 # # Generates outputs for the edit teams page
 output$edit_team_A <- renderUI({
-  tagList(team_edit_ui("A", pull(players_tbl, player_name), active_player_inputs()))
+  tagList(team_edit_ui("A", pull(vals$players_tbl(), player_name), active_player_inputs()))
 })
 
 output$edit_team_B <- renderUI({
-   tagList(team_edit_ui("B", pull(players_tbl, player_name), active_player_inputs()))
+   tagList(team_edit_ui("B", pull(vals$players_tbl(), player_name), active_player_inputs()))
 })
     
 
@@ -1722,13 +1722,7 @@ observe({
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
-      if(!(die_thrower %in% vals$players_db$player_name)){
-        
-        # Add a row to the players table with the new player's name and new ID
-        vals$players_db = bind_rows(vals$players_db,
-                                 tibble(
-                                   player_id = vals$new_player_id,
-                                   player_name = die_thrower))
+      if(!(die_thrower %in% vals$players_tbl()$player_name)){
         
         # Update the players database right here with the player name
         
@@ -2298,7 +2292,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$players_tbl(), player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
       shooting_team_lgl = all(str_detect(round_num(), "A"), scorers_team == "A") # Are they on team A & did they score for team A?
@@ -2471,7 +2465,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$players_db, player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$players_tbl(), player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
