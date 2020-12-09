@@ -2823,16 +2823,16 @@ observeEvent(input$add_player_A3, {
     
     # 2. Reset player inputs
     walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
-         function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(players_tbl, player_name)), 
+         function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(vals$players_tbl(), player_name)), 
                                            options = list(create = TRUE)))
     
     # 3. Reset reactive values
-    vals$game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5)
-    vals$player_stats_db = player_stats_tbl %>% slice(0)
-    vals$players_db = dbGetQuery(con, "SELECT * FROM players")
-    vals$scores_db = scores_tbl %>% slice(0)
-    vals$score_id = as.integer(0)
-    vals$shot_num = as.integer(1)
+    # vals$game_stats_db = game_stats_tbl() %>% slice(0) %>% select(1:5)
+    # vals$player_stats_db = player_stats_tbl() %>% slice(0)
+    # vals$players_db = dbGetQuery(con, "SELECT * FROM players")
+    # vals$scores_db = scores_tbl() %>% slice(0)
+    # vals$score_id = as.integer(0)
+    # vals$shot_num = as.integer(1)
     
 
     
