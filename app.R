@@ -1089,11 +1089,11 @@ server <- function(input, output, session) {
 
   output$team_a_summary = render_gt({
     make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = player_stats_tbl, 
+                       player_stats = vals$player_stats_tbl(),
                        neers = snappaneers(), 
                        team_name = "A", 
                        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = scores_tbl) %>%
+                       past_scores = vals$scores_tbl()) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
                        team = "A",
@@ -1102,11 +1102,11 @@ server <- function(input, output, session) {
   
   output$team_b_summary = render_gt({
     make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = player_stats_tbl, 
+                       player_stats = vals$player_stats_tbl(),
                        neers = snappaneers(), 
                        team_name = "B", 
                        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = scores_tbl) %>%
+                       past_scores = vals$scores_tbl()) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
                        team = "B",
