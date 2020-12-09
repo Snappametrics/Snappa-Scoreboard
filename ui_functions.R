@@ -885,58 +885,12 @@ team_summary_tab = function(df, game_over, score_difference, team){
 }
 
 
-leaderboard_table = function(players, player_stats, game_stats){
-  # Join players, player_stats, and game_stats
-  tab_df = inner_join(players, player_stats, by = "player_id") %>%
-    inner_join(game_stats, by = "game_id") %>% 
-    # Identify which games were won
-    mutate(winning = if_else(points_a > points_b, "A", "B"),
-           won_game = (team == winning)) %>% 
-    select(-player_id) %>% 
-    # Calculate leaderboard
-    group_by(player_name) %>% 
-    summarise(
-      games_played = n(),
-      win_pct = sum(won_game, na.rm=T)/games_played,
-      points_per_game = mean(total_points),
-      total_points = sum(total_points),
-      offensive_points = sum(off_ppr*shots),
-      defensive_points = sum(def_ppr*shots),
-      ones = sum(ones),
-      twos = sum(twos),
-      threes = sum(threes),
-      paddle_points = sum(paddle_points),
-      clink_points = sum(clink_points),
-      total_shots = sum(shots),
-      off_ppg = mean(off_ppr*shots),
-      def_ppg = mean(def_ppr*shots),
-      toss_efficiency = weighted.mean(toss_efficiency, w = shots)
-    ) %>% 
-    ungroup() %>% 
-    # Remove any NAs
-    filter(rowAny(
-      across(
-        .cols = everything(),
-        .fns = ~ !is.na(.x)
-      )
-    ))  %>% 
-    # Before ranking players according to total score, first sort them by games played
-    # (this prevents players from ending up on the wrong side of the dividing line due
-    #  to having less points than some who should be below)
-    mutate(played_5_games = (games_played >= 5)) %>% 
-    arrange(-played_5_games, -total_points) %>% 
-    mutate(rank = 1:n()) %>% 
-    arrange(rank) %>% 
-    select(rank, player_name, 
-           games_played, win_pct, 
-           points_per_game, off_ppg:toss_efficiency)
+leaderboard_table = function(career_stats_data, dividing_line){
 
-  dividing_line = tab_df %>% filter(games_played < 5) %>% pull(rank) %>% min()
-  
-  stats_eligible = tab_df %>% 
+  stats_eligible = career_stats_data %>% 
     filter(rank < dividing_line)
   
-  tab_df %>% 
+  career_stats_data %>% 
     gt(., id = "leaderboard") %>% 
     tab_header(title = "Snappaneers Leaderboard", 
                subtitle = "The Deadliest Die-throwers in all the land.") %>% 

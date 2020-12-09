@@ -511,7 +511,7 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "career_stats",
               boxPlus(width = 12,
                     style = str_c("background:", snappa_pal[1]), align = "center",
-                                 gt_output("career_stats_table")
+                                 gt_output("leaderboard")
                 ),
                 boxPlus(width = 12,
                     style = str_c("background:", snappa_pal[1]), align = "center",
@@ -858,14 +858,14 @@ server <- function(input, output, session) {
     ) %>% 
       # Remove empty player inputs
       filter(player_name != "") %>% 
-      left_join(vals$players_db, by = "player_name") %>% 
+      left_join(vals$players_tbl(), by = "player_name") %>% 
       # Add shot count
       add_shot_count(shot_num = vals$shot_num)
   })
   
   # Vector of players, with current players removed
   current_choices = reactive({
-    inner_join(count(player_stats_tbl, player_id, sort = T), players_tbl, by = "player_id") %>% 
+    dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
     anti_join(., snappaneers(), by = "player_name") %>% 
       pull(player_name)
   })
@@ -873,6 +873,20 @@ server <- function(input, output, session) {
   # Length of active player inputs
   num_players = reactive({
     length(active_player_inputs()[active_player_inputs() != ""])
+  })
+  
+  
+  output$leaderboard = render_gt({
+   aggregated_data = vals$career_stats_tbl() %>% 
+      mutate(rank = 1:n()) %>% 
+      arrange(rank) %>% 
+      select(rank, player_name, 
+             games_played, win_pct, 
+             points_per_game, off_ppg:toss_efficiency)
+    
+    dividing_line = aggregated_data %>% filter(games_played < 5) %>% pull(rank) %>% min()
+    
+    leaderboard_table(aggregated_data, dividing_line = dividing_line)
   })
   
   
@@ -1122,15 +1136,7 @@ server <- function(input, output, session) {
 
 # Stats Outputs --------------------------------------------------------------
 
-  output$career_stats_table = render_gt({
-    ps_cols = c("game_id", "player_id", "team", "shots", "total_points", "ones", "twos", "threes", "paddle_points",
-                "clink_points", "off_ppr", "def_ppr", "toss_efficiency")
-    leaderboard_table(players = vals$players_db,
-                      player_stats = dbGetQuery(con, str_c("SELECT ", str_c(ps_cols, collapse = ", "), " FROM player_stats")),
-                      game_stats = dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"))
-      
-  })
-  
+
   output$scoring_heatmap = renderPlot({
     score_prog_plot
   })
