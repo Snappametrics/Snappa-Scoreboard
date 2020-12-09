@@ -754,36 +754,36 @@ server <- function(input, output, session) {
     players_tbl = reactivePoll(
       intervalMillis = 1000*60,
       session = session,
-      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
-      valueFunc = function() {dbGetQuery(con, "SELECT * FROM players")}
+      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM players"))}
     ),
     
     scores_tbl = reactivePoll(
       intervalMillis = 1000*60,
       session = session,
-      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
-      valueFunc = function() {dbGetQuery(con, "SELECT * FROM scores")}
+      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM scores WHERE game_id IN (SELECT game_id FROM game_stats WHERE game_complete is true)"))}
       ),
     
     player_stats_tbl = reactivePoll(
       intervalMillis = 1000*60,
       session = session,
-      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
-      valueFunc = function() {dbGetQuery(con, "SELECT * FROM player_stats")}
+      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM player_stats WHERE game_id IN (SELECT game_id FROM game_stats WHERE game_complete is true)"))}
       ),
     
     game_stats_tbl = reactivePoll(
       intervalMillis = 1000*60,
       session = session,
-      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
-      valueFunc = function() {dbGetQuery(con, "SELECT * FROM game_stats")}
+      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM game_stats WHERE game_id IN (SELECT game_id FROM game_stats WHERE game_complete is true)"))}
       ),
     
     career_stats_tbl = reactivePoll(
       intervalMillis = 1000*60,
       session = session,
-      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
-      valueFunc = function() {dbGetQuery(con, "SELECT * FROM career_stats")}
+      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM career_stats"))}
     ),
 
     # dataframe of the players and their teams
