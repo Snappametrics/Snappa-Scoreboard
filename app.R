@@ -1789,7 +1789,7 @@ observe({
       # Set the score outputs and shot number to 0
       vals$current_scores$team_A = 0
       vals$current_scores$team_B = 0
-      vals$scores_db = slice(scores_tbl, 0)
+
       vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
         as.integer()
       
