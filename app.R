@@ -544,12 +544,7 @@ ui <- dashboardPagePlus(
                                      choices = c("Total Points" = "total_points", 
                                                  "Paddle Points" = "paddle_points", 
                                                  "Toss Efficiency" = "toss_efficiency"), 
-                                     selected = "total_points")),
-                  column(width = 3,
-                         # Sample size selection
-                         selectInput("sample_select", label = "Last __ games", selectize = F,
-                                     choices = c(5, 10, 20, "All"), 
-                                     selected = 5))
+                                     selected = "total_points"))
 
                 )
               ),
@@ -559,6 +554,13 @@ ui <- dashboardPagePlus(
                       collapsible = T,
                       closable = F,
                       status = "primary",
+                      fluidRow(
+                        column(width = 5,
+                               # Sample size selection
+                               selectInput("sample_select", label = "Last ___ games", selectize = F, width = "50%",
+                                           choices = c(5, 10, 20, "All"), 
+                                           selected = 5))
+                      ),
                 plotOutput("player_form")
               ),
               # Top Teammates
@@ -566,7 +568,8 @@ ui <- dashboardPagePlus(
                       collapsible = T,
                       closable = F,
                       status = "primary",
-                      gt_output("teammate_tab")
+                      # gt_output("teammate_tab")
+                      reactableOutput("teammate_tab_rt")
               )
               ),
 
@@ -1190,6 +1193,49 @@ server <- function(input, output, session) {
                  "SELECT * FROM teammate_stats ",
                  "WHERE player_id = ", input$player_select
                )))
+  })
+  
+  output$teammate_tab_rt = renderReactable({
+    teammate_stats() %>% 
+      select(-1:-2) %>% 
+      reactable(
+        defaultSorted = "win_pct",
+        columns = list(
+          teammate = colDef(
+            name = "Teammate"
+          ),
+          games_played = colDef(
+            name = "Games Played",
+            defaultSortOrder = "desc"
+          ),
+          win_pct = colDef(
+            name = "Win %",
+            defaultSortOrder = "desc",
+            # Render the bar charts using a custom cell render function
+            cell = function(value) {
+              # Format as percentages with 1 decimal place
+              value <- str_c(format(value* 100, nsmall = 1), "%")
+              # Fix width here to align single and double-digit percentages
+              value <- format(value, width = 6, justify = "right")
+              bar_chart(value, width = value, fill = snappa_pal[5], background = "#DEDDDD")
+            },
+            # And left-align the columns
+            align = "left"
+          ),
+          avg_points = colDef(
+            name = "Avg. Points",
+            defaultSortOrder = "desc",
+            format = colFormat(digits = 2)
+          ),
+          avg_paddle_points = colDef(
+            name = "Avg. Paddle Points",
+            defaultSortOrder = "desc",
+            format = colFormat(digits = 2)
+          )
+        ),
+        compact = T
+      )
+      
   })
   
   output$teammate_tab = render_gt({
