@@ -729,6 +729,11 @@ server <- function(input, output, session) {
     
 
 # Reactive Values Object ---------------------------------------------------------
+  
+  # reactivePoll watches for changes in the value of checkFunc at the interval
+  #   when it notices changes, it updates using valueFunc
+  # This checkFunc should update our tables when a game is complete
+  
 
 
   
@@ -740,11 +745,46 @@ server <- function(input, output, session) {
     score_id = as.integer(0),
     shot_num = as.integer(1),
     
-    # DB Tables
-    game_stats_db = game_stats_tbl %>% slice(0) %>% select(1:5),
-    player_stats_db = player_stats_tbl %>% slice(0),
-    players_db = players_tbl,
-    scores_db = scores_tbl %>% slice(0),
+    # Current game Tables
+    game_stats_db = tbl_templates$game_stats %>% select(1:5),
+    player_stats_db = tbl_templates$player_stats,
+    scores_db = tbl_templates$scores,
+    
+    # Live data
+    players_tbl = reactivePoll(
+      intervalMillis = 1000*60,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
+      valueFunc = function() {dbGetQuery(con, "SELECT * FROM players")}
+    ),
+    
+    scores_tbl = reactivePoll(
+      intervalMillis = 1000*60,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
+      valueFunc = function() {dbGetQuery(con, "SELECT * FROM scores")}
+      ),
+    
+    player_stats_tbl = reactivePoll(
+      intervalMillis = 1000*60,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
+      valueFunc = function() {dbGetQuery(con, "SELECT * FROM player_stats")}
+      ),
+    
+    game_stats_tbl = reactivePoll(
+      intervalMillis = 1000*60,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
+      valueFunc = function() {dbGetQuery(con, "SELECT * FROM game_stats")}
+      ),
+    
+    career_stats_tbl = reactivePoll(
+      intervalMillis = 1000*60,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, "SELECT COUNT(*) FROM game_stats where game_complete is true")},
+      valueFunc = function() {dbGetQuery(con, "SELECT * FROM career_stats")}
+    ),
 
     # dataframe of the players and their teams
     # Current Scores
