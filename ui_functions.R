@@ -884,8 +884,52 @@ team_summary_tab = function(df, game_over, score_difference, team){
     tab_theme_snappa()
 }
 
-
-leaderboard_table = function(career_stats_data, dividing_line){
+leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
+  stats_eligible = career_stats_data %>% 
+    filter(rank < dividing_line)
+  
+  career_stats_data %>% 
+    reactable(
+      defaultSorted = "rank",
+      defaultPageSize = 20,
+      # compact = T, 
+      width = "100%",
+      columns = list(
+        rank = colDef("", 
+                      minWidth = 40,
+                      maxWidth = 80), 
+        player_name = colDef("Player", 
+                             minWidth = 100,
+                             maxWidth = 200),
+        games_played = colDef("Games Played", 
+                              minWidth = 70,
+                              maxWidth = 150),
+        win_pct = colDef("Win %", 
+                         format = colFormat(percent = T, digits = 1), 
+                         minWidth = 80,
+                         maxWidth = 150), 
+        points_per_game = colDef("Points per Game\n(PPG)", 
+                                 format = colFormat(digits = 2), 
+                                 minWidth = 90,
+                                 maxWidth = 200),
+        off_ppg = colDef("Offensive PPG", 
+                         format = colFormat(digits = 2),
+                         minWidth = 90,
+                         maxWidth = 200),
+        def_ppg = colDef("Defensive PPG", 
+                         format = colFormat(digits = 2), 
+                         minWidth = 90,
+                         maxWidth = 200),
+        toss_efficiency = colDef("Toss Efficiency", 
+                                 format = colFormat(digits = 1, percent = T), 
+                                 minWidth = 90,
+                                 maxWidth = 200)
+      ),
+      class = "snappaneers-tbl"
+    )
+  
+}
+leaderboard_table = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
 
   stats_eligible = career_stats_data %>% 
     filter(rank < dividing_line)
