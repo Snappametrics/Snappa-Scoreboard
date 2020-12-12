@@ -565,12 +565,18 @@ ui <- dashboardPagePlus(
                       collapsible = T,
                       closable = F,
                       status = "primary",
-                      fluidRow(
+                      fluidRow(class = "last-n-games",
+                        column(width = 1, style = "padding-right:3vw;",
+                               tags$span("Last ", style = "font-weight:600;")
+                               ),
                         column(width = 5,
                                # Sample size selection
-                               selectInput("sample_select", label = "Last ___ games", selectize = F, width = "50%",
+                               selectInput("sample_select", label = NULL, selectize = F, 
                                            choices = c(5, 10, 20, "All"), 
-                                           selected = 5))
+                                           selected = 5)),
+                        column(width = 1, style = "padding-left:0;",
+                               tags$span(" games", style = "font-weight:600;")
+                                         )
                       ),
                 plotOutput("player_form")
               ),
