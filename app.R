@@ -1278,33 +1278,11 @@ server <- function(input, output, session) {
       
   })
   
-  output$teammate_tab = render_gt({
-    teammate_stats() %>% 
-      gt() %>% 
-      tab_header(title = "Performance with _______") %>% 
-      cols_hide(vars(player_id, teammate_id)) %>% 
-      cols_label(teammate = "Teammate",
-                 games_played = "Games Played",
-                 win_pct = "Wins (%)",
-                 avg_points = "Avg. Points",
-                 avg_paddle_points = "Avg. Paddle Points") %>% 
-      fmt_number(
-        columns = starts_with("avg"),
-        decimals = 2
-      ) %>% 
-      fmt_percent(
-        columns = vars(win_pct),
-        decimals = 1
-      ) %>% 
-      # Styling
-      # Title
-      tab_style(
-        style = list(cell_text(align = "left", v_align = "bottom", weight = "bold", size = px(18))),
-        locations = cells_title(groups = "title")
-      )%>% 
-      tab_theme_snappa()
-  })
   
+  
+  
+  
+
   # Player form plot
   output$player_form = renderPlot({
     
