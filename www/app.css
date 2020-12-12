@@ -23,6 +23,9 @@
     --gray-4: rgba(8, 0, 26, 0.25);
     --gray-3: rgba(8, 0, 26, 0.08);
     --gray-2: rgba(8, 0, 26, 0.03);
+    
+    --font-sans-serif: "Inter", sans-serif;
+    --font-family-monospace: "Source Code Pro";
 }
 
 /* My CSS */
