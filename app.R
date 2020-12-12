@@ -1180,6 +1180,10 @@ server <- function(input, output, session) {
           "<p><span style='font-weight:500'>How many occurrences?</span>: ", freq))
   })
   
+  
+  
+  
+  
   player_game_stats = reactive({
     inner_join(vals$players_tbl(), 
                vals$player_stats_tbl(), 
@@ -1190,6 +1194,10 @@ server <- function(input, output, session) {
       mutate(winning = if_else(points_a > points_b, "A", "B"),
              won_game = (team == winning))
   })
+  
+  
+  
+  
   
   # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
@@ -1211,6 +1219,10 @@ server <- function(input, output, session) {
     
   })
   
+  
+  
+  
+  
   teammate_stats = reactive({
     dbGetQuery(con, 
                sql(str_c(
@@ -1218,6 +1230,10 @@ server <- function(input, output, session) {
                  "WHERE player_id = ", input$player_select
                )))
   })
+  
+  
+  
+  
   
   output$teammate_tab_rt = renderReactable({
     teammate_stats() %>% 
@@ -1339,6 +1355,10 @@ server <- function(input, output, session) {
             legend.key.height = unit(.25, "cm"))
     
   })
+  
+  
+  
+  
   
   output$player_stats_headers = renderUI({
     player_stats = dbGetQuery(con, 
