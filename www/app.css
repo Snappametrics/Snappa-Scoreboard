@@ -23,31 +23,32 @@
     --gray-4: rgba(8, 0, 26, 0.25);
     --gray-3: rgba(8, 0, 26, 0.08);
     --gray-2: rgba(8, 0, 26, 0.03);
+    
+    --font-sans-serif: "Inter", sans-serif;
+    --font-family-monospace: "Source Code Pro";
 }
 
 /* My CSS */
 
+.box {
+    background: #fafaf9;
+}
+
 /* General */
 
-.navbar-default, .navbar-brand, .navbar-nav>li>a {
-    color: white !important;
-    background-color: #e26a6a !important;
-    font-weight: 500;
-}
 
-.navbar-nav>li>a:hover {
-    outline-width: 2px;
-    outline-style: solid;
-    outline-offset: -2px;
-    z-index: 1;
-    font-weight: 600;
-}
 
 
 #shiny-notification-panel {
     background-color: var(--grey-bg);
-    width: 40vw;
-    height: 10vh;
+    min-width: max-content;
+    max-width: 35vw;
+    border: 2px solid var(--gray-4);
+    border-radius: 7px;
+}
+
+.shiny-notification-content-text {
+    min-width: 35vw;
 }
 
 .shiny-notification {
@@ -56,7 +57,17 @@
     font-size: 2.5rem;
     font-weight: 600;
     border: none;
-    text-align: right;
+}
+
+.content {
+    overflow: auto;
+}
+
+.well {
+    margin-top: 2vh;
+    padding-top: 2vh;
+    padding-bottom:5vh;
+    opacity: 0.9;
 }
 
 
@@ -80,6 +91,10 @@
     z-index:1;
 }
 
+.bootstrap-select .dropdown-toggle .filter-option {
+    text-align: center!important;
+}
+
 /* Scoreboard */
 
 #previous_round {
@@ -98,7 +113,7 @@
 }
 
 #A_score_button, #B_score_button {
-    font-size: 2.5rem;
+    font-size: 2.1rem;
     
 }
 
@@ -147,13 +162,14 @@ label[for='foot'] {
 }
 
 
-#start_game, #scorer, #paddle, #score {
-    font-size: 170%; 
+#start_game, #scorer, #paddle, #score, #clink, #foot {
+    font-size: 2rem; 
+    margin-bottom: 1.5vh;
 }
 
-.sw-dropdown {
+#game_summary, .sw-dropdown {
     display: inline-block;
-    margin-top: -2vh;
+    margin-top: 1.5vh;
     margin-bottom: 2vh;
 }
 
@@ -165,6 +181,12 @@ label[for='foot'] {
 .sw-show.sw-dropdown-content {
     background-color: var(--grey-bg);
 }
+
+.dropdown-menu {
+    min-width: 25vw;
+}
+
+/* Buttons */
 
 
 .bttn-unite.bttn-md { 
@@ -191,12 +213,17 @@ label.control-label[for='score'] {
 }
 
 .selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
-    font-size: 2.75rem;
+    font-size: 2.5rem;
 }
 
 
 .selectize-dropdown-content {
     font-size: 3rem;
+}
+
+.selectize-dropdown {
+    bottom: 100% !important; 
+    top:auto!important;
 }
 
 .selectize-input.items.has-options.full.has-items {
@@ -229,11 +256,71 @@ label.control-label[for='score'] {
     transform: scale(2);
 }
 
-#game_summary .modal-dialog.modal-lg {
-    width: 90vw;
-    background-color: #f5f5f5;
+.awesome-checkbox {
+    margin-top: 2.5vh;
+    margin-bottom: 2.5vh;
 }
 
+.btn {
+    padding: .25vh 1.5vh;
+    background: var(--blue);
+    border: none;
+}
+
+.description-block {
+    height: 8vh;
+}
+
+.awesome-checkbox {
+    padding-left: 25px;
+}
+.awesome-checkbox label::before {
+    transform: translateY(3px);
+    left: -10px;
+    padding: 12px;
+}
+
+.form-group .shiny-input-container {
+    align-items: flex-start;
+}
+
+.last-n-games {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Styles for the table container, title, and subtitle */
+.top-snappaneers {
+  /* Center the table */
+  margin: 0 auto;
+  /* Reduce the table width */
+  font-family: var(--font-sans-serif), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 2vw;
+}
+
+.snappaneers-header {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.snappaneers-title {
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+}
+
+/* Styles for the table */
+.snappaneers-tbl {
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.snappaneers-tbl a {
+  color: inherit;
+}
 
 
 /* End my CSS */
@@ -241,26 +328,12 @@ label.control-label[for='score'] {
 body{
     background-color: #ffffff;
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232051e5' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    font-family: 'Inter', sans-serif;
-    color: var(--purpp);
+    font-family: var(--font-sans-serif);
     font-size: 16px;
     margin: 0;
     padding: 0;
 }
 
-header {
-    height: auto;
-    width: 100%;
-    background-color: white;
-    margin: 0;
-    padding: 8px 0px;
-    border-bottom: solid 1px var(--gray-2);
-    margin-bottom: 32px;
-    text-align: center;
-    position: fixed;
-    z-index: 1000;
-    top: 0;
-}
 
 h1 {
     height: auto !important;
@@ -450,7 +523,6 @@ input[type=radio]{
 
 .btn {
     padding: 8px 16px;
-    margin: 0px 0px 16px;
     font-size: 1em;
     font-weight: 500;
     border-radius: 10px;
@@ -547,6 +619,7 @@ input[type=radio]{
     and (min-device-width : 768px) 
     and (max-device-width : 1024px) 
     and (orientation : landscape) {
+        
     .h1, .h2, .h3, h1, h2, h3 {
         margin: 0;
     }
@@ -596,8 +669,19 @@ input[type=radio]{
         height: 500px;
     }
     
-    #finish_game, #new_game {
+    #finish_game, #new_game, #game_summary {
+        font-size: 1.7rem;
+        margin: 2vh 1vh;
+        padding: 1.4vh;
+    }
+    
+    .modal-dialog .modal-lg {
+        width: 95vw!important;
+    }
+    
+    #resume_yes, #resume_no {
         font-size: 2.5rem;
+        margin: 1vh;
     }
 
     

@@ -122,29 +122,91 @@ team_input_ui = function(team, player_choices){
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
+
   column(4, align = "center",
          
          wellPanel(
-           style = paste("opacity: 0.92; background:", team_colour),
+           style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
            # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', sample(player_choices)),  options = list(create = TRUE)),
+           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
+                          options = list(create = TRUE, hideSelected=T), width = "125%"),
            # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', sample(player_choices)), options = list(create = TRUE)),
+           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
+                          options = list(create = TRUE, hideSelected=T), width = "125%"),
            # Add Player 3 button
-           actionBttn(paste0("extra_player_", team, "3"), label = "+ Add Player", style = "unite", color = "danger"), 
+           actionBttn(paste0("extra_player_", team, "3"), 
+                      label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
            
            # CSS: Increase font size, change color to white, add top and bottom margins
-           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}",
-                                               player_inputs, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
          )
   )
 }
 
+
+team_edit_column = function(team){
+  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+  
+  # Because the ui elements here need to be dynamically generated, I generate them
+  # first and then pass it on to the ui nested in the column
+
+  column(4, align = "center",
+                wellPanel(
+                  style = paste("opacity: 0.92; background:", team_colour),
+                  # Header
+                  h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
+                  uiOutput(
+                    outputId = paste0("edit_team_", team)
+                  )
+                  
+                )
+        )
+}
+
+
+
+# This function creates the panels that are used in the add/edit process (the function above).
+# This function is called inside the renderUI for each team's add/edit page.
+
+team_edit_ui = function(team, player_choices, active_players){
+  # For styling
+  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+  
+  current_players = active_players[str_detect(names(active_players), team)]
+  add_player_number = length(current_players) + 1
+  
+  team_list = imap(current_players, ~{
+    tagList(
+      tags$style(type = "text/css", str_c("#edit_name_", team, str_sub(.y, -1), "-selectized ", "{color: white; margin-top:30px;margin-bottom:30px;} ",
+                                          "#edit_name_", team, str_sub(.y, -1), "{color: white; margin-top:30px;margin-bottom:30px;}")),
+      selectizeInput(paste0('edit_name_', team, str_sub(.y, -1)), paste0('Player ', str_sub(.y, -1)), c(`Player Name`='', player_choices), 
+                     selected = .x, options = list(create = TRUE)
+      ),
+      br()
+      
+    )
+  })
+  if (add_player_number < 5) {
+    team_list[[add_player_number]] = tagList(
+      actionBttn(paste0("edit_add_", team, add_player_number), label = "+ Add Player", style = "unite", color = "danger")
+    )
+  } else {
+    invisible()
+  }
+  
+  return(team_list)
+}
+
+
 team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   
   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+  
+  well_panel_style = "margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92; background:"
+  h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
+  
 
   div(id = "ScoreboardUI", 
            
@@ -153,10 +215,10 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                      
                      wellPanel(
-                       style = paste("opacity: 0.92; background:", team_colours[[left_team]]),
+                       style = paste(well_panel_style, team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
-                       h1(paste("Team", toupper(left_team)), style = "color: white; font-size: 7rem;"),
+                       h1(paste("Team", toupper(left_team)), style = h1_style),
                        # Score
                        h2(textOutput(paste0("score_", left_team))),
                        # Score button
@@ -173,10 +235,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
               ), 
               # Round
               column(width = 4, align = "center",
-                     # materialSwitch(
-                     #   inputId = "switch_sides",label = "Switch sides", icon = icon("refresh"), 
-                     # ),
-                     h1("Round", style = "font-size: 8rem;"),
+                     h1("Round", style = "font-size: 5rem; font-weight: 600;"),
                      uiOutput("round_num"),
                      uiOutput("round_control_buttons")
 
@@ -185,10 +244,9 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                     
                     wellPanel(
-                      style = paste("opacity: 0.92; background:", team_colours[[right_team]]),
-                      # uiOutput("active_die_a"),
+                      style = paste(well_panel_style, team_colours[[right_team]]),
                       # Header
-                      h1(paste("Team", toupper(right_team)), style = "color: white; font-size: 7rem;"),
+                      h1(paste("Team", toupper(right_team)), style = h1_style),
                       # Score
                       h2(textOutput(paste0("score_", right_team))),
                       # Score button
@@ -208,31 +266,44 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
 }
 
 # Function for producing extra player UI inputs
-extra_player_ui = function(player, player_choices){
+extra_player_ui = function(current_tab, player, player_choices){
   
   # Get the player's team
   player_team = str_extract(player, "[A-z]")
   
   # Get the player number
   player_num = as.numeric(str_extract(player, "[0-9]"))
-  div_id = paste0("add_remove_", player)
   
+  # Name the upcoming div based on which screen you're on
+  
+  if (current_tab == "start") {
+    div_id = paste0("add_remove_", player)
+    input_type = paste0("name_", player)
+    remove_type = paste0("remove_", player)
+    extra_type = paste0("extra_player_", player_team, player_num + 1)
+  } else {
+    div_id = paste0("edit_new_", player)
+    input_type = paste0("edit_name_", player)
+    remove_type = paste0("edit_remove_", player)
+    extra_type = paste0("edit_add_", player_team, player_num + 1)
+  }
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
+               actionBttn(inputId = remove_type,  label = "X", style = "jelly",
+                              color = "danger", size = "sm"),
                # Add extra player text input 
-               selectizeInput(inputId = paste0("name_", player), 
-                              label = paste('Player', player_num), c(`Player Name`='', sample(player_choices)), options = list(create = TRUE)),
+               selectizeInput(inputId = input_type, 
+                              label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
+
              # Add remove player button outside fluid row
-             actionBttn(
-               inputId = paste0("remove_", player),  label = "X", style = "jelly", color = "danger", size = "sm"),
              
              # CSS
-             tags$style(paste0("#add_remove_", player, " {margin-left:auto; margin-right:auto; position: relative;}")),
+             tags$style(paste0(div_id, " {margin-left:auto; margin-right:auto; position: relative;}")),
 
            # If the extra player is not the fourth on a team yet, add another add player button
            if(player_num < 4){
-             actionBttn(paste0("extra_player_", player_team, player_num+1), 
+             actionBttn(extra_type, 
                         label = "+ Add Player", style = "unite", color = "danger")
            } else{
              invisible()
@@ -241,14 +312,14 @@ extra_player_ui = function(player, player_choices){
   )
 }
 
-add_player_input = function(inputs, team, player, player_choices, session){
+add_player_input = function(current_tab, inputs, team, player, player_choices, session){
   
   
   # Insert extra player UI
   insertUI(
     selector = inputs,
     where = "afterEnd",
-    ui = extra_player_ui(paste0(team, player), player_choices)
+    ui = extra_player_ui(current_tab, paste0(team, player), player_choices)
   )
   
   # Remove add player button       
@@ -260,37 +331,61 @@ add_player_input = function(inputs, team, player, player_choices, session){
 
 
 
-remove_p3_input = function(team, session){
-  add_p3_button = paste0("#add_remove_", team, "3")
+remove_p3_input = function(current_tab, team, session){
+ 
+   if (current_tab == "start") {
+     
+    add_p3_button = paste0("#add_remove_", team, "3")
+    ui_name = paste0("extra_player_", team,"3")
+    selectize_name_3 =  paste0("name_", team, "3")
+    selectize_name_4 = paste0("name_", team, "4")
+    
+  }  else if (current_tab == "edit"){
+    
+    add_p3_button = paste0("#edit_new_", team, "3")
+    ui_name = paste0("edit_add_", team,"3")
+    selectize_name_3 =  paste0("edit_name_", team, "3")
+    selectize_name_4 = paste0("edit_name_", team, "4")
+  }
+    
   
-  insertUI(selector = add_p3_button,
-           where = "afterEnd",
-           ui = actionBttn(paste0("extra_player_", team,"3"), label = "+ Add Player", style = "unite", color = "danger")
-  )
+    insertUI(selector = add_p3_button,
+             where = "afterEnd",
+             ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
+    )
+    
+    
+    removeUI(selector = add_p3_button)
+    
+    updateSelectizeInput(session, selectize_name_3, selected = character(0))
+    updateSelectizeInput(session, selectize_name_4, selected = character(0))
   
-  
-  removeUI(selector = add_p3_button)
-  
-  updateSelectizeInput(session, paste0("name_", team, "3"), selected = character(0))
-  updateSelectizeInput(session, paste0("name_", team, "4"), selected = character(0))
 }
 
 
 
-remove_p4_input = function(team, session){
-  
-  add_p4_button = paste0("#add_remove_", team, "4")
+remove_p4_input = function(current_tab, team, session){
+  if (current_tab == "start") {
+    add_p4_button = paste0("#add_remove_", team, "4")
+    ui_name = paste0("extra_player_", team, "4")
+    selectize_name = paste0("name_", team, "4")
+  } else if (current_tab == "edit") {
+    add_p4_button = paste0("edit_new_", team, "4")
+    ui_name = paste0("edit_add_", team, "4")
+    selectize_name = paste0("edit_name_", team, "4")
+  }
+      
   # Insert add player button
   insertUI(selector = add_p4_button,
            where = "afterEnd",
-           ui = actionBttn(paste0("extra_player_", team, "4"), label = "+ Add Player", style = "unite", color = "danger")
+           ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
   )
   # Remove player text input
   removeUI(selector = add_p4_button)
   
   # Tells later checks to not worry about this
   # empty slot in active_player_names
-  updateSelectizeInput(session, paste0("name_", team, "4"), selected = character(0))
+  updateSelectizeInput(session, selectize_name, selected = character(0))
 }
 
 recent_scores_tab = function(scores_data){
@@ -395,240 +490,10 @@ glance_ui_game = function(game.id){
 }
 
 
+
+
 # Stats Output ------------------------------------------------------------
 
-snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
-
-theme_snappa = function(title_family = "Inter SemiBold",
-                        text_family = "Inter",
-                        base_size = 12, 
-                        text_color = "gray20",
-                        bg_color = snappa_pal[1], line_color = "grey",
-                        plot_margin = margin(20,20,20,20),
-                        plots_pane = FALSE,
-                        md = FALSE){
-
-  if (plots_pane == FALSE & md == FALSE) {
-    ggplot2::theme_minimal() +
-      ggplot2::theme(
-        text = element_text(family = text_family,
-                            size = base_size,
-                            color = text_color),
-        title = element_text(family = title_family,
-                             color = text_color),
-        line = element_line(color = "#DEDDDD"),
-        
-        plot.title = element_text(face = "bold",
-                                  size = base_size * 2,
-                                  lineheight = 1.2), 
-        plot.title.position = "plot",
-        plot.subtitle = element_text(size = base_size * 1.5,
-                                     lineheight = 1.1, 
-                                     family = text_family,
-                                     margin = margin(b=15)),
-        plot.margin = plot_margin,
-        plot.caption.position = "plot", 
-        plot.caption = element_text(hjust = 0, 
-                                    size = base_size * 1.25),
-        plot.background = element_rect(fill = bg_color,
-                                       color = bg_color),
-        
-        axis.text = element_text(size = base_size * 1.2),
-        axis.text.y.left = element_text(hjust = 0),
-        axis.title = element_text(size = base_size * 1.6,
-                                  hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color),
-        
-        legend.title = element_text(size = base_size * 1.3),
-        legend.text = element_text(size = base_size * 1.1)
-      )
-  } else if (plots_pane == FALSE & md == TRUE) {
-    ggplot2::theme_minimal() +
-      ggplot2::theme(
-        text = element_text(family = text_family,
-                            size = base_size,
-                            color = text_color),
-        title = ggtext::element_markdown(family = title_family,
-                                         color = text_color),
-        line = element_line(color = "#DEDDDD"),
-        
-        plot.title = ggtext::element_markdown(face = "bold",
-                                              size = base_size * 2,
-                                              lineheight = 1.2),
-        plot.title.position = "plot",
-        plot.subtitle = ggtext::element_markdown(size = base_size * 1.7,
-                                                 lineheight = 1.1, 
-                                                 family = text_family,
-                                                 margin = margin(b=15)),
-        plot.margin = plot_margin,
-        plot.caption.position = "plot",
-        plot.caption = ggtext::element_markdown(hjust = 0, 
-                                                size = base_size * 1.25),
-        plot.background = element_rect(fill = bg_color,
-                                       color = bg_color),
-        
-        axis.text = element_text(size = base_size * 1.2),
-        axis.text.y.left = element_text(hjust = 0),
-        axis.title = ggtext::element_markdown(size = base_size * 1.6,
-                                              hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color),
-        
-        legend.title = ggtext::element_markdown(size = base_size * 1.3),
-        legend.text = element_text(size = base_size * 1.1)
-      )
-  } else if (plots_pane == TRUE && md == TRUE) {
-    ggplot2::theme_minimal(base_size = base_size) +
-      ggplot2::theme(
-        text = element_text(family = text_family,
-                            color = text_color),
-        title = element_text(family = title_family),
-        line = element_line(color = "#DEDDDD"),
-        
-        plot.title = ggtext::element_markdown(face = "bold",
-                                              lineheight = 1.2),
-        plot.title.position = "plot",
-        plot.subtitle = ggtext::element_markdown(lineheight = 1.1, 
-                                                 family = text_family,
-                                                 margin = margin(b=15)),
-        plot.margin = plot_margin,
-        plot.caption.position = "plot",
-        plot.caption = ggtext::element_markdown(hjust = 0, 
-                                                size = base_size * 1.25),
-        plot.background = element_rect(fill = bg_color,
-                                       color = bg_color),
-        axis.text.y.left = element_text(hjust = 0),
-        axis.title = ggtext::element_markdown(hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color)
-      )
-  } else {
-    ggplot2::theme_minimal(base_size = base_size) +
-      ggplot2::theme(
-        text = element_text(family = text_family,
-                            color = text_color),
-        title = element_text(family = title_family),
-        line = element_line(color = "#DEDDDD"),
-        
-        plot.title = element_text(face = "bold",
-                                  lineheight = 1.2),
-        plot.title.position = "plot",
-        plot.subtitle = element_text(lineheight = 1.1, 
-                                     family = text_family,
-                                     margin = margin(b=15)),
-        plot.margin = plot_margin,
-        plot.caption.position = "plot",
-        plot.caption = element_text(hjust = 0, 
-                                    size = base_size * 1.25),
-        plot.background = element_rect(fill = bg_color,
-                                       color = bg_color),
-        axis.text.y.left = element_text(hjust = 0),
-        axis.title = element_text(hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_color)
-      )
-  }
-}
-
-tab_theme_snappa = function(data, 
-                     # Container
-                     container.width = pct(95), 
-                     container.height = pct(50), 
-                     container.overflow.x = NULL, 
-                     container.overflow.y = NULL, 
-                     # Table
-                     table.width = NULL, table.layout = NULL, table.align = NULL, 
-                     table.margin.left = NULL, table.margin.right = NULL, table.background.color = snappa_pal[1], 
-                     table.additional_css = NULL, table.font.names = NULL, table.font.size = NULL, 
-                     table.font.weight = NULL, table.font.style = NULL, table.font.color = NULL, 
-                     table.font.color.light = NULL, 
-                     table.border.top.style = "none",table.border.top.width = NULL, table.border.top.color = NULL, 
-                     table.border.right.style = "none", table.border.right.width = NULL,table.border.right.color = NULL, 
-                     table.border.bottom.style = "none",table.border.bottom.width = NULL, table.border.bottom.color = NULL, 
-                     table.border.left.style = "none", table.border.left.width = NULL,table.border.left.color = NULL, 
-                     # Heading
-                     heading.background.color = NULL, 
-                     heading.align = NULL, 
-                     heading.title.font.size = NULL, heading.title.font.weight = NULL, 
-                     heading.subtitle.font.size = NULL, heading.subtitle.font.weight = NULL, 
-                     heading.border.bottom.style =  "none", heading.border.bottom.width = NULL, heading.border.bottom.color = NULL, 
-                     heading.border.lr.style = "none", heading.border.lr.width = NULL, heading.border.lr.color = NULL, 
-                     # Column labels
-                     column_labels.background.color = NULL, 
-                     column_labels.font.size = NULL, column_labels.font.weight = NULL, 
-                     column_labels.text_transform = NULL, 
-                     column_labels.vlines.style = NULL, column_labels.vlines.width = NULL, column_labels.vlines.color = NULL,
-                     column_labels.border.top.style =  "none", column_labels.border.top.width = NULL, column_labels.border.top.color = NULL, 
-                     column_labels.border.bottom.style = "solid", column_labels.border.bottom.width = "3px", column_labels.border.bottom.color = "#7c7c7c", 
-                     column_labels.border.lr.style = "none", column_labels.border.lr.width = NULL, column_labels.border.lr.color = NULL, 
-                     column_labels.hidden = NULL, 
-                     # Row group
-                     row_group.background.color = NULL, 
-                     row_group.font.size = NULL, row_group.font.weight = NULL, 
-                     row_group.text_transform = NULL, row_group.padding = NULL, 
-                     row_group.border.top.style = NULL, row_group.border.top.width = NULL, 
-                     row_group.border.top.color = NULL, row_group.border.bottom.style = NULL, 
-                     row_group.border.bottom.width = NULL, row_group.border.bottom.color = NULL, 
-                     row_group.border.left.style = NULL, row_group.border.left.width = NULL, 
-                     row_group.border.left.color = NULL, row_group.border.right.style = NULL, 
-                     row_group.border.right.width = NULL, row_group.border.right.color = NULL, 
-                     # Table body
-                     table_body.hlines.style = NULL, table_body.hlines.width = NULL, 
-                     table_body.hlines.color = NULL, 
-                     table_body.vlines.style = NULL, 
-                     table_body.vlines.width = NULL, table_body.vlines.color = NULL, 
-                     table_body.border.top.style = NULL, table_body.border.top.width = NULL, table_body.border.top.color = "#DEDDDD", 
-                     table_body.border.bottom.style = NULL, table_body.border.bottom.width = NULL, table_body.border.bottom.color = "#DEDDDD", 
-                     # Stub
-                     stub.background.color = NULL, stub.font.size = NULL, stub.font.weight = NULL, 
-                     stub.text_transform = NULL, stub.border.style = NULL, stub.border.width = NULL, 
-                     stub.border.color = NULL, 
-                     data_row.padding = NULL, 
-                     # Summary row
-                     summary_row.background.color = NULL, 
-                     summary_row.text_transform = NULL, summary_row.padding = NULL, 
-                     summary_row.border.style = NULL, summary_row.border.width = NULL, 
-                     summary_row.border.color = NULL, 
-                     # Grand summary row
-                     grand_summary_row.background.color = NULL, 
-                     grand_summary_row.text_transform = NULL, grand_summary_row.padding = NULL, 
-                     grand_summary_row.border.style = NULL, grand_summary_row.border.width = NULL, 
-                     grand_summary_row.border.color = NULL, 
-                     # Footnotes
-                     footnotes.background.color = NULL, 
-                     footnotes.font.size = NULL, footnotes.padding = NULL, footnotes.border.bottom.style = NULL, 
-                     footnotes.border.bottom.width = NULL, footnotes.border.bottom.color = NULL, 
-                     footnotes.border.lr.style = NULL, footnotes.border.lr.width = NULL, 
-                     footnotes.border.lr.color = NULL, footnotes.sep = NULL, footnotes.marks = NULL, 
-                     # Source notes
-                     source_notes.background.color = NULL, source_notes.font.size = NULL, 
-                     source_notes.padding = NULL, source_notes.border.bottom.style = NULL, 
-                     source_notes.border.bottom.width = NULL, source_notes.border.bottom.color = NULL, 
-                     source_notes.border.lr.style = NULL, source_notes.border.lr.width = NULL, 
-                     source_notes.border.lr.color = NULL, 
-                     # Row striping
-                     row.striping.background_color = NULL, 
-                     row.striping.include_stub = NULL, row.striping.include_table_body = NULL){
-  gt:::stop_if_not_gt(data = data)
-  opts_df <- gt:::dt_options_get(data = data)
-  arg_names <- formals(tab_options) %>% names() %>% base::setdiff("data")
-  arg_vals <- mget(arg_names)
-  arg_vals <- arg_vals[!vapply(arg_vals, FUN = is.null, FUN.VALUE = logical(1))]
-  arg_vals <- arg_vals %>% gt:::set_super_options()
-  
-  new_df <- dplyr::tibble(parameter = names(arg_vals) %>% 
-                            gt:::tidy_gsub(".", "_", fixed = TRUE), value = unname(arg_vals)) %>%
-    dplyr::left_join(opts_df %>% 
-                       dplyr::select(parameter, type), by = "parameter") %>% 
-    dplyr::mutate(value = mapply(gt:::preprocess_tab_option, option = value, 
-                                 var_name = parameter, type = type, SIMPLIFY = FALSE)) %>% 
-    dplyr::select(-type)
-  
-  opts_df <- dplyr::bind_rows(new_df %>% 
-                                dplyr::inner_join(opts_df %>% 
-                                                    dplyr::select(-value), by = "parameter"), opts_df %>% 
-                                dplyr::anti_join(new_df, by = "parameter"))
-  
-  data <- gt:::dt_options_set(data = data, options = opts_df)
-  data
-}
 
 make_summary_table = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
   # Produce a team's performance summary and comparison to historical performance in equivalent games
@@ -662,7 +527,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # and opponent_team_size and merge it to player_stats to be used as a 
   
 
-  # Make a dataframe of team sizes
+  # Make a dataframe of team sizes in past games
   team_sizes = player_stats %>% 
     # Count team size for each game
     count(game_id, team, name = "team_size") %>% 
@@ -1019,59 +884,57 @@ team_summary_tab = function(df, game_over, score_difference, team){
     tab_theme_snappa()
 }
 
-
-leaderboard_table = function(players, player_stats, game_stats){
-  # Join players, player_stats, and game_stats
-  tab_df = inner_join(players, player_stats, by = "player_id") %>%
-    inner_join(game_stats, by = "game_id") %>% 
-    # Identify which games were won
-    mutate(winning = if_else(points_a > points_b, "A", "B"),
-           won_game = (team == winning)) %>% 
-    select(-player_id) %>% 
-    # Calculate leaderboard
-    group_by(player_name) %>% 
-    summarise(
-      games_played = n(),
-      win_pct = sum(won_game, na.rm=T)/games_played,
-      points_per_game = mean(total_points),
-      total_points = sum(total_points),
-      offensive_points = sum(off_ppr*shots),
-      defensive_points = sum(def_ppr*shots),
-      ones = sum(ones),
-      twos = sum(twos),
-      threes = sum(threes),
-      paddle_points = sum(paddle_points),
-      clink_points = sum(clink_points),
-      total_shots = sum(shots),
-      off_ppg = mean(off_ppr*shots),
-      def_ppg = mean(def_ppr*shots),
-      toss_efficiency = weighted.mean(toss_efficiency, w = shots)
-    ) %>% 
-    ungroup() %>% 
-    # Remove any NAs
-    filter(rowAny(
-      across(
-        .cols = everything(),
-        .fns = ~ !is.na(.x)
-      )
-    ))  %>% 
-    # Before ranking players according to total score, first sort them by games played
-    # (this prevents players from ending up on the wrong side of the dividing line due
-    #  to having less points than some who should be below)
-    mutate(played_5_games = (games_played >= 5)) %>% 
-    arrange(-played_5_games, -total_points) %>% 
-    mutate(rank = 1:n()) %>% 
-    arrange(rank) %>% 
-    select(rank, player_name, 
-           games_played, win_pct, 
-           points_per_game, off_ppg:toss_efficiency)
-
-  dividing_line = tab_df %>% filter(games_played < 5) %>% pull(rank) %>% min()
-  
-  stats_eligible = tab_df %>% 
+leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
+  stats_eligible = career_stats_data %>% 
     filter(rank < dividing_line)
   
-  tab_df %>% 
+  career_stats_data %>% 
+    reactable(
+      defaultSorted = "rank",
+      defaultPageSize = 20,
+      # compact = T, 
+      width = "100%",
+      columns = list(
+        rank = colDef("", 
+                      minWidth = 40,
+                      maxWidth = 80), 
+        player_name = colDef("Player", 
+                             minWidth = 100,
+                             maxWidth = 200),
+        games_played = colDef("Games Played", 
+                              minWidth = 70,
+                              maxWidth = 150),
+        win_pct = colDef("Win %", 
+                         format = colFormat(percent = T, digits = 1), 
+                         minWidth = 80,
+                         maxWidth = 150), 
+        points_per_game = colDef("Points per Game\n(PPG)", 
+                                 format = colFormat(digits = 2), 
+                                 minWidth = 90,
+                                 maxWidth = 200),
+        off_ppg = colDef("Offensive PPG", 
+                         format = colFormat(digits = 2),
+                         minWidth = 90,
+                         maxWidth = 200),
+        def_ppg = colDef("Defensive PPG", 
+                         format = colFormat(digits = 2), 
+                         minWidth = 90,
+                         maxWidth = 200),
+        toss_efficiency = colDef("Toss Efficiency", 
+                                 format = colFormat(digits = 1, percent = T), 
+                                 minWidth = 90,
+                                 maxWidth = 200)
+      ),
+      class = "snappaneers-tbl"
+    )
+  
+}
+leaderboard_table = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
+
+  stats_eligible = career_stats_data %>% 
+    filter(rank < dividing_line)
+  
+  career_stats_data %>% 
     gt(., id = "leaderboard") %>% 
     tab_header(title = "Snappaneers Leaderboard", 
                subtitle = "The Deadliest Die-throwers in all the land.") %>% 
@@ -1141,9 +1004,9 @@ leaderboard_table = function(players, player_stats, game_stats){
       vars(win_pct) ~ pct(14),
       vars(toss_efficiency, points_per_game, def_ppg, off_ppg) ~ pct(28)
     ) %>%
-    # Underline dope shit
+    # Highlight dope shit
     tab_style(
-      style = list(cell_text(weight = "bold", color = snappa_pal[2])),
+      style = list(cell_text(weight = "bold", color = highlight_colour)),
       locations = list(
         # Highest win %
         cells_body(
@@ -1225,6 +1088,210 @@ score_heatmap = function(df){
   
   
 }
+
+
+
+markov_summary_data = function(simulations){
+  # Answer the basic questions
+  # Who won more? What's their win rate?
+  wins = simulations %>% map_chr( function(element){
+    element$won
+  })
+  A_winrate = length(wins[wins == "A"])/length(wins)
+  B_winrate = 1 - A_winrate
+
+  # In the games where the winningest team won, what was the modal score?
+  winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
+                    "A",
+                    "B")
+  if (length(winners) == 2){
+    tie = TRUE
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+        matrix[team_A_score + 1, team_B_score + 1] = 1
+        
+        return(list("scores" = matrix,
+                    "final" = final_scores))
+      })
+    winrate = 0.50
+  } else {
+  # Using a matrix here so that I can treat each pairing of points as a unique
+  # value, rather than each team's individual total (meaning that I am truly
+  # looking for the pair of scores which are modal in the set of games that
+  # the winning team won)
+    tie = F
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+      if (simulations[[game_number]]$won != winners){
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+      } else {
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+        matrix[team_A_score + 1, team_B_score + 1] = 1
+      }
+      
+  
+      return(list("scores" = matrix,
+                  "final" = final_scores))
+    })
+    winrate = c("A" = A_winrate, "B" = B_winrate)[winners]
+  }
+  
+  # Initialize an empty matrix
+  scores_matrix = matrix(0, nrow = 51, ncol = 51)                     
+  for (i in 1:length(simulations)){
+    scores_matrix = scores_matrix + per_game_data[[i]]$scores 
+  }
+        
+  modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
+  
+  # As one may expect, this sometimes comes up with more than one 
+  # modal score! In that case, we have to tread a little more carefully.
+  # What I'll do is take advantage of the structure of the matrix to figure
+  # out which games look the best for everyone. What I'll do is look at the 
+  # score total that's the closest
+  if (length(modal_score_position) < 3){
+  modal_A_score = modal_score_position[1] - 1
+  modal_B_score = modal_score_position[2] - 1
+  } else{
+    modal_score_position = cbind(modal_score_position, 
+                                 abs(modal_score_position[, 1] - modal_score_position[, 2])) 
+    modal_row = which(modal_score_position[, 3] == min(modal_score_position[, 3]))
+    # If this is more than one, take the one with the highest A value. That will
+    # automatically break any ties. There cannot be duplicate A values in this 
+    # search already, because only one such A and B score pairing will have
+    # the smallest distance between them
+    if (length(modal_row) > 1){
+      if (all(winners == "A")){
+        modal_row = which(
+          modal_score_position[modal_row, 1] == max(modal_score_position[modal_row, 1])
+        )
+      } else {
+        #Technically this settles tie games with multiple modals in B's favor,
+        # but this is such a ridiculous outcome that I'm not going to worry about
+        # doing any more for now
+        modal_row = which(
+          modal_score_position[modal_row, 2] == max(modal_score_position[modal_row, 2])
+        )
+      } 
+    }
+    modal_A_score = modal_score_position[modal_row, 1] - 1
+    modal_B_score = modal_score_position[modal_row, 2] - 1
+  }
+  
+  final_scores_table = seq(1, length(per_game_data)) %>% 
+    map_df(function(number){
+      per_game_data[[number]]$final
+    })
+  
+  modal_frequency = final_scores_table %>%
+    filter(A == modal_A_score, B == modal_B_score) %>%
+    nrow()
+   
+  return(list("final_scores" = final_scores_table,
+              "wins" = wins,
+              "winner" = winners,
+              "winrate" = winrate,
+              "tie" = tie,
+              "modal_A" = modal_A_score,
+              "modal_B" = modal_B_score,
+              "modal_freq" = modal_frequency))
+}
+
+markov_visualizations = function(summary){
+  
+  # Create a histogram of each team's final score on a common x-axis
+  # This should be one of the interactive graphs that allows us to roll our cursor over
+ scores_overlap = ggplot(data = summary$final_scores) +
+    # Team A
+    geom_histogram(aes(x = `A`), fill = snappa_pal[2], alpha = 0.9) +
+    geom_histogram(aes(x = `B`), fill = snappa_pal[3], alpha = 0.7) +
+   theme_snappa() + 
+   xlab("Total Points") + 
+   ylab("Number of Games")
+  
+  # Idea, use the final score summary data to make stacked geom_bars for each
+  # game, kind of like what I had in my thesis. Here, I'll separate according 
+  # to the margin of victory, so that we look from the most A favored games
+  # to the most B favored
+  
+  score_counts = summary$final_scores %>% 
+    mutate(difference = A - B) %>%
+    arrange(difference) %>%
+    mutate(game_id = row_number()) %>%
+    pivot_longer(cols = c(A,B), names_to = "team", values_to = "points")
+  score_counts = score_counts[rep(row.names(score_counts), score_counts$points), ]
+  # To make this raw data more useful, I expand this out so that my grouping
+  # id (game_id) will work
+  
+  # These geom bars look kind of bad without a line if the number of 
+  # obs is less than about 500. Setting the width to 1 fixes this
+  
+  
+  score_shares = ggplot(data = score_counts) + 
+      geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
+      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", size = 1) + 
+      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", size = 1) +
+    ylab("Share of Total Points") + 
+    xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
+    theme_snappa() +
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) +
+    theme(legend.position = "none")
+  
+  winners_tbl = tibble(won = summary$wins) %>%
+    mutate(game_id = row_number(), team = won) 
+  
+  winners_tbl = complete(winners_tbl,
+                         expand(winners_tbl, game_id, team),
+                         fill = list(won = "C")) %>%
+    mutate(won = case_when(won == team ~ 1,
+                    won != team ~ 0)
+    )
+  
+  
+  
+  win_probability_bar = winners_tbl %>% 
+    filter(won == 1) %>%
+    ggplot() + 
+    geom_bar(aes(y = won, fill = fct_rev(team)), position = "fill") +
+    geom_vline(xintercept = 0.5, color = "white", linetype = "dotted") + 
+    ylab("") +
+    xlab(" ") + 
+    scale_y_continuous(breaks = NULL) +
+    scale_x_continuous(breaks = 0.50, labels = scales::percent_format(1)) + 
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) + 
+    coord_fixed(0.01) + 
+    theme(panel.background = element_rect(fill = "transparent", colour = NA),
+          plot.background = element_rect(fill = "transparent", colour = NA),
+          panel.grid = element_blank(),
+          panel.border = element_blank(),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          panel.spacing = unit(c(0, 0, 0, 0), "null"),
+          axis.ticks.x = element_line(),
+          axis.ticks.y = element_blank(),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title = element_blank(),
+          axis.line = element_blank(),
+          legend.position = "none",
+          axis.ticks.length = unit(0, "null"),
+          legend.spacing = unit(0, "null"))
+  
+  return(list("overlap" = scores_overlap,
+              "shares" = score_shares,
+              "win_probability" = win_probability_bar))
+  
+}
+
+
 
 
 
@@ -1407,4 +1474,261 @@ game_summary_plot = function(player_stats, players, scores, game){
 }
 
 
+
+# Visualization themes ----------------------------------------------------
+
+
+snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
+options(reactable.theme = reactableTheme(
+  color = "gray20",
+  backgroundColor = snappa_pal[1],
+  borderColor = "#DEDDDD",
+  headerStyle = list(
+    alignSelf = "flex-end"
+  ))
+)
+
+library(htmltools)
+
+# Render a bar chart with a label on the left
+bar_chart <- function(label, width = "100%", height = "14px", fill = "#00bfc4", background = NULL) {
+  bar <- div(style = list(background = fill, width = width, height = height))
+  chart <- div(style = list(flexGrow = 1, marginLeft = "6px", background = background), bar)
+  div(style = list(display = "flex", alignItems = "center"), label, chart)
+}
+
+theme_snappa = function(title_family = "Inter SemiBold",
+                        text_family = "Inter",
+                        base_size = 12, 
+                        text_color = "gray20",
+                        bg_color = snappa_pal[1], line_colour = "#DEDDDD",
+                        plot_margin = margin(20,20,20,20),
+                        plots_pane = FALSE,
+                        md = FALSE){
+  
+  if (plots_pane == FALSE & md == FALSE) {
+    ggplot2::theme_minimal() +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            size = base_size,
+                            color = text_color),
+        title = element_text(family = title_family,
+                             color = text_color),
+        line = element_line(color = line_colour),
+        
+        plot.title = element_text(face = "bold",
+                                  size = base_size * 2,
+                                  lineheight = 1.2,
+                                  margin = margin(0,5,15,5)), 
+        plot.title.position = "plot",
+        plot.subtitle = element_text(size = base_size * 1.5,
+                                     lineheight = 1.1, 
+                                     family = text_family,
+                                     margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot", 
+        plot.caption = element_text(hjust = 0, 
+                                    size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        
+        axis.text = element_text(size = base_size * 1.2),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = element_text(size = base_size * 1.6,
+                                  hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_colour),
+        
+        legend.title = element_text(size = base_size * 1.3),
+        legend.text = element_text(size = base_size * 1.1)
+      )
+  } else if (plots_pane == FALSE & md == TRUE) {
+    ggplot2::theme_minimal() +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            size = base_size,
+                            color = text_color),
+        title = ggtext::element_markdown(family = title_family,
+                                         color = text_color),
+        line = element_line(color = line_colour),
+        
+        plot.title = ggtext::element_markdown(face = "bold",
+                                              size = base_size * 2,
+                                              lineheight = 1.2,
+                                              margin = margin(0,5,15,5)),
+        plot.title.position = "plot",
+        plot.subtitle = ggtext::element_markdown(size = base_size * 1.7,
+                                                 lineheight = 1.1, 
+                                                 family = text_family,
+                                                 margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = ggtext::element_markdown(hjust = 0, 
+                                                size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        
+        axis.text = element_text(size = base_size * 1.2),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = ggtext::element_markdown(size = base_size * 1.6,
+                                              hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_colour),
+        
+        legend.title = ggtext::element_markdown(size = base_size * 1.3),
+        legend.text = element_text(size = base_size * 1.1)
+      )
+  } else if (plots_pane == TRUE && md == TRUE) {
+    ggplot2::theme_minimal(base_size = base_size) +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            color = text_color),
+        title = element_text(family = title_family),
+        line = element_line(color = line_colour),
+        
+        plot.title = ggtext::element_markdown(face = "bold",
+                                              lineheight = 1.2,
+                                              margin = margin(0,5,15,5)),
+        plot.title.position = "plot",
+        plot.subtitle = ggtext::element_markdown(lineheight = 1.1, 
+                                                 family = text_family,
+                                                 margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = ggtext::element_markdown(hjust = 0, 
+                                                size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = ggtext::element_markdown(hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_colour)
+      )
+  } else {
+    ggplot2::theme_minimal(base_size = base_size) +
+      ggplot2::theme(
+        text = element_text(family = text_family,
+                            color = text_color),
+        title = element_text(family = title_family),
+        line = element_line(color = line_colour),
+        
+        plot.title = element_text(face = "bold",
+                                  lineheight = 1.2,
+                                  margin = margin(0,5,15,5)),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(lineheight = 1.1, 
+                                     family = text_family,
+                                     margin = margin(b=15)),
+        plot.margin = plot_margin,
+        plot.caption.position = "plot",
+        plot.caption = element_text(hjust = 0, 
+                                    size = base_size * 1.25),
+        plot.background = element_rect(fill = bg_color,
+                                       color = bg_color),
+        axis.text.y.left = element_text(hjust = 0),
+        axis.title = element_text(hjust = 1, face = "italic"),
+        axis.line = element_line(color = line_colour)
+      )
+  }
+}
+
+tab_theme_snappa = function(data, 
+                            # Container
+                            container.width = pct(95), 
+                            container.height = pct(50), 
+                            container.overflow.x = NULL, 
+                            container.overflow.y = NULL, 
+                            # Table
+                            table.width = NULL, table.layout = NULL, table.align = NULL, 
+                            table.margin.left = NULL, table.margin.right = NULL, table.background.color = snappa_pal[1], 
+                            table.additional_css = NULL, table.font.names = NULL, table.font.size = NULL, 
+                            table.font.weight = NULL, table.font.style = NULL, table.font.color = NULL, 
+                            table.font.color.light = NULL, 
+                            table.border.top.style = "none",table.border.top.width = NULL, table.border.top.color = NULL, 
+                            table.border.right.style = "none", table.border.right.width = NULL,table.border.right.color = NULL, 
+                            table.border.bottom.style = "none",table.border.bottom.width = NULL, table.border.bottom.color = NULL, 
+                            table.border.left.style = "none", table.border.left.width = NULL,table.border.left.color = NULL, 
+                            # Heading
+                            heading.background.color = NULL, 
+                            heading.align = NULL, 
+                            heading.title.font.size = NULL, heading.title.font.weight = NULL, 
+                            heading.subtitle.font.size = NULL, heading.subtitle.font.weight = NULL, 
+                            heading.border.bottom.style =  "none", heading.border.bottom.width = NULL, heading.border.bottom.color = NULL, 
+                            heading.border.lr.style = "none", heading.border.lr.width = NULL, heading.border.lr.color = NULL, 
+                            # Column labels
+                            column_labels.background.color = NULL, 
+                            column_labels.font.size = NULL, column_labels.font.weight = NULL, 
+                            column_labels.text_transform = NULL, 
+                            column_labels.vlines.style = NULL, column_labels.vlines.width = NULL, column_labels.vlines.color = NULL,
+                            column_labels.border.top.style =  "none", column_labels.border.top.width = NULL, column_labels.border.top.color = NULL, 
+                            column_labels.border.bottom.style = "solid", column_labels.border.bottom.width = "3px", column_labels.border.bottom.color = "#7c7c7c", 
+                            column_labels.border.lr.style = "none", column_labels.border.lr.width = NULL, column_labels.border.lr.color = NULL, 
+                            column_labels.hidden = NULL, 
+                            # Row group
+                            row_group.background.color = NULL, 
+                            row_group.font.size = NULL, row_group.font.weight = NULL, 
+                            row_group.text_transform = NULL, row_group.padding = NULL, 
+                            row_group.border.top.style = NULL, row_group.border.top.width = NULL, 
+                            row_group.border.top.color = NULL, row_group.border.bottom.style = NULL, 
+                            row_group.border.bottom.width = NULL, row_group.border.bottom.color = NULL, 
+                            row_group.border.left.style = NULL, row_group.border.left.width = NULL, 
+                            row_group.border.left.color = NULL, row_group.border.right.style = NULL, 
+                            row_group.border.right.width = NULL, row_group.border.right.color = NULL, 
+                            # Table body
+                            table_body.hlines.style = NULL, table_body.hlines.width = NULL, 
+                            table_body.hlines.color = NULL, 
+                            table_body.vlines.style = NULL, 
+                            table_body.vlines.width = NULL, table_body.vlines.color = NULL, 
+                            table_body.border.top.style = NULL, table_body.border.top.width = NULL, table_body.border.top.color = "#DEDDDD", 
+                            table_body.border.bottom.style = NULL, table_body.border.bottom.width = NULL, table_body.border.bottom.color = "#DEDDDD", 
+                            # Stub
+                            stub.background.color = NULL, stub.font.size = NULL, stub.font.weight = NULL, 
+                            stub.text_transform = NULL, stub.border.style = NULL, stub.border.width = NULL, 
+                            stub.border.color = NULL, 
+                            data_row.padding = NULL, 
+                            # Summary row
+                            summary_row.background.color = NULL, 
+                            summary_row.text_transform = NULL, summary_row.padding = NULL, 
+                            summary_row.border.style = NULL, summary_row.border.width = NULL, 
+                            summary_row.border.color = NULL, 
+                            # Grand summary row
+                            grand_summary_row.background.color = NULL, 
+                            grand_summary_row.text_transform = NULL, grand_summary_row.padding = NULL, 
+                            grand_summary_row.border.style = NULL, grand_summary_row.border.width = NULL, 
+                            grand_summary_row.border.color = NULL, 
+                            # Footnotes
+                            footnotes.background.color = NULL, 
+                            footnotes.font.size = NULL, footnotes.padding = NULL, footnotes.border.bottom.style = NULL, 
+                            footnotes.border.bottom.width = NULL, footnotes.border.bottom.color = NULL, 
+                            footnotes.border.lr.style = NULL, footnotes.border.lr.width = NULL, 
+                            footnotes.border.lr.color = NULL, footnotes.sep = NULL, footnotes.marks = NULL, 
+                            # Source notes
+                            source_notes.background.color = NULL, source_notes.font.size = NULL, 
+                            source_notes.padding = NULL, source_notes.border.bottom.style = NULL, 
+                            source_notes.border.bottom.width = NULL, source_notes.border.bottom.color = NULL, 
+                            source_notes.border.lr.style = NULL, source_notes.border.lr.width = NULL, 
+                            source_notes.border.lr.color = NULL, 
+                            # Row striping
+                            row.striping.background_color = NULL, 
+                            row.striping.include_stub = NULL, row.striping.include_table_body = NULL){
+  gt:::stop_if_not_gt(data = data)
+  opts_df <- gt:::dt_options_get(data = data)
+  arg_names <- formals(tab_options) %>% names() %>% base::setdiff("data")
+  arg_vals <- mget(arg_names)
+  arg_vals <- arg_vals[!vapply(arg_vals, FUN = is.null, FUN.VALUE = logical(1))]
+  arg_vals <- arg_vals %>% gt:::set_super_options()
+  
+  new_df <- dplyr::tibble(parameter = names(arg_vals) %>% 
+                            gt:::tidy_gsub(".", "_", fixed = TRUE), value = unname(arg_vals)) %>%
+    dplyr::left_join(opts_df %>% 
+                       dplyr::select(parameter, type), by = "parameter") %>% 
+    dplyr::mutate(value = mapply(gt:::preprocess_tab_option, option = value, 
+                                 var_name = parameter, type = type, SIMPLIFY = FALSE)) %>% 
+    dplyr::select(-type)
+  
+  opts_df <- dplyr::bind_rows(new_df %>% 
+                                dplyr::inner_join(opts_df %>% 
+                                                    dplyr::select(-value), by = "parameter"), opts_df %>% 
+                                dplyr::anti_join(new_df, by = "parameter"))
+  
+  data <- gt:::dt_options_set(data = data, options = opts_df)
+  data
+}
 
