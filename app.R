@@ -1284,6 +1284,144 @@ server <- function(input, output, session) {
       
   })
   
+  output$game_history_title = renderText({
+    browser()
+    str_c(players_tbl[players_tbl$player_id == input$player_select, "player_name"], 
+          "'s Game History")
+  })
+  
+  player_game_history = reactive({
+    dbGetQuery(con, 
+               sql(
+                 str_c(
+                   "SELECT game_id, 
+                        to_date(gs.game_start, 'YYYY-MM-DD') as date, 
+                    		(to_timestamp(gs.game_end, 'YYYY-MM-DD HH24:MI:SS')-to_timestamp(gs.game_start, 'YYYY-MM-DD HH24:MI:SS')) AS game_length,
+                    		ps.team,
+                    		CASE ps.team 
+                    			WHEN 'A' THEN gs.points_a || ' - ' || gs.points_b
+                    			WHEN 'B' THEN gs.points_b || ' - ' || gs.points_a
+                    		END AS final_score,
+                    		teammates.teammates,
+                    		ps.shots,
+                    		ps.total_points,
+                    		ps.clink_points, ps.paddle_points, 
+                    		sc.foot_paddles,
+                    		sc.sinks,sc.paddle_sinks, sc.foot_sinks,
+                    		ps.points_per_round, ps.off_ppr, ps.def_ppr, ps.toss_efficiency
+                    FROM player_stats ps
+                    INNER JOIN game_stats gs
+                    USING (game_id)
+                    INNER JOIN (SELECT game_id, team, string_agg(players.player_name, ', ') AS teammates
+                    			FROM  player_stats
+                    			INNER JOIN players
+                    			USING (player_id)
+                    			WHERE player_id !=", input$player_select,"
+                    			GROUP BY game_id, team
+                    			ORDER BY game_id DESC) AS teammates
+                    USING (game_id, team)
+                    INNER JOIN ( SELECT scores.game_id,
+                                scores.player_id,
+                                sum(scores.points_scored) AS total_points,
+                                sum(
+                                    CASE
+                                        WHEN scores.points_scored = 3 AND scores.clink = false THEN 1
+                                        ELSE 0
+                                    END) AS sinks,
+                                sum(
+                                    CASE
+                                        WHEN scores.points_scored = 3 AND scores.clink = false AND scores.paddle = true THEN 1
+                                        ELSE 0
+                                    END) AS paddle_sinks,
+                    			SUM(
+                    				CASE
+                    					WHEN scores.foot = TRUE THEN scores.points_scored
+                    				ELSE 0
+                    				END) AS foot_paddles,
+                    			SUM(
+                    				CASE
+                    					WHEN scores.points_scored = 3 AND scores.clink = FALSE AND scores.foot = TRUE THEN 1
+                    				ELSE 0
+                    				END) AS foot_sinks
+                               FROM scores
+                              GROUP BY scores.game_id, scores.player_id) sc
+                    USING (game_id, player_id)
+                    WHERE ps.player_id = ", input$player_select, "
+                    ORDER BY game_id DESC")))
+  })
+  
+  output$player_game_stats = renderReactable({
+    player_game_history() %>% 
+      reactable(
+        defaultSorted = "game_id",
+        defaultSortOrder = "desc",
+        columns = list(
+          game_id = colDef(
+            name = "Game", width = 78
+          ),
+          date = colDef(
+            name = "Date", width = 107
+          ),
+          game_length = colDef(
+            name = "Game Length"
+          ),
+          team = colDef(
+            name = "Team", width = 72,
+            sortable = F
+          ),
+          final_score = colDef(
+            name = "Final Score", width = 92,
+            sortable = F
+          ),
+          teammates = colDef(
+            name = "Teammate(s)", width = 115,
+            sortable = F
+          ),
+          shots = colDef(
+            name = "Shots", width = 77
+          ),
+          total_points = colDef(
+            name = "Points", width = 81
+          ),
+          clink_points = colDef(
+            name = "Clink Points", width = 81
+          ),
+          paddle_points = colDef(
+            name = "Paddle Points", width = 86
+          ),
+          foot_paddles = colDef(
+            name = "Foot Paddles"
+          ),
+          sinks = colDef(
+            name = "Sinks"
+          ),
+          paddle_sinks = colDef(
+            name = "Paddle Sinks"
+          ),
+          foot_sinks = colDef(
+            name = "Foot Sinks"
+          ),
+          points_per_round = colDef(
+            name = "Points per Round (PPR)",
+            format = colFormat(digits = 2)
+          ),
+          off_ppr = colDef(
+            name = "Off. PPR",
+            format = colFormat(digits = 2)
+          ),
+          def_ppr = colDef(
+            name = "Def. PPR",
+            format = colFormat(digits = 2)
+          ),
+          toss_efficiency = colDef(
+            name = "Toss Efficiency",
+            format = colFormat(digits = 1, percent = T)
+          )
+        ),
+        compact = T
+      )
+  })
+  
   
   
   
