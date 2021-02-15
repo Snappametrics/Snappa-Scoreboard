@@ -1490,7 +1490,8 @@ server <- function(input, output, session) {
   
   output$player_stats_headers = renderUI({
     player_stats = dbGetQuery(con, 
-                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks FROM basic_career_stats ", 
+                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks, foot_paddles, foot_sinks
+                                        FROM basic_career_stats ", 
                                         "WHERE player_id = ", input$player_select))
                               )
 
@@ -1525,7 +1526,7 @@ server <- function(input, output, session) {
       box(width = 6, status = "success", title = "Paddle Stats", collapsible = T,
       # Paddle points
       column(
-        width = 6,
+        width = 3,
         descriptionBlock(
           header = player_stats$paddle_points,
           text = "PADDLE POINTS"
@@ -1533,10 +1534,26 @@ server <- function(input, output, session) {
       ),
       # Paddle Sinks
       column(
-        width = 6,
+        width = 3,
         descriptionBlock(
           header = player_stats$paddle_sinks,
           text = "PADDLE SINK(S)"
+        )
+      ),
+      # Foot Paddles
+      column(
+        width = 3,
+        descriptionBlock(
+          header = player_stats$foot_paddles,
+          text = "FOOT PADDLES"
+        )
+      ),
+      # Foot Sinks
+      column(
+        width = 3,
+        descriptionBlock(
+          header = player_stats$foot_sinks,
+          text = "FOOT SINK(S)"
         )
       )
       
