@@ -587,7 +587,13 @@ ui <- dashboardPagePlus(
                       status = "primary",
                       # gt_output("teammate_tab")
                       reactableOutput("teammate_tab_rt")
-              )
+              ),
+              boxPlus(title = textOutput("game_history_title"),
+                      collapsible = T, width = 12,
+                      closable = F,
+                      collapsed = T,
+                      status = "primary",
+                      reactableOutput("player_game_stats"))
               ),
 
 # Edit teams --------------------------------------------------------
