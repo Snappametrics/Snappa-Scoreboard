@@ -1004,9 +1004,9 @@ leaderboard_table = function(career_stats_data, dividing_line, highlight_colour 
       vars(win_pct) ~ pct(14),
       vars(toss_efficiency, points_per_game, def_ppg, off_ppg) ~ pct(28)
     ) %>%
-    # Underline dope shit
+    # Highlight dope shit
     tab_style(
-      style = list(cell_text(weight = "bold", color = snappa_pal[2])),
+      style = list(cell_text(weight = "bold", color = highlight_colour)),
       locations = list(
         # Highest win %
         cells_body(
@@ -1482,7 +1482,10 @@ snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e",
 options(reactable.theme = reactableTheme(
   color = "gray20",
   backgroundColor = snappa_pal[1],
-  borderColor = "#DEDDDD")
+  borderColor = "#DEDDDD",
+  headerStyle = list(
+    alignSelf = "flex-end"
+  ))
 )
 
 library(htmltools)
