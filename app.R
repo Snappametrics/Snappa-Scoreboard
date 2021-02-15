@@ -1291,7 +1291,6 @@ server <- function(input, output, session) {
   })
   
   output$game_history_title = renderText({
-    browser()
     str_c(players_tbl[players_tbl$player_id == input$player_select, "player_name"], 
           "'s Game History")
   })
