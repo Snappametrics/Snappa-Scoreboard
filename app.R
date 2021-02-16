@@ -59,28 +59,6 @@ tbl_templates = map(tbls, function(table){
 
 
 
-# Scores doesn't need to be pulled but will be referenced later
-
-
-# Career Stats ------------------------------------------------------------
-
-
-
-
-score_progression = scores_tbl %>% 
-  arrange(game_id, score_id) %>% 
-  group_by(game_id) %>% 
-  mutate(
-    score_a = cumsum((scoring_team=="A")*points_scored),
-    score_b = cumsum((scoring_team=="B")*points_scored)
-  ) %>% 
-  ungroup() %>% 
-  count(score_a, score_b)
-
-score_prog_plot = score_heatmap(score_progression)
-
-
-
 
 
 # UI ----------------------------------------------------------------------
@@ -536,6 +514,13 @@ server <- function(input, output, session) {
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM career_stats"))}
     ),
+    score_progression = reactivePoll(
+      intervalMillis = 1000*60,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, sql("SELECT SUM(n) FROM score_progression"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM score_progression"))}
+    ),
+    
 
     # dataframe of the players and their teams
     # Current Scores
@@ -900,9 +885,10 @@ server <- function(input, output, session) {
     leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
   })
 
+  
 
   output$scoring_heatmap = renderPlot({
-    score_prog_plot
+    score_heatmap(vals$score_progression())
   })
   
   output$heatmap_info <- renderUI({
@@ -910,7 +896,7 @@ server <- function(input, output, session) {
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
-    freq = filter(score_progression, score_a == y, score_b == x) %>% 
+    freq = filter(vals$score_progression(), score_a == y, score_b == x) %>% 
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
