@@ -151,16 +151,13 @@ label[for='foot'] {
     position: relative !important;
     left: 85%;
 }
-/*
-#undo_score_A {
-    right: 3vw;
-    margin-top: 5vh;
+
+#undo_score_A, #undo_score_B {
+    width: 50%;
+    height: 25%;
+    border-radius: 15px
 }
-#undo_score_B {
-    left: 3vw;
-    margin-top: 5vh;
-}
-*/
+
 
 #start_game, #scorer, #paddle, #score, #clink, #foot {
     font-size: 2rem; 
@@ -322,12 +319,15 @@ label.control-label[for='score'] {
   color: inherit;
 }
 
+.scoreboard_well, #next_round, #previous_round, #A_score_button, #undo_score_A, #B_score_button, #undo_score_B {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+}
 
 /* Styling for 'we-scored' button and box around it */
 #A_score_and_undo, #B_score_and_undo {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: space-evenly;
     align-items: center;
     height: 45%;
 }
