@@ -1465,7 +1465,8 @@ options(reactable.theme = reactableTheme(
   backgroundColor = snappa_pal[1],
   borderColor = "#DEDDDD",
   headerStyle = list(
-    alignSelf = "flex-end"
+    alignSelf = "flex-end",
+    borderBottom = "3px solid #7c7c7c"
   ))
 )
 
