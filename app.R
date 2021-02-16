@@ -230,7 +230,11 @@ ui <- dashboardPagePlus(
                             div(class = "snappaneers-title", "Top Snappaneers"),
                             "The deadliest die-throwers in all the land."
                         ),
-                        reactableOutput("leaderboard_rt", width = "100%")
+                        reactableOutput("leaderboard_rt", width = "100%"),
+                        div(class = "caption",
+                          p("Toss efficiency = point-scoring tosses as % total tosses"),
+                          p("Players need to play at least 5 games to be eligible for achievements.")
+                        )
                     )
                 ),
                 boxPlus(width = 12,
