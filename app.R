@@ -1507,7 +1507,7 @@ server <- function(input, output, session) {
       box(width = 6, status = "success", title = "General Stats", collapsible = T,
       # Games Played
       column(
-        width = 4,
+        width = 3,
         descriptionBlock(
           header = player_stats$games_played,
           text = "GAMES PLAYED"
@@ -1515,7 +1515,7 @@ server <- function(input, output, session) {
       ),
       # Win %
       column(
-        width = 4,
+        width = 3,
         descriptionBlock(
           header = scales::percent(player_stats$win_pct),
           text = "WIN PERCENTAGE"
@@ -1523,10 +1523,19 @@ server <- function(input, output, session) {
       ),
       # Sinks
       column(
-        width = 4,
+        width = 3,
         descriptionBlock(
           header = player_stats$sinks,
           text = "SINK(S)"
+        )
+      ),
+      column(
+        width = 3,
+        descriptionBlock(
+          header = if_else(player_stats$sinks > 0, 
+                           str_c("Once every ", round(1/(player_stats$sinks/player_stats$games_played), 1), " games"),
+                           "TBD"),
+          text = "SINK FREQUENCY"
         )
       )
       ),
