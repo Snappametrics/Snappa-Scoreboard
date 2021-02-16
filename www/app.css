@@ -151,7 +151,7 @@ label[for='foot'] {
     position: relative !important;
     left: 85%;
 }
-
+/*
 #undo_score_A {
     right: 3vw;
     margin-top: 5vh;
@@ -160,7 +160,7 @@ label[for='foot'] {
     left: 3vw;
     margin-top: 5vh;
 }
-
+*/
 
 #start_game, #scorer, #paddle, #score, #clink, #foot {
     font-size: 2rem; 
@@ -321,6 +321,23 @@ label.control-label[for='score'] {
 .snappaneers-tbl a {
   color: inherit;
 }
+
+
+/* Styling for 'we-scored' button and box around it */
+#A_score_and_undo, #B_score_and_undo {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    height: 45%;
+}
+
+#A_score_button, #B_score_button {
+  width: 90%;
+  height: 50%;
+  border-radius: 15px;
+}
+
 
 
 /* End my CSS */
@@ -632,7 +649,7 @@ input[type=radio]{
         padding: 2vh 2vw 2vh 2vw;
     }
     
-    #undo_score_A {
+/*    #undo_score_A {
         padding: 1vh 1vw 1vh 1vw;
         right: 6vw;
         font-size: 2.5vh;
@@ -643,7 +660,7 @@ input[type=radio]{
         left: 6vw;
         font-size: 2.5vh;
     }
-    
+ */   
     #previous_round{
         font-size: 1rem;
         padding: 2vh 2vw 2vh 2vw;
@@ -686,3 +703,6 @@ input[type=radio]{
 
     
 }
+
+
+
