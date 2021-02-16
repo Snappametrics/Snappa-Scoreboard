@@ -28,7 +28,7 @@ library(extrafont)
 library(waiter)
 
 
-source("dbconnect.R")
+source("database/test_dbconnect.R")
 source("ui_functions.R")
 source("server_functions.R")
 source("markov/Markov_model_functions.R")
@@ -693,12 +693,14 @@ server <- function(input, output, session) {
   output$round_control_buttons = renderUI({
     team_colours = list("A" = "danger", "B" = "primary")
     column(width=12, align = "center",
-           actionBttn("next_round", 
-                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), 
-                      color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
-           actionBttn("previous_round", 
+           div( id = 'round_control_buttons',
+             actionBttn("previous_round", 
                       label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = 
-                        team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
+                        team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
+             actionBttn("next_round", 
+                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), 
+                      color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
+           )
     )
   })
   
