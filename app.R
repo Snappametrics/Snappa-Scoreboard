@@ -1308,7 +1308,7 @@ server <- function(input, output, session) {
                     			WHEN 'B' THEN gs.points_b || ' - ' || gs.points_a
                     		END AS final_score,
                     		teammates.teammates,
-                    		ps.shots,
+                    		round(ps.shots::numeric, 2) as shots,
                     		ps.total_points,
                     		ps.clink_points, ps.paddle_points, 
                     		sc.foot_paddles,
