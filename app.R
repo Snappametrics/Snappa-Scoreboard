@@ -1763,10 +1763,7 @@ observeEvent(input$resume_no, {
       # Update round in game stats
       db_update_round(round = round_num(), game = vals$game_id)
       
-    
-    
-    
-    
+      
     
   })
   
@@ -1815,6 +1812,38 @@ observeEvent(input$resume_no, {
     }
       
     })
+  
+
+# Score notifications -----------------------------------------------------
+
+  
+  observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
+               {
+                 validate(
+                   need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
+                 )
+                 
+                 
+                 inputSweetAlert(session, 
+                                 inputId = "casualty",
+                                 title = "War of 1812",
+                                 text = "Everyone roll a die, the lowest roll takes a shot.",
+                                 type = "warning",
+                                 input = "radio",
+                                 inputOptions = snappaneers()$player_name)
+               })
+  
+  observeEvent(input$casualty, {
+    # Convert player name to ID
+    casualty = select(snappaneers(), starts_with("player")) %>% 
+      deframe() %>% 
+      pluck(input$casualty)
+    
+    # Insert the game ID and player ID
+    dbExecute(con, 
+              sql(str_c("INSERT INTO casualties_of_1812(game_id, player_id)
+                        VALUES (", vals$game_id, ", ", casualty, ");")))
+  })
   
 
 # New Players -------------------------------------------------------------
@@ -2157,32 +2186,11 @@ observeEvent(input$resume_no, {
                        duration = 20, closeButton = F
                       )
     }
-    validate(
-      need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
-    )
     
-    
-    inputSweetAlert(session, 
-                    inputId = "casualty",
-                   title = "1812",
-                   text = "Everyone roll a die, lowest roll takes a shot.",
-                   type = "warning",
-                   input = "radio",
-                   inputOptions = snappaneers()$player_name)
 
   })
   
-  observeEvent(input$casualty, {
-    # Convert player name to ID
-    casualty = select(snappaneers(), starts_with("player")) %>% 
-      deframe() %>% 
-      pluck(input$casualty)
-    
-    # Insert the game ID and player ID
-    dbExecute(con, 
-              sql(str_c("INSERT INTO casualties_of_1812(game_id, player_id)
-                        VALUES (", vals$game_id, ", ", casualty, ");")))
-  })
+  
   
 
 # Undo Score --------------------------------------------------------------
@@ -2332,18 +2340,7 @@ observeEvent(input$resume_no, {
       )
     }
     
-    validate(
-      need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
-    )
     
-    
-    inputSweetAlert(session, 
-                    inputId = "casualty",
-                    title = "1812",
-                    text = "Everyone roll a die, lowest roll takes a shot.",
-                    type = "warning",
-                    input = "radio",
-                    inputOptions = snappaneers()$player_name)
   })
   
   # Undo score
