@@ -1375,7 +1375,15 @@ server <- function(input, output, session) {
             sortable = F
           ),
           final_score = colDef(
-            name = "Final Score", width = 92,
+            name = "Final Score", width = 75,
+            style = function(value) {
+              blue_team = as.numeric(str_extract(value, "^[0-9]{1,2}"))
+              red_team = as.numeric(str_extract(value, "[0-9]{1,2}$"))
+              bg_color = if_else(blue_team > red_team, snappa_pal[5], snappa_pal[2])
+              
+              list(background = bg_color,
+                   color = snappa_pal[1])
+            },
             sortable = F
           ),
           teammates = colDef(
