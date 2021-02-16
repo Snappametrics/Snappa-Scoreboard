@@ -185,7 +185,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   
   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
   
-  well_panel_style = "margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92; background:"
+  well_panel_style = "margin-top: 2vh; padding-top: 5vh; padding-bottom: 2vh; height: 70vh; opacity: 0.92; background:"
   h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
   
 
@@ -196,6 +196,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                      
                      wellPanel(
+                       class = 'scoreboard_well',
                        style = paste(well_panel_style, team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
@@ -203,15 +204,16 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                        # Score
                        h2(textOutput(paste0("score_", left_team))),
                        # Score button
-                       actionBttn(paste0(left_team, "_score_button"), 
-                                  label = "We scored!", color = "danger",
-                                  size = "lg"),
-                       br(),
-                       actionBttn(
-                         inputId = paste0("undo_score_", left_team),
-                         label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                       )#,
+                       div(id = paste0(left_team, '_score_and_undo'),
+                        actionBttn(paste0(left_team, "_score_button"), 
+                                   label = "We scored!", color = "danger",
+                                   size = "lg"),
+                        actionBttn(
+                          inputId = paste0("undo_score_", left_team),
+                          label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                        )#,
                        # h3(textOutput(paste0("player_names_", left_team)))
+                      )
                      )
               ), 
               # Round
@@ -225,21 +227,23 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                     
                     wellPanel(
+                      class = 'scoreboard_well',
                       style = paste(well_panel_style, team_colours[[right_team]]),
                       # Header
                       h1(paste("Team", toupper(right_team)), style = h1_style),
                       # Score
                       h2(textOutput(paste0("score_", right_team))),
                       # Score button
-                      actionBttn(paste0(right_team, "_score_button"), 
+                      div(id = paste0(right_team, "_score_and_undo"),
+                          actionBttn(paste0(right_team, "_score_button"), 
                                  label = "We scored!", color = "danger",
                                  size = "lg"),
-                      br(),
-                      actionBttn(
-                        inputId = paste0("undo_score_", right_team),
-                        label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                      )#,
+                          actionBttn(
+                            inputId = paste0("undo_score_", right_team),
+                            label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                          )#,
                       # h3(textOutput(paste0("player_names_", right_team)))
+                      )
                     )
              )
               )
