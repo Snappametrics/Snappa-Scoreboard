@@ -872,14 +872,32 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   career_stats_data %>% 
     reactable(
       defaultSorted = "rank",
-      defaultPageSize = 20,
+      defaultPageSize = 20, 
+      defaultSortOrder = "desc",
+      highlight = T,
       # compact = T, 
       width = "100%",
+      rowStyle = function(index) {
+        if (career_stats_data[index, "games_played"] < 5) {
+          list(background = "#E3E3DE",
+               fontWeight = 200)
+        }
+      },
+      rowClass = function(index) {
+        if (career_stats_data[index, "rank"] == max(stats_eligible$rank)) {
+          "dividing-line"
+        } else if (career_stats_data[index, "rank"] > max(stats_eligible$rank)) {
+          "unranked"
+        }
+      },
       columns = list(
-        rank = colDef("", 
-                      minWidth = 40,
-                      maxWidth = 80), 
+        rank = colDef("",
+                      align = "left", 
+                      minWidth = 35,
+                      maxWidth = 45,
+                      style = list(fontWeight = 700)), 
         player_name = colDef("Player", 
+                             sortable = F,
                              minWidth = 100,
                              maxWidth = 200),
         games_played = colDef("Games Played", 
@@ -888,23 +906,53 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
         win_pct = colDef("Win %", 
                          format = colFormat(percent = T, digits = 1), 
                          minWidth = 80,
-                         maxWidth = 150), 
+                         maxWidth = 150,
+                         style = function(value) {
+                           if(max(stats_eligible[, "win_pct"], na.rm=T) == value){
+                             list(color = snappa_pal[5],
+                                  fontWeight = 600)
+                           }
+                         }), 
         points_per_game = colDef("Points per Game\n(PPG)", 
                                  format = colFormat(digits = 2), 
                                  minWidth = 90,
-                                 maxWidth = 200),
+                                 maxWidth = 200,
+                                 style = function(value) {
+                                   if(max(stats_eligible[, "points_per_game"], na.rm=T) == value){
+                                     list(color = snappa_pal[5],
+                                          fontWeight = 600)
+                                   }
+                                 }),
         off_ppg = colDef("Offensive PPG", 
                          format = colFormat(digits = 2),
                          minWidth = 90,
-                         maxWidth = 200),
+                         maxWidth = 200,
+                         style = function(value) {
+                           if(max(stats_eligible[, "off_ppg"], na.rm=T) == value){
+                             list(color = snappa_pal[5],
+                                  fontWeight = 600)
+                           }
+                         }),
         def_ppg = colDef("Defensive PPG", 
                          format = colFormat(digits = 2), 
                          minWidth = 90,
-                         maxWidth = 200),
+                         maxWidth = 200,
+                         style = function(value) {
+                           if(max(stats_eligible[, "def_ppg"], na.rm=T) == value){
+                             list(color = snappa_pal[5],
+                                  fontWeight = 600)
+                           }
+                         }),
         toss_efficiency = colDef("Toss Efficiency", 
                                  format = colFormat(digits = 1, percent = T), 
                                  minWidth = 90,
-                                 maxWidth = 200)
+                                 maxWidth = 200,
+                                 style = function(value) {
+                                   if(max(stats_eligible[, "toss_efficiency"], na.rm=T) == value){
+                                     list(color = snappa_pal[5],
+                                          fontWeight = 600)
+                                   }
+                                 })
       ),
       class = "snappaneers-tbl"
     )
