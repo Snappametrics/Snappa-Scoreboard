@@ -871,9 +871,9 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   
   career_stats_data %>% 
     reactable(
-      defaultSorted = "rank",
       defaultPageSize = 20, 
-      defaultSortOrder = "desc",
+      defaultSorted = "rank",
+      showSortable = T,
       highlight = T,
       # compact = T, 
       width = "100%",
