@@ -322,6 +322,35 @@ label.control-label[for='score'] {
   color: inherit;
 }
 
+.dividing-line {
+  border-bottom: 1px dashed var(--red);
+}
+
+.unranked:hover {
+  background: #fafaf9 !important;
+  font-weight: 400 !important;
+}
+
+.unranked:focus {
+  background: #fafaf9 !important;
+  font-weight: 400 !important;
+}
+
+.unranked:active {
+  background: #fafaf9 !important;
+  font-weight: 400 !important;
+}
+
+.caption {
+  font-size: 0.95rem;
+  padding: 2px;
+  width: 100%;
+  text-align: left;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #adc4c2;
+}
+
 
 /* End my CSS */
 
