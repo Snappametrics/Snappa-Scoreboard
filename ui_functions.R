@@ -102,11 +102,13 @@ team_input_ui = function(team, player_choices){
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-  
+  selector = if_else(team == 'A', 'input_well_A', 'input_well_B')
 
   column(4, align = "center",
          
          wellPanel(
+           class = 'input_well'
+           id = selector,
            style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
