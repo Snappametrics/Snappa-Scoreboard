@@ -993,7 +993,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                               }),
         points_per_game = colDef("Points per Game\n(PPG)", 
                                  format = colFormat(digits = 2), 
-                                 minWidth = 100,
+                                 minWidth = 117,
                                  maxWidth = 200,
                                  style = function(value) {
                                    if(max(stats_eligible[, "points_per_game"], na.rm=T) == value){
