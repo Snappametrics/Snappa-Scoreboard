@@ -34,9 +34,17 @@
     background: #fafaf9;
 }
 
+.box-body {
+  display: flex;
+  flex-flow: wrap;
+  align-items: center;
+}
+
 /* General */
 
-
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans-serif) !important;
+}
 
 
 #shiny-notification-panel {
