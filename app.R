@@ -251,19 +251,15 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "player_stats",
               # Filters
               boxPlus(width = 12,
-                fluidRow(
-                  column(width = 3,
-                         # Player selection
+                      # Player Select
                          selectInput("player_select", label = "Player", selectize = F,
                                      choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id")) %>%
                                        deframe() %>% sample())
-                         )
-
-                )
               ),
+              # General and Paddle Stat boxes
               uiOutput("player_stats_headers"),
               # Form plot
               boxPlus(title = "Player Form",
