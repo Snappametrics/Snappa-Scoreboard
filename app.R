@@ -1196,7 +1196,7 @@ server <- function(input, output, session) {
 
     # stat_list = 
     fluidRow(
-      box(width = 6, status = "success", title = "General Stats", collapsible = T,
+      box(width = 6, status = "success", title = "General Stats", collapsible = T, 
       # Games Played
       column(
         width = 3,
@@ -1207,7 +1207,7 @@ server <- function(input, output, session) {
       ),
       # Win %
       column(
-        width = 3,
+        width = 2,
         descriptionBlock(
           header = scales::percent(player_stats$win_pct),
           text = "WIN %"
