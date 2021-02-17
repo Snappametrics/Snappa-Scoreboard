@@ -322,6 +322,10 @@ label.control-label[for='score'] {
 }
 
 /* Styles for the table */
+.reactable {
+  overflow:auto;
+}
+
 .snappaneers-tbl {
   font-size: 14px;
   line-height: 18px;
