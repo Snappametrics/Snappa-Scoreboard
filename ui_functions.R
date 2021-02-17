@@ -874,6 +874,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
       defaultPageSize = 20, 
       defaultSorted = "rank",
       showSortable = T,
+      defaultColDef = colDef(headerStyle = list(minHeight = 51), align = "left"),
       highlight = T,
       # compact = T, 
       width = "100%",
@@ -888,6 +889,8 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
           "dividing-line"
         } else if (career_stats_data[index, "rank"] > max(stats_eligible$rank)) {
           "unranked"
+        } else if (career_stats_data[index, "rank"] <= max(stats_eligible$rank)) {
+          "ranked"
         }
       },
       columns = list(
@@ -895,13 +898,43 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                       align = "left", 
                       minWidth = 35,
                       maxWidth = 45,
-                      style = list(fontWeight = 700)), 
+                      headerStyle = list(minHeight = 51, background = snappa_pal[1], position = "sticky", left = 0, zIndex = 1),
+                      style = function(value){
+                        if(value > max(stats_eligible$rank)){
+                          list(background = "#E3E3DE",
+                               fontWeight = 200, position = "sticky", left = 0, zIndex = 1)
+                        } else {
+                          list(background = snappa_pal[1], fontWeight = 700, position = "sticky", left = 0, zIndex = 1)
+                        }
+                      },
+                      class = function(value){
+                          if(value > max(stats_eligible$rank)){
+                            "unranked"
+                          } else {
+                          "ranked"
+                        }
+                        }), 
         player_name = colDef("Player", 
                              sortable = F,
                              minWidth = 100,
-                             maxWidth = 200),
+                             maxWidth = 200,
+                             headerStyle = list(minHeight = 51, background = snappa_pal[1], position = "sticky", left = 35,zIndex = 1),
+                             style = function(value){
+                               if(value %in% unique(stats_eligible$player_name)){
+                                 list(background = snappa_pal[1], position = "sticky", left = 35,zIndex = 1)
+                               } else {
+                                 list(background = "#E3E3DE", position = "sticky", left = 35,zIndex = 1)
+                               }
+                             },
+                             class = function(value){
+                               if(!(value %in% unique(stats_eligible$player_name))){
+                                 "unranked"
+                               } else {
+                               "ranked"
+                               }
+                             }),
         games_played = colDef("Games Played", 
-                              minWidth = 70,
+                              minWidth = 82,
                               maxWidth = 150),
         win_pct = colDef("Win %", 
                          format = colFormat(percent = T, digits = 1), 
