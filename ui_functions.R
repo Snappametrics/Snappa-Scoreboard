@@ -913,9 +913,54 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                                   fontWeight = 600)
                            }
                          }), 
+        total_points = colDef("Total Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        offensive_points = colDef("Off. Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        defensive_points = colDef("Def. Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        paddle_points = colDef("Paddle Points", 
+                              minWidth = 82,
+                              maxWidth = 150,
+                              style = function(value) {
+                                if(max(stats_eligible[, "paddle_points"], na.rm=T) == value){
+                                  list(color = snappa_pal[5],
+                                       fontWeight = 600)
+                                }
+                              }),
+        clink_points = colDef("Clink Points", 
+                               minWidth = 82,
+                               maxWidth = 150,
+                              style = function(value) {
+                                if(max(stats_eligible[, "clink_points"], na.rm=T) == value){
+                                  list(color = snappa_pal[5],
+                                       fontWeight = 600)
+                                }
+                              }),
+        sinks = colDef("Sinks", 
+                               minWidth = 82,
+                               maxWidth = 150,
+                       style = function(value) {
+                         if(max(stats_eligible[, "sinks"], na.rm=T) == value){
+                           list(color = snappa_pal[5],
+                                fontWeight = 600)
+                         }
+                       }),
+        paddle_sinks = colDef("Paddle Sinks", 
+                               minWidth = 82,
+                               maxWidth = 150,
+                              style = function(value) {
+                                if(max(stats_eligible[, "paddle_sinks"], na.rm=T) == value){
+                                  list(color = snappa_pal[5],
+                                       fontWeight = 600)
+                                }
+                              }),
         points_per_game = colDef("Points per Game\n(PPG)", 
                                  format = colFormat(digits = 2), 
-                                 minWidth = 90,
+                                 minWidth = 100,
                                  maxWidth = 200,
                                  style = function(value) {
                                    if(max(stats_eligible[, "points_per_game"], na.rm=T) == value){
@@ -925,7 +970,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                                  }),
         off_ppg = colDef("Offensive PPG", 
                          format = colFormat(digits = 2),
-                         minWidth = 90,
+                         minWidth = 100,
                          maxWidth = 200,
                          style = function(value) {
                            if(max(stats_eligible[, "off_ppg"], na.rm=T) == value){
@@ -935,7 +980,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                          }),
         def_ppg = colDef("Defensive PPG", 
                          format = colFormat(digits = 2), 
-                         minWidth = 90,
+                         minWidth = 105,
                          maxWidth = 200,
                          style = function(value) {
                            if(max(stats_eligible[, "def_ppg"], na.rm=T) == value){
@@ -945,7 +990,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                          }),
         toss_efficiency = colDef("Toss Efficiency", 
                                  format = colFormat(digits = 1, percent = T), 
-                                 minWidth = 90,
+                                 minWidth = 105,
                                  maxWidth = 200,
                                  style = function(value) {
                                    if(max(stats_eligible[, "toss_efficiency"], na.rm=T) == value){

@@ -224,7 +224,6 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "career_stats",
               boxPlus(width = 12,
                     style = str_c("background:", snappa_pal[1]), align = "center",
-                                 gt_output("leaderboard"),
                     div(class = "top-snappaneers",
                         div(class = "snappaneers-header",
                             div(class = "snappaneers-title", "Top Snappaneers"),
@@ -849,27 +848,10 @@ server <- function(input, output, session) {
 
 # Stats Outputs --------------------------------------------------------------
   
-  output$leaderboard = render_gt({
-    aggregated_data = vals$career_stats_tbl() %>% 
-      mutate(rank = 1:n()) %>% 
-      arrange(rank) %>% 
-      select(rank, player_name, 
-             games_played, win_pct, 
-             points_per_game, off_ppg:toss_efficiency)
-    
-    dividing_line = aggregated_data %>% filter(games_played < 5) %>% pull(rank) %>% min()
-    
-    leaderboard_table(aggregated_data, dividing_line = dividing_line)
-  })
-  
+
   output$leaderboard_rt = renderReactable({
     # Create the rank column, arrange the data, and select the columns
-    aggregated_data = vals$career_stats_tbl() %>% 
-      mutate(rank = 1:n()) %>% 
-      arrange(rank) %>% 
-      select(rank, player_name, 
-             games_played, win_pct, 
-             points_per_game, off_ppg:toss_efficiency)
+    aggregated_data = vals$career_stats_tbl()
     
     # Separate out those with under 5 games
     dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
