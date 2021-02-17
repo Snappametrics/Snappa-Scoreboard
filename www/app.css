@@ -326,6 +326,25 @@ label.control-label[for='score'] {
   border-bottom: 1px dashed var(--red);
 }
 
+.ranked {
+  background: #fafaf9 !important;
+}
+
+.ranked:hover {
+  background: #E3E3DE !important;
+}
+
+.ranked:focus {
+  background: #E3E3DE !important;
+}
+
+.ranked:active {
+  background: #E3E3DE !important;
+}
+.unranked {
+  background: #E3E3DE !important;
+}
+
 .unranked:hover {
   background: #fafaf9 !important;
   font-weight: 400 !important;
