@@ -30,6 +30,7 @@ library(waiter)
 
 source("dbconnect.R")
 source("ui_functions.R")
+source("server_functions.R")
 source("markov/Markov_model_functions.R")
 
 
@@ -55,298 +56,6 @@ tbl_templates = map(tbls, function(table){
   dbGetQuery(con, str_c("SELECT * FROM ", table, " LIMIT 0")) 
 }) %>% 
   set_names(tbls)
-
-
-
-# Scores doesn't need to be pulled but will be referenced later
-
-
-# Functions ---------------------------------------------------------------
-
-game_notification = function(rebuttal = F, round, current_scores){
-  if(rebuttal){
-
-    team_in_rebuttal = str_extract(round, "[AB]+")
-    text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
-    showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
-                                team_in_rebuttal, "</span>",
-                                " needs ",
-                                  abs(current_scores$team_A - current_scores$team_B) - 1,
-                                " points to bring it back")
-    ), duration = 20, closeButton = F)
-  } else {
-    showNotification(HTML(str_c("<i class='fa fa-sign-language' style='padding: 1vh;'></i><span>That's some hot shit!</span>")),
-                     duration = 10, closeButton = F)
-  }
-  
-}
-
-add_shot_count = function(df, shot_num){
-  add_count(df, team, name = "n_players") %>% # Count the number of rows for each team
-  # Calculate the number of shots for each player by diving the team shots by 2
-  # Team shots calculated using ceiling/floor because A always goes first
-  mutate(baseline_shots = case_when(str_detect(team, "A") ~ ceiling(shot_num/2),
-                                    str_detect(team, "B") ~ floor(shot_num/2)),
-         # In cases where teams are uneven, we calculate the average shots a player had
-         shots = baseline_shots*max(n_players)/n_players) %>% 
-  select(-baseline_shots, -n_players)
-}
-
-
-rebuttal_check <- function(a , b , round, points_to_win) {
-  if (any(is.null(a),is.null(b))){
-    check <- F
-  } else{ 
-    check <- case_when(
-      (a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")) ~ T, 
-      (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]")) ~ T,
-      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")), 
-           (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]"))) ~ F)
-  }
-  
-  return(check)
-}
-
-
-validate_scores = function(player, shot, snappaneers, paddle, 
-                           scores_table, round_vector = rounds, rebuttal = F){
-  
-  # Identify the scorer's team and ID
-  players_team = snappaneers[snappaneers$player_name == player, "team", drop=TRUE]
-  scorer_id = snappaneers[snappaneers$player_name == player, "player_id", drop=TRUE]
-  
-  # Typical Offense: Scoring on one's shot
-  typical_offense = str_detect(round_vector[shot], players_team)
-  
-  # Typical Paddle: Scoring on the other team's shot
-  typical_paddle = all(str_detect(round_vector[shot], players_team, negate = T), 
-                       paddle)
-  
-  # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
-  # Players can only score once on a non-paddle shot
-  not_already_scored = !(scorer_id %in% pull(filter(scores_table, round_num == round_vector[shot], paddle == F), player_id))
-  
-
-  # If teams are even
-  if(nrow(distinct(count(snappaneers, team), n)) == 1){
-    
-    # A valid score is either a paddle or a typical offense and the scorer has not already scored
-    # OR it's rebuttal
-    valid_score = any(paddle,
-                      all(typical_offense,
-                          not_already_scored),
-                      rebuttal)
-    
-    if(not_already_scored){
-      valid_score_message = "That entry doesn't make sense for this round/shooter combination"
-    }
-    
-    valid_score_message = "That player scored a non-paddle point already!"
-    
-  } else { # If teams are uneven:
-    
-    # Check if the scorer is on the team with fewer players (i.e. can score multiple non-paddle points)
-    scorer_team_players = nrow(snappaneers[snappaneers$team == players_team, ])
-    other_team_players = nrow(snappaneers[snappaneers$team != players_team, ])
-    
-    if((scorer_team_players < other_team_players)|rebuttal){ # If their team has fewer players OR Rebuttal:
-      
-      # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
-      # Players can only score once on a non-paddle shot
-      scored_already = (nrow(filter(scores_table, round_num == round_vector[shot], paddle == F, player_id == scorer_id)) > 1)
-      
-      # Then they can have scored already
-      valid_score = any(all(typical_offense,
-                            !scored_already),
-                        rebuttal,
-                        paddle)
-      
-      # Score message if invalid
-      valid_score_message = "That player scored a non-paddle point already!"
-      
-    } else { # If they have the larger team:
-      # They cannot have scored already OR it's rebuttal
-      valid_score = any(all(typical_offense,
-                            not_already_scored),
-                        paddle,
-                        rebuttal)
-      
-      valid_score_message = "That player scored a non-paddle point already!"
-      
-    }
-    
-  }
-  
-  # Validate all valid scores
-  if(valid_score){
-    valid_score_message = "valid"
-  }
-  
-  return(valid_score_message)
-  
-}
-
-troll_check = function(session, snappaneers, player_stats, game_id){
-  
-  
-  trolls = snappaneers %>%
-    anti_join(player_stats, by = "player_id")
-  
-  bind_rows(player_stats, 
-            tibble(
-                   game_id = rep(game_id, times = nrow(trolls)),
-                   player_id = pull(trolls, player_id), 
-                   team = pull(trolls, team), 
-                   total_points = rep(integer(1), times = nrow(trolls)), # Weirdly enough, integer(1) is a 0 integer vector of length 1
-                   shots = pull(trolls, shots),
-                   ones = rep(integer(1), times = nrow(trolls)),
-                   twos = rep(integer(1), times = nrow(trolls)),
-                   threes = rep(integer(1), times = nrow(trolls)),
-                   impossibles = rep(integer(1), times = nrow(trolls)),
-                   paddle_points = rep(integer(1), times = nrow(trolls)),
-                   clink_points = rep(integer(1), times = nrow(trolls)),
-                   points_per_round = rep(double(1), times = nrow(trolls)),
-                   off_ppr = rep(double(1), times = nrow(trolls)),
-                   def_ppr = rep(double(1), times = nrow(trolls)),
-                   toss_efficiency = rep(double(1), times = nrow(trolls))
-                 )
-  )
-  
-}
-
-# For the sake of code simplicity, I'm going to define a function which
-# writes player_stats_db off of scores. This should only require
-# a scores table to be passed on, since the snappaneers table that is also
-# called would always be the same
-app_update_player_stats = function(scores_df, neers, game){
-   g.id = game
-   output = scores_df %>% 
-    # Join scores to snappaneers to get each player's team
-    left_join(neers, by = "player_id") %>% 
-    # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, team, shots) %>% 
-    # Calculate summary stats
-    summarise(total_points = sum(points_scored),
-              ones = sum((points_scored == 1)),
-              twos = sum((points_scored == 2)),
-              threes = sum((points_scored == 3)),
-              impossibles = sum((points_scored > 3)),
-              paddle_points = sum(points_scored* (paddle | foot)),
-              clink_points = sum(points_scored*clink),
-              points_per_round = total_points / last(shots),
-              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
-              def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
-    ungroup()
-  
-  output = troll_check(snappaneers = neers,
-                                     player_stats = output,
-                                     game_id = g.id)
-  return(output)
-}
-
-
-
-db_update_player_stats = function(player_stats){
-  current_game = unique(player_stats$game_id)
-  del_rows = sql(str_c("DELETE FROM player_stats 
-                 WHERE game_id = ", current_game, ";"))
-  
-  dbExecute(con, del_rows)
-  
-  dbWriteTable(con, "player_stats", player_stats, append = T)
-}
-
-db_update_round = function(round, game){
-  # Update round number in game_stats
-  dbExecute(con, 
-            sql(str_c("UPDATE game_stats 
-                 set last_round = '", round, "'
-                ",
-                      "WHERE game_id = ", game, ";")))
-}
-
-
-# For use with restarting a lost game: First extract the table
-# with the teams and the number of players for each team for the given
-# game_id. This function isn't all that necessary in its own right, but
-# I think it helps for readability
-extract_team_sizes = function(g.id){
-  output = dbGetQuery(con, str_c("SELECT game_id, team FROM player_stats WHERE game_id = ", g.id)) %>% 
-    count(team)
-  return(output)
-}
-
-generate_round_num = function(df, g.id){
-  # Generate the possible sequences for assignment
-  shot_nums = rep(1:200, each = 1)
-  A_geq = rep(1:100, each = 2)
-  B_geq = c(0, A_geq[-200])
-  
-  # The values of the shot nums from each team also
-  # need to be recorded. Unique works in this case because
-  # we update shot number for every team member simultaneously
-  A_shots = dbGetQuery(con, str_c("SELECT DISTINCT(shots) FROM player_stats WHERE team = 'A' AND game_id =", g.id)) %>% 
-    pull()
-  B_shots = dbGetQuery(con, str_c("SELECT DISTINCT(shots) FROM player_stats WHERE team = 'B' AND game_id =", g.id)) %>% 
-    pull()
-  
-  # I generate a multiplier which expresses the difference
-  # between A's players and B's players. For the if statements
-  # which follow, I could either reason on the number of players  
-  # on each team or the multiplier. Each of these has their own
-  # drawbacks, but I'll take mathematical complication as the
-  # downside if the gain is having a simple battery of "if" 
-  # statements. 
-  multiplier = df[df$team == "A", "n"] / 
-    df[df$team == "B", "n"] 
-  
-  
-  # Reason on the possible sequence of shots according
-  # to the multiplier. This requires some "finer tuning" on B_seq than
-  # I'm really happy with, so this would be a nice thing to come back to and improve
-  # in the future
-  if(multiplier > 1) {
-    A_seq = A_geq
-    B_seq = c(0, rep(seq(from = multiplier, to = (100 * multiplier), by = multiplier), each = 2))[-201]
-  } else if (multiplier == 1){
-    A_seq = A_geq
-    B_seq = B_geq
-  } else {
-    A_seq = rep(seq(from = (1/multiplier), to = (100 / multiplier), by = (1/multiplier)), each = 2)
-    B_seq = B_geq
-  }
-  
-  # Now build the table for checking the round number
-  check_table = tibble(shots = shot_nums, 
-                       A = A_seq,
-                       B = B_seq)
-  
-  # Finally, pull the value from shots when A and B meet
-  # the conditions
-  # value = check_table %>% 
-  #   filter(A == A_shots, B == B_shots) %>%
-  #   pull(shots)
-  value = check_table[(check_table$A == A_shots & check_table$B == B_shots), "shots"]
-  return(value$shots)
-}
-
-# Career Stats ------------------------------------------------------------
-
-
-
-
-score_progression = scores_tbl %>% 
-  arrange(game_id, score_id) %>% 
-  group_by(game_id) %>% 
-  mutate(
-    score_a = cumsum((scoring_team=="A")*points_scored),
-    score_b = cumsum((scoring_team=="B")*points_scored)
-  ) %>% 
-  ungroup() %>% 
-  count(score_a, score_b)
-
-score_prog_plot = score_heatmap(score_progression)
 
 
 
@@ -515,13 +224,16 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "career_stats",
               boxPlus(width = 12,
                     style = str_c("background:", snappa_pal[1]), align = "center",
-                                 gt_output("leaderboard"),
                     div(class = "top-snappaneers",
                         div(class = "snappaneers-header",
                             div(class = "snappaneers-title", "Top Snappaneers"),
                             "The deadliest die-throwers in all the land."
                         ),
-                        reactableOutput("leaderboard_rt", width = "100%")
+                        reactableOutput("leaderboard_rt", width = "100%"),
+                        div(class = "caption",
+                          p("Toss efficiency = point-scoring tosses as % total tosses"),
+                          p("Players need to play at least 5 games to be eligible for achievements.")
+                        )
                     )
                 ),
                 boxPlus(width = 12,
@@ -664,18 +376,6 @@ ui <- dashboardPagePlus(
 
 
 
-# Start Screen ------------------------------------------------------------
-
-        
-
-        
-
-# Stats Pane --------------------------------------------------------------
-
-
-
-
-        
 
 # Debugging ---------------------------------------------------------------
 
@@ -811,6 +511,13 @@ server <- function(input, output, session) {
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM career_stats"))}
     ),
+    score_progression = reactivePoll(
+      intervalMillis = 1000*60,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, sql("SELECT SUM(n) FROM score_progression"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM score_progression"))}
+    ),
+    
 
     # dataframe of the players and their teams
     # Current Scores
@@ -1147,27 +854,10 @@ server <- function(input, output, session) {
 
 # Stats Outputs --------------------------------------------------------------
   
-  output$leaderboard = render_gt({
-    aggregated_data = vals$career_stats_tbl() %>% 
-      mutate(rank = 1:n()) %>% 
-      arrange(rank) %>% 
-      select(rank, player_name, 
-             games_played, win_pct, 
-             points_per_game, off_ppg:toss_efficiency)
-    
-    dividing_line = aggregated_data %>% filter(games_played < 5) %>% pull(rank) %>% min()
-    
-    leaderboard_table(aggregated_data, dividing_line = dividing_line)
-  })
-  
+
   output$leaderboard_rt = renderReactable({
     # Create the rank column, arrange the data, and select the columns
-    aggregated_data = vals$career_stats_tbl() %>% 
-      mutate(rank = 1:n()) %>% 
-      arrange(rank) %>% 
-      select(rank, player_name, 
-             games_played, win_pct, 
-             points_per_game, off_ppg:toss_efficiency)
+    aggregated_data = vals$career_stats_tbl()
     
     # Separate out those with under 5 games
     dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
@@ -1175,9 +865,10 @@ server <- function(input, output, session) {
     leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
   })
 
+  
 
   output$scoring_heatmap = renderPlot({
-    score_prog_plot
+    score_heatmap(vals$score_progression())
   })
   
   output$heatmap_info <- renderUI({
@@ -1185,7 +876,7 @@ server <- function(input, output, session) {
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
-    freq = filter(score_progression, score_a == y, score_b == x) %>% 
+    freq = filter(vals$score_progression(), score_a == y, score_b == x) %>% 
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
@@ -2223,10 +1914,7 @@ observeEvent(input$resume_no, {
       # Update round in game stats
       db_update_round(round = round_num(), game = vals$game_id)
       
-    
-    
-    
-    
+      
     
   })
   
@@ -2275,6 +1963,38 @@ observeEvent(input$resume_no, {
     }
       
     })
+  
+
+# Score notifications -----------------------------------------------------
+
+  
+  observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
+               {
+                 validate(
+                   need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
+                 )
+                 
+                 
+                 inputSweetAlert(session, 
+                                 inputId = "casualty",
+                                 title = "War of 1812",
+                                 text = "Everyone roll a die, the lowest roll takes a shot.",
+                                 type = "warning",
+                                 input = "radio",
+                                 inputOptions = snappaneers()$player_name)
+               })
+  
+  observeEvent(input$casualty, {
+    # Convert player name to ID
+    casualty = select(snappaneers(), starts_with("player")) %>% 
+      deframe() %>% 
+      pluck(input$casualty)
+    
+    # Insert the game ID and player ID
+    dbExecute(con, 
+              sql(str_c("INSERT INTO casualties_of_1812(game_id, player_id)
+                        VALUES (", vals$game_id, ", ", casualty, ");")))
+  })
   
 
 # New Players -------------------------------------------------------------
@@ -2617,32 +2337,11 @@ observeEvent(input$resume_no, {
                        duration = 20, closeButton = F
                       )
     }
-    validate(
-      need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
-    )
     
-    
-    inputSweetAlert(session, 
-                    inputId = "casualty",
-                   title = "1812",
-                   text = "Everyone roll a die, lowest roll takes a shot.",
-                   type = "warning",
-                   input = "radio",
-                   inputOptions = snappaneers()$player_name)
 
   })
   
-  observeEvent(input$casualty, {
-    # Convert player name to ID
-    casualty = select(snappaneers(), starts_with("player")) %>% 
-      deframe() %>% 
-      pluck(input$casualty)
-    
-    # Insert the game ID and player ID
-    dbExecute(con, 
-              sql(str_c("INSERT INTO casualties_of_1812(game_id, player_id)
-                        VALUES (", vals$game_id, ", ", casualty, ");")))
-  })
+  
   
 
 # Undo Score --------------------------------------------------------------
@@ -2792,18 +2491,7 @@ observeEvent(input$resume_no, {
       )
     }
     
-    validate(
-      need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
-    )
     
-    
-    inputSweetAlert(session, 
-                    inputId = "casualty",
-                    title = "1812",
-                    text = "Everyone roll a die, lowest roll takes a shot.",
-                    type = "warning",
-                    input = "radio",
-                    inputOptions = snappaneers()$player_name)
   })
   
   # Undo score

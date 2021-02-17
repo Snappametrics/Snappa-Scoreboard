@@ -1,41 +1,4 @@
-toss_percent_plus = function(x){
-  str_c("(+", round(x*100, 0), "%)")
-}
-toss_percent_minus = function(x){
-  str_c("(", round(x*100, 0), "%)")
-}
 
-aggregate_player_stats = function(scores, players){
-  scores %>% 
-    # Join scores to snappaneers to get each player's team
-    left_join(players, by = "player_id") %>% 
-    # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, team, shots) %>% 
-    # Calculate summary stats
-    summarise(total_points = sum(points_scored),
-              ones = sum((points_scored == 1)),
-              twos = sum((points_scored == 2)),
-              threes = sum((points_scored == 3)),
-              impossibles = sum((points_scored > 3)),
-              paddle_points = sum(points_scored* (paddle | foot)),
-              clink_points = sum(points_scored*clink),
-              points_per_round = total_points / last(shots),
-              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
-              def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
-    ungroup()
-}
-
-parse_round_num = function(round){
-  str_replace_all(round, c("([0-9]+)A" = "(\\1*2)-1",
-                           "([0-9]+)B" = "(\\1*2)")) %>% 
-    map(., ~parse(text = .)) %>% 
-    map_dbl(eval)
-}
-
-rowAny <- function(x) {
-  rowSums(x) > 0
-} 
 
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
@@ -111,6 +74,24 @@ score_check <- function(team, players, round) {
                 uiOutput(score_val)
               )
   )
+  
+}
+
+game_notification = function(rebuttal = F, round, current_scores){
+  if(rebuttal){
+    
+    team_in_rebuttal = str_extract(round, "[AB]+")
+    text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+    showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
+                                team_in_rebuttal, "</span>",
+                                " needs ",
+                                abs(current_scores$team_A - current_scores$team_B) - 1,
+                                " points to bring it back")
+    ), duration = 20, closeButton = F)
+  } else {
+    showNotification(HTML(str_c("<i class='fa fa-sign-language' style='padding: 1vh;'></i><span>That's some hot!</span>")),
+                     duration = 10, closeButton = F)
+  }
   
 }
 
@@ -890,40 +871,166 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   
   career_stats_data %>% 
     reactable(
+      defaultPageSize = 20, 
       defaultSorted = "rank",
-      defaultPageSize = 20,
+      showSortable = T,
+      defaultColDef = colDef(headerStyle = list(minHeight = 51), align = "left"),
+      highlight = T,
       # compact = T, 
       width = "100%",
+      rowStyle = function(index) {
+        if (career_stats_data[index, "games_played"] < 5) {
+          list(background = "#E3E3DE",
+               fontWeight = 200)
+        }
+      },
+      rowClass = function(index) {
+        if (career_stats_data[index, "rank"] == max(stats_eligible$rank)) {
+          "dividing-line"
+        } else if (career_stats_data[index, "rank"] > max(stats_eligible$rank)) {
+          "unranked"
+        } else if (career_stats_data[index, "rank"] <= max(stats_eligible$rank)) {
+          "ranked"
+        }
+      },
       columns = list(
-        rank = colDef("", 
-                      minWidth = 40,
-                      maxWidth = 80), 
+        rank = colDef("",
+                      align = "left", 
+                      minWidth = 35,
+                      maxWidth = 45,
+                      headerStyle = list(minHeight = 51, background = snappa_pal[1], position = "sticky", left = 0, zIndex = 1),
+                      style = function(value){
+                        if(value > max(stats_eligible$rank)){
+                          list(background = "#E3E3DE",
+                               fontWeight = 200, position = "sticky", left = 0, zIndex = 1)
+                        } else {
+                          list(background = snappa_pal[1], fontWeight = 700, position = "sticky", left = 0, zIndex = 1)
+                        }
+                      },
+                      class = function(value){
+                          if(value > max(stats_eligible$rank)){
+                            "unranked"
+                          } else {
+                          "ranked"
+                        }
+                        }), 
         player_name = colDef("Player", 
+                             sortable = F,
                              minWidth = 100,
-                             maxWidth = 200),
+                             maxWidth = 200,
+                             headerStyle = list(minHeight = 51, background = snappa_pal[1], position = "sticky", left = 35,zIndex = 1),
+                             style = function(value){
+                               if(value %in% unique(stats_eligible$player_name)){
+                                 list(background = snappa_pal[1], position = "sticky", left = 35,zIndex = 1)
+                               } else {
+                                 list(background = "#E3E3DE", position = "sticky", left = 35,zIndex = 1)
+                               }
+                             },
+                             class = function(value){
+                               if(!(value %in% unique(stats_eligible$player_name))){
+                                 "unranked"
+                               } else {
+                               "ranked"
+                               }
+                             }),
         games_played = colDef("Games Played", 
-                              minWidth = 70,
+                              minWidth = 82,
                               maxWidth = 150),
         win_pct = colDef("Win %", 
                          format = colFormat(percent = T, digits = 1), 
                          minWidth = 80,
-                         maxWidth = 150), 
+                         maxWidth = 150,
+                         style = function(value) {
+                           if(max(stats_eligible[, "win_pct"], na.rm=T) == value){
+                             list(color = snappa_pal[5],
+                                  fontWeight = 600)
+                           }
+                         }), 
+        total_points = colDef("Total Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        offensive_points = colDef("Off. Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        defensive_points = colDef("Def. Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        paddle_points = colDef("Paddle Points", 
+                              minWidth = 82,
+                              maxWidth = 150,
+                              style = function(value) {
+                                if(max(stats_eligible[, "paddle_points"], na.rm=T) == value){
+                                  list(color = snappa_pal[5],
+                                       fontWeight = 600)
+                                }
+                              }),
+        clink_points = colDef("Clink Points", 
+                               minWidth = 82,
+                               maxWidth = 150,
+                              style = function(value) {
+                                if(max(stats_eligible[, "clink_points"], na.rm=T) == value){
+                                  list(color = snappa_pal[5],
+                                       fontWeight = 600)
+                                }
+                              }),
+        sinks = colDef("Sinks", 
+                               minWidth = 82,
+                               maxWidth = 150,
+                       style = function(value) {
+                         if(max(stats_eligible[, "sinks"], na.rm=T) == value){
+                           list(color = snappa_pal[5],
+                                fontWeight = 600)
+                         }
+                       }),
+        paddle_sinks = colDef("Paddle Sinks", 
+                               minWidth = 82,
+                               maxWidth = 150,
+                              style = function(value) {
+                                if(max(stats_eligible[, "paddle_sinks"], na.rm=T) == value){
+                                  list(color = snappa_pal[5],
+                                       fontWeight = 600)
+                                }
+                              }),
         points_per_game = colDef("Points per Game\n(PPG)", 
                                  format = colFormat(digits = 2), 
-                                 minWidth = 90,
-                                 maxWidth = 200),
+                                 minWidth = 117,
+                                 maxWidth = 200,
+                                 style = function(value) {
+                                   if(max(stats_eligible[, "points_per_game"], na.rm=T) == value){
+                                     list(color = snappa_pal[5],
+                                          fontWeight = 600)
+                                   }
+                                 }),
         off_ppg = colDef("Offensive PPG", 
                          format = colFormat(digits = 2),
-                         minWidth = 90,
-                         maxWidth = 200),
+                         minWidth = 100,
+                         maxWidth = 200,
+                         style = function(value) {
+                           if(max(stats_eligible[, "off_ppg"], na.rm=T) == value){
+                             list(color = snappa_pal[5],
+                                  fontWeight = 600)
+                           }
+                         }),
         def_ppg = colDef("Defensive PPG", 
                          format = colFormat(digits = 2), 
-                         minWidth = 90,
-                         maxWidth = 200),
+                         minWidth = 105,
+                         maxWidth = 200,
+                         style = function(value) {
+                           if(max(stats_eligible[, "def_ppg"], na.rm=T) == value){
+                             list(color = snappa_pal[5],
+                                  fontWeight = 600)
+                           }
+                         }),
         toss_efficiency = colDef("Toss Efficiency", 
                                  format = colFormat(digits = 1, percent = T), 
-                                 minWidth = 90,
-                                 maxWidth = 200)
+                                 minWidth = 105,
+                                 maxWidth = 200,
+                                 style = function(value) {
+                                   if(max(stats_eligible[, "toss_efficiency"], na.rm=T) == value){
+                                     list(color = snappa_pal[5],
+                                          fontWeight = 600)
+                                   }
+                                 })
       ),
       class = "snappaneers-tbl"
     )
@@ -1484,7 +1591,8 @@ options(reactable.theme = reactableTheme(
   backgroundColor = snappa_pal[1],
   borderColor = "#DEDDDD",
   headerStyle = list(
-    alignSelf = "flex-end"
+    alignSelf = "flex-end",
+    borderBottom = "3px solid #7c7c7c"
   ))
 )
 
