@@ -260,14 +260,7 @@ ui <- dashboardPagePlus(
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id")) %>%
                                        deframe() %>% sample())
-                         ),
-                  column(width = 3,
-                         # Stat selection
-                         selectInput("stat_select", label = "Stat", selectize = F,
-                                     choices = c("Total Points" = "total_points", 
-                                                 "Paddle Points" = "paddle_points", 
-                                                 "Toss Efficiency" = "toss_efficiency"), 
-                                     selected = "total_points"))
+                         )
 
                 )
               ),
@@ -278,10 +271,17 @@ ui <- dashboardPagePlus(
                       closable = F,
                       status = "primary",
                       fluidRow(class = "last-n-games",
-                        column(width = 1, style = "padding-right:3vw;",
-                               tags$span("Last ", style = "font-weight:600;")
+                               column(width = 5,
+                                      # Stat selection
+                                      selectInput("stat_select", label = NULL, selectize = F,
+                                                  choices = c("Total Points" = "total_points", 
+                                                              "Paddle Points" = "paddle_points", 
+                                                              "Toss Efficiency" = "toss_efficiency"), 
+                                                  selected = "total_points")), 
+                        column(width = 1, style = "padding-right:3vw;padding-left:0",
+                               tags$span("Last", style = "font-weight:600;")
                                ),
-                        column(width = 5,
+                        column(width = 3,
                                # Sample size selection
                                selectInput("sample_select", label = NULL, selectize = F, 
                                            choices = c(5, 10, 20, "All"), 
@@ -289,6 +289,7 @@ ui <- dashboardPagePlus(
                         column(width = 1, style = "padding-left:0;",
                                tags$span(" games", style = "font-weight:600;")
                                          )
+                        
                       ),
                 plotOutput("player_form")
               ),
@@ -1137,10 +1138,10 @@ server <- function(input, output, session) {
     stat_name = str_to_title(str_replace(input$stat_select, "_", " "))
 
     # X axis title conditional on number of games chosen
-    plot_title = str_c(stat_name, ": ", 
-                    if_else(input$sample_select == "All", 
-                            str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
-                    paste("Last", input$sample_select, "games")))
+    # plot_title = str_c(stat_name, ": ", 
+    #                 if_else(input$sample_select == "All", 
+    #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
+    #                 paste("Last", input$sample_select, "games")))
     
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
@@ -1168,7 +1169,7 @@ server <- function(input, output, session) {
     } else {
       plot = plot +
         labs(x = expression(More ~ Recent ~ Games %->% ""), y = stat_name, 
-             title = plot_title,
+             # title = plot_title,
              caption = str_c("- - - -  Career Avg. (", 
                              scales::comma(unique(pluck(player_form_data(), "data")[["avg_points"]]), accuracy = 1), " points)"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
