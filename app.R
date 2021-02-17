@@ -1189,82 +1189,81 @@ server <- function(input, output, session) {
                                         FROM basic_career_stats ", 
                                         "WHERE player_id = ", input$player_select))
                               )
-
-    # stat_list = 
-    fluidRow(
+    div(
       box(width = 6, status = "success", title = "General Stats", collapsible = T, 
-      # Games Played
-      column(
-        width = 3,
-        descriptionBlock(
-          header = player_stats$games_played,
-          text = "GAMES"
-        )
-      ),
-      # Win %
-      column(
-        width = 2,
-        descriptionBlock(
-          header = scales::percent(player_stats$win_pct),
-          text = "WIN %"
-        )
-      ),
-      # Sinks
-      column(
-        width = 2,
-        descriptionBlock(
-          header = player_stats$sinks,
-          text = "SINK(S)"
-        )
-      ),
-      column(
-        width = 5,
-        descriptionBlock(
-          header = HTML(if_else(player_stats$sinks > 0, 
-                           str_c("<span style='font-weight: 500;'>Every </span>", 
-                                      round(1/(player_stats$sinks/player_stats$games_played), 1), 
-                                      "<span style='font-weight: 500;'> games</span>"),
-                           "TBD")),
-          text = "SINK FREQUENCY"
-        )
-      )
+          # Games Played
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$games_played,
+              text = "GAMES"
+            )
+          ),
+          # Win %
+          column(
+            width = 2,
+            descriptionBlock(
+              header = scales::percent(player_stats$win_pct),
+              text = "WIN %"
+            )
+          ),
+          # Sinks
+          column(
+            width = 2,
+            descriptionBlock(
+              header = player_stats$sinks,
+              text = "SINK(S)"
+            )
+          ),
+          column(
+            width = 5,
+            descriptionBlock(
+              header = HTML(if_else(player_stats$sinks > 0, 
+                                    str_c("<span style='font-weight: 500;'>Every </span>", 
+                                          round(1/(player_stats$sinks/player_stats$games_played), 1), 
+                                          "<span style='font-weight: 500;'> games</span>"),
+                                    "TBD")),
+              text = "SINK FREQUENCY"
+            )
+          )
       ),
       box(width = 6, status = "success", title = "Paddle Stats", collapsible = T,
-      # Paddle points
-      column(
-        width = 3,
-        descriptionBlock(
-          header = player_stats$paddle_points,
-          text = "PADDLE POINTS"
-        )
-      ),
-      # Paddle Sinks
-      column(
-        width = 3,
-        descriptionBlock(
-          header = player_stats$paddle_sinks,
-          text = "PADDLE SINK(S)"
-        )
-      ),
-      # Foot Paddles
-      column(
-        width = 3,
-        descriptionBlock(
-          header = player_stats$foot_paddles,
-          text = "FOOT PADDLES"
-        )
-      ),
-      # Foot Sinks
-      column(
-        width = 3,
-        descriptionBlock(
-          header = player_stats$foot_sinks,
-          text = "FOOT SINK(S)"
-        )
+          # Paddle points
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$paddle_points,
+              text = "PADDLE POINTS"
+            )
+          ),
+          # Paddle Sinks
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$paddle_sinks,
+              text = "PADDLE SINK(S)"
+            )
+          ),
+          # Foot Paddles
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$foot_paddles,
+              text = "FOOT PADDLES"
+            )
+          ),
+          # Foot Sinks
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$foot_sinks,
+              text = "FOOT SINK(S)"
+            )
+          )
+          
       )
-      
     )
-    )
+
 
   })
   
