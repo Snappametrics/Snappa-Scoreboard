@@ -267,9 +267,6 @@ label.control-label[for='score'] {
     border: none;
 }
 
-.description-block {
-    height: 8.5vh;
-}
 
 .description-header {
   margin-bottom: 5px !important;
