@@ -268,7 +268,16 @@ label.control-label[for='score'] {
 }
 
 .description-block {
-    height: 8vh;
+    height: 8.5vh;
+}
+
+.description-header {
+  margin-bottom: 5px !important;
+  font-size: 15px !important;
+}
+
+.description-text {
+  font-size: 13px;
 }
 
 .awesome-checkbox {

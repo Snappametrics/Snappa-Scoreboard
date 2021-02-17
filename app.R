@@ -1202,7 +1202,7 @@ server <- function(input, output, session) {
         width = 3,
         descriptionBlock(
           header = player_stats$games_played,
-          text = "GAMES PLAYED"
+          text = "GAMES"
         )
       ),
       # Win %
@@ -1210,19 +1210,19 @@ server <- function(input, output, session) {
         width = 3,
         descriptionBlock(
           header = scales::percent(player_stats$win_pct),
-          text = "WIN PERCENTAGE"
+          text = "WIN %"
         )
       ),
       # Sinks
       column(
-        width = 3,
+        width = 2,
         descriptionBlock(
           header = player_stats$sinks,
           text = "SINK(S)"
         )
       ),
       column(
-        width = 3,
+        width = 4,
         descriptionBlock(
           header = if_else(player_stats$sinks > 0, 
                            str_c("Every ", round(1/(player_stats$sinks/player_stats$games_played), 1), " games"),
