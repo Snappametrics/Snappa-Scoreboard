@@ -1222,11 +1222,13 @@ server <- function(input, output, session) {
         )
       ),
       column(
-        width = 4,
+        width = 5,
         descriptionBlock(
-          header = if_else(player_stats$sinks > 0, 
-                           str_c("Every ", round(1/(player_stats$sinks/player_stats$games_played), 1), " games"),
-                           "TBD"),
+          header = HTML(if_else(player_stats$sinks > 0, 
+                           str_c("<span style='font-weight: 500;'>Every </span>", 
+                                      round(1/(player_stats$sinks/player_stats$games_played), 1), 
+                                      "<span style='font-weight: 500;'> games</span>"),
+                           "TBD")),
           text = "SINK FREQUENCY"
         )
       )
