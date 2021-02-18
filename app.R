@@ -50,7 +50,7 @@ scores_tbl = dbGetQuery(con, "SELECT * FROM scores")
 player_stats_tbl = dbGetQuery(con, "SELECT * FROM player_stats")
 game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
-# Makea list of table templates
+# Make a list of table templates
 tbls = c("players", "scores", "player_stats", "game_stats")
 tbl_templates = map(tbls, function(table){
   dbGetQuery(con, str_c("SELECT * FROM ", table, " LIMIT 0")) 

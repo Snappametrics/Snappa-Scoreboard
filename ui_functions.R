@@ -281,12 +281,17 @@ extra_player_ui = function(current_tab, player, player_choices){
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
-           class = 'additional_players_form',
-               actionBttn(inputId = remove_type,  label = "X", style = "jelly",
-                              color = "danger", size = "sm"),
+            class = 'additional_players_form',
+              div(class = 'input_close_and_name',
+                actionBttn(inputId = remove_type,  label = "X", style = "jelly",
+                               color = "danger", size = "sm"),
+                h2(id = paste0("name_", player_team, player_num),
+                   paste0('Player ', player_num)
+                )
+               ),
                # Add extra player text input 
                selectizeInput(inputId = input_type, 
-                              label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
+                              label = NULL, c(`Player Name`='', player_choices), options = list(create = TRUE)),
 
              # Add remove player button outside fluid row
              

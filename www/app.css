@@ -85,12 +85,6 @@
     margin-bottom: 2rem;
 }
 
-#remove_A3, #remove_A4, #remove_B3, #remove_B4 {
-    position: relative; 
-    top:-11vh; 
-    z-index:1;
-}
-
 .bootstrap-select .dropdown-toggle .filter-option {
     text-align: center!important;
 }
@@ -396,6 +390,20 @@ players 3 and 4 */
 .selectize-input {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
+
+.input_close_and_name {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+.input_close_and_name > h2{
+  text-align: center;
+  font-weight: bold;
+  padding-right: 5vw;
+  color: white;
+  font-size: 4rem;
+  flex-grow: 5;
+}
 /* End my CSS */
 
 body{
@@ -695,10 +703,6 @@ input[type=radio]{
         
     .h1, .h2, .h3, h1, h2, h3 {
         margin: 0;
-    }
-    
-    #remove_A3, #remove_A4, #remove_B3, #remove_B4 {
-        top:-15vh; 
     }
     
     #start_game {
