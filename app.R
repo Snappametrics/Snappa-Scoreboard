@@ -9,7 +9,7 @@
 
 
 
-
+library(extrafont)
 library(DBI)
 library(RPostgres)
 library(tidyverse)
@@ -24,8 +24,8 @@ library(reactable)
 library(ggrepel)
 library(ggtext)
 library(patchwork)
-library(extrafont)
 library(waiter)
+library(htmltools)
 
 
 source("dbconnect.R")

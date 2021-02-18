@@ -1596,7 +1596,6 @@ options(reactable.theme = reactableTheme(
   ))
 )
 
-library(htmltools)
 
 # Render a bar chart with a label on the left
 bar_chart <- function(label, width = "100%", height = "14px", fill = "#00bfc4", background = NULL) {

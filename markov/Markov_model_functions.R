@@ -2,9 +2,6 @@
 # Rmd file every time I want to run the model. It's also a space to clean
 # up the script that runs the simulation into more discrete functions
 
-library(lubridate)
-library(dbplyr)
-library(tidyverse)
 
 # This function creates all the "helper" tables that are needed in team_transitions
 # and elsewhere in the funcitons. It is just easier to keep them all in one
