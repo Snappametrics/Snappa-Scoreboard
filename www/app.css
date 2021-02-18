@@ -325,7 +325,7 @@ label.control-label[for='score'] {
   color: inherit;
 }
 
-.well, .scoreboard_well, #start_game, #next_round, #previous_round, #switch_sides, #A_score_button, #undo_score_A, #B_score_button, #undo_score_B {
+.input_well, .scoreboard_well, #start_game, #next_round, #previous_round, #switch_sides, #A_score_button, #undo_score_A, #B_score_button, #undo_score_B {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -354,8 +354,35 @@ label.control-label[for='score'] {
   align-items: center;
 }
 
+/* Styling for the landing page: size of input wells, flex on player forms, and additional styling due to the close button on 
+players 3 and 4 */
+.input_well {
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
 
+.player_input_forms {
+  flex-grow: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;  
+  height: auto;
+}
 
+#extra_player_A3, #extra_player_A4, #extra_player_B3, #extra_player_B4 {
+  height: 10vh;
+  width: 80%;
+  border-radius: 15px;
+  font-size: 2rem;
+}
+
+#start_game {
+  border-radius: 15px;
+}
 /* End my CSS */
 
 body{

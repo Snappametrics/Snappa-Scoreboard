@@ -102,29 +102,33 @@ team_input_ui = function(team, player_choices){
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-  selector = if_else(team == 'A', 'input_well_A', 'input_well_B')
-
+  well_selector = if_else(team == 'A', 'input_well_A', 'input_well_B')
+  div_selector = if_else(team == 'A', 'input_forms_A','input_forms_B')
+  
   column(4, align = "center",
          
          wellPanel(
-           class = 'input_well'
-           id = selector,
+           class = 'input_well',
+           id = well_selector,
            style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
-           # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
+           tags$div( id = div_selector,
+                class = 'player_input_forms',
+                # Player 1
+                selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
                           options = list(create = TRUE, hideSelected=T), width = "125%"),
-           # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
-                          options = list(create = TRUE, hideSelected=T), width = "125%"),
-           # Add Player 3 button
-           actionBttn(paste0("extra_player_", team, "3"), 
-                      label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
-           
-           # CSS: Increase font size, change color to white, add top and bottom margins
-           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
-         )
+                 # Player 2
+                selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
+                               options = list(create = TRUE, hideSelected=T), width = "125%"),
+                # Add Player 3 button
+                actionBttn(paste0("extra_player_", team, "3"), 
+                           label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
+                
+                # CSS: Increase font size, change color to white, add top and bottom margins
+                tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+           )
+        )
   )
 }
 
@@ -277,6 +281,7 @@ extra_player_ui = function(current_tab, player, player_choices){
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
+           class = 'additional_players_form',
                actionBttn(inputId = remove_type,  label = "X", style = "jelly",
                               color = "danger", size = "sm"),
                # Add extra player text input 
