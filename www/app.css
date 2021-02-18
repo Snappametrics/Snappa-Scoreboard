@@ -373,6 +373,14 @@ players 3 and 4 */
   height: auto;
 }
 
+.additional_players_form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+}
+
+
 #extra_player_A3, #extra_player_A4, #extra_player_B3, #extra_player_B4 {
   height: 10vh;
   width: 80%;
