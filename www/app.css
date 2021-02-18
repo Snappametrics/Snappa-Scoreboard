@@ -30,9 +30,10 @@
 
 /* My CSS */
 
-.box {
-    background: #fafaf9;
+.box, .swal2-popup, .modal-header {
+    background-color: #fafaf9 !important;
 }
+
 
 /* General */
 
