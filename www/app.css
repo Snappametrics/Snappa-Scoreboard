@@ -378,10 +378,15 @@ players 3 and 4 */
   width: 80%;
   border-radius: 15px;
   font-size: 2rem;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
 
 #start_game {
   border-radius: 15px;
+}
+
+.selectize-input {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
 /* End my CSS */
 

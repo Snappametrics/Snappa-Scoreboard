@@ -65,6 +65,7 @@ tbl_templates = map(tbls, function(table){
 
 # Define UI for application that draws a histogram
 ui <- dashboardPagePlus(
+  collapse_sidebar = TRUE,
   dashboardHeaderPlus(title = tagList(
     # Corner logo
     span(class = "logo-lg", "Snappa Scoreboard"), 
@@ -96,7 +97,8 @@ ui <- dashboardPagePlus(
     )
     ),
   dashboardSidebar(
-    sidebarMenuOutput("sidebar_menu")
+    sidebarMenuOutput("sidebar_menu"),
+    collapsed = TRUE
   ),
   rightsidebar = rightSidebar(
     background = "dark",
