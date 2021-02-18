@@ -2179,7 +2179,7 @@ observeEvent(input$resume_no, {
         team = "B", 
         players = eligible_shooters,
         round = round_num()))
-
+    
   })
   
   # Score validation
@@ -2204,24 +2204,24 @@ observeEvent(input$resume_no, {
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
-
+      
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
-                              tibble(
-                                score_id = vals$score_id,
-                                game_id = vals$game_id,
-                                player_id = scorer_pid,
-                                scoring_team = "B",
-                                round_num = round_num(),
-                                points_scored = score,
-                                shooting = shooting_team_lgl,
-                                paddle = any(input$paddle, input$foot),
-                                clink = input$clink,
-                                foot = input$foot
-                              ))
+                                 tibble(
+                                   score_id = vals$score_id,
+                                   game_id = vals$game_id,
+                                   player_id = scorer_pid,
+                                   scoring_team = "B",
+                                   round_num = round_num(),
+                                   points_scored = score,
+                                   shooting = shooting_team_lgl,
+                                   paddle = any(input$paddle, input$foot),
+                                   clink = input$clink,
+                                   foot = input$foot
+                                 ))
       #Update the server with the new score
       dbWriteTable(con, "scores", 
-                    anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
+                   anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
       
       
       # Update player stats in the app
@@ -2531,6 +2531,12 @@ observeEvent(input$resume_no, {
     db_update_player_stats(vals$player_stats_db)
     
   })
+  
+  
+  
+  
+  
+  
   
   
 
