@@ -396,14 +396,42 @@ players 3 and 4 */
   display: flex;
   justify-content: flex-start;
 }
-.input_close_and_name > h2{
+.input_close_and_name > h1{
   text-align: center;
   font-weight: bold;
   padding-right: 5vw;
   color: white;
-  font-size: 4rem;
+  font-size: 4.2rem;
   flex-grow: 5;
 }
+
+#remove_A3, #remove_A4, #remove_B3, #remove_B4 {
+  width: 4vw;
+}
+
+.additional_players_form > .shiny-input-container {
+  width: 100%;
+}
+
+.input_close_and_name > button {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+#switch_sides {
+  height: 5vh;
+  width: 60%;
+  border-radius: 15px;
+}
+
+
+/* Controls for text shading on wells */
+.well_A > h1, .well_A > h2, #input_forms_A > div > label {
+  text-shadow: -1px 1px 0 rgb(255,0,0, 0.4), 1px 1px 0 rgb(255,0,0, 0.4), 1px -1px 0 rgb(255,0,0, 0.4), -1px -1px 0 rgb(255,0,0, 0.4);
+}
+.well_B > h1, .well_B > h2 #input_forms_B > div > label{
+  text-shadow: -1px 1px 0 rgb(0,0,255, 0.2), 1px 1px 0 rgb(0,0,255, 0.2), 1px -1px 0 rgb(0,0,255, 0.2), -1px -1px 0 rgb(0,0,255, 0.2);
+}
+
 /* End my CSS */
 
 body{
@@ -655,11 +683,20 @@ input[type=radio]{
     .well .shiny-input-container {
         width: 80%;
     }
+    .additional_players_form > .shiny-input-container {
+        width: 100%;
+    }
 }
 
+
+
+
 @media (max-width: 1200px) {
-    .well .shiny-input-container {
+    .well  {
         width: auto;
+    }
+    .shiny-input-container {
+        width: 100%;
     }
 }
 

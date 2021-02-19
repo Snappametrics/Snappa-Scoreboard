@@ -104,11 +104,12 @@ team_input_ui = function(team, player_choices){
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   well_selector = if_else(team == 'A', 'input_well_A', 'input_well_B')
   div_selector = if_else(team == 'A', 'input_forms_A','input_forms_B')
+  class_selector = paste0('input_well ', if_else(team == 'A', 'well_A', 'well_B'))
   
   column(4, align = "center",
          
          wellPanel(
-           class = 'input_well',
+           class = class_selector,
            id = well_selector,
            style = paste("background:", team_colour),
            # Header
@@ -202,7 +203,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                      
                      wellPanel(
-                       class = 'scoreboard_well',
+                       class = paste0('scoreboard_well ', 'well_', left_team), 
                        style = paste(well_panel_style, team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
@@ -233,7 +234,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                     
                     wellPanel(
-                      class = 'scoreboard_well',
+                      class = paste0('scoreboard_well ', 'well_', right_team),
                       style = paste(well_panel_style, team_colours[[right_team]]),
                       # Header
                       h1(paste("Team", toupper(right_team)), style = h1_style),
@@ -285,7 +286,7 @@ extra_player_ui = function(current_tab, player, player_choices){
               div(class = 'input_close_and_name',
                 actionBttn(inputId = remove_type,  label = "X", style = "jelly",
                                color = "danger", size = "sm"),
-                h2(id = paste0("name_", player_team, player_num),
+                h1(id = paste0("name_", player_team, player_num),
                    paste0('Player ', player_num)
                 )
                ),
