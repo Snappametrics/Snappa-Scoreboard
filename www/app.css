@@ -417,6 +417,16 @@ players 3 and 4 */
   border-radius: 15px;
 }
 
+#scoreboard_center_controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: stretch;
+}
+
+#round_value > h3 {
+  text-align: center;
+}
 
 /* Controls for text shading on wells */
 .well_A > h1, .well_A > h2, #input_forms_A > div > label, #add_remove_A3 .input_close_and_name > h1 {

@@ -224,10 +224,12 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                      )
               ), 
               # Round
-              column(width = 4, align = "center",
-                     h1("Round", style = "font-size: 5rem; font-weight: 600;"),
-                     uiOutput("round_num"),
-                     uiOutput("round_control_buttons")
+              column(width = 4, align = "center", style = 'padding: 0;',
+                     div(id = 'scoreboard_center_controls',
+                         h1("Round", style = "font-size: 5rem; font-weight: 600;"),
+                         uiOutput("round_num"),
+                         uiOutput("round_control_buttons")
+                     )
 
               ),
               # Team B
