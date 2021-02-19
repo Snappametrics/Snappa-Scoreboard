@@ -112,10 +112,6 @@
     line-height: 20rem;
 }
 
-#A_score_button, #B_score_button {
-    font-size: 2.1rem;
-    
-}
 
 #score_A, #score_B {
     font-size: 20rem; 
@@ -323,10 +319,6 @@ label.control-label[for='score'] {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
 
-#switch_sides {
-  border-radius: 15px;
-}
-
 /* Styling for 'we-scored' button and box around it */
 #A_score_and_undo, #B_score_and_undo {
     display: flex;
@@ -340,6 +332,8 @@ label.control-label[for='score'] {
   width: 90%;
   height: 50%;
   border-radius: 15px;
+  font-size: 3rem;
+  padding: 0vw;
 }
 
 #round_control_buttons {
@@ -418,18 +412,18 @@ players 3 and 4 */
 }
 
 #switch_sides {
-  height: 5vh;
-  width: 60%;
+  height: 6vh;
+  width: 80%;
   border-radius: 15px;
 }
 
 
 /* Controls for text shading on wells */
-.well_A > h1, .well_A > h2, #input_forms_A > div > label {
-  text-shadow: -1px 1px 0 rgb(255,0,0, 0.4), 1px 1px 0 rgb(255,0,0, 0.4), 1px -1px 0 rgb(255,0,0, 0.4), -1px -1px 0 rgb(255,0,0, 0.4);
+.well_A > h1, .well_A > h2, #input_forms_A > div > label, #add_remove_A3 .input_close_and_name > h1 {
+  text-shadow: -1px 1px 8px rgb(139,0,0, 0.3), 1px 1px 8px rgb(139,0,0, 0.3), 1px -1px 8px rgb(139,0,0, 0.3), -1px -1px 8px rgb(139,0,0, 0.3);
 }
-.well_B > h1, .well_B > h2 #input_forms_B > div > label{
-  text-shadow: -1px 1px 0 rgb(0,0,255, 0.2), 1px 1px 0 rgb(0,0,255, 0.2), 1px -1px 0 rgb(0,0,255, 0.2), -1px -1px 0 rgb(0,0,255, 0.2);
+.well_B > h1, .well_B > h2, #input_forms_B > div > label, #add_remove_B3 .input_close_and_name > h1{
+  text-shadow: -1px 1px 8px rgb(0,0,139, 0.2), 1px 1px 8px rgb(0,0,139, 0.2), 1px -1px 8px rgb(0,0,139, 0.2), -1px -1px 8px rgb(0,0,139, 0.2);
 }
 
 /* End my CSS */
@@ -759,22 +753,22 @@ input[type=radio]{
     }
  */   
     #previous_round{
-        font-size: 1rem;
-        padding: 2vh 2vw 2vh 2vw;
-        margin-bottom: 1vh;
+        font-size: 1.5rem;
+        padding: 2vh 1vw 2vh 1vw;
+        margin-bottom: 2vh;
         margin-top: 1vh;
-        height: 10vh;
-        width: 60%;
+        height: 9vh;
+        width: 75%;
         order: 2;
     }
     
     #next_round {
         font-size: 2rem;
-        padding: 2vh 2vw 2vh 2vw;
-        margin-bottom: 1vh;
+        padding: 2vh 1vw 2vh 1vw;
+        margin-bottom: 0vh;
         margin-top: 1vh;
         height: 15vh;
-        width: 80%;
+        width: 90%;
         order: 1;
     }
     
