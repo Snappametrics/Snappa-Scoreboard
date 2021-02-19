@@ -2164,50 +2164,6 @@ observeEvent(input$resume_no, {
 
   })
   
-  
-  
-
-# Undo Score --------------------------------------------------------------
-
-  
-  # Undo score
-  observeEvent(input$undo_score_A, {
-    validate(
-      need(vals$current_scores$team_A > 0, label = "Team A hasn't scored yet!")
-    )
-
-    # Select the ID which is the max on Team A
-    last_score = filter(vals$scores_db, scoring_team == "A") %>% 
-      pull(score_id) %>% 
-      max()
-    
-    # Pull the number of points the last score was worth
-    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
-      pull(points_scored)
-    
-    # Reduce the score ID for any scores which have happened since the score which is being removed
-    # Note that score undo-ing is team specific
-    vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
-      mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
-    
-    # Reduce the team's score and score_id
-    vals$current_scores$team_A = vals$current_scores$team_A - last_score_pts
-    vals$score_id = as.integer(vals$score_id-1)
-    
-    #Remove the value from the snappaDB
-    dbSendQuery(con,
-      str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id, ";")
-    )
-    
-    
-    # Update player stats table in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
-   #Update the DB with the new player_stats
-    db_update_player_stats(vals$player_stats_db)
-    
-  })
-  
-  
   # Team B ---------------------------------------------------------
   
   
@@ -2223,7 +2179,7 @@ observeEvent(input$resume_no, {
         team = "B", 
         players = eligible_shooters,
         round = round_num()))
-
+    
   })
   
   # Score validation
@@ -2248,24 +2204,24 @@ observeEvent(input$resume_no, {
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
-
+      
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
-                              tibble(
-                                score_id = vals$score_id,
-                                game_id = vals$game_id,
-                                player_id = scorer_pid,
-                                scoring_team = "B",
-                                round_num = round_num(),
-                                points_scored = score,
-                                shooting = shooting_team_lgl,
-                                paddle = any(input$paddle, input$foot),
-                                clink = input$clink,
-                                foot = input$foot
-                              ))
+                                 tibble(
+                                   score_id = vals$score_id,
+                                   game_id = vals$game_id,
+                                   player_id = scorer_pid,
+                                   scoring_team = "B",
+                                   round_num = round_num(),
+                                   points_scored = score,
+                                   shooting = shooting_team_lgl,
+                                   paddle = any(input$paddle, input$foot),
+                                   clink = input$clink,
+                                   foot = input$foot
+                                 ))
       #Update the server with the new score
       dbWriteTable(con, "scores", 
-                    anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
+                   anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
       
       
       # Update player stats in the app
@@ -2317,12 +2273,236 @@ observeEvent(input$resume_no, {
     
   })
   
-  # Undo score
+  
+
+# Undo Score --------------------------------------------------------------
+
+  # Undo score consists of:
+  # - Observe the press of the undo score button
+  # - Present confirmation with details of the last score
+  # - Observe the confirmation of the undo score button
+  # - Remove score from the database
+  
+  ## Observe press of undo score button
+  # Team A
+  observeEvent(input$undo_score_A, {
+    validate(
+      need(vals$current_scores$team_A > 0, label = "Team A hasn't scored yet!")
+    )
+
+    # Select the ID which is the max on Team A
+    last_score = filter(vals$scores_db, scoring_team == "A") %>% 
+      pull(score_id) %>% 
+      max()
+    
+    # Pull the number of points the last score was worth
+    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
+      pull(points_scored)
+    
+    
+    
+    confirmSweetAlert(
+      session,
+      type = "warning",
+      inputId = "undo_score_A_confirm",
+      title = "Remove this score?",
+      text = reactableOutput("last_score_A"),
+      closeOnClickOutside = T,
+      html = T
+    )
+    
+  })
+  
+  # Team B
   observeEvent(input$undo_score_B, {
     validate(
       need(vals$current_scores$team_B > 0, label = "Team B hasn't scored yet!")
     )
-
+    
+    # Select the ID which is the max on Team A
+    last_score = filter(vals$scores_db, scoring_team == "B") %>% 
+      pull(score_id) %>% 
+      max()
+    
+    # Pull the number of points the last score was worth
+    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
+      pull(points_scored)
+    
+    
+    
+    confirmSweetAlert(
+      session,
+      type = "warning",
+      inputId = "undo_score_B_confirm",
+      title = "Remove this score?",
+      text = reactableOutput("last_score_B"),
+      closeOnClickOutside = T,
+      html = T
+    )
+    
+  })
+  
+  ## Last score table outputs
+  
+  # Team A
+  # A Last score table
+  output$last_score_A = renderReactable({
+    # Check if Team has scored yet
+    validate(
+      need(vals$current_scores$team_A > 0, label = "Team A hasn't scored yet!")
+    )
+    
+    # Find the highest score on each team and keep only team A
+    last_score = filter(group_by(vals$scores_db, scoring_team), scoring_team == "A", score_id == max(score_id)) %>% 
+      ungroup() %>% 
+      # Join in player names
+      inner_join(snappaneers(), by = "player_id")
+    
+    # Initially I was showing each 'event' (e.g. paddle) column and leaving them blank when
+    # the event did not occur. This made the table very wide and it didn't look nice,
+    # I tried toying around with minWidth and maxWidth, and making a custom class
+    # with a specified with of 'fit-content' etc.
+    # 
+    # The solution I came up with was to create a list of column definitions and then remove 
+    # columns whose values were false
+    
+    # Create the column list to use for the table display of the last score
+    col_list = list(
+      player_name = colDef(name = "Player", maxWidth = 100),
+      round_num = colDef(name = "Round", maxWidth = 70),
+      points_scored = colDef(name = "Pts", maxWidth = 50),
+      paddle = colDef(name = "", width = 30, 
+                      cell = function(value) {
+                        if (value) emo::ji("waving_hand") else ""
+                      }),
+      clink = colDef(name = "", width = 30, 
+                     cell = function(value) {
+                       if (value) emo::ji("ear") else ""
+                     }),
+      foot = colDef(name = "", width = 30, 
+                    cell = function(value) {
+                      if (value) emo::ji("foot") else ""
+                    })
+    )
+    
+    # map over event columns and keep those which are true
+    emoji_to_show = map(select(last_score, paddle:foot), isTRUE) %>% 
+      keep(isTRUE) %>% 
+      names()
+    
+    # Subset the column definitions
+    cols_to_show = col_list[c("player_name", "round_num", "points_scored", emoji_to_show)]
+    
+    last_score %>% 
+      select(player_name, round_num, points_scored, any_of(emoji_to_show)) %>% 
+      reactable(compact = T, 
+                sortable = F, 
+                filterable = F, 
+                fullWidth = F, wrap = T, 
+                columns = cols_to_show)
+  })
+  
+  # Team B
+  # B Last score table
+  output$last_score_B = renderReactable({
+    # Check if Team has scored yet
+    validate(
+      need(vals$current_scores$team_B > 0, label = "Team B hasn't scored yet!")
+    )
+    
+    # Find the highest score on each team and keep only team B
+    last_score = filter(group_by(vals$scores_db, scoring_team), scoring_team == "B", score_id == max(score_id)) %>% 
+      ungroup() %>% 
+      # Join in player names
+      inner_join(snappaneers(), by = "player_id")
+    
+    # Initially I was showing each 'event' (e.g. paddle) column and leaving them blank when
+    # the event did not occur. This made the table very wide and it didn't look nice,
+    # I tried toying around with minWidth and maxWidth, and making a custom class
+    # with a specified with of 'fit-content' etc.
+    # 
+    # The solution I came up with was to create a list of column definitions and then remove 
+    # columns whose values were false
+    
+    # Create the column list to use for the table display of the last score
+    col_list = list(
+      player_name = colDef(name = "Player", maxWidth = 100),
+      round_num = colDef(name = "Round", maxWidth = 70),
+      points_scored = colDef(name = "Pts", maxWidth = 50),
+      paddle = colDef(name = "", width = 30, 
+                      cell = function(value) {
+                        if (value) emo::ji("waving_hand") else ""
+                      }),
+      clink = colDef(name = "", width = 30, 
+                     cell = function(value) {
+                       if (value) emo::ji("ear") else ""
+                     }),
+      foot = colDef(name = "", width = 30, 
+                    cell = function(value) {
+                      if (value) emo::ji("foot") else ""
+                    })
+    )
+    
+    # map over event columns and keep those which are true
+    emoji_to_show = map(select(last_score, paddle:foot), isTRUE) %>% 
+      keep(isTRUE) %>% 
+      names()
+    
+    # Subset the column definitions
+    cols_to_show = col_list[c("player_name", "round_num", "points_scored", emoji_to_show)]
+    
+    last_score %>% 
+      select(player_name, round_num, points_scored, any_of(emoji_to_show)) %>% 
+      reactable(compact = T, 
+                sortable = F, 
+                filterable = F, 
+                fullWidth = F, wrap = T, 
+                columns = cols_to_show)
+  })
+  
+  ## Observe the confirmation of the undo score button
+  
+  # Team A
+  # Remove the last score from the database
+  observeEvent(input$undo_score_A_confirm, {
+    validate(
+      need(isTRUE(input$undo_score_A_confirm), label = "Nothin' to see here..")
+    )
+    # Select the ID which is the max on Team A
+    last_score = filter(vals$scores_db, scoring_team == "A") %>% 
+      pull(score_id) %>% 
+      max()
+    
+    # Pull the number of points the last score was worth
+    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
+      pull(points_scored)
+    # Reduce the score ID for any scores which have happened since the score which is being removed
+    # Note that score undo-ing is team specific
+    vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
+      mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
+    # Reduce the team's score and score_id
+    vals$current_scores$team_A = vals$current_scores$team_A - last_score_pts
+    vals$score_id = as.integer(vals$score_id-1)
+    
+    #Remove the value from the snappaDB
+    dbSendQuery(con,
+                str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id, ";")
+    )
+    
+    
+    # Update player stats table in the app
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    #Update the DB with the new player_stats
+    db_update_player_stats(vals$player_stats_db)
+  })
+  
+  # Team B
+  # Undo score B
+  observeEvent(input$undo_score_B_confirm, {
+    validate(
+      need(isTRUE(input$undo_score_B_confirm), label = "Nothin' to see here..")
+    )
+    
     # Select the ID which is the max on Team B
     last_score = filter(vals$scores_db, scoring_team == "B") %>% 
       pull(score_id) %>% 
@@ -2351,6 +2531,12 @@ observeEvent(input$resume_no, {
     db_update_player_stats(vals$player_stats_db)
     
   })
+  
+  
+  
+  
+  
+  
   
   
 
