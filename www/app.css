@@ -34,10 +34,17 @@
     background-color: #fafaf9 !important;
 }
 
+.box-body {
+  display: flex;
+  flex-flow: wrap;
+  align-items: center;
+}
 
 /* General */
 
-
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans-serif) !important;
+}
 
 
 #shiny-notification-panel {
@@ -268,8 +275,14 @@ label.control-label[for='score'] {
     border: none;
 }
 
-.description-block {
-    height: 8vh;
+
+.description-header {
+  margin-bottom: 5px !important;
+  font-size: 15px !important;
+}
+
+.description-text {
+  font-size: 13px;
 }
 
 .awesome-checkbox {
@@ -314,6 +327,10 @@ label.control-label[for='score'] {
 }
 
 /* Styles for the table */
+.reactable {
+  overflow:auto;
+}
+
 .snappaneers-tbl {
   font-size: 14px;
   line-height: 18px;

@@ -251,26 +251,15 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "player_stats",
               # Filters
               boxPlus(width = 12,
-                fluidRow(
-                  column(width = 3,
-                         # Player selection
+                      # Player Select
                          selectInput("player_select", label = "Player", selectize = F,
                                      choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id")) %>%
                                        deframe() %>% sample())
-                         ),
-                  column(width = 3,
-                         # Stat selection
-                         selectInput("stat_select", label = "Stat", selectize = F,
-                                     choices = c("Total Points" = "total_points", 
-                                                 "Paddle Points" = "paddle_points", 
-                                                 "Toss Efficiency" = "toss_efficiency"), 
-                                     selected = "total_points"))
-
-                )
               ),
+              # General and Paddle Stat boxes
               uiOutput("player_stats_headers"),
               # Form plot
               boxPlus(title = "Player Form",
@@ -278,10 +267,17 @@ ui <- dashboardPagePlus(
                       closable = F,
                       status = "primary",
                       fluidRow(class = "last-n-games",
-                        column(width = 1, style = "padding-right:3vw;",
-                               tags$span("Last ", style = "font-weight:600;")
+                               column(width = 5,
+                                      # Stat selection
+                                      selectInput("stat_select", label = NULL, selectize = F,
+                                                  choices = c("Total Points" = "total_points", 
+                                                              "Paddle Points" = "paddle_points", 
+                                                              "Toss Efficiency" = "toss_efficiency"), 
+                                                  selected = "total_points")), 
+                        column(width = 1, style = "padding-right:3vw;padding-left:0",
+                               tags$span("Last", style = "font-weight:600;")
                                ),
-                        column(width = 5,
+                        column(width = 3,
                                # Sample size selection
                                selectInput("sample_select", label = NULL, selectize = F, 
                                            choices = c(5, 10, 20, "All"), 
@@ -289,6 +285,7 @@ ui <- dashboardPagePlus(
                         column(width = 1, style = "padding-left:0;",
                                tags$span(" games", style = "font-weight:600;")
                                          )
+                        
                       ),
                 plotOutput("player_form")
               ),
@@ -299,7 +296,13 @@ ui <- dashboardPagePlus(
                       status = "primary",
                       # gt_output("teammate_tab")
                       reactableOutput("teammate_tab_rt")
-              )
+              ),
+              boxPlus(title = textOutput("game_history_title"),
+                      collapsible = T, width = 12,
+                      closable = F,
+                      collapsed = T,
+                      status = "primary",
+                      reactableOutput("player_game_stats"))
               ),
 
 # Edit teams --------------------------------------------------------
@@ -975,6 +978,151 @@ server <- function(input, output, session) {
       
   })
   
+  output$game_history_title = renderText({
+    str_c(players_tbl[players_tbl$player_id == input$player_select, "player_name"], 
+          "'s Game History")
+  })
+  
+  player_game_history = reactive({
+    dbGetQuery(con, 
+               sql(
+                 str_c(
+                   "SELECT game_id, 
+                        to_date(gs.game_start, 'YYYY-MM-DD') as date, 
+                    		(to_timestamp(gs.game_end, 'YYYY-MM-DD HH24:MI:SS')-to_timestamp(gs.game_start, 'YYYY-MM-DD HH24:MI:SS')) AS game_length,
+                    		ps.team,
+                    		CASE ps.team 
+                    			WHEN 'A' THEN gs.points_a || ' - ' || gs.points_b
+                    			WHEN 'B' THEN gs.points_b || ' - ' || gs.points_a
+                    		END AS final_score,
+                    		teammates.teammates,
+                    		round(ps.shots::numeric, 2) as shots,
+                    		ps.total_points,
+                    		ps.clink_points, ps.paddle_points, 
+                    		sc.foot_paddles,
+                    		sc.sinks,sc.paddle_sinks, sc.foot_sinks,
+                    		ps.points_per_round, ps.off_ppr, ps.def_ppr, ps.toss_efficiency
+                    FROM player_stats ps
+                    INNER JOIN game_stats gs
+                    USING (game_id)
+                    INNER JOIN (SELECT game_id, team, string_agg(players.player_name, ', ') AS teammates
+                    			FROM  player_stats
+                    			INNER JOIN players
+                    			USING (player_id)
+                    			WHERE player_id !=", input$player_select,"
+                    			GROUP BY game_id, team
+                    			ORDER BY game_id DESC) AS teammates
+                    USING (game_id, team)
+                    INNER JOIN ( SELECT scores.game_id,
+                                scores.player_id,
+                                sum(scores.points_scored) AS total_points,
+                                sum(
+                                    CASE
+                                        WHEN scores.points_scored = 3 AND scores.clink = false THEN 1
+                                        ELSE 0
+                                    END) AS sinks,
+                                sum(
+                                    CASE
+                                        WHEN scores.points_scored = 3 AND scores.clink = false AND scores.paddle = true THEN 1
+                                        ELSE 0
+                                    END) AS paddle_sinks,
+                    			SUM(
+                    				CASE
+                    					WHEN scores.foot = TRUE THEN scores.points_scored
+                    				ELSE 0
+                    				END) AS foot_paddles,
+                    			SUM(
+                    				CASE
+                    					WHEN scores.points_scored = 3 AND scores.clink = FALSE AND scores.foot = TRUE THEN 1
+                    				ELSE 0
+                    				END) AS foot_sinks
+                               FROM scores
+                              GROUP BY scores.game_id, scores.player_id) sc
+                    USING (game_id, player_id)
+                    WHERE ps.player_id = ", input$player_select, "
+                    ORDER BY game_id DESC")))
+  })
+  
+  output$player_game_stats = renderReactable({
+    player_game_history() %>% 
+      reactable(
+        defaultSorted = "game_id",
+        defaultSortOrder = "desc",
+        columns = list(
+          game_id = colDef(
+            name = "Game", width = 78
+          ),
+          date = colDef(
+            name = "Date", width = 107
+          ),
+          game_length = colDef(
+            name = "Game Length"
+          ),
+          team = colDef(
+            name = "Team", width = 72,
+            sortable = F
+          ),
+          final_score = colDef(
+            name = "Final Score", width = 75,
+            style = function(value) {
+              blue_team = as.numeric(str_extract(value, "^[0-9]{1,2}"))
+              red_team = as.numeric(str_extract(value, "[0-9]{1,2}$"))
+              bg_color = if_else(blue_team > red_team, snappa_pal[5], snappa_pal[2])
+              
+              list(background = bg_color,
+                   color = snappa_pal[1])
+            },
+            sortable = F
+          ),
+          teammates = colDef(
+            name = "Teammate(s)", width = 115,
+            sortable = F
+          ),
+          shots = colDef(
+            name = "Shots", width = 77
+          ),
+          total_points = colDef(
+            name = "Points", width = 81
+          ),
+          clink_points = colDef(
+            name = "Clink Points", width = 81
+          ),
+          paddle_points = colDef(
+            name = "Paddle Points", width = 86
+          ),
+          foot_paddles = colDef(
+            name = "Foot Paddles"
+          ),
+          sinks = colDef(
+            name = "Sinks"
+          ),
+          paddle_sinks = colDef(
+            name = "Paddle Sinks"
+          ),
+          foot_sinks = colDef(
+            name = "Foot Sinks"
+          ),
+          points_per_round = colDef(
+            name = "Points per Round (PPR)",
+            format = colFormat(digits = 2)
+          ),
+          off_ppr = colDef(
+            name = "Off. PPR",
+            format = colFormat(digits = 2)
+          ),
+          def_ppr = colDef(
+            name = "Def. PPR",
+            format = colFormat(digits = 2)
+          ),
+          toss_efficiency = colDef(
+            name = "Toss Efficiency",
+            format = colFormat(digits = 1, percent = T)
+          )
+        ),
+        compact = T
+      )
+  })
+  
   
   
   
@@ -986,10 +1134,10 @@ server <- function(input, output, session) {
     stat_name = str_to_title(str_replace(input$stat_select, "_", " "))
 
     # X axis title conditional on number of games chosen
-    plot_title = str_c(stat_name, ": ", 
-                    if_else(input$sample_select == "All", 
-                            str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
-                    paste("Last", input$sample_select, "games")))
+    # plot_title = str_c(stat_name, ": ", 
+    #                 if_else(input$sample_select == "All", 
+    #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
+    #                 paste("Last", input$sample_select, "games")))
     
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
@@ -1017,7 +1165,7 @@ server <- function(input, output, session) {
     } else {
       plot = plot +
         labs(x = expression(More ~ Recent ~ Games %->% ""), y = stat_name, 
-             title = plot_title,
+             # title = plot_title,
              caption = str_c("- - - -  Career Avg. (", 
                              scales::comma(unique(pluck(player_form_data(), "data")[["avg_points"]]), accuracy = 1), " points)"))+
         scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
@@ -1037,58 +1185,85 @@ server <- function(input, output, session) {
   
   output$player_stats_headers = renderUI({
     player_stats = dbGetQuery(con, 
-                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks FROM basic_career_stats ", 
+                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks, foot_paddles, foot_sinks
+                                        FROM basic_career_stats ", 
                                         "WHERE player_id = ", input$player_select))
                               )
-
-    # stat_list = 
-    fluidRow(
-      box(width = 6, status = "success", title = "General Stats", collapsible = T,
-      # Games Played
-      column(
-        width = 4,
-        descriptionBlock(
-          header = player_stats$games_played,
-          text = "GAMES PLAYED"
-        )
-      ),
-      # Win %
-      column(
-        width = 4,
-        descriptionBlock(
-          header = scales::percent(player_stats$win_pct),
-          text = "WIN PERCENTAGE"
-        )
-      ),
-      # Sinks
-      column(
-        width = 4,
-        descriptionBlock(
-          header = player_stats$sinks,
-          text = "SINK(S)"
-        )
-      )
+    div(
+      box(width = 6, status = "success", title = "General Stats", collapsible = T, 
+          # Games Played
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$games_played,
+              text = "GAMES"
+            )
+          ),
+          # Win %
+          column(
+            width = 2,
+            descriptionBlock(
+              header = scales::percent(player_stats$win_pct),
+              text = "WIN %"
+            )
+          ),
+          # Sinks
+          column(
+            width = 2,
+            descriptionBlock(
+              header = player_stats$sinks,
+              text = "SINK(S)"
+            )
+          ),
+          column(
+            width = 5,
+            descriptionBlock(
+              header = HTML(if_else(player_stats$sinks > 0, 
+                                    str_c("<span style='font-weight: 500;'>Every </span>", 
+                                          round(1/(player_stats$sinks/player_stats$games_played), 1), 
+                                          "<span style='font-weight: 500;'> games</span>"),
+                                    "TBD")),
+              text = "SINK FREQUENCY"
+            )
+          )
       ),
       box(width = 6, status = "success", title = "Paddle Stats", collapsible = T,
-      # Paddle points
-      column(
-        width = 6,
-        descriptionBlock(
-          header = player_stats$paddle_points,
-          text = "PADDLE POINTS"
-        )
-      ),
-      # Paddle Sinks
-      column(
-        width = 6,
-        descriptionBlock(
-          header = player_stats$paddle_sinks,
-          text = "PADDLE SINK(S)"
-        )
+          # Paddle points
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$paddle_points,
+              text = "PADDLE POINTS"
+            )
+          ),
+          # Paddle Sinks
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$paddle_sinks,
+              text = "PADDLE SINK(S)"
+            )
+          ),
+          # Foot Paddles
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$foot_paddles,
+              text = "FOOT PADDLES"
+            )
+          ),
+          # Foot Sinks
+          column(
+            width = 3,
+            descriptionBlock(
+              header = player_stats$foot_sinks,
+              text = "FOOT SINK(S)"
+            )
+          )
+          
       )
-      
     )
-    )
+
 
   })
   
