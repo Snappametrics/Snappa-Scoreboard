@@ -113,7 +113,7 @@ team_input_ui = function(team, player_choices){
            id = well_selector,
            style = paste("background:", team_colour),
            # Header
-           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
+           h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
            tags$div( id = div_selector,
                 class = 'player_input_forms',
                 # Player 1

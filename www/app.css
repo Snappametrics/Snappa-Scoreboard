@@ -393,19 +393,20 @@ players 3 and 4 */
   width: 100%;
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-direction: column;
 }
 .input_close_and_name > h1{
   text-align: center;
   font-weight: bold;
-  padding-right: 15%;
   color: white;
   font-size: 4.2rem;
   flex: 5 0 80%;
 }
 
 #remove_A3, #remove_A4, #remove_B3, #remove_B4 {
-  flex: 0 5 4vw;
+    height: 6vh;
+    width: 30%;
+    align-self: center
 }
 
 .additional_players_form > .shiny-input-container {
