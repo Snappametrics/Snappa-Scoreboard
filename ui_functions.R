@@ -192,7 +192,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   
   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
   
-  well_panel_style = "margin-top: 2vh; padding-top: 5vh; padding-bottom: 2vh; height: 70vh; opacity: 0.92; background:"
+  well_panel_style = "margin-top: 2vh; padding-top: 2vh; padding-bottom: 2vh; min-height: 70vh; opacity: 0.92; background:"
   h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
   
 
@@ -207,9 +207,11 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                        style = paste(well_panel_style, team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
-                       h1(paste("Team", toupper(left_team)), style = h1_style),
+                       h1(class = 'team_name',
+                          paste("Team", toupper(left_team)), style = h1_style),
                        # Score
-                       h2(textOutput(paste0("score_", left_team))),
+                       h2(class = 'team_score', 
+                          textOutput(paste0("score_", left_team))),
                        # Score button
                        div(id = paste0(left_team, '_score_and_undo'),
                         actionBttn(paste0(left_team, "_score_button"), 
@@ -239,9 +241,11 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                       class = paste0('scoreboard_well ', 'well_', right_team),
                       style = paste(well_panel_style, team_colours[[right_team]]),
                       # Header
-                      h1(paste("Team", toupper(right_team)), style = h1_style),
+                      h1(class = 'team_name',
+                         paste("Team", toupper(right_team)), style = h1_style),
                       # Score
-                      h2(textOutput(paste0("score_", right_team))),
+                      h2(class = 'team_score',
+                         textOutput(paste0("score_", right_team))),
                       # Score button
                       div(id = paste0(right_team, "_score_and_undo"),
                           actionBttn(paste0(right_team, "_score_button"), 

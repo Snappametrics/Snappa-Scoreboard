@@ -149,9 +149,10 @@ label[for='foot'] {
 }
 
 #undo_score_A, #undo_score_B {
-    width: 50%;
-    height: 25%;
-    border-radius: 15px
+    width: 80%;
+    flex: 1 3 5vh;
+    border-radius: 15px;
+    font-size: 2rem;
 }
 
 
@@ -325,15 +326,18 @@ label.control-label[for='score'] {
     flex-direction: column;
     justify-content: space-evenly;
     align-items: center;
-    height: 45%;
+    flex: 2 1 50%;
+    padding-bottom: 2vh;
+    
 }
 
 #A_score_button, #B_score_button {
   width: 90%;
-  height: 50%;
+  flex: 3 1 20vh;
   border-radius: 15px;
   font-size: 3rem;
   padding: 0vw;
+  margin-bottom: 3vh;
 }
 
 #round_control_buttons {
@@ -428,6 +432,20 @@ players 3 and 4 */
   text-align: center;
 }
 
+.scoreboard_well {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: stretch;
+}
+.team_name {
+  padding-top: 2vh;
+  flex: 1 1 auto;
+}
+.team_score {
+  flex: 1 1 auto;
+}
+
 /* Controls for text shading on wells */
 .well_A > h1, .well_A > h2, #input_forms_A > div > label, #add_remove_A3 .input_close_and_name > h1 {
   text-shadow: -1px 1px 8px rgb(139,0,0, 0.3), 1px 1px 8px rgb(139,0,0, 0.3), 1px -1px 8px rgb(139,0,0, 0.3), -1px -1px 8px rgb(139,0,0, 0.3);
@@ -435,6 +453,9 @@ players 3 and 4 */
 .well_B > h1, .well_B > h2, #input_forms_B > div > label, #add_remove_B3 .input_close_and_name > h1{
   text-shadow: -1px 1px 8px rgb(0,0,139, 0.2), 1px 1px 8px rgb(0,0,139, 0.2), 1px -1px 8px rgb(0,0,139, 0.2), -1px -1px 8px rgb(0,0,139, 0.2);
 }
+
+
+
 
 /* End my CSS */
 
