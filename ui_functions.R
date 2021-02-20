@@ -874,7 +874,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
       defaultPageSize = 20, 
       defaultSorted = "rank",
       showSortable = T,
-      defaultColDef = colDef(headerStyle = list(minHeight = 51), align = "left"),
+      defaultColDef = colDef(headerStyle = list(minHeight = 51), align = "left", defaultSortOrder = "desc"),
       highlight = T,
       # compact = T, 
       width = "100%",
@@ -898,6 +898,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                       align = "left", 
                       minWidth = 35,
                       maxWidth = 45,
+                      defaultSortOrder = "asc",
                       headerStyle = list(minHeight = 51, background = snappa_pal[1], position = "sticky", left = 0, zIndex = 1),
                       style = function(value){
                         if(value > max(stats_eligible$rank)){
