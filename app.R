@@ -939,7 +939,7 @@ server <- function(input, output, session) {
     teammate_stats() %>% 
       select(-1:-2) %>% 
       reactable(
-        defaultSorted = "win_pct",
+        defaultSorted = "games_played",
         columns = list(
           teammate = colDef(
             name = "Teammate"
