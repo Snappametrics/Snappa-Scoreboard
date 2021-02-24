@@ -35,6 +35,21 @@
     background-color: #fafaf9 !important;
 }
 
+.swal2-radio {
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  flex-flow: column;
+}
+
+.swal2-radio label {
+  display:flex; 
+  flex-flow: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding-top: 5px;
+}
+
 .box-body {
   display: flex;
   flex-flow: wrap;
