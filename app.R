@@ -40,6 +40,13 @@ source("markov/Markov_model_functions.R")
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
+casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text,
+                         12, 7, "12-7", "Roll off to see who is taking the kamikaze to the face",
+                         7, 12, "12-7", "Roll off to see who is taking the kamikaze to the face",
+                         18, 12, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.",
+                         12, 18, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.",
+                         20, 03, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams",
+                         03, 20, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams")
 
 # DB Tables ---------------------------------------------------------------
 
