@@ -62,19 +62,31 @@ helper_tables = function(player_stats, scores, team_vector){
   # joining . In order to give the scores table the ability to 'complete' the data
   # for shots in a given round, I add in a variable which calculates the running total of 
   # scores in that round
-  scores_simplified = scores %>% 
+  scores_truncated = scores %>% 
     arrange(game_id, score_id) %>%
     group_by(game_id, round_num, scoring_team) %>%
-    mutate(shot_order = row_number()) %>% 
-    select(game_id, scoring_team, points_scored, round_num, shot_order) %>%
+    select(game_id, scoring_team, points_scored, round_num) %>%
     filter(game_id %in% game_team_pair$game_id) %>%
+    mutate(shot_order = row_number())
+    
+  if (any(duplicated(game_team_pair$team))) {
+    scores_simplified = scores_truncated %>% 
+      left_join(game_team_pair, by = c('game_id', 'scoring_team' = 'team'), keep = T, suffix = c('.scores', '.gt_pair')) %>%
+      mutate(off_def = case_when(str_extract(round_num, "[A-Z]") == team ~ "offense",
+                                 str_extract(round_num, "[A-Z]") != team ~ "defense"),
+             round_num = as.integer(str_sub(round_num, 1, -2))) %>%
+      #extra line for this case to handle the double instance of game_id created by the merge
+      select(-game_id.gt_pair) %>%
+      rename(game_id = game_id.scores)
+  } else {
+  scores_simplified = scores_truncated %>% 
     left_join(game_team_pair, by = "game_id") %>%
     filter(scoring_team == team) %>%
     mutate(off_def = case_when(str_extract(round_num, "[A-Z]") == team ~ "offense",
                                str_extract(round_num, "[A-Z]") != team ~ "defense"),
            round_num = as.integer(str_sub(round_num, 1, -2))
-           )
-    
+    )
+  }
   # As it turns out, there are more games in the game_team_pair than there 
   # are in scores. Missing data is a bummer sometimes. So we have to delete
   # those games and only rely on the games from the overlap when we map
