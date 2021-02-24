@@ -758,15 +758,7 @@ server <- function(input, output, session) {
       str_c(., collapse = ", ")
   })
   
-  # Recent Scores
-  output$recent_scores = render_gt({
-    
-    top_n(vals$scores_db, 5, score_id) %>% 
-      arrange(-score_id) %>% 
-      left_join(select(snappaneers(), player_id, player_name)) %>% 
-      recent_scores_tab()
-  })
-  
+
   output$recent_scores_rt = renderReactable({
 
     # Take the max sentence length to set width of column in col defs
