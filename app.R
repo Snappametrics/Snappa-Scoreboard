@@ -2066,7 +2066,7 @@ observeEvent(input$resume_no, {
     dbExecute(con, 
               sql(str_c("INSERT INTO casualties(game_id, score_id, player_id, casualty_type)
                         VALUES (", 
-                        str_c(vals$game_id, vals$score_id-1, casualty, "'Sunk'",  sep = ", "), ");")))
+                        str_c(vals$game_id, vals$score_id, casualty, "'Sunk'",  sep = ", "), ");")))
   })
   
 
