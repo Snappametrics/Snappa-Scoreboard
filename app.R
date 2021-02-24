@@ -2334,20 +2334,22 @@ observeEvent(input$resume_no, {
       scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
       shooting_team_lgl = all(str_detect(round_num(), "A"), scorers_team == "A") # Are they on team A & did they score for team A?
       
+      new_score = tibble(
+        score_id = vals$score_id,
+        game_id = vals$game_id,
+        player_id = scorer_pid,
+        scoring_team = "A",
+        round_num = round_num(),
+        points_scored = score,
+        shooting = shooting_team_lgl,
+        paddle = any(input$foot, input$paddle),
+        clink = input$clink,
+        foot = input$foot
+      )
+      
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
-                                 tibble(
-                                   score_id = vals$score_id,
-                                   game_id = vals$game_id,
-                                   player_id = scorer_pid,
-                                   scoring_team = "A",
-                                   round_num = round_num(),
-                                   points_scored = score,
-                                   shooting = shooting_team_lgl,
-                                   paddle = any(input$foot, input$paddle),
-                                   clink = input$clink,
-                                   foot = input$foot
-                                 ))
+                                 new_score)
       #Update the db with the new score
   
       dbWriteTable(con, "scores", anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
@@ -2442,20 +2444,22 @@ observeEvent(input$resume_no, {
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
       
+      new_score = tibble(
+        score_id = vals$score_id,
+        game_id = vals$game_id,
+        player_id = scorer_pid,
+        scoring_team = "B",
+        round_num = round_num(),
+        points_scored = score,
+        shooting = shooting_team_lgl,
+        paddle = any(input$paddle, input$foot),
+        clink = input$clink,
+        foot = input$foot
+      )
+      
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
-                                 tibble(
-                                   score_id = vals$score_id,
-                                   game_id = vals$game_id,
-                                   player_id = scorer_pid,
-                                   scoring_team = "B",
-                                   round_num = round_num(),
-                                   points_scored = score,
-                                   shooting = shooting_team_lgl,
-                                   paddle = any(input$paddle, input$foot),
-                                   clink = input$clink,
-                                   foot = input$foot
-                                 ))
+                                 new_score)
       #Update the server with the new score
       dbWriteTable(con, "scores", 
                    anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
