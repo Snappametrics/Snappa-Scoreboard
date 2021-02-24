@@ -78,6 +78,14 @@
     opacity: 0.9;
 }
 
+.dropdown-menu {
+  background-color: var(--bg-col);
+  text-align: center;
+  flex-flow: column;
+  padding: 5px;
+  width: max-content;
+}
+
 
 
 
