@@ -2028,17 +2028,16 @@ observeEvent(input$resume_no, {
   observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
                {
                  validate(
-                   need((vals$current_scores$team_A == 18 && vals$current_scores$team_B == 12) || (vals$current_scores$team_A == 12 && vals$current_scores$team_B == 18), label = "eighteen_twelve")
+                   need( 
+                     vctrs::vec_in(vals$current_scores, 
+                                   haystack = casualty_rules[,1:2]), label = "casualty")
                  )
+
+                 casualty_popup(session,
+                                score = vals$current_scores, 
+                                rules = casualty_rules, 
+                                players = snappaneers()$player_name)
                  
-                 
-                 inputSweetAlert(session, 
-                                 inputId = "casualty",
-                                 title = "War of 1812",
-                                 text = "Everyone roll a die, the lowest roll takes a shot.",
-                                 type = "warning",
-                                 input = "radio",
-                                 inputOptions = snappaneers()$player_name)
                })
   
   observeEvent(input$casualty, {
@@ -2047,10 +2046,14 @@ observeEvent(input$resume_no, {
       deframe() %>% 
       pluck(input$casualty)
     
-    # Insert the game ID and player ID
+    type = casualty_rules$casualty_title[vctrs::vec_match(vals$current_scores, haystack = casualty_rules[, 1:2])]
+    
+
+    # Insert casualty details
     dbExecute(con, 
-              sql(str_c("INSERT INTO casualties_of_1812(game_id, player_id)
-                        VALUES (", vals$game_id, ", ", casualty, ");")))
+              sql(str_c("INSERT INTO casualties(game_id, score_id, player_id, casualty_type)
+                        VALUES (", 
+                        str_c(vals$game_id, vals$score_id-1, casualty, str_c("'", type, "'"),  sep = ", "), ");")))
   })
   
 
