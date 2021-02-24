@@ -177,8 +177,7 @@ label[for='foot'] {
 
 #game_summary, .sw-dropdown {
     display: inline-block;
-    margin-top: 1.5vh;
-    margin-bottom: 2vh;
+    margin: 2vh 6vh;
 }
 
 .sw-dropdown-in {
@@ -736,7 +735,7 @@ input[type=radio]{
         height: 500px;
     }
     
-    #finish_game, #new_game, #game_summary {
+    #finish_game, #new_game {
         font-size: 1.7rem;
         margin: 2vh 1vh;
         padding: 1.4vh;
