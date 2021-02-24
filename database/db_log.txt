@@ -21,3 +21,14 @@ https://www.postgresqltutorial.com/postgresql-primary-key/#:~:text=Technically%2
 UPDATE player_stats // (or scores)
 SET player_id = 16
 WHERE player_id IN (18, 19)
+
+2021-02-23 (haven't kept this as updated as possible)
+- Added casualties_of_1812 table to record losses of 1812
+- Added arena column to game_stats
+- Added a number of views over the past few months to reduce the client-side data processing
+  - career_stats
+  - basic_career_stats
+  - score_progression
+  - teammate_stats
+  - thirstiest_players
+- Added recent_scores view today
