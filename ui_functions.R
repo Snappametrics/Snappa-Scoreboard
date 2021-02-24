@@ -179,6 +179,35 @@ casualty_popup = function(session, score, rules, players = snappaneers()$player_
   
 }
 
+sink_casualty_popup = function(session, score_row, players = snappaneers()$player_name){
+  
+  sink_criteria = tribble(~points_scored, ~clink, 
+                          3, F,
+                          5, T,
+                          7, T)
+  
+  if(vctrs::vec_in(score_row[, c("points_scored", "clink")], sink_criteria)){
+    # Create a pop up given a score and a set of rules
+    inputSweetAlert(session, 
+                    inputId = "sink_casualty",
+                    title = "Sploosh! Who got sunk?",
+                    text = str_c("Remember: you have a ", scales::percent(1/6), "chance of rolling a one!"),
+                    # Want to add images, but these don't work yet
+                    # url = 'https://cdn.britannica.com/96/192896-131-ECCA4FB7/Explosion-USS-Shaw-magazine-attack-Pearl-Harbor-Dec-7-1941.jpg',
+                    # imageWidth = 400,
+                    # imageHeight = 200,
+                    type = "warning",
+                    input = "radio",
+                    inputOptions = players)
+  } else {
+    invisible()
+  }
+  
+
+  
+  
+}
+
 
 
 team_input_ui = function(team, player_choices){
