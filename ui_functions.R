@@ -77,6 +77,30 @@ score_check <- function(team, players, round) {
   
 }
 
+dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") 
+{
+  if (!is.null(badgeStatus)) 
+    validateStatus(badgeStatus)
+  items <- c(list(...))
+  dropdownClass <- paste0("dropdown")
+  numItems <- length(items)
+  if (is.null(badgeStatus)) {
+    badge <- NULL
+  }
+  else {
+    badge <- dashboardLabel(status = badgeStatus, numItems)
+  }
+  shiny::tags$li(shiny::singleton(shiny::tags$head(shiny::tags$script(shiny::HTML(paste0("$(document).ready(function(){\n                $('#", 
+                                                                                         id, "').find('ul').click(function(e){\n                  e.stopPropagation();\n                });\n              });\n              "))))), 
+                 class = dropdownClass, id = id, shiny::tags$a(href = "#", 
+                                                               class = "dropdown-toggle", `data-toggle` = "dropdown", 
+                                                               shiny::icon(icon), title, badge), 
+                 shiny::tags$div(class = "dropdown-menu", 
+                                style = "left: 0; right: auto;", 
+                                items))
+}
+
+
 game_notification = function(rebuttal = F, round, current_scores){
   if(rebuttal){
     
