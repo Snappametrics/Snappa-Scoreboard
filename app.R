@@ -2370,6 +2370,9 @@ observeEvent(input$resume_no, {
       vals$error_msg <- "You did not input anything."
     }
     
+    # Sink notification
+    sink_casualty_popup(session, score_row = new_score, players = snappaneers()$player_name)
+    
     # If the game is in rebuttal, remind players
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
@@ -2483,6 +2486,9 @@ observeEvent(input$resume_no, {
     } else {
       vals$error_msg <- "You did not input anything."
     }
+    
+    # Sink notification
+    sink_casualty_popup(session, score_row = new_score, players = snappaneers()$player_name)
     
     # If the game is still in rebuttal in rebuttal, remind players
     # of the points needed to bring it back
