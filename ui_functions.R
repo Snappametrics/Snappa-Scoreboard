@@ -166,9 +166,11 @@ casualty_popup = function(session, score, rules, players = snappaneers()$player_
                     inputId = "casualty",
                     title = current_rule$casualty_title,
                     text = current_rule$casualty_text,
-                    url = 'https://cdn.britannica.com/96/192896-131-ECCA4FB7/Explosion-USS-Shaw-magazine-attack-Pearl-Harbor-Dec-7-1941.jpg',
-                    imageWidth = 400,
-                    imageHeight = 200,
+                    # Want to add images, but these don't work yet
+                    # url = 'https://cdn.britannica.com/96/192896-131-ECCA4FB7/Explosion-USS-Shaw-magazine-attack-Pearl-Harbor-Dec-7-1941.jpg',
+                    # imageWidth = 400,
+                    # imageHeight = 200,
+                    type = "warning",
                     input = "radio",
                     inputOptions = players)
   }
