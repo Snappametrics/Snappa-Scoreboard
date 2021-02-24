@@ -2056,6 +2056,19 @@ observeEvent(input$resume_no, {
                         str_c(vals$game_id, vals$score_id-1, casualty, str_c("'", type, "'"),  sep = ", "), ");")))
   })
   
+  observeEvent(input$sink_casualty, {
+    # Convert player name to ID
+    casualty = select(snappaneers(), starts_with("player")) %>% 
+      deframe() %>% 
+      pluck(input$sink_casualty)
+    
+    # Insert casualty details
+    dbExecute(con, 
+              sql(str_c("INSERT INTO casualties(game_id, score_id, player_id, casualty_type)
+                        VALUES (", 
+                        str_c(vals$game_id, vals$score_id-1, casualty, "'Sunk'",  sep = ", "), ");")))
+  })
+  
 
 # New Players -------------------------------------------------------------
 
