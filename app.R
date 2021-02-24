@@ -514,6 +514,12 @@ server <- function(input, output, session) {
       checkFunc = function() {dbGetQuery(con, sql("SELECT SUM(n) FROM score_progression"))},
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM score_progression"))}
     ),
+    recent_scores = reactivePoll(
+      intervalMillis = 100*30,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
+      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
+    ),
     
 
     # dataframe of the players and their teams
