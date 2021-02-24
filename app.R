@@ -766,6 +766,46 @@ server <- function(input, output, session) {
       recent_scores_tab()
   })
   
+  output$recent_scores_rt = renderReactable({
+
+    # Take the max sentence length to set width of column in col defs
+    sentence_width = as.numeric(dbGetQuery(con, sql("SELECT MAX(char_length(what_happened)*6.5) FROM recent_scores")))
+    
+    column_defs = list(
+      scoring_team = colDef(show = F),
+      player_name = colDef(
+        align = "right",
+        maxWidth = 80,
+        # Use team colours for player names
+        style = JS(str_c("function(rowInfo) {
+                    var value = rowInfo.row['scoring_team']
+                    if (value == 'A') {
+                      var color = '", snappa_pal[2], "'
+                    } else {
+                      var color = '", snappa_pal[3], "'
+                    }
+                    return { color: color, fontWeight: 'bold', padding: '5px' }
+                                     }")
+        )
+      ),
+      what_happened = colDef(
+        width = sentence_width
+      )
+    )
+
+    # Take top 5 recent scores
+    head(vals$recent_scores(), n = 5) %>% 
+      reactable(compact = T, 
+                defaultColDef = colDef(name = "", style = list(padding = "5px 0px"),
+                                       # Hide header
+                                       headerStyle = list(
+                                         alignSelf = "flex-end",
+                                         display = "none"
+                                       )),
+                columns = column_defs
+                )
+  })
+  
   # Output error message
   output$skip_error_msg <- renderText({
     vals$error_msg
