@@ -81,12 +81,12 @@ ui <- dashboardPagePlus(
         icon = "backward",
         badgeStatus = NULL,
         reactableOutput("recent_scores_rt"),
-        actionBttn("game_summary", 
+        disabled(actionBttn("game_summary", 
                    "Detailed Game Summary",
                    style = "material-flat",
                    color = "primary",
                    icon = icon("chart-bar"),
-                   size = "sm")
+                   size = "sm"))
       ),
       # Right side header
     ),
@@ -1821,7 +1821,7 @@ observe({
     }
     
     
-    
+    shinyjs::enable("game_summary")
 
   })
   
