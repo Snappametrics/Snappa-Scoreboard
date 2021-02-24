@@ -75,17 +75,19 @@ ui <- dashboardPagePlus(
     
     # Left side header
     left_menu = tagList(
-      dropdownBlock(
-        id = "game_point",
-        title = "Game Point",
-        icon = "sliders",
+      dropdownBlock2(
+        id = "recent_scores_dropdown",
+        title = "Recent Scores",
+        icon = "backward",
         badgeStatus = NULL,
-        sliderInput(
-          inputId = "score_to",
-          label = "What score are you playing to?",
-          min = 21, max = 50, value = 21
-        )
-      )
+        reactableOutput("recent_scores_rt"),
+        actionBttn("game_summary", 
+                   "Detailed Game Summary",
+                   style = "material-flat",
+                   color = "primary",
+                   icon = icon("chart-bar"),
+                   size = "sm")
+      ),
       # Right side header
     ),
     tags$li(class = "dropdown", socialButton(
@@ -106,12 +108,11 @@ ui <- dashboardPagePlus(
       icon = "desktop",
       active = TRUE,
       align = "center",
-      actionBttn("game_summary", 
-                 "Game Summary",
-                 style = "material-flat",
-                 color = "primary",
-                 icon = icon("chart-bar"),
-                 size = "sm"),
+      sliderInput(
+        inputId = "score_to",
+        label = "What score are you playing to?",
+        min = 21, max = 50, value = 21
+      ),
       actionBttn("new_game", "Restart", 
                  icon = icon("plus"), size = "sm",
                  style = "material-flat", color = "warning"),
@@ -842,6 +843,7 @@ server <- function(input, output, session) {
       ),
       # Summary plot
         plotOutput("summary_plot", height = "50vh"),
+      reactableOutput("scores_tbl"),
       
       footer = NULL,
       easyClose = T,
@@ -1860,6 +1862,18 @@ observeEvent(input$game_summary, {
     )
   )
   
+})
+output$scores_tbl = renderReactable({
+  filter(vals$scores_db, game_id == vals$game_id) %>% 
+    arrange(-score_id) %>% 
+    inner_join(snappaneers(), by = "player_id") %>% 
+    select(score_id, player_name, round_num, Points = points_scored,
+           Paddle = paddle, Clink = clink, Foot = foot) %>% 
+    reactable(compact = T,
+              columns = list(
+                player_name = colDef(name = "Player"),
+                round_num = colDef(name = "Round")
+              ))
 })
 
   
