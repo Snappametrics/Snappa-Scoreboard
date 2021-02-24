@@ -40,6 +40,7 @@
   justify-content: center;
   flex-wrap: wrap;
   flex-flow: column;
+  background-color: var(--bg-col) !important;
 }
 
 .swal2-radio label {
