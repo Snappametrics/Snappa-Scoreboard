@@ -18,31 +18,37 @@ helper_tables = function(player_stats, scores, team_vector){
     mutate(position = row_number()) %>%
     pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
   
-  team_vector = team_vector %>% sort()
-  
-  num_players = team_vector %>% length()
-  while (num_players < 4){
-    team_vector = team_vector %>% append(NA)
+  if (all(team_vector == 9)) {
+    game_team_pair = player_stats %>% 
+      group_by(game_id, team) %>% 
+      count() %>%
+      filter(`n` == length(team_vector))
+  } else {
+    team_vector = team_vector %>% sort()
+    
     num_players = team_vector %>% length()
+    while (num_players < 4){
+      team_vector = team_vector %>% append(NA)
+      num_players = team_vector %>% length()
+    }
+    
+    # Make the expression which creates a filter 
+    filter_vector = team_vector %>%
+      imap(function(player, index){
+        if (!is.na(player)){
+          str_c("`", index, "` == ", player)
+        } else
+          str_c("is.na(`", index, "`) ")
+      })
+    
+    filter_expression =  rlang::parse_exprs(
+      paste0(filter_vector)
+    )
+    
+    game_team_pair = team_combinations %>% 
+      filter(!!!filter_expression) %>%
+      select(game_id, team) 
   }
-  
-  # Make the expression which creates a filter 
-  filter_vector = team_vector %>%
-    imap(function(player, index){
-      if (!is.na(player)){
-        str_c("`", index, "` == ", player)
-      } else
-        str_c("is.na(`", index, "`) ")
-    })
-  
-  filter_expression =  rlang::parse_exprs(
-    paste0(filter_vector)
-  )
-  
-  game_team_pair = team_combinations %>% 
-    filter(!!!filter_expression) %>%
-    select(game_id, team) 
-  
   # We need to know how many shots occurred within each round of play in each game
   # to accurately assess the total number of observations 
   
@@ -95,6 +101,12 @@ helper_tables = function(player_stats, scores, team_vector){
            defensive = ifelse(team == "A", floor(rounds / 2), ceiling(rounds / 2))) %>%
     ungroup() %>%
     select(game_id, offensive, defensive)
+  # A quick correction in the event that we're calculating for the "average team". There 
+  # would be duplicates if the teams were evenly matched
+  if (all(team_vector == 9)) {
+    total_rounds = total_rounds %>% distinct()
+  }
+  
   
   package = list("team_combinations" = team_combinations, 
                  "game_team_pair" = game_team_pair,
@@ -138,7 +150,7 @@ transition_list = tables$game_team_pair %>%
     # then expand both and combine them again. Then I'll have to use a very
     # careful arrangement of the combined table to get the proper running scores
     # value for that game. At least I don't have to declare off/def as a factor
-    
+    browser()
     offense_filtered = filtered_game %>% 
       filter(off_def == "offense") %>%
       ungroup() %>%
@@ -278,7 +290,6 @@ transition_list = tables$game_team_pair %>%
 
 return(transition_list)
 }
-
 
 transition_probabilities = function(player_stats, scores, type, player_id_1, player_id_2, 
                                     player_id_3 = NA, player_id_4 = NA){
@@ -645,7 +656,7 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
                         if_else(!is.na(team_B[4]), str_c(", ", team_B[4]), ""),
                         ")"
     )
-      
+    ##TODO: Enter in the snippets for the "average team" here. 
     team_A_transitions = transitions_list[[team_A_name]]$scores
     team_A_backup = transitions_list[[team_A_name]]$states
     team_B_transitions = transitions_list[[team_B_name]]$scores
@@ -671,43 +682,5 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
   return(games_record)
 }
 
-###### Analysis #####
-## This is no longer the focus of this script. However, these functions
-# will be useful once the model is integrated into the app
 
-# hi_there = markov_simulate_games(c(2,9, NA, NA), c(2, 9, NA, NA), 1000)
-# 
-# # Answer the basic questions
-# # Who won more? What's their win rate?
-# wins = hi_there %>% map_chr( function(element){
-#   element$won
-# }) 
-# A_winrate = length(wins[wins == "A"])/length(wins)
-# B_winrate = 1 - A_winrate
-# 
-# # In the games where the winningest team won, what was the modal score?
-# winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
-#                   "A",
-#                   "B")
-# 
-# # Using a matrix here so that I can treat each pairing of points as a unique
-# # value, rather than each team's individual total (meaning that I am truly 
-# # looking for the pair of scores which are modal in the set of games that 
-# # the winning team won)
-# 
-# scores_matrices = seq(1, length(hi_there)) %>% map(function(game_number){
-#   if (hi_there[[game_number]]$won != winners){
-#     matrix = matrix(0, nrow = 51, ncol = 51)
-#   } else {
-#     team_A_score = hi_there[[game_number]]$team_A %>% last()
-#     team_B_score = hi_there[[game_number]]$team_B %>% last()
-#     matrix = matrix(0, nrow = 51, ncol = 51)
-#     matrix[team_A_score, team_B_score] = 1
-#   }
-#   return(matrix)
-# })
-# 
-# scores_matrix = scores_matrices %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
-# modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
-# modal_A_score = modal_score_position[1]
-# modal_B_score = modal_score_position[2]
+

@@ -78,5 +78,8 @@ teams_vector = unique_team_combinations %>%
 
 names(all_transitions) = teams_vector
 
+# Average teams go here at the end
+
+
 saveRDS(all_transitions, file = "markov/transition_probabilities.Rdata")
 
