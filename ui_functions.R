@@ -100,6 +100,44 @@ dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "da
                                 items))
 }
 
+inputSweetAlert2 = function (session, inputId, title = NULL, text = NULL, type = NULL, 
+          input = c("text", "password", "textarea", "radio", "checkbox", 
+                    "select"), inputOptions = NULL, inputPlaceholder = NULL, 
+          btn_labels = "Ok", btn_colors = NULL, reset_input = TRUE, 
+          ...) 
+{
+  
+  input <- match.arg(input)
+  shiny::insertUI(selector = "body", where = "afterBegin", 
+                  ui = useSweetAlert(), immediate = TRUE, session = session)
+  if (is.null(type)) 
+    type <- jsonlite::toJSON(NULL, auto_unbox = TRUE, null = "null")
+  if (inherits(session, "session_proxy")) {
+    if (!starts_with(inputId, session$ns(""))) 
+      inputId <- session$ns(inputId)
+  }
+  text <- jsonlite::toJSON(text, auto_unbox = TRUE, null = "null")
+  if (!is.null(inputOptions)) {
+    inputOptions <- shinyWidgets:::choicesWithNames(inputOptions)
+  }
+  session$sendCustomMessage(type = "sweetalert-sw-input", 
+                            message = list(id = inputId, 
+                                           reset_input = reset_input, 
+                                           swal = shinyWidgets:::dropNullsOrNA(list(title = title, 
+                                                                     text = text, 
+                                                                     icon = type, 
+                                                                     input = input, 
+                                                                     inputOptions = inputOptions, 
+                                                                     inputPlaceholder = inputPlaceholder, 
+                                                                     confirmButtonText = btn_labels[1], 
+                                                                     confirmButtonColor = btn_colors[1], 
+                                                                     cancelButtonText = btn_labels[2], 
+                                                                     cancelButtonColor = btn_colors[2], 
+                                                                     showCancelButton = !is.na(btn_labels[2]),
+                                                                     ...)
+                                                                )))
+}
+
 
 game_notification = function(rebuttal = F, round, current_scores){
   if(rebuttal){
