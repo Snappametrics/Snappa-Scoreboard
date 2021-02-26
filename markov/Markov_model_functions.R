@@ -7,7 +7,7 @@ library(dbplyr)
 library(tidyverse)
 
 # This function creates all the "helper" tables that are needed in team_transitions
-# and elsewhere in the funcitons. It is just easier to keep them all in one
+# and elsewhere in the functions. It is just easier to keep them all in one
 # place, and to avoid making other functions take 6 arguments 
 
 helper_tables = function(player_stats, scores, team_vector){
@@ -162,7 +162,6 @@ transition_list = tables$game_team_pair %>%
     # then expand both and combine them again. Then I'll have to use a very
     # careful arrangement of the combined table to get the proper running scores
     # value for that game. At least I don't have to declare off/def as a factor
-    browser()
     offense_filtered = filtered_game %>% 
       filter(off_def == "offense") %>%
       ungroup() %>%
@@ -172,6 +171,12 @@ transition_list = tables$game_team_pair %>%
       filter(off_def == "defense") %>%
       ungroup() %>%
       select(round_num, shot_order, off_def, points_scored)
+    
+    # Bugfix: if the defense_filtered table is 0, give it one value to make sure that the completion works
+    
+    if (nrow(defense_filtered) == 0) {
+      defense_filtered = defense_filtered %>% add_row(round_num = 1, shot_order = 1, off_def = 'defense', points_scored = 0)
+    }
     
     offensive_rounds = rounds_in_game$offensive
     defensive_rounds = rounds_in_game$defensive
@@ -202,7 +207,7 @@ transition_list = tables$game_team_pair %>%
                off_def),
         fill = list(points_scored = 0,
                     off_def = "offense")) 
-
+    
     expanded_game_defense = defense_filtered %>%
       complete(
         expand(defense_filtered,
@@ -220,10 +225,29 @@ transition_list = tables$game_team_pair %>%
     team = tables$game_team_pair %>%
       filter(game_id == game) %>%
       pull(team)
-
+    browser()
     # I need to make sure that the running score is actually correctly accounting
     # for the order of play in each game. While I have the game, also
-    # make sure to add an extra value to the table 
+    # make sure to add an extra value to the table. 
+    
+    # In the event that we are looking for the "average team" and a game consists
+    # of two teams of the correct size, then we have to do a bit more here, adding 
+    # on a row for each team according to the previous pattern. That will be 
+    # another "split -> add -> rebind" procedure
+    
+    if (length(team) == 2) {
+      expanded_game_A = expanded_game %>% 
+        arrange(round_num, desc(off_def), shot_order) %>%
+        select(off_def, points_scored)
+      expanded_game_A = bind_rows(tibble(off_def = 'offense', points_scored = 0),
+                                  expanded_game_A)
+      expanded_game_B = expanded_game %>% 
+        arrange(round_num, off_def, shot_order) %>%
+        select(off_def, points_scored)
+      expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
+                                expanded_game)
+    }
+    
     if (team == "A"){
       expanded_game = expanded_game %>% 
         arrange(round_num, desc(off_def), shot_order) %>%
