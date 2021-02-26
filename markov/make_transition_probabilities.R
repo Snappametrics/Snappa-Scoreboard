@@ -18,7 +18,7 @@ library(lubridate)
 library(dbplyr)
 library(tidyverse)
 
-source("dbconnect.R")
+source("database/db_connect.R")
 # I take the functions for the Markov modeling from the script of functions
 source("markov/Markov_model_functions.R")
 
@@ -68,7 +68,7 @@ all_transitions = unique_team_combinations %>%
 # make the team_id vector the name of each list element.
 
 teams_vector = unique_team_combinations %>%
-  mutate(team_vector = str_c("(", `1`, ",", `2`, 
+  mutate(team_vector = str_c("(", `1`, ", ", `2`, 
                              if_else(!is.na(`3`), str_c(", ", `3`), ""),
                              if_else(!is.na(`4`), str_c(", ", `4`), ""),
                              ")"
@@ -79,7 +79,37 @@ teams_vector = unique_team_combinations %>%
 names(all_transitions) = teams_vector
 
 # Average teams go here at the end
+stand_in_teams = tibble(`1` = c(9, 9, 9), `2` = c(9, 9, 9), `3` = c(NA, 9, 9), `4` = c(NA, NA, 9))
+  
+average_team_transitions = stand_in_teams %>%
+  pmap(function(...){
+    team_vec = c(...)
+    scores_transitions = transition_probabilities(player_stats, 
+                                                  scores, 
+                                                  "scores",
+                                                  team_vec[[1]], team_vec[[2]],
+                                                  team_vec[[3]], team_vec[[4]])
+    states_transitions = transition_probabilities(player_stats, 
+                                                  scores, 
+                                                  "states",
+                                                  team_vec[[1]], team_vec[[2]],
+                                                  team_vec[[3]], team_vec[[4]])
+     return(list("scores" = scores_transitions,
+                 "states" = states_transitions))
+    
+  })
+average_team_name = stand_in_teams %>%
+  mutate(team_vector = str_c("(", `1`, ", ", `2`, 
+                             if_else(!is.na(`3`), str_c(", ", `3`), ""),
+                             if_else(!is.na(`4`), str_c(", ", `4`), ""),
+                             ")"
+                             )
+         ) %>%
+    pull(team_vector)
+
+names(average_teams_transitions) = average_team_name
 
 
+  
 saveRDS(all_transitions, file = "markov/transition_probabilities.Rdata")
 

@@ -18,7 +18,8 @@ helper_tables = function(player_stats, scores, team_vector){
     mutate(position = row_number()) %>%
     pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
   
-  if (all(team_vector == 9)) {
+  if (all(team_vector == 9, na.rm = T)) {
+    team_vector = team_vector %>% discard(is.na)
     game_team_pair = player_stats %>% 
       group_by(game_id, team) %>% 
       count() %>%
@@ -115,7 +116,7 @@ helper_tables = function(player_stats, scores, team_vector){
     select(game_id, offensive, defensive, team)
   # A quick correction in the event that we're calculating for the "average team". There 
   # would be duplicates if the teams were evenly matched
-  if (all(team_vector == 9)) {
+  if (all(team_vector == 9, na.rm = T)) {
     total_rounds = total_rounds %>% distinct()
   }
   
@@ -196,7 +197,6 @@ transition_list = tables$game_team_pair %>%
       
       # Since shot order is true for all teams, it can be assigned to offense_filtered
       # and defense_filtered before splitting.
-      browser()
       offense_filtered$shot_order =
         factor(
           offense_filtered$shot_order,
@@ -821,7 +821,7 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
     team_B_backup = transition_probabilities(player_stats, scores, "states", team_B[1], team_B[2], team_B[3], team_B[4])
   } else {
     
-    team_A_name = str_c("(", team_A[1], ",", team_A[2], 
+    team_A_name = str_c("(", team_A[1], ", ", team_A[2], 
                         if_else(!is.na(team_A[3]), str_c(", ", team_A[3]), ""),
                         if_else(!is.na(team_A[4]), str_c(", ", team_A[4]), ""),
                         ")"
@@ -833,7 +833,6 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
                         if_else(!is.na(team_B[4]), str_c(", ", team_B[4]), ""),
                         ")"
     )
-    ##TODO: Enter in the snippets for the "average team" here. 
     team_A_transitions = transitions_list[[team_A_name]]$scores
     team_A_backup = transitions_list[[team_A_name]]$states
     team_B_transitions = transitions_list[[team_B_name]]$scores
