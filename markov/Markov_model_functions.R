@@ -112,7 +112,7 @@ helper_tables = function(player_stats, scores, team_vector){
     mutate(offensive = ifelse(team == "A", ceiling(rounds / 2), floor(rounds / 2)),
            defensive = ifelse(team == "A", floor(rounds / 2), ceiling(rounds / 2))) %>%
     ungroup() %>%
-    select(game_id, offensive, defensive)
+    select(game_id, offensive, defensive, team)
   # A quick correction in the event that we're calculating for the "average team". There 
   # would be duplicates if the teams were evenly matched
   if (all(team_vector == 9)) {
@@ -172,32 +172,11 @@ transition_list = tables$game_team_pair %>%
       ungroup() %>%
       select(round_num, shot_order, off_def, points_scored, team)
     
-    # Bugfix: if the defense_filtered table is 0, give it one value to make sure that the completion works
-    
-    if (nrow(defense_filtered) == 0) {
-      defense_filtered = defense_filtered %>% add_row(round_num = 1, shot_order = 1, off_def = 'defense', points_scored = 0)
-    }
     
     offensive_rounds = rounds_in_game$offensive
     defensive_rounds = rounds_in_game$defensive
     
-    offense_filtered$round_num =
-      factor(
-        offense_filtered$round_num,
-        levels = seq(1, offensive_rounds))
-    offense_filtered$shot_order =
-      factor(
-        offense_filtered$shot_order,
-        levels = seq(1, shots_per_round))  
     
-    defense_filtered$round_num =
-      factor(
-        defense_filtered$round_num,
-        levels = seq(1, defensive_rounds))
-    defense_filtered$shot_order =
-      factor(
-        defense_filtered$shot_order,
-        levels = seq(1, shots_per_round))  
     
     # Use the information from game_team_pair to figure out ordering
     # and to expand in the correct way (using team or)
@@ -206,35 +185,118 @@ transition_list = tables$game_team_pair %>%
       pull(team)
     
     if (length(team) == 2) {
-      # First things first: fill in the team value with the value that makes sense,
-      # so that the filter below doesn't wipe out the newly created "expanded" values
-      # since they were not given a team to fill in
-      offense_filtered$team = factor(offense_filtered$team, levels = c('A', 'B'))
-      defense_filtered$team = factor(defense_filtered$team, levels = c('A', 'B'))
       
-      expanded_game_offense = offense_filtered %>%
+      # Bugfix: if the defense_filtered table is 0, give it one value to make sure that the completion works
+      # Strictly speaking, this bugfix should also be present for offense, but I kind of want to wait to worry
+      # about that when we see an all defensive game happen. It's pretty unlikely and I'd worry at this point 
+      # that it'd do more harm than good.
+      if (nrow(defense_filtered) == 0) {
+        defense_filtered = defense_filtered %>% add_row(round_num = c(1,1), shot_order = c(1,1), off_def = c('defense', 'defense'), points_scored = c(0,0), team= c('A', 'B'))
+      }
+      
+      # Since shot order is true for all teams, it can be assigned to offense_filtered
+      # and defense_filtered before splitting.
+      browser()
+      offense_filtered$shot_order =
+        factor(
+          offense_filtered$shot_order,
+          levels = seq(1, shots_per_round))
+      
+      defense_filtered$shot_order =
+        factor(
+          defense_filtered$shot_order,
+          levels = seq(1, shots_per_round)) 
+      
+      # I'll pull the values for the offensive and defensive rounds of each team here,
+      # so they're together
+      offensive_rounds_A = rounds_in_game %>% filter(team == 'A') %>% pull(offensive)
+      offensive_rounds_B = rounds_in_game %>% filter(team == 'B') %>% pull(offensive)
+      defensive_rounds_A = rounds_in_game %>% filter(team == 'A') %>% pull(defensive)
+      defensive_rounds_B = rounds_in_game %>% filter(team == 'B') %>% pull(defensive)
+      
+      
+      offense_filtered_A = offense_filtered %>%
+        filter(team == 'A')
+      # Fill in factor levels for round_num here
+      offense_filtered_A$round_num = 
+        factor(
+          offense_filtered_A$round_num, 
+          levels = seq(1, offensive_rounds_A)
+        )
+      
+      expanded_game_offense_A = offense_filtered_A %>%
         complete(
-          expand(offense_filtered,
+          expand(offense_filtered_A,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "offense",
+                      team = 'A'))
+      
+        offense_filtered_B = offense_filtered %>%
+          filter(team == 'B') 
+        
+        offense_filtered_B$round_num = 
+          factor(
+            offense_filtered_B$round_num,
+            levels = seq(1, offensive_rounds_B)
+          )
+        
+        expanded_game_offense_B = offense_filtered_B %>%
+        complete(
+          expand(offense_filtered_B,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "offense",
+                      team = 'B'))
+      
+      defense_filtered_A = defense_filtered %>%
+        filter(team == 'A')
+      
+      defense_filtered_A$round_num = 
+        factor(
+          defense_filtered_A$round_num,
+          levels = seq(1, defensive_rounds_A)
+      )
+      expanded_game_defense_A = defense_filtered_A %>%
+        complete(
+          expand(defense_filtered_A,
                  round_num,
                  shot_order,
                  off_def,
                  team),
           fill = list(points_scored = 0,
-                      off_def = "offense")) 
-      
-      expanded_game_defense = defense_filtered %>%
+                      off_def = "defense",
+                      team = 'A'))
+        
+        defense_filtered_B = defense_filtered %>%
+          filter(team == 'B')
+        
+        defense_filtered_B$round_num = 
+          factor(
+            defense_filtered_B$round_num,
+            levels = seq(1, defensive_rounds_B)
+          )
+        expanded_game_defense_B = defense_filtered_B %>%
         complete(
-          expand(defense_filtered,
+          expand(defense_filtered_B,
                  round_num,
                  shot_order,
                  off_def,
                  team),
           fill = list(points_scored = 0,
-                      off_def = "defense"))
+                      off_def = "defense",
+                      team = 'B'))
       
+        
       
-      expanded_game = bind_rows(expanded_game_offense,
-                                expanded_game_defense)
+      expanded_game = bind_rows(expanded_game_offense_A,
+                                expanded_game_offense_B,
+                                expanded_game_defense_A,
+                                expanded_game_defense_B)
       
       # I need to make sure that the running score is actually correctly accounting
       # for the order of play in each game. While I have the game, also
@@ -267,6 +329,33 @@ transition_list = tables$game_team_pair %>%
                   .groups = "drop")
       
     } else {
+      # Bugfix: if the defense_filtered table is 0, give it one value to make sure that the completion works
+      # Strictly speaking, this bugfix should also be present for offense, but I kind of want to wait to worry
+      # about that when we see an all defensive game happen. It's pretty unlikely and I'd worry at this point 
+      # that it'd do more harm than good.
+      if (nrow(defense_filtered) == 0) {
+        defense_filtered = defense_filtered %>% add_row(round_num = 1, shot_order = 1, off_def = 'defense', points_scored = 0)
+      }
+      
+      
+      offense_filtered$round_num =
+        factor(
+          offense_filtered$round_num,
+          levels = seq(1, offensive_rounds))
+      offense_filtered$shot_order =
+        factor(
+          offense_filtered$shot_order,
+          levels = seq(1, shots_per_round))  
+      
+      defense_filtered$round_num =
+        factor(
+          defense_filtered$round_num,
+          levels = seq(1, defensive_rounds))
+      defense_filtered$shot_order =
+        factor(
+          defense_filtered$shot_order,
+          levels = seq(1, shots_per_round)) 
+      
       
       expanded_game_offense = offense_filtered %>%
         complete(
