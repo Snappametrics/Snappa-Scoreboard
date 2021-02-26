@@ -205,8 +205,6 @@ transition_list = tables$game_team_pair %>%
       filter(game_id == game) %>%
       pull(team)
     
-    browser()
-    
     if (length(team) == 2) {
       # First things first: fill in the team value with the value that makes sense,
       # so that the filter below doesn't wipe out the newly created "expanded" values
@@ -337,14 +335,20 @@ transition_list = tables$game_team_pair %>%
           old_score = score_side_table$running_score[i - 1]
           new_score = score_side_table$running_score[i]
           
-          if (score_side_table$off_def[i] == "offense"){
-            offense_matrix[old_score + 1, new_score + 1] =
-              offense_matrix[old_score+ 1, new_score + 1] + 1
-          } else { 
-            defense_matrix[old_score + 1, new_score + 1] = 
-              defense_matrix[old_score + 1, new_score + 1] + 1
+          # A change for the "average teams" case. You have to make sure
+          # that the score doesn't go from something like 21 to 0
+          
+          if (new_score - old_score < 0) {
+            invisible() 
+          } else {
+            if (score_side_table$off_def[i] == "offense"){
+              offense_matrix[old_score + 1, new_score + 1] =
+                offense_matrix[old_score+ 1, new_score + 1] + 1
+            } else { 
+              defense_matrix[old_score + 1, new_score + 1] = 
+                defense_matrix[old_score + 1, new_score + 1] + 1
+            }
           }
-            
         }
       } else {
         offense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
@@ -354,15 +358,17 @@ transition_list = tables$game_team_pair %>%
             score_side_table$running_score[i - 2]
           new_state = score_side_table$running_score[i] - 
             score_side_table$running_score[i - 1]
-          
-          if (score_side_table$off_def[i] == "offense"){
-            offense_matrix[old_state + 1, new_state + 1] =
-              offense_matrix[old_state+ 1, new_state + 1] + 1
-          } else { 
-            defense_matrix[old_state + 1, new_state + 1] = 
-              defense_matrix[old_state + 1, new_state + 1] + 1
+          if (any(old_state < 0, new_state < 0)) {
+            invisible()
+          } else {
+            if (score_side_table$off_def[i] == "offense"){
+              offense_matrix[old_state + 1, new_state + 1] =
+                offense_matrix[old_state+ 1, new_state + 1] + 1
+            } else { 
+              defense_matrix[old_state + 1, new_state + 1] = 
+                defense_matrix[old_state + 1, new_state + 1] + 1
+            }
           }
-          
         }
       } 
     return(list("offense" = offense_matrix,
