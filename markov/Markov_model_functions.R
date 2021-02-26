@@ -165,12 +165,12 @@ transition_list = tables$game_team_pair %>%
     offense_filtered = filtered_game %>% 
       filter(off_def == "offense") %>%
       ungroup() %>%
-      select(round_num, shot_order, off_def, points_scored)
+      select(round_num, shot_order, off_def, points_scored, team)
     
     defense_filtered = filtered_game %>% 
       filter(off_def == "defense") %>%
       ungroup() %>%
-      select(round_num, shot_order, off_def, points_scored)
+      select(round_num, shot_order, off_def, points_scored, team)
     
     # Bugfix: if the defense_filtered table is 0, give it one value to make sure that the completion works
     
@@ -198,76 +198,122 @@ transition_list = tables$game_team_pair %>%
       factor(
         defense_filtered$shot_order,
         levels = seq(1, shots_per_round))  
-   
-    expanded_game_offense = offense_filtered %>%
-      complete(
-        expand(offense_filtered,
-               round_num,
-               shot_order,
-               off_def),
-        fill = list(points_scored = 0,
-                    off_def = "offense")) 
-    
-    expanded_game_defense = defense_filtered %>%
-      complete(
-        expand(defense_filtered,
-               round_num,
-               shot_order,
-               off_def),
-        fill = list(points_scored = 0,
-                    off_def = "defense"))
-    
-    
-    expanded_game = bind_rows(expanded_game_offense,
-                              expanded_game_defense)
     
     # Use the information from game_team_pair to figure out ordering
+    # and to expand in the correct way (using team or)
     team = tables$game_team_pair %>%
       filter(game_id == game) %>%
       pull(team)
-    browser()
-    # I need to make sure that the running score is actually correctly accounting
-    # for the order of play in each game. While I have the game, also
-    # make sure to add an extra value to the table. 
     
-    # In the event that we are looking for the "average team" and a game consists
-    # of two teams of the correct size, then we have to do a bit more here, adding 
-    # on a row for each team according to the previous pattern. That will be 
-    # another "split -> add -> rebind" procedure
+    browser()
     
     if (length(team) == 2) {
+      # First things first: fill in the team value with the value that makes sense,
+      # so that the filter below doesn't wipe out the newly created "expanded" values
+      # since they were not given a team to fill in
+      offense_filtered$team = factor(offense_filtered$team, levels = c('A', 'B'))
+      defense_filtered$team = factor(defense_filtered$team, levels = c('A', 'B'))
+      
+      expanded_game_offense = offense_filtered %>%
+        complete(
+          expand(offense_filtered,
+                 round_num,
+                 shot_order,
+                 off_def,
+                 team),
+          fill = list(points_scored = 0,
+                      off_def = "offense")) 
+      
+      expanded_game_defense = defense_filtered %>%
+        complete(
+          expand(defense_filtered,
+                 round_num,
+                 shot_order,
+                 off_def,
+                 team),
+          fill = list(points_scored = 0,
+                      off_def = "defense"))
+      
+      
+      expanded_game = bind_rows(expanded_game_offense,
+                                expanded_game_defense)
+      
+      # I need to make sure that the running score is actually correctly accounting
+      # for the order of play in each game. While I have the game, also
+      # make sure to add an extra value to the table. 
+      
+      # In the event that we are looking for the "average team" and a game consists
+      # of two teams of the correct size, then we have to do a bit more here, adding 
+      # on a row for each team according to the previous pattern. That will be 
+      # another "split -> add -> rebind" procedure
+      
+      
       expanded_game_A = expanded_game %>% 
         arrange(round_num, desc(off_def), shot_order) %>%
-        select(off_def, points_scored)
-      expanded_game_A = bind_rows(tibble(off_def = 'offense', points_scored = 0),
+        filter(team == 'A') %>% 
+        select(off_def, points_scored, team)
+      expanded_game_A = bind_rows(tibble(off_def = 'offense', points_scored = 0, team = 'A'),
                                   expanded_game_A)
       expanded_game_B = expanded_game %>% 
         arrange(round_num, off_def, shot_order) %>%
-        select(off_def, points_scored)
-      expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
-                                expanded_game)
-    }
-    
-    if (team == "A"){
-      expanded_game = expanded_game %>% 
-        arrange(round_num, desc(off_def), shot_order) %>%
-        select(off_def, points_scored)
-      expanded_game = bind_rows(tibble(off_def = "offense", points_scored = 0),
-                                expanded_game)
+        filter(team == 'B') %>%
+        select(off_def, points_scored, team)
+      expanded_game_B = bind_rows(tibble(off_def = "defense", points_scored = 0, team = 'B'),
+                                  expanded_game_B)
+      expanded_game = bind_rows(expanded_game_A, expanded_game_B)
+      
+      score_side_table = expanded_game %>% 
+        group_by(team) %>% 
+        summarize(running_score = cumsum(points_scored),
+                  off_def = off_def,
+                  .groups = "drop")
+      
     } else {
-      expanded_game = expanded_game %>% 
-        arrange(round_num, off_def, shot_order) %>%
-        select(off_def, points_scored)
-      expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
-                                expanded_game)
+      
+      expanded_game_offense = offense_filtered %>%
+        complete(
+          expand(offense_filtered,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "offense")) 
+      
+      expanded_game_defense = defense_filtered %>%
+        complete(
+          expand(defense_filtered,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "defense"))
+      
+      
+      expanded_game = bind_rows(expanded_game_offense,
+                                expanded_game_defense)
+      
+      if (team == "A"){
+        expanded_game = expanded_game %>% 
+          arrange(round_num, desc(off_def), shot_order) %>%
+          select(off_def, points_scored)
+        expanded_game = bind_rows(tibble(off_def = "offense", points_scored = 0),
+                                  expanded_game)
+      } else {
+        expanded_game = expanded_game %>% 
+          arrange(round_num, off_def, shot_order) %>%
+          select(off_def, points_scored)
+        expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
+                                  expanded_game)
+      }
+      
+      
+      
+      score_side_table = expanded_game %>%
+        summarize(running_score = cumsum(points_scored),
+                  off_def = off_def,
+                  .groups = "drop")
     }
     
-    
-    
-    score_side_table = expanded_game %>%
-                        summarize(running_score = cumsum(points_scored),
-                                  off_def = off_def,
-                                  .groups = "drop")
     # If this is only one observation long, then this game isn't in scores, so dip
     if (nrow(score_side_table) == 1){
       if (type == "scores") {
