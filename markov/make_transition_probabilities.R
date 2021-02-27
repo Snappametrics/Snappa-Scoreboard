@@ -107,8 +107,9 @@ average_team_name = stand_in_teams %>%
          ) %>%
     pull(team_vector)
 
-names(average_teams_transitions) = average_team_name
+names(average_team_transitions) = average_team_name
 
+all_transitions = append(all_transitions, average_team_transitions)
 
   
 saveRDS(all_transitions, file = "markov/transition_probabilities.Rdata")
