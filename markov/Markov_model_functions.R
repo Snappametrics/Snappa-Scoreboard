@@ -830,7 +830,7 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
       )
       
       
-    team_B_name = str_c("(", team_B[1], ",", team_B[2], 
+    team_B_name = str_c("(", team_B[1], ", ", team_B[2], 
                         if_else(!is.na(team_B[3]), str_c(", ", team_B[3]), ""),
                         if_else(!is.na(team_B[4]), str_c(", ", team_B[4]), ""),
                         ")"
@@ -850,7 +850,7 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
   # you have to replace them with the average team values, then also issue a 
   # warning which can be printed to users
   if (all(is.null(team_A_transitions), is.null(team_B_transitions))) {
-    warning_code = 'both teams'
+    warning_code = 'Both teams'
     standin_team_name_A = str_c('(', paste0(rep(9, A_size), collapse = ', '), ')') 
     standin_team_name_B = str_c('(', paste0(rep(9, B_size), collapse = ', '), ')')
     team_A_transitions = transitions_list[[standin_team_name_A]]$scores
