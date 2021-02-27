@@ -821,6 +821,8 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
     team_B_backup = transition_probabilities(player_stats, scores, "states", team_B[1], team_B[2], team_B[3], team_B[4])
   } else {
     
+    
+    
     team_A_name = str_c("(", team_A[1], ", ", team_A[2], 
                         if_else(!is.na(team_A[3]), str_c(", ", team_A[3]), ""),
                         if_else(!is.na(team_A[4]), str_c(", ", team_A[4]), ""),
@@ -837,11 +839,39 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
     team_A_backup = transitions_list[[team_A_name]]$states
     team_B_transitions = transitions_list[[team_B_name]]$scores
     team_B_backup = transitions_list[[team_B_name]]$states
-  }  
+  }
+  
   # At this point, I run the same simulation as before, but now I map it over
   # a sequence to iterate
   A_size = length(team_A %>% discard(is.na))
   B_size = length(team_B %>% discard(is.na))
+  
+  # Catch some errors. In the event that any of these come back as null values,
+  # you have to replace them with the average team values, then also issue a 
+  # warning which can be printed to users
+  if (all(is.null(team_A_transitions), is.null(team_B_transitions))) {
+    warning_code = 'both teams'
+    standin_team_name_A = str_c('(', paste0(rep(9, A_size), collapse = ', '), ')') 
+    standin_team_name_B = str_c('(', paste0(rep(9, B_size), collapse = ', '), ')')
+    team_A_transitions = transitions_list[[standin_team_name_A]]$scores
+    team_A_backup = transitions_list[[standin_team_name_A]]$states
+    team_B_transitions = transitions_list[[standin_team_name_B]]$scores
+    team_B_backup = transitions_list[[standin_team_name_B]]$states
+  } else if (is.null(team_A_transitions)) {
+    warning_code = 'Team A'
+    standin_team_name_A = str_c('(', paste0(rep(9, A_size), collapse = ', '), ')')
+    team_A_transitions = transitions_list[[standin_team_name_A]]$scores
+    team_A_backup = transitions_list[[standin_team_name_A]]$states
+  } else if (is.null(team_B_transitions)) {
+    warning_code = 'Team B'
+    standin_team_name_B = str_c('(', paste0(rep(9, B_size), collapse = ', '), ')')
+    team_B_transitions = transitions_list[[standin_team_name_B]]$scores
+    team_B_backup = transitions_list[[standin_team_name_B]]$states
+  } else {
+    warning_code = 'none'
+  }
+  
+  
   
   shots = max(A_size, B_size)
   
@@ -855,7 +885,9 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
                        current_scores_B
                       )
   })
-  return(games_record)
+  return(list(games_record = games_record, 
+              warning = warning_code)
+  )
 }
 
 
