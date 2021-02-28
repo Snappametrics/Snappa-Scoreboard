@@ -406,9 +406,13 @@ players 3 and 4 */
 }
 
 #remove_A3, #remove_A4, #remove_B3, #remove_B4 {
-    height: 6vh;
-    width: 30%;
-    align-self: center
+    height: 5vh;
+    width: 15%;
+    align-self: center;
+    position: relative;
+    left: 47%;
+    top: 75px;
+    z-index: 100;
 }
 
 .additional_players_form > .shiny-input-container {
