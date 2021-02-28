@@ -686,10 +686,10 @@ server <- function(input, output, session) {
   # Output the round number
   output$round_num = renderUI({
     team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
-    HTML(str_c('<div id = "round_value"> <h3 style="font-size:18rem; line-height: 20rem;">', 
+    HTML(str_c('<h3 class="numbers">', 
                str_extract(round_num(), "[0-9]+"), 
                '<span style="color:', team_colours[[str_extract(round_num(), "[AB]+")]], ';">', str_extract(round_num(), "[AB]+"), "</span>",
-               "</h3> </div>"))
+               "</h3>"))
   })
   
   output$round_control_buttons = renderUI({
