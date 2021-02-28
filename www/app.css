@@ -428,8 +428,7 @@ players 3 and 4 */
 #scoreboard_center_controls {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  align-items: stretch;
+  text-align: center;
 }
 
 #round_value > h3 {
@@ -440,7 +439,7 @@ players 3 and 4 */
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  align-items: stretch;
+  align-items: center;
 }
 .team_name {
   padding-top: 2vh;
@@ -451,12 +450,6 @@ players 3 and 4 */
 }
 
 /* Controls for text shading on wells */
-.well_A > h1, .well_A > h2, #input_forms_A > div > label, #add_remove_A3 .input_close_and_name > h1 {
-  text-shadow: -1px 1px 8px rgb(139,0,0, 0.3), 1px 1px 8px rgb(139,0,0, 0.3), 1px -1px 8px rgb(139,0,0, 0.3), -1px -1px 8px rgb(139,0,0, 0.3);
-}
-.well_B > h1, .well_B > h2, #input_forms_B > div > label, #add_remove_B3 .input_close_and_name > h1{
-  text-shadow: -1px 1px 8px rgb(0,0,139, 0.2), 1px 1px 8px rgb(0,0,139, 0.2), 1px -1px 8px rgb(0,0,139, 0.2), -1px -1px 8px rgb(0,0,139, 0.2);
-}
 
 
 
