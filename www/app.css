@@ -327,21 +327,18 @@ label.control-label[for='score'] {
 
 /* Styling for 'we-scored' button and box around it */
 #A_score_and_undo, #B_score_and_undo {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    align-items: center;
     flex: 2 1 50%;
     padding-bottom: 2vh;
     
 }
 
 #A_score_button, #B_score_button {
-  width: 90%;
+  width: 95%;
   flex: 3 1 20vh;
   border-radius: 15px;
   font-size: 3rem;
-  padding: 0vw;
+  text-align: center;
+  padding: 3vw 0vw;
   margin-bottom: 3vh;
 }
 
