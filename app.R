@@ -2755,14 +2755,14 @@ observeEvent(input$resume_no, {
       max()
     
     # Pull the number of points the last score was worth
-    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
-      pull(points_scored)
+    last_score_row = filter(vals$scores_db, score_id == last_score) %>% 
+      select(points_scored, clink)
     # Reduce the score ID for any scores which have happened since the score which is being removed
     # Note that score undo-ing is team specific
     vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
       mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
     # Reduce the team's score and score_id
-    vals$current_scores$team_A = vals$current_scores$team_A - last_score_pts
+    vals$current_scores$team_A = vals$current_scores$team_A - last_score_row$points_scored
     vals$score_id = as.integer(vals$score_id-1)
     
     #Remove the value from the snappaDB
@@ -2775,6 +2775,20 @@ observeEvent(input$resume_no, {
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
+    
+    # Remove any associated sink casualty
+    if(vctrs::vec_in(last_score_row, tribble(~points_scored, ~clink, 
+                                             3, F,
+                                             5, T,
+                                             7, T))){
+      dbSendQuery(con,
+                  str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
+                        " AND game_id = ", vals$game_id,
+                        " AND casualty_type = 'Sunk'")
+      )
+    }
+      
+    
   })
   
   # Team B
@@ -2790,14 +2804,14 @@ observeEvent(input$resume_no, {
       max()
     
     # Pull the number of points the last score was worth
-    last_score_pts = filter(vals$scores_db, score_id == last_score) %>% 
-      pull(points_scored)
+    last_score_row = filter(vals$scores_db, score_id == last_score) %>% 
+      select(points_scored, clink)
     
     # Reset any scores which have happened since the score being erased
     vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
       mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
     
-    vals$current_scores$team_B = vals$current_scores$team_B - last_score_pts
+    vals$current_scores$team_B = vals$current_scores$team_B - last_score_row$points_scored
     vals$score_id = as.integer(vals$score_id-1)
     
     
@@ -2810,6 +2824,18 @@ observeEvent(input$resume_no, {
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
+    
+    # Remove any associated sink casualty
+    if(vctrs::vec_in(last_score_row, tribble(~points_scored, ~clink, 
+                                             3, F,
+                                             5, T,
+                                             7, T))){
+      dbSendQuery(con,
+                  str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
+                        " AND game_id = ", vals$game_id,
+                        " AND casualty_type = 'Sunk'")
+      )
+    }
     
   })
   
