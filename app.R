@@ -2048,12 +2048,22 @@ observeEvent(input$resume_no, {
     
     type = casualty_rules$casualty_title[vctrs::vec_match(vals$current_scores, haystack = casualty_rules[, 1:2])]
     
-
     # Insert casualty details
-    dbExecute(con, 
-              sql(str_c("INSERT INTO casualties(game_id, score_id, player_id, casualty_type)
-                        VALUES (", 
-                        str_c(vals$game_id, vals$score_id-1, casualty, str_c("'", type, "'"),  sep = ", "), ");")))
+    new_casualty = tibble(
+      casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
+      game_id = vals$game_id,
+      score_id = vals$score_id-1,
+      player_id = casualty,
+      casualty_type = type
+    )
+    dbWriteTable(
+      conn = con, 
+      name = "casualties", 
+      value = new_casualty,
+      append=T
+    )
+    
+
   })
   
   observeEvent(input$sink_casualty, {
@@ -2063,11 +2073,22 @@ observeEvent(input$resume_no, {
       pluck(input$sink_casualty)
     
     # Insert casualty details
-    dbExecute(con, 
-              sql(str_c("INSERT INTO casualties(game_id, score_id, player_id, casualty_type)
-                        VALUES (", 
-                        str_c(vals$game_id, vals$score_id, casualty, "'Sunk'",  sep = ", "), ");")))
-  })
+    new_casualty = tibble(
+      casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
+      game_id = vals$game_id,
+      score_id = vals$score_id,
+      player_id = casualty,
+      casualty_type = "Sunk"
+    )
+    
+    dbWriteTable(
+      conn = con, 
+      name = "casualties", 
+      value = new_casualty,
+      append=T
+    )  
+    
+    })
   
 
 # New Players -------------------------------------------------------------
