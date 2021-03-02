@@ -50,7 +50,7 @@ scores_tbl = dbGetQuery(con, "SELECT * FROM scores")
 player_stats_tbl = dbGetQuery(con, "SELECT * FROM player_stats")
 game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
-# Makea list of table templates
+# Make a list of table templates
 tbls = c("players", "scores", "player_stats", "game_stats")
 tbl_templates = map(tbls, function(table){
   dbGetQuery(con, str_c("SELECT * FROM ", table, " LIMIT 0")) 
@@ -65,6 +65,7 @@ tbl_templates = map(tbls, function(table){
 
 # Define UI for application that draws a histogram
 ui <- dashboardPagePlus(
+  collapse_sidebar = TRUE,
   dashboardHeaderPlus(title = tagList(
     # Corner logo
     span(class = "logo-lg", "Snappa Scoreboard"), 
@@ -98,7 +99,8 @@ ui <- dashboardPagePlus(
     )
     ),
   dashboardSidebar(
-    sidebarMenuOutput("sidebar_menu")
+    sidebarMenuOutput("sidebar_menu"),
+    collapsed = TRUE
   ),
   rightsidebar = rightSidebar(
     background = "dark",
@@ -685,7 +687,7 @@ server <- function(input, output, session) {
   # Output the round number
   output$round_num = renderUI({
     team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
-    HTML(str_c('<h3 style="font-size:18rem; line-height: 20rem;">', 
+    HTML(str_c('<h3 class="numbers">', 
                str_extract(round_num(), "[0-9]+"), 
                '<span style="color:', team_colours[[str_extract(round_num(), "[AB]+")]], ';">', str_extract(round_num(), "[AB]+"), "</span>",
                "</h3>"))
@@ -694,12 +696,14 @@ server <- function(input, output, session) {
   output$round_control_buttons = renderUI({
     team_colours = list("A" = "danger", "B" = "primary")
     column(width=12, align = "center",
-           actionBttn("next_round", 
-                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), 
-                      color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
-           actionBttn("previous_round", 
+           div( id = 'round_control_buttons',
+             actionBttn("previous_round", 
                       label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = 
-                        team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
+                        team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
+             actionBttn("next_round", 
+                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), 
+                      color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
+           )
     )
   })
   
