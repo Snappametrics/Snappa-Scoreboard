@@ -173,6 +173,8 @@ casualty_popup = function(session, score, rules, players = snappaneers()$player_
                     type = "warning",
                     input = "radio",
                     inputOptions = players)
+  } else {
+    invisible()
   }
   
   
