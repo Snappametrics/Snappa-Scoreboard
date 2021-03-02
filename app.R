@@ -120,6 +120,8 @@ ui <- dashboardPagePlus(
         label = "What score are you playing to?",
         min = 21, max = 50, value = 21
       ),
+      actionBttn("sink_rescue", "Hey that was a sink!",
+                 size = "sm"),
       actionBttn("new_game", "Restart", 
                  icon = icon("plus"), size = "sm",
                  style = "material-flat", color = "warning"),
@@ -2844,7 +2846,9 @@ observeEvent(input$resume_no, {
   })
   
   
-  
+  observeEvent(input$sink_rescue, {
+    sink_casualty_popup(session, score_row = tail(vals$scores_db, 1), players = snappaneers()$player_name)
+  })
   
   
   
