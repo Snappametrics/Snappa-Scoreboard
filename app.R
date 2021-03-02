@@ -252,45 +252,51 @@ ui <- dashboardPagePlus(
 
       
       tabItem(tabName = "player_stats",
-              # Filters
-              boxPlus(width = 12,
-                      # Player Select
-                         selectInput("player_select", label = "Player", selectize = F,
-                                     choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
+              fluidRow(
+                # Filters
+                boxPlus(width = 12,
+                        # Player Select
+                        selectInput("player_select", label = "Player", selectize = F,
+                                    choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id")) %>%
-                                       deframe() %>% sample())
-              ),
-              # General and Paddle Stat boxes
-              uiOutput("player_stats_headers"),
-              # Form plot
-              boxPlus(title = "Player Form",
-                      collapsible = T,
-                      closable = F,
-                      status = "primary",
-                      fluidRow(class = "last-n-games",
-                               column(width = 5,
-                                      # Stat selection
-                                      selectInput("stat_select", label = NULL, selectize = F,
-                                                  choices = c("Total Points" = "total_points", 
-                                                              "Paddle Points" = "paddle_points", 
-                                                              "Toss Efficiency" = "toss_efficiency"), 
-                                                  selected = "total_points")), 
-                        column(width = 1, style = "padding-right:3vw;padding-left:0",
-                               tags$span("Last", style = "font-weight:600;")
-                               ),
-                        column(width = 3,
-                               # Sample size selection
-                               selectInput("sample_select", label = NULL, selectize = F, 
-                                           choices = c(5, 10, 20, "All"), 
-                                           selected = 5)),
-                        column(width = 1, style = "padding-left:0;",
-                               tags$span(" games", style = "font-weight:600;")
-                                         )
-                        
-                      ),
-                plotOutput("player_form")
+                                      deframe() %>% sample())
+                )
+              )
+              ,
+              fluidRow(
+                # General and Paddle Stat boxes
+                uiOutput("player_stats_headers")
+              )
+              ,
+              fluidRow(
+                boxPlus(title = "Player Form",
+                        collapsible = T,
+                        closable = F,
+                        status = "primary",
+                        fluidRow(class = "last-n-games",
+                                 column(width = 5,
+                                        # Stat selection
+                                        selectInput("stat_select", label = NULL, selectize = F,
+                                                    choices = c("Total Points" = "total_points", 
+                                                                "Paddle Points" = "paddle_points", 
+                                                                "Toss Efficiency" = "toss_efficiency"), 
+                                                    selected = "total_points")), 
+                                 column(width = 1, style = "padding-right:3vw;padding-left:0",
+                                        tags$span("Last", style = "font-weight:600;")
+                                 ),
+                                 column(width = 3,
+                                        # Sample size selection
+                                        selectInput("sample_select", label = NULL, selectize = F, 
+                                                    choices = c(5, 10, 20, "All"), 
+                                                    selected = 5)),
+                                 column(width = 1, style = "padding-left:0;",
+                                        tags$span(" games", style = "font-weight:600;")
+                                 )
+                                 
+                        ),
+                        plotOutput("player_form")
               ),
               # Top Teammates
               boxPlus(title = "Top Teammates",
@@ -299,13 +305,19 @@ ui <- dashboardPagePlus(
                       status = "primary",
                       # gt_output("teammate_tab")
                       reactableOutput("teammate_tab_rt")
+              )
+              # Form plot
+              
               ),
-              boxPlus(title = textOutput("game_history_title"),
-                      collapsible = T, width = 12,
-                      closable = F,
-                      collapsed = T,
-                      status = "primary",
-                      reactableOutput("player_game_stats"))
+              fluidRow(
+                boxPlus(title = textOutput("game_history_title"),
+                        collapsible = T, width = 12,
+                        closable = F,
+                        collapsed = T,
+                        status = "primary",
+                        reactableOutput("player_game_stats"))
+              )
+              
               ),
 
 # Edit teams --------------------------------------------------------
