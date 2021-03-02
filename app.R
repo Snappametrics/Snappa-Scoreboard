@@ -2052,7 +2052,7 @@ observeEvent(input$resume_no, {
     new_casualty = tibble(
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
-      score_id = vals$score_id-1,
+      score_id = vals$score_id,
       player_id = casualty,
       casualty_type = type
     )
