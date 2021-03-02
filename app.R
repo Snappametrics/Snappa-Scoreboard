@@ -322,11 +322,12 @@ ui <- dashboardPagePlus(
                     uiOutput("simulation_score_A")
                   ),
                   column(width = 4, align = "center",
-                    awesomeRadio("num_simulations", "Number of Simulations",
-                                choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
-                                inline = T),
-                    br(),
-                    br(),
+                    sliderTextInput(
+                      inputId = "num_simulations",
+                      label = "Number of Simulations", 
+                      choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
+                      grid = TRUE
+                    ),
                     actionBttn("simulation_go",
                                "Run the Simulations!",
                                color = 'primary',
