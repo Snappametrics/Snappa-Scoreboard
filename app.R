@@ -28,7 +28,7 @@ library(waiter)
 library(htmltools)
 
 
-source("dbconnect.R")
+source("database/db_connect.R")
 source("ui_functions.R")
 source("server_functions.R")
 source("markov/Markov_model_functions.R")
@@ -321,8 +321,6 @@ ui <- dashboardPagePlus(
 
 # Win Probability Model ---------------------------------------------
     tabItem(tabName = "markov_model_summary",
-            #TODO: make the scores inputs a dynamic output so that
-            # you can use vals$current_scores to fill them
         div(id = "waiter",
                 boxPlus(title = "Simulation Parameters",
                 width = 12,
@@ -333,11 +331,12 @@ ui <- dashboardPagePlus(
                     uiOutput("simulation_score_A")
                   ),
                   column(width = 4, align = "center",
-                    awesomeRadio("num_simulations", "Number of Simulations",
-                                choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
-                                inline = T),
-                    br(),
-                    br(),
+                    sliderTextInput(
+                      inputId = "num_simulations",
+                      label = "Number of Simulations", 
+                      choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
+                      grid = TRUE
+                    ),
                     actionBttn("simulation_go",
                                "Run the Simulations!",
                                color = 'primary',
@@ -351,6 +350,7 @@ ui <- dashboardPagePlus(
                     
             ),
         div(class = "simulation_results",
+            uiOutput('simulation_warning'),
             uiOutput("simulation_blurb"),
             plotOutput("simulation_probability_bar",
                        height = 100),
@@ -408,11 +408,11 @@ server <- function(input, output, session) {
   # This is an initial value which will be overwritten when you run
   # the simulations
   w = Waiter$new(
-    html = tagList(
-      spin_pixel(),
-      str_c("Yeeting Imaginary Dice Into The Sky"
-      )
-    ))
+   html = tagList(
+     spin_pixel(),
+     str_c("Yeeting Imaginary Dice Into The Sky"
+     )
+   ))
   output$sidebar_menu <- renderUI({
     
     
@@ -1349,8 +1349,8 @@ server <- function(input, output, session) {
                 "team_B" = team_B))
       
   })
-  
-  game_simulations = reactive({
+
+  markov_simulated_output = reactive({
     markov_simulate_games(team_transition_names()$team_A, 
                           team_transition_names()$team_B,
                           iterations = vals$markov_vals$iterations ,
@@ -1359,8 +1359,15 @@ server <- function(input, output, session) {
                           current_scores_A = vals$markov_vals$A_score,
                           current_scores_B = vals$markov_vals$B_score)
   })
+  
+  game_simulations = reactive({
+    markov_simulated_output()$games_record
+  })
 
-
+  markov_average_team_warning = reactive({
+    markov_simulated_output()$warning
+  })
+  
   markov_summary = reactive({
     markov_summary_data(game_simulations())
   })
@@ -1411,6 +1418,26 @@ output$simulation_score_A = renderUI({
 output$simulation_score_B = renderUI({
   numericInput("simulation_scores_B", label = "Team B Starting Score",
                value = vals$current_scores$team_B, min = 0, max = 50)
+})
+
+output$simulation_warning = renderUI({
+    fluidRow(
+      column(12,
+        HTML(str_c('<h3 style = \'color: red; text-align: center\'>',
+            if_else(markov_average_team_warning() != 'none',
+              str_c('Warning: ', 
+                  if_else(markov_average_team_warning() == 'Both teams', 'Neither team has ', 
+                          str_c(markov_average_team_warning(), ' does not have ')
+                          ),
+                  'an entry in the Markov simulation model. Aggregate values for 
+                  teams of the same size have been used instead. </span>'),
+              '<span style = \'display: none \' >'
+            )
+          )
+        )
+      )
+    )
+
 })
 
 output$simulation_blurb = renderUI({

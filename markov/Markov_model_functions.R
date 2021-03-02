@@ -4,7 +4,7 @@
 
 
 # This function creates all the "helper" tables that are needed in team_transitions
-# and elsewhere in the funcitons. It is just easier to keep them all in one
+# and elsewhere in the functions. It is just easier to keep them all in one
 # place, and to avoid making other functions take 6 arguments 
 
 helper_tables = function(player_stats, scores, team_vector){
@@ -15,31 +15,38 @@ helper_tables = function(player_stats, scores, team_vector){
     mutate(position = row_number()) %>%
     pivot_wider(id_cols = c(game_id, team), names_from = position, values_from = player_id)
   
-  team_vector = team_vector %>% sort()
-  
-  num_players = team_vector %>% length()
-  while (num_players < 4){
-    team_vector = team_vector %>% append(NA)
+  if (all(team_vector == 9, na.rm = T)) {
+    team_vector = team_vector %>% discard(is.na)
+    game_team_pair = player_stats %>% 
+      group_by(game_id, team) %>% 
+      count() %>%
+      filter(`n` == length(team_vector))
+  } else {
+    team_vector = team_vector %>% sort()
+    
     num_players = team_vector %>% length()
+    while (num_players < 4){
+      team_vector = team_vector %>% append(NA)
+      num_players = team_vector %>% length()
+    }
+    
+    # Make the expression which creates a filter 
+    filter_vector = team_vector %>%
+      imap(function(player, index){
+        if (!is.na(player)){
+          str_c("`", index, "` == ", player)
+        } else
+          str_c("is.na(`", index, "`) ")
+      })
+    
+    filter_expression =  rlang::parse_exprs(
+      paste0(filter_vector)
+    )
+    
+    game_team_pair = team_combinations %>% 
+      filter(!!!filter_expression) %>%
+      select(game_id, team) 
   }
-  
-  # Make the expression which creates a filter 
-  filter_vector = team_vector %>%
-    imap(function(player, index){
-      if (!is.na(player)){
-        str_c("`", index, "` == ", player)
-      } else
-        str_c("is.na(`", index, "`) ")
-    })
-  
-  filter_expression =  rlang::parse_exprs(
-    paste0(filter_vector)
-  )
-  
-  game_team_pair = team_combinations %>% 
-    filter(!!!filter_expression) %>%
-    select(game_id, team) 
-  
   # We need to know how many shots occurred within each round of play in each game
   # to accurately assess the total number of observations 
   
@@ -53,19 +60,31 @@ helper_tables = function(player_stats, scores, team_vector){
   # joining . In order to give the scores table the ability to 'complete' the data
   # for shots in a given round, I add in a variable which calculates the running total of 
   # scores in that round
-  scores_simplified = scores %>% 
+  scores_truncated = scores %>% 
     arrange(game_id, score_id) %>%
     group_by(game_id, round_num, scoring_team) %>%
-    mutate(shot_order = row_number()) %>% 
-    select(game_id, scoring_team, points_scored, round_num, shot_order) %>%
+    select(game_id, scoring_team, points_scored, round_num) %>%
     filter(game_id %in% game_team_pair$game_id) %>%
+    mutate(shot_order = row_number())
+    
+  if (any(duplicated(game_team_pair$team))) {
+    scores_simplified = scores_truncated %>% 
+      left_join(game_team_pair, by = c('game_id', 'scoring_team' = 'team'), keep = T, suffix = c('.scores', '.gt_pair')) %>%
+      mutate(off_def = case_when(str_extract(round_num, "[A-Z]") == team ~ "offense",
+                                 str_extract(round_num, "[A-Z]") != team ~ "defense"),
+             round_num = as.integer(str_sub(round_num, 1, -2))) %>%
+      #extra line for this case to handle the double instance of game_id created by the merge
+      select(-game_id.gt_pair) %>%
+      rename(game_id = game_id.scores)
+  } else {
+  scores_simplified = scores_truncated %>% 
     left_join(game_team_pair, by = "game_id") %>%
     filter(scoring_team == team) %>%
     mutate(off_def = case_when(str_extract(round_num, "[A-Z]") == team ~ "offense",
                                str_extract(round_num, "[A-Z]") != team ~ "defense"),
            round_num = as.integer(str_sub(round_num, 1, -2))
-           )
-    
+    )
+  }
   # As it turns out, there are more games in the game_team_pair than there 
   # are in scores. Missing data is a bummer sometimes. So we have to delete
   # those games and only rely on the games from the overlap when we map
@@ -91,7 +110,13 @@ helper_tables = function(player_stats, scores, team_vector){
     mutate(offensive = ifelse(team == "A", ceiling(rounds / 2), floor(rounds / 2)),
            defensive = ifelse(team == "A", floor(rounds / 2), ceiling(rounds / 2))) %>%
     ungroup() %>%
-    select(game_id, offensive, defensive)
+    select(game_id, offensive, defensive, team)
+  # A quick correction in the event that we're calculating for the "average team". There 
+  # would be duplicates if the teams were evenly matched
+  if (all(team_vector == 9, na.rm = T)) {
+    total_rounds = total_rounds %>% distinct()
+  }
+  
   
   package = list("team_combinations" = team_combinations, 
                  "game_team_pair" = game_team_pair,
@@ -135,88 +160,244 @@ transition_list = tables$game_team_pair %>%
     # then expand both and combine them again. Then I'll have to use a very
     # careful arrangement of the combined table to get the proper running scores
     # value for that game. At least I don't have to declare off/def as a factor
-    
     offense_filtered = filtered_game %>% 
       filter(off_def == "offense") %>%
       ungroup() %>%
-      select(round_num, shot_order, off_def, points_scored)
+      select(round_num, shot_order, off_def, points_scored, team)
     
     defense_filtered = filtered_game %>% 
       filter(off_def == "defense") %>%
       ungroup() %>%
-      select(round_num, shot_order, off_def, points_scored)
+      select(round_num, shot_order, off_def, points_scored, team)
+    
     
     offensive_rounds = rounds_in_game$offensive
     defensive_rounds = rounds_in_game$defensive
     
-    offense_filtered$round_num =
-      factor(
-        offense_filtered$round_num,
-        levels = seq(1, offensive_rounds))
-    offense_filtered$shot_order =
-      factor(
-        offense_filtered$shot_order,
-        levels = seq(1, shots_per_round))  
     
-    defense_filtered$round_num =
-      factor(
-        defense_filtered$round_num,
-        levels = seq(1, defensive_rounds))
-    defense_filtered$shot_order =
-      factor(
-        defense_filtered$shot_order,
-        levels = seq(1, shots_per_round))  
-   
-    expanded_game_offense = offense_filtered %>%
-      complete(
-        expand(offense_filtered,
-               round_num,
-               shot_order,
-               off_def),
-        fill = list(points_scored = 0,
-                    off_def = "offense")) 
-
-    expanded_game_defense = defense_filtered %>%
-      complete(
-        expand(defense_filtered,
-               round_num,
-               shot_order,
-               off_def),
-        fill = list(points_scored = 0,
-                    off_def = "defense"))
-    
-    
-    expanded_game = bind_rows(expanded_game_offense,
-                              expanded_game_defense)
     
     # Use the information from game_team_pair to figure out ordering
+    # and to expand in the correct way (using team or)
     team = tables$game_team_pair %>%
       filter(game_id == game) %>%
       pull(team)
-
-    # I need to make sure that the running score is actually correctly accounting
-    # for the order of play in each game. While I have the game, also
-    # make sure to add an extra value to the table 
-    if (team == "A"){
-      expanded_game = expanded_game %>% 
+    
+    if (length(team) == 2) {
+      
+      # Bugfix: if the defense_filtered table is 0, give it one value to make sure that the completion works
+      # Strictly speaking, this bugfix should also be present for offense, but I kind of want to wait to worry
+      # about that when we see an all defensive game happen. It's pretty unlikely and I'd worry at this point 
+      # that it'd do more harm than good.
+      if (nrow(defense_filtered) == 0) {
+        defense_filtered = defense_filtered %>% add_row(round_num = c(1,1), shot_order = c(1,1), off_def = c('defense', 'defense'), points_scored = c(0,0), team= c('A', 'B'))
+      }
+      
+      # Since shot order is true for all teams, it can be assigned to offense_filtered
+      # and defense_filtered before splitting.
+      offense_filtered$shot_order =
+        factor(
+          offense_filtered$shot_order,
+          levels = seq(1, shots_per_round))
+      
+      defense_filtered$shot_order =
+        factor(
+          defense_filtered$shot_order,
+          levels = seq(1, shots_per_round)) 
+      
+      # I'll pull the values for the offensive and defensive rounds of each team here,
+      # so they're together
+      offensive_rounds_A = rounds_in_game %>% filter(team == 'A') %>% pull(offensive)
+      offensive_rounds_B = rounds_in_game %>% filter(team == 'B') %>% pull(offensive)
+      defensive_rounds_A = rounds_in_game %>% filter(team == 'A') %>% pull(defensive)
+      defensive_rounds_B = rounds_in_game %>% filter(team == 'B') %>% pull(defensive)
+      
+      
+      offense_filtered_A = offense_filtered %>%
+        filter(team == 'A')
+      # Fill in factor levels for round_num here
+      offense_filtered_A$round_num = 
+        factor(
+          offense_filtered_A$round_num, 
+          levels = seq(1, offensive_rounds_A)
+        )
+      
+      expanded_game_offense_A = offense_filtered_A %>%
+        complete(
+          expand(offense_filtered_A,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "offense",
+                      team = 'A'))
+      
+        offense_filtered_B = offense_filtered %>%
+          filter(team == 'B') 
+        
+        offense_filtered_B$round_num = 
+          factor(
+            offense_filtered_B$round_num,
+            levels = seq(1, offensive_rounds_B)
+          )
+        
+        expanded_game_offense_B = offense_filtered_B %>%
+        complete(
+          expand(offense_filtered_B,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "offense",
+                      team = 'B'))
+      
+      defense_filtered_A = defense_filtered %>%
+        filter(team == 'A')
+      
+      defense_filtered_A$round_num = 
+        factor(
+          defense_filtered_A$round_num,
+          levels = seq(1, defensive_rounds_A)
+      )
+      expanded_game_defense_A = defense_filtered_A %>%
+        complete(
+          expand(defense_filtered_A,
+                 round_num,
+                 shot_order,
+                 off_def,
+                 team),
+          fill = list(points_scored = 0,
+                      off_def = "defense",
+                      team = 'A'))
+        
+        defense_filtered_B = defense_filtered %>%
+          filter(team == 'B')
+        
+        defense_filtered_B$round_num = 
+          factor(
+            defense_filtered_B$round_num,
+            levels = seq(1, defensive_rounds_B)
+          )
+        expanded_game_defense_B = defense_filtered_B %>%
+        complete(
+          expand(defense_filtered_B,
+                 round_num,
+                 shot_order,
+                 off_def,
+                 team),
+          fill = list(points_scored = 0,
+                      off_def = "defense",
+                      team = 'B'))
+      
+        
+      
+      expanded_game = bind_rows(expanded_game_offense_A,
+                                expanded_game_offense_B,
+                                expanded_game_defense_A,
+                                expanded_game_defense_B)
+      
+      # I need to make sure that the running score is actually correctly accounting
+      # for the order of play in each game. While I have the game, also
+      # make sure to add an extra value to the table. 
+      
+      # In the event that we are looking for the "average team" and a game consists
+      # of two teams of the correct size, then we have to do a bit more here, adding 
+      # on a row for each team according to the previous pattern. That will be 
+      # another "split -> add -> rebind" procedure
+      
+      
+      expanded_game_A = expanded_game %>% 
         arrange(round_num, desc(off_def), shot_order) %>%
-        select(off_def, points_scored)
-      expanded_game = bind_rows(tibble(off_def = "offense", points_scored = 0),
-                                expanded_game)
-    } else {
-      expanded_game = expanded_game %>% 
+        filter(team == 'A') %>% 
+        select(off_def, points_scored, team)
+      expanded_game_A = bind_rows(tibble(off_def = 'offense', points_scored = 0, team = 'A'),
+                                  expanded_game_A)
+      expanded_game_B = expanded_game %>% 
         arrange(round_num, off_def, shot_order) %>%
-        select(off_def, points_scored)
-      expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
-                                expanded_game)
+        filter(team == 'B') %>%
+        select(off_def, points_scored, team)
+      expanded_game_B = bind_rows(tibble(off_def = "defense", points_scored = 0, team = 'B'),
+                                  expanded_game_B)
+      expanded_game = bind_rows(expanded_game_A, expanded_game_B)
+      
+      score_side_table = expanded_game %>% 
+        group_by(team) %>% 
+        summarize(running_score = cumsum(points_scored),
+                  off_def = off_def,
+                  .groups = "drop")
+      
+    } else {
+      # Bugfix: if the defense_filtered table is 0, give it one value to make sure that the completion works
+      # Strictly speaking, this bugfix should also be present for offense, but I kind of want to wait to worry
+      # about that when we see an all defensive game happen. It's pretty unlikely and I'd worry at this point 
+      # that it'd do more harm than good.
+      if (nrow(defense_filtered) == 0) {
+        defense_filtered = defense_filtered %>% add_row(round_num = 1, shot_order = 1, off_def = 'defense', points_scored = 0)
+      }
+      
+      
+      offense_filtered$round_num =
+        factor(
+          offense_filtered$round_num,
+          levels = seq(1, offensive_rounds))
+      offense_filtered$shot_order =
+        factor(
+          offense_filtered$shot_order,
+          levels = seq(1, shots_per_round))  
+      
+      defense_filtered$round_num =
+        factor(
+          defense_filtered$round_num,
+          levels = seq(1, defensive_rounds))
+      defense_filtered$shot_order =
+        factor(
+          defense_filtered$shot_order,
+          levels = seq(1, shots_per_round)) 
+      
+      
+      expanded_game_offense = offense_filtered %>%
+        complete(
+          expand(offense_filtered,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "offense")) 
+      
+      expanded_game_defense = defense_filtered %>%
+        complete(
+          expand(defense_filtered,
+                 round_num,
+                 shot_order,
+                 off_def),
+          fill = list(points_scored = 0,
+                      off_def = "defense"))
+      
+      
+      expanded_game = bind_rows(expanded_game_offense,
+                                expanded_game_defense)
+      
+      if (team == "A"){
+        expanded_game = expanded_game %>% 
+          arrange(round_num, desc(off_def), shot_order) %>%
+          select(off_def, points_scored)
+        expanded_game = bind_rows(tibble(off_def = "offense", points_scored = 0),
+                                  expanded_game)
+      } else {
+        expanded_game = expanded_game %>% 
+          arrange(round_num, off_def, shot_order) %>%
+          select(off_def, points_scored)
+        expanded_game = bind_rows(tibble(off_def = "defense", points_scored = 0),
+                                  expanded_game)
+      }
+      
+      
+      
+      score_side_table = expanded_game %>%
+        summarize(running_score = cumsum(points_scored),
+                  off_def = off_def,
+                  .groups = "drop")
     }
     
-    
-    
-    score_side_table = expanded_game %>%
-                        summarize(running_score = cumsum(points_scored),
-                                  off_def = off_def,
-                                  .groups = "drop")
     # If this is only one observation long, then this game isn't in scores, so dip
     if (nrow(score_side_table) == 1){
       if (type == "scores") {
@@ -240,14 +421,20 @@ transition_list = tables$game_team_pair %>%
           old_score = score_side_table$running_score[i - 1]
           new_score = score_side_table$running_score[i]
           
-          if (score_side_table$off_def[i] == "offense"){
-            offense_matrix[old_score + 1, new_score + 1] =
-              offense_matrix[old_score+ 1, new_score + 1] + 1
-          } else { 
-            defense_matrix[old_score + 1, new_score + 1] = 
-              defense_matrix[old_score + 1, new_score + 1] + 1
+          # A change for the "average teams" case. You have to make sure
+          # that the score doesn't go from something like 21 to 0
+          
+          if (new_score - old_score < 0) {
+            invisible() 
+          } else {
+            if (score_side_table$off_def[i] == "offense"){
+              offense_matrix[old_score + 1, new_score + 1] =
+                offense_matrix[old_score+ 1, new_score + 1] + 1
+            } else { 
+              defense_matrix[old_score + 1, new_score + 1] = 
+                defense_matrix[old_score + 1, new_score + 1] + 1
+            }
           }
-            
         }
       } else {
         offense_matrix = matrix(data = 0, nrow = 8, ncol = 8)
@@ -257,15 +444,17 @@ transition_list = tables$game_team_pair %>%
             score_side_table$running_score[i - 2]
           new_state = score_side_table$running_score[i] - 
             score_side_table$running_score[i - 1]
-          
-          if (score_side_table$off_def[i] == "offense"){
-            offense_matrix[old_state + 1, new_state + 1] =
-              offense_matrix[old_state+ 1, new_state + 1] + 1
-          } else { 
-            defense_matrix[old_state + 1, new_state + 1] = 
-              defense_matrix[old_state + 1, new_state + 1] + 1
+          if (any(old_state < 0, new_state < 0)) {
+            invisible()
+          } else {
+            if (score_side_table$off_def[i] == "offense"){
+              offense_matrix[old_state + 1, new_state + 1] =
+                offense_matrix[old_state+ 1, new_state + 1] + 1
+            } else { 
+              defense_matrix[old_state + 1, new_state + 1] = 
+                defense_matrix[old_state + 1, new_state + 1] + 1
+            }
           }
-          
         }
       } 
     return(list("offense" = offense_matrix,
@@ -275,7 +464,6 @@ transition_list = tables$game_team_pair %>%
 
 return(transition_list)
 }
-
 
 transition_probabilities = function(player_stats, scores, type, player_id_1, player_id_2, 
                                     player_id_3 = NA, player_id_4 = NA){
@@ -630,28 +818,57 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
     team_B_backup = transition_probabilities(player_stats, scores, "states", team_B[1], team_B[2], team_B[3], team_B[4])
   } else {
     
-    team_A_name = str_c("(", team_A[1], ",", team_A[2], 
+    
+    
+    team_A_name = str_c("(", team_A[1], ", ", team_A[2], 
                         if_else(!is.na(team_A[3]), str_c(", ", team_A[3]), ""),
                         if_else(!is.na(team_A[4]), str_c(", ", team_A[4]), ""),
                         ")"
       )
       
       
-    team_B_name = str_c("(", team_B[1], ",", team_B[2], 
+    team_B_name = str_c("(", team_B[1], ", ", team_B[2], 
                         if_else(!is.na(team_B[3]), str_c(", ", team_B[3]), ""),
                         if_else(!is.na(team_B[4]), str_c(", ", team_B[4]), ""),
                         ")"
     )
-      
     team_A_transitions = transitions_list[[team_A_name]]$scores
     team_A_backup = transitions_list[[team_A_name]]$states
     team_B_transitions = transitions_list[[team_B_name]]$scores
     team_B_backup = transitions_list[[team_B_name]]$states
-  }  
+  }
+  
   # At this point, I run the same simulation as before, but now I map it over
   # a sequence to iterate
   A_size = length(team_A %>% discard(is.na))
   B_size = length(team_B %>% discard(is.na))
+  
+  # Catch some errors. In the event that any of these come back as null values,
+  # you have to replace them with the average team values, then also issue a 
+  # warning which can be printed to users
+  if (all(is.null(team_A_transitions), is.null(team_B_transitions))) {
+    warning_code = 'Both teams'
+    standin_team_name_A = str_c('(', paste0(rep(9, A_size), collapse = ', '), ')') 
+    standin_team_name_B = str_c('(', paste0(rep(9, B_size), collapse = ', '), ')')
+    team_A_transitions = transitions_list[[standin_team_name_A]]$scores
+    team_A_backup = transitions_list[[standin_team_name_A]]$states
+    team_B_transitions = transitions_list[[standin_team_name_B]]$scores
+    team_B_backup = transitions_list[[standin_team_name_B]]$states
+  } else if (is.null(team_A_transitions)) {
+    warning_code = 'Team A'
+    standin_team_name_A = str_c('(', paste0(rep(9, A_size), collapse = ', '), ')')
+    team_A_transitions = transitions_list[[standin_team_name_A]]$scores
+    team_A_backup = transitions_list[[standin_team_name_A]]$states
+  } else if (is.null(team_B_transitions)) {
+    warning_code = 'Team B'
+    standin_team_name_B = str_c('(', paste0(rep(9, B_size), collapse = ', '), ')')
+    team_B_transitions = transitions_list[[standin_team_name_B]]$scores
+    team_B_backup = transitions_list[[standin_team_name_B]]$states
+  } else {
+    warning_code = 'none'
+  }
+  
+  
   
   shots = max(A_size, B_size)
   
@@ -665,46 +882,10 @@ markov_simulate_games = function(team_A, team_B, iterations = 50, points_to_win 
                        current_scores_B
                       )
   })
-  return(games_record)
+  return(list(games_record = games_record, 
+              warning = warning_code)
+  )
 }
 
-###### Analysis #####
-## This is no longer the focus of this script. However, these functions
-# will be useful once the model is integrated into the app
 
-# hi_there = markov_simulate_games(c(2,9, NA, NA), c(2, 9, NA, NA), 1000)
-# 
-# # Answer the basic questions
-# # Who won more? What's their win rate?
-# wins = hi_there %>% map_chr( function(element){
-#   element$won
-# }) 
-# A_winrate = length(wins[wins == "A"])/length(wins)
-# B_winrate = 1 - A_winrate
-# 
-# # In the games where the winningest team won, what was the modal score?
-# winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
-#                   "A",
-#                   "B")
-# 
-# # Using a matrix here so that I can treat each pairing of points as a unique
-# # value, rather than each team's individual total (meaning that I am truly 
-# # looking for the pair of scores which are modal in the set of games that 
-# # the winning team won)
-# 
-# scores_matrices = seq(1, length(hi_there)) %>% map(function(game_number){
-#   if (hi_there[[game_number]]$won != winners){
-#     matrix = matrix(0, nrow = 51, ncol = 51)
-#   } else {
-#     team_A_score = hi_there[[game_number]]$team_A %>% last()
-#     team_B_score = hi_there[[game_number]]$team_B %>% last()
-#     matrix = matrix(0, nrow = 51, ncol = 51)
-#     matrix[team_A_score, team_B_score] = 1
-#   }
-#   return(matrix)
-# })
-# 
-# scores_matrix = scores_matrices %>% reduce(`+`, .init = matrix(0, nrow = 51, ncol = 51))
-# modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
-# modal_A_score = modal_score_position[1]
-# modal_B_score = modal_score_position[2]
+
