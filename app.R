@@ -2064,8 +2064,9 @@ observeEvent(input$resume_no, {
       value = new_casualty,
       append=T
     )
-    
-
+    # In the event that there was a sink which caused this, also popup the sink menu
+    last_score = vals$scores_db[ max(vals$scores_db$score_id),]
+    sink_casualty_popup(session, score_row = last_score, players = snappaneers()$player_name)
   })
   
   observeEvent(input$sink_casualty, {
