@@ -304,7 +304,8 @@ ui <- dashboardPagePlus(
                       closable = F,
                       status = "primary",
                       # gt_output("teammate_tab")
-                      reactableOutput("teammate_tab_rt")
+                      reactableOutput("teammate_tab_rt",
+                                      width = "100%")
               )
               # Form plot
               
@@ -1016,7 +1017,7 @@ server <- function(input, output, session) {
               bar_chart(value, width = value, fill = snappa_pal[5], background = "#DEDDDD")
             },
             # And left-align the columns
-            align = "left"
+            align = "right"
           ),
           avg_points = colDef(
             name = "Avg. Points",
