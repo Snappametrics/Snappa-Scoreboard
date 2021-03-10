@@ -2094,6 +2094,41 @@ observeEvent(input$resume_no, {
     
     })
   
+  observeEvent(input$tifu, {
+    showModal(
+      tifu_casualty_popup(players = snappaneers()$player_name)
+    )
+    
+  })
+  
+  observeEvent(input$tifu_confirm, {
+    # Convert player name to ID
+    casualty = select(snappaneers(), starts_with("player")) %>% 
+      deframe() %>% 
+      pluck(input$tifu_casualty)
+    
+    # Insert casualty details
+    new_casualty = tibble(
+      casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
+      game_id = vals$game_id,
+      score_id = vals$score_id,
+      player_id = casualty,
+      casualty_type = input$casualty_type
+    )
+    
+    dbWriteTable(
+      conn = con, 
+      name = "casualties", 
+      value = new_casualty,
+      append=T
+    )  
+    
+    removeModal()
+    
+    showNotification(str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
+                                input$tifu_casualty), duration = NULL)
+  })
+  
 
 # New Players -------------------------------------------------------------
 
@@ -2847,10 +2882,6 @@ observeEvent(input$resume_no, {
     
   })
   
-  
-  observeEvent(input$sink_rescue, {
-    sink_casualty_popup(session, score_row = tail(vals$scores_db, 1), players = snappaneers()$player_name)
-  })
   
   
   
