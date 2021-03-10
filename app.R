@@ -120,8 +120,9 @@ ui <- dashboardPagePlus(
         label = "What score are you playing to?",
         min = 21, max = 50, value = 21
       ),
-      actionBttn("sink_rescue", "Hey that was a sink!",
-                 size = "sm"),
+      actionBttn("tifu", "Friendly Fire", 
+                 style = "material-flat",
+                 size = "sm", color = "danger"),
       actionBttn("new_game", "Restart", 
                  icon = icon("plus"), size = "sm",
                  style = "material-flat", color = "warning"),
