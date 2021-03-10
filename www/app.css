@@ -35,6 +35,11 @@
     background-color: #fafaf9 !important;
 }
 
+.modal-footer{
+  display: flex;
+  justify-content: flex-end;
+}
+
 .swal2-radio {
   align-items: center;
   justify-content: center;
@@ -181,8 +186,6 @@ label[for='foot'] {
 
 #ok_A, #ok_B {
     font-size: x-large;
-    position: relative !important;
-    left: 85%;
 }
 
 #undo_score_A {
