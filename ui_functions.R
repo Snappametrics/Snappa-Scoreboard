@@ -212,6 +212,45 @@ sink_casualty_popup = function(session, score_row, players = snappaneers()$playe
 
 
 
+tifu_casualty_popup <- function(players) {
+  # Ask what happened and to whom
+  modalDialog(align = "center", easyClose = T, size = "l",
+              # Header
+              h2(HTML("You <del>love</del> hate to see that!"),
+                 style = "margin-bottom: 2vh;"),
+              
+                column(12,
+                       # What happened?
+                       radioGroupButtons(
+                         inputId = "casualty_type",
+                         label = "What happened?",
+                         choices = c("Self sink", "Team sink"),
+                         direction = "horizontal",
+                         individual = T,
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-bitbucket"))
+                       ),
+                       # to whom?
+                       radioGroupButtons(
+                         inputId = "tifu_casualty",
+                         label = "Casualty",
+                         choices = players,
+                         size = "lg"
+                       )
+              ),
+              
+              footer = tagList(
+                modalButton("Sorry, fat fingered it"),
+                actionButton("tifu_confirm", label = "Sadly, it happened.")
+              )
+  )
+  
+}
+
+
+
+
 team_input_ui = function(team, player_choices){
   
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
