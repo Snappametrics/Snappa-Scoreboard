@@ -2126,7 +2126,7 @@ observeEvent(input$resume_no, {
     removeModal()
     
     showNotification(str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
-                                input$tifu_casualty), duration = NULL)
+                                input$tifu_casualty), duration = 7, closeButton = F)
   })
   
 
