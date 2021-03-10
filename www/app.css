@@ -79,6 +79,7 @@
 
 .shiny-notification-content-text {
     min-width: 35vw;
+    white-space: nowrap;
 }
 
 .shiny-notification {
