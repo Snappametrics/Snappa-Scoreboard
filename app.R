@@ -2419,9 +2419,8 @@ observeEvent(input$resume_no, {
         clink = input$clink,
         foot = input$foot
       )
-      
       # Sink notification
-      sink_casualty_popup(session, score_row = new_score, players = snappaneers()$player_name)
+      sink_casualty_popup(session, score_row = new_score, players = snappaneers()[snappaneers()$team == "B", "player_name", drop=T])
       
       
       # Add the score to the scores table
@@ -2536,7 +2535,7 @@ observeEvent(input$resume_no, {
       )
       
       # Sink notification
-      sink_casualty_popup(session, score_row = new_score, players = snappaneers()$player_name)
+      sink_casualty_popup(session, score_row = new_score, players = snappaneers()[snappaneers()$team == "A", "player_name", drop=T])
       
       
       # Add the score to the scores table
