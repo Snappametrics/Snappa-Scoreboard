@@ -591,7 +591,7 @@ input:focus {
 }
 
 .shiny-input-radiogroup {
-    margin: 0px;
+    margin: 2vh 0;
 }
 
 .shiny-options-group {
