@@ -1530,21 +1530,21 @@ output$simulation_overlap =
 
   # For debugging
   
-  output$db_output_players = renderTable({
-    vals$db_tbls()[["players"]]
-  })
-  output$db_output_scores = renderTable({
-    vals$db_tbls()[["scores"]]
-  })
-  output$db_output_player_stats = renderTable({
-    vals$db_tbls()[["player_stats"]]
-  })
-  output$db_output_game_history = renderTable({
-    vals$db_tbls()[["game_stats"]]
-  })
-  output$snappaneers = renderTable({
-    snappaneers()
-  })
+  # output$db_output_players = renderTable({
+  #   vals$db_tbls()[["players"]]
+  # })
+  # output$db_output_scores = renderTable({
+  #   vals$db_tbls()[["scores"]]
+  # })
+  # output$db_output_player_stats = renderTable({
+  #   vals$db_tbls()[["player_stats"]]
+  # })
+  # output$db_output_game_history = renderTable({
+  #   vals$db_tbls()[["game_stats"]]
+  # })
+  # output$snappaneers = renderTable({
+  #   snappaneers()
+  # })
   
   
 # # Generates outputs for the edit teams page
