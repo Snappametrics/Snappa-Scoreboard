@@ -77,6 +77,33 @@ score_check <- function(team, players, round) {
   
 }
 
+timeline_score_check = function(players, round) {
+  team_scored = paste("ok", team, sep = "_")
+  team_colour = if_else(team_scored == "ok_A", "#e26a6a", "#2574a9")
+  score_val = paste(team, "score_val", sep = "_")
+  timeline_color = c('red', 'blue')
+  
+  modalDialog(align = 'center', easyClose = T, size = 'l',
+              h2(HTML(str_c('Score recorded in ', round))),
+              fluidRow(
+                column(2,
+                       h1("Team A"),
+                       uiOutput('team_A_score_check_buttons')
+                      ),
+                column(10,
+                       div(id = 'score_entry_and_timeline',
+                           uiOutput('score_entry_cards'),
+                           uiOutput('score_entry_indicator')
+                           )
+                       ),
+                column(2,
+                       h1('Team B'),
+                       uiOutput('team_B_score_check_buttons')
+                       )
+              )
+                )
+}
+
 dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") 
 {
   if (!is.null(badgeStatus)) 
