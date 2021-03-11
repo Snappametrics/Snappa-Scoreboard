@@ -591,7 +591,7 @@ server <- function(input, output, session) {
     ) %>% 
       # Remove empty player inputs
       filter(player_name != "") %>% 
-      left_join(vals$players_tbl(), by = "player_name") %>% 
+      left_join(vals$db_tbls()[["players"]], by = "player_name") %>% 
       # Add shot count
       add_shot_count(shot_num = vals$shot_num)
   })
@@ -843,7 +843,7 @@ server <- function(input, output, session) {
   
   output$summary_plot = renderPlot({
     game_summary_plot(player_stats = vals$player_stats_db,
-                      players = vals$players_tbl(), 
+                      players = vals$db_tbls()[["players"]],
                       scores = vals$scores_db,
                       game = vals$game_id)
   })
@@ -856,11 +856,11 @@ server <- function(input, output, session) {
 
   output$team_a_summary = render_gt({
     make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$player_stats_tbl(),
+                       player_stats = vals$db_tbls()[["player_stats"]],
                        neers = snappaneers(), 
                        team_name = "A", 
                        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$scores_tbl()) %>%
+                       past_scores = vals$db_tbls()[["scores"]]) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
                        team = "A",
@@ -869,11 +869,11 @@ server <- function(input, output, session) {
   
   output$team_b_summary = render_gt({
     make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$player_stats_tbl(),
+                       player_stats = vals$db_tbls()[["player_stats"]],
                        neers = snappaneers(), 
                        team_name = "B", 
                        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$scores_tbl()) %>%
+                       past_scores = vals$db_tbls()[["scores"]]) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
                        team = "B",
@@ -892,7 +892,7 @@ server <- function(input, output, session) {
 
   output$leaderboard_rt = renderReactable({
     # Create the rank column, arrange the data, and select the columns
-    aggregated_data = vals$career_stats_tbl()
+    aggregated_data = vals$db_tbls()[["career_stats"]]
     
     # Separate out those with under 5 games
     dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
@@ -903,7 +903,7 @@ server <- function(input, output, session) {
   
 
   output$scoring_heatmap = renderPlot({
-    score_heatmap(vals$score_progression())
+    score_heatmap(vals$db_tbls()[["score_progression"]])
   })
   
   output$heatmap_info <- renderUI({
@@ -911,7 +911,7 @@ server <- function(input, output, session) {
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
-    freq = filter(vals$score_progression(), score_a == y, score_b == x) %>% 
+    freq = filter(vals$db_tbls()[["score_progression"]], score_a == y, score_b == x) %>% 
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
@@ -923,8 +923,8 @@ server <- function(input, output, session) {
   
   
   player_game_stats = reactive({
-    inner_join(vals$players_tbl(), 
-               vals$player_stats_tbl(), 
+    inner_join(vals$db_tbls()[["players"]], 
+               vals$db_tbls()[["player_stats"]], 
                by = "player_id") %>%
       inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
                  by = "game_id") %>% 
@@ -939,7 +939,7 @@ server <- function(input, output, session) {
   
   # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
-    recent_games = filter(vals$player_stats_tbl(), player_id == input$player_select) %>% 
+    recent_games = filter(vals$db_tbls()[["player_stats"]], player_id == input$player_select) %>% 
       mutate(avg_points = mean(!!sym(input$stat_select)),
              max_points = max(!!sym(input$stat_select))) %>% 
       when(input$sample_select != "All" ~ (.) %>% 
@@ -1531,16 +1531,16 @@ output$simulation_overlap =
   # For debugging
   
   output$db_output_players = renderTable({
-    vals$players_tbl()
+    vals$db_tbls()[["players"]]
   })
   output$db_output_scores = renderTable({
-    vals$scores_db
+    vals$db_tbls()[["scores"]]
   })
   output$db_output_player_stats = renderTable({
-    vals$player_stats_db
+    vals$db_tbls()[["player_stats"]]
   })
   output$db_output_game_history = renderTable({
-    vals$game_stats_db
+    vals$db_tbls()[["game_stats"]]
   })
   output$snappaneers = renderTable({
     snappaneers()
@@ -1549,11 +1549,11 @@ output$simulation_overlap =
   
 # # Generates outputs for the edit teams page
 output$edit_team_A <- renderUI({
-  tagList(team_edit_ui("A", pull(vals$players_tbl(), player_name), active_player_inputs()))
+  tagList(team_edit_ui("A", pull(vals$db_tbls()[["players"]], player_name), active_player_inputs()))
 })
 
 output$edit_team_B <- renderUI({
-   tagList(team_edit_ui("B", pull(vals$players_tbl(), player_name), active_player_inputs()))
+  tagList(team_edit_ui("B", pull(vals$db_tbls()[["players"]], player_name), active_player_inputs()))
 })
     
 
@@ -1733,7 +1733,7 @@ observe({
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
-      if(!(die_thrower %in% vals$players_tbl()$player_name)){
+      if(!(die_thrower %in% vals$db_tbls[["players"]]$player_name)){
         
         # Update the players database right here with the player name
         
@@ -2344,7 +2344,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$players_tbl(), player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
       shooting_team_lgl = all(str_detect(round_num(), "A"), scorers_team == "A") # Are they on team A & did they score for team A?
@@ -2452,7 +2452,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$players_tbl(), player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
@@ -2977,8 +2977,8 @@ observeEvent(input$add_player_A3, {
     
     # 2. Reset player inputs
     walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
-         function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', pull(vals$players_tbl(), player_name)), 
-                                           options = list(create = TRUE)))
+         function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$db_tbls()[["players"]]$player_name), 
+                                                options = list(create = TRUE)))
     
     # 3. Reset reactive values
     # vals$game_stats_db = game_stats_tbl() %>% slice(0) %>% select(1:5)
