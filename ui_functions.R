@@ -1012,6 +1012,15 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                                        fontWeight = 600)
                                 }
                               }),
+        foot_paddle_points = colDef("Foot Paddle Points", 
+                               minWidth = 115,
+                               maxWidth = 150,
+                               style = function(value) {
+                                 if(max(stats_eligible[, "foot_paddle_points"], na.rm=T) == value){
+                                   list(color = snappa_pal[5],
+                                        fontWeight = 600)
+                                 }
+                               }),
         clink_points = colDef("Clink Points", 
                                minWidth = 82,
                                maxWidth = 150,
