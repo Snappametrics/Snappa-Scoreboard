@@ -29,7 +29,7 @@ library(htmltools)
 library(timevis)
 
 
-source("database/db_connect.R")
+source("database/test_dbconnect.R")
 source("ui_functions.R")
 source("server_functions.R")
 source("markov/Markov_model_functions.R")
@@ -615,14 +615,63 @@ server <- function(input, output, session) {
     length(active_player_inputs()[active_player_inputs() != ""])
   })
   
-  
-  
-  
+  #timeline tracker, the thing that gets mapped over and added to in order to put player
+  # along the timeline input
+  player_touched_timeline = reactive({
+    tribble(~position, ~player, ~team,
+            1, 'Dewey', 'A')
+  })
   
 
 # Outputs -----------------------------------------------------------------
-  
 
+# Outputs for the timeline score check ------------------------------------
+
+  output$team_A_score_check_buttons = renderUI({
+    snappaneers() %>% 
+      filter(team == 'A') %>%
+      pull(player_name) %>% 
+      imap(~{
+        actionBttn(inputId = str_c('timeline_add_A', .y),
+                   label = .x,
+                   style = "jelly",
+                   color = 'danger',
+                   size = 'md'
+        )
+      })
+  })
+  
+  output$team_B_score_check_buttons = renderUI({
+    snappaneers() %>% 
+      filter(team == 'B') %>%
+      pull(player_name) %>% 
+      imap(~{
+        actionBttn(inputId = str_c('timeline_add_B', .y),
+                   label = .x,
+                   style = "jelly",
+                   color = 'primary',
+                   size = 'md'
+        )
+      })
+  })
+
+
+  output$score_entry_center = renderUI({
+    player_touched_timeline() %>%
+      pmap(function(...){
+        current_entry = tibble(...)
+        timeline_card(current_entry)
+      })
+
+  })
+  
+  output$score_entry_centerbar = renderUI({
+    color = if_else(player_touched_timeline()[length(player_touched_timeline())]$team == 'A', 'red', 'blue')
+    div(id = 'entry_timeline_bar',
+        tags$style(type = 'text/css', 
+                   str_c('#entry_timeline_bar {background-color:', color, '; height: 70vh; width: 1vw; z-index: 1;}'))
+    )
+  })
 
 # Score Validation --------------------------------------------------------
 
@@ -2325,8 +2374,7 @@ observeEvent(input$resume_no, {
       sample()
     
     showModal(
-      score_check(team = "A", 
-                  players = eligible_shooters,
+      timeline_score_check(players = eligible_shooters,
                   round = round_num()))
   })
   

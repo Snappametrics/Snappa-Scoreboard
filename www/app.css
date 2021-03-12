@@ -529,9 +529,36 @@ players 3 and 4 */
   flex: 1 1 auto;
 }
 
-/* Controls for text shading on wells */
+/* Controls elements in the timeline_score_check modal */
+
+.modal-lg {
+  width: 90vw;
+}
+
+#team_A_score_check_buttons, #team_B_score_check_buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 70vh;
+}
 
 
+#score_entry_cards {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.timeline_card {
+  width: 20vw;
+}
+.timeline_card_team_A {
+  margin-left: 10vw;
+}
+
+.timeline_card_team_B {
+  margin-right: 10vw;
+}
 
 /* End my CSS */
 

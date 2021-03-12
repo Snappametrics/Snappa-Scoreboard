@@ -78,30 +78,68 @@ score_check <- function(team, players, round) {
 }
 
 timeline_score_check = function(players, round) {
-  team_scored = paste("ok", team, sep = "_")
-  team_colour = if_else(team_scored == "ok_A", "#e26a6a", "#2574a9")
-  score_val = paste(team, "score_val", sep = "_")
   timeline_color = c('red', 'blue')
   
-  modalDialog(align = 'center', easyClose = T, size = 'l',
+  modalDialog(
+    align = 'center', easyClose = T, size = 'l',
               h2(HTML(str_c('Score recorded in ', round))),
               fluidRow(
                 column(2,
-                       h1("Team A"),
-                       uiOutput('team_A_score_check_buttons')
+                      h1("Team A"),
+                      uiOutput('team_A_score_check_buttons')
                       ),
-                column(10,
-                       div(id = 'score_entry_and_timeline',
-                           uiOutput('score_entry_cards'),
-                           uiOutput('score_entry_indicator')
-                           )
+                column(8,
+                      uiOutput('score_entry_center'),
+                      uiOutput('score_entry_centerbar')
                        ),
                 column(2,
                        h1('Team B'),
                        uiOutput('team_B_score_check_buttons')
                        )
               )
-                )
+  )
+}
+
+timeline_card = function(timeline_reactive) {
+  player = timeline_reactive$player
+  position = timeline_reactive$position
+  team = timeline_reactive$team
+  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+   
+  div(class = str_c('timeline_card timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
+      div(class = 'timeline_card_header',
+          p(position)
+      ),
+      div(class = 'timeline_card_name_and_entry',
+        h2(player),
+        numericInput(inputId = str_c('points_scored_', position),
+                     label = 'points scored',
+                     value = 0,
+                     min = 0,
+                     max = 7,
+                     step = 1)
+      ),
+      div(class = 'other_cool_stuff_array',
+          # # More to be done here for sure, like header and the like
+          # awesomeCheckbox(
+          #   inputId = "paddle", 
+          #   label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
+          #   status = "warning"
+          # ),
+          # # Was it a clink?
+          # awesomeCheckbox(
+          #   inputId = "clink", 
+          #   label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
+          #   status = "warning"
+          # ),
+          # # feet?
+          # awesomeCheckbox(
+          #   inputId = "foot", 
+          #   label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
+          #   status = "warning"
+          # )
+      )
+  )
 }
 
 dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") 
