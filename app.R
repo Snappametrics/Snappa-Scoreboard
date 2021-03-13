@@ -1827,6 +1827,26 @@ observe({
       )
     }
     
+    # Setup a reactive poll for cooldowns to check if any casualty rules are still in effect
+    # but have not made their way around the horn yet
+    vals$cooldowns = reactivePoll(
+      intervalMillis = 100*30,
+      session = session,
+      checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
+                                                        WHERE game_id = ", vals$game_id)))},
+      valueFunc = function() {
+        map(
+          # Map over each type of score-based casualty
+          unique(casualty_rules$casualty_title), 
+          ~cooldown_check(current_game = vals$game_id, 
+                          current_round = round_num(), 
+                          casualty_to_check = .x,
+                          rounds = rounds)) %>% 
+          # Set the names of the list
+          set_names(unique(casualty_rules$casualty_title))}
+    )
+    
+    
     
     shinyjs::enable("game_summary")
 
