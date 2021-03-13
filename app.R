@@ -564,7 +564,8 @@ server <- function(input, output, session) {
                        "A_score" = 0,
                        "B_score" = 0),
     
-    eligible_shooters = list('A' = NULL, 'B' = NULL)
+    eligible_shooters = list('A' = tibble(player_name = NULL), 
+                             'B' = tibble(player_name = NULL))
   )
   
   
@@ -620,19 +621,18 @@ server <- function(input, output, session) {
   #timeline tracker, the thing that gets mapped over and added to in order to put player
   # along the timeline input
   player_touched_timeline = reactive({
-    tribble(~position, ~player, ~team,
-            1, 'Dewey', 'A',
-            2, 'Shaunt', 'B')
+    tribble(~position, ~player, ~team)
   })
   
 
 # Outputs -----------------------------------------------------------------
 
+  
 # Outputs for the timeline score check ------------------------------------
 
   output$team_A_score_check_buttons = renderUI({
 
-    vals$eligible_shooters['A'] %>%
+    vals$eligible_shooters[['A']] %>%
         imap(~{
         actionBttn(inputId = str_c('timeline_add_A', .y),
                    label = .x,
@@ -644,10 +644,7 @@ server <- function(input, output, session) {
   })
   
   output$team_B_score_check_buttons = renderUI({
-    snappaneers() %>% 
-      filter(team == 'B') %>%
-      pull(player_name) %>% 
-      sample() %>%
+    vals$eligible_shooters[['B']] %>%
       imap(~{
         actionBttn(inputId = str_c('timeline_add_B', .y),
                    label = .x,
@@ -2372,12 +2369,12 @@ observeEvent(input$resume_no, {
   observeEvent(input$A_score_button, {
     vals$error_msg <- NULL
     
-    vals$eligible_shooters['A'] = snappaneers() %>% 
+    vals$eligible_shooters[['A']] = snappaneers() %>% 
       filter(team == 'A') %>%
       pull(player_name) %>%
       sample() 
     
-    vals$eligible_shooters['B'] = snappaneers() %>% 
+    vals$eligible_shooters[['B']] = snappaneers() %>% 
       filter(team == 'B') %>%
       pull(player_name) %>%
       sample() 
@@ -2385,6 +2382,22 @@ observeEvent(input$resume_no, {
     showModal(
       timeline_score_check(round = round_num()))
     
+    # I'm certain this can be handled in a better way, but my monkey brain
+    # is reasoning about it this way right now
+    browser()
+    c('A', 'B') %>%
+      map(function(team){
+        seq(1:length(vals$eligible_shooters[[team]])) %>%
+          map(function(player){
+            observeEvent(input["timeline_add_team number"], {
+              # understand the new position of the card you're putting into place
+              new_position = nrow(player_touched_timeline()) + 1
+              # update the reactive with the new player information
+              player_touched_timeline() = player_touched_timeline() %>%
+                bind_rows(c(new_position, vals$eligible_shooters[[team]][player], team))
+            })
+          })
+      })
     
     
   })
