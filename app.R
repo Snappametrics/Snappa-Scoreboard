@@ -1864,6 +1864,11 @@ observe({
                                      "<audio preload='auto' src='change_places.mp3' type='audio/mp3'></audio>")), html = T)
 
     shinyjs::click("switch_sides")
+    
+    # In the event that there was a sink which caused this, also popup the sink menu
+    last_score = vals$scores_db[ max(vals$scores_db$score_id),]
+    
+    sink_casualty_popup(session, score_row = last_score, players = snappaneers()$player_name)
 
   }, once = T, ignoreNULL = T)
   
