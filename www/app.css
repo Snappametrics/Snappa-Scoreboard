@@ -531,7 +531,10 @@ players 3 and 4 */
 
 /* Controls elements in the timeline_score_check modal */
 
-.modal-lg {
+/* Ideally this can be done in a way that only affects this modal, but for now 
+this will impact every modal */
+
+.modal-dialog.modal-lg {
   width: 90vw;
 }
 
@@ -543,7 +546,7 @@ players 3 and 4 */
 }
 
 
-#score_entry_cards {
+#score_entry_center {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -553,13 +556,18 @@ players 3 and 4 */
   width: 20vw;
 }
 .timeline_card_team_A {
-  margin-left: 10vw;
+  align-self: flex-start;
 }
 
 .timeline_card_team_B {
-  margin-right: 10vw;
+  align-self: flex-end;
 }
 
+#score_entry_centerbar {
+  position: fixed;
+  top: 10vh;
+  left: 47vw;
+}
 /* End my CSS */
 
 body{

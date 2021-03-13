@@ -619,7 +619,8 @@ server <- function(input, output, session) {
   # along the timeline input
   player_touched_timeline = reactive({
     tribble(~position, ~player, ~team,
-            1, 'Dewey', 'A')
+            1, 'Dewey', 'A',
+            2, 'Shaunt', 'B')
   })
   
 
@@ -666,10 +667,10 @@ server <- function(input, output, session) {
   })
   
   output$score_entry_centerbar = renderUI({
-    color = if_else(player_touched_timeline()[length(player_touched_timeline())]$team == 'A', 'red', 'blue')
+    color = if_else(player_touched_timeline()[nrow(player_touched_timeline()), ]$team == 'A', 'red', 'blue')
     div(id = 'entry_timeline_bar',
         tags$style(type = 'text/css', 
-                   str_c('#entry_timeline_bar {background-color:', color, '; height: 70vh; width: 1vw; z-index: 1;}'))
+                   str_c('#entry_timeline_bar {background-color:', color, '; height: 70vh; width: 1vw;}'))
     )
   })
 
