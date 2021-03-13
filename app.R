@@ -26,7 +26,7 @@ library(ggtext)
 library(patchwork)
 library(waiter)
 library(htmltools)
-library(timevis)
+
 
 
 source("database/test_dbconnect.R")
