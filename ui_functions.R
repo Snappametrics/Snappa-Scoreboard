@@ -111,9 +111,9 @@ timeline_card = function(timeline_reactive) {
           p(position)
       ),
       div(class = 'timeline_card_name_and_entry',
-        h2(player),
+        h3(class = 'timeline_card_name', player),
         numericInput(inputId = str_c('points_scored_', position),
-                     label = 'points scored',
+                     label = 'Points',
                      value = 0,
                      min = 0,
                      max = 7,
