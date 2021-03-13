@@ -77,7 +77,7 @@ score_check <- function(team, players, round) {
   
 }
 
-timeline_score_check = function(players, round) {
+timeline_score_check = function(round) {
   timeline_color = c('red', 'blue')
   
   modalDialog(

@@ -562,7 +562,9 @@ server <- function(input, output, session) {
     
     markov_vals = list("iterations" = 1,
                        "A_score" = 0,
-                       "B_score" = 0)
+                       "B_score" = 0),
+    
+    eligible_shooters = list('A' = NULL, 'B' = NULL)
   )
   
   
@@ -629,10 +631,9 @@ server <- function(input, output, session) {
 # Outputs for the timeline score check ------------------------------------
 
   output$team_A_score_check_buttons = renderUI({
-    snappaneers() %>% 
-      filter(team == 'A') %>%
-      pull(player_name) %>% 
-      imap(~{
+
+    vals$eligible_shooters['A'] %>%
+        imap(~{
         actionBttn(inputId = str_c('timeline_add_A', .y),
                    label = .x,
                    style = "jelly",
@@ -646,6 +647,7 @@ server <- function(input, output, session) {
     snappaneers() %>% 
       filter(team == 'B') %>%
       pull(player_name) %>% 
+      sample() %>%
       imap(~{
         actionBttn(inputId = str_c('timeline_add_B', .y),
                    label = .x,
@@ -2370,13 +2372,21 @@ observeEvent(input$resume_no, {
   observeEvent(input$A_score_button, {
     vals$error_msg <- NULL
     
-    eligible_shooters = filter(snappaneers(), team == "A") %>% 
-      pull(player_name) %>% 
-      sample()
+    vals$eligible_shooters['A'] = snappaneers() %>% 
+      filter(team == 'A') %>%
+      pull(player_name) %>%
+      sample() 
+    
+    vals$eligible_shooters['B'] = snappaneers() %>% 
+      filter(team == 'B') %>%
+      pull(player_name) %>%
+      sample() 
     
     showModal(
-      timeline_score_check(players = eligible_shooters,
-                  round = round_num()))
+      timeline_score_check(round = round_num()))
+    
+    
+    
   })
   
   # Team A presses score button
@@ -2478,14 +2488,14 @@ observeEvent(input$resume_no, {
   observeEvent(input$B_score_button, {
     vals$error_msg <- NULL
     
-    eligible_shooters = filter(snappaneers(), team == "B") %>% 
+    vals$eligible_shooters = filter(snappaneers(), team == "B") %>% 
       pull(player_name) %>% 
       sample()
     
     showModal(
       score_check(
         team = "B", 
-        players = eligible_shooters,
+        players = vals$eligible_shooters,
         round = round_num()))
     
   })
