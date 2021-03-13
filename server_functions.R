@@ -217,3 +217,24 @@ db_update_round = function(round, game){
                 ",
                       "WHERE game_id = ", game, ";")))
 }
+
+cooldown_check = function(current_game, current_round, casualty_to_check, rounds){
+  # Check whether the last casualty of a certain type occurred 
+  # a full round (both teams shot) ago, determining whether the rule is reactivated
+  #   rounds is the round_label vector i.e. "1A", "1B", etc.
+  
+  # Pull the round_num associated with the casualties in the current game
+  # Also count the number of times -1 the casualty has occurred
+  last_casualty_df = dbGetQuery(con, sql(str_c("SELECT sc.round_num, COUNT(*)-1 AS times 
+                                                FROM casualties
+                                                JOIN scores sc
+                                                USING (game_id, score_id)
+                                                WHERE casualty_type = '", casualty_to_check, 
+                                               "' AND game_id = ", current_game,
+                                               "GROUP BY sc.round_num")))
+  
+  # Increment the round by 2x the times the casualty has been repeated
+  last_casualty_round = which(rounds == last_casualty_df$round_num) + last_casualty_df$times*2
+  
+  which(rounds == current_round) - last_casualty_round < 2
+}
