@@ -532,6 +532,11 @@ server <- function(input, output, session) {
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
     ),
     
+    
+    # setup cooldowns as a list of false bools
+    cooldowns = list(F,F,F) %>% 
+      set_names(unique(casualty_rules$casualty_title)),
+
 
     # dataframe of the players and their teams
     # Current Scores
