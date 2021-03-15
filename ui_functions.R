@@ -101,10 +101,11 @@ timeline_score_check = function(round) {
 }
 
 timeline_card = function(timeline_reactive) {
-  player = timeline_reactive$player
+  player = timeline_reactive$player_name
   position = timeline_reactive$position
   team = timeline_reactive$team
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+  points = timeline_reactive$points
    
   div(class = str_c('timeline_card timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
       div(class = 'timeline_card_header',
@@ -112,13 +113,25 @@ timeline_card = function(timeline_reactive) {
       ),
       div(class = 'timeline_card_name_and_entry',
         h3(class = 'timeline_card_name', player),
-        numericInput(inputId = str_c('points_scored_', position),
-                     label = 'Points',
-                     value = 0,
-                     min = 0,
-                     max = 7,
-                     step = 1)
-      ),
+        div(class = 'timeline_card_points_array',
+            h4(class = 'points_label',
+              'Points'),
+            #Without assigning classes to each button and the points display,
+            # I add a div to flex this horizontally
+            div(class = 'timeline_card_points_control',
+              actionBttn(inputId = str_c('timeline_points_down_', position),
+                         icon = icon('arrow-left'),
+                         style = 'jelly',
+                         size = 'xs'),
+              h4(class = 'points_amount',
+                 points),
+              actionBttn(inputId = str_c('timeline_points_up_', position),
+                         icon = icon('arrow-right'),
+                         style = 'jelly',
+                         size = 'xs')
+            )
+          )
+        ),
       div(class = 'other_cool_stuff_array',
           # # More to be done here for sure, like header and the like
           # awesomeCheckbox(
