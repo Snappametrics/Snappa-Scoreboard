@@ -219,27 +219,34 @@ team_input_ui = function(team, player_choices){
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+  well_selector = if_else(team == 'A', 'input_well_A', 'input_well_B')
+  div_selector = if_else(team == 'A', 'input_forms_A','input_forms_B')
+  class_selector = paste0('input_well ', if_else(team == 'A', 'well_A', 'well_B'))
   
-
   column(4, align = "center",
          
          wellPanel(
+           class = class_selector,
+           id = well_selector,
            style = paste("background:", team_colour),
            # Header
-           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
-           # Player 1
-           selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
+           h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
+           tags$div( id = div_selector,
+                class = 'player_input_forms',
+                # Player 1
+                selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
                           options = list(create = TRUE, hideSelected=T), width = "125%"),
-           # Player 2
-           selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
-                          options = list(create = TRUE, hideSelected=T), width = "125%"),
-           # Add Player 3 button
-           actionBttn(paste0("extra_player_", team, "3"), 
-                      label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
-           
-           # CSS: Increase font size, change color to white, add top and bottom margins
-           tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
-         )
+                 # Player 2
+                selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
+                               options = list(create = TRUE, hideSelected=T), width = "125%"),
+                # Add Player 3 button
+                actionBttn(paste0("extra_player_", team, "3"), 
+                           label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
+                
+                # CSS: Increase font size, change color to white, add top and bottom margins
+                tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+           )
+        )
   )
 }
 
@@ -302,7 +309,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   
   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
   
-  well_panel_style = "margin-top: 2vh; padding-top: 5vh; padding-bottom: 5vh; opacity: 0.92; background:"
+  well_panel_style = "margin-top: 2vh; padding-top: 2vh; padding-bottom: 2vh; min-height: 70vh; opacity: 0.92; background:"
   h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
   
 
@@ -313,50 +320,60 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
              column(width = 4, align = "center",
                      
                      wellPanel(
+                       class = paste0('scoreboard_well ', 'well_', left_team), 
                        style = paste(well_panel_style, team_colours[[left_team]]),
                        # uiOutput("active_die_a"),
                        # Header
-                       h1(paste("Team", toupper(left_team)), style = h1_style),
+                       h1(class = 'team_name',
+                          paste("Team", toupper(left_team)), style = h1_style),
                        # Score
-                       h2(textOutput(paste0("score_", left_team))),
+                       h2(class = 'team_score numbers', 
+                          textOutput(paste0("score_", left_team))),
                        # Score button
-                       actionBttn(paste0(left_team, "_score_button"), 
-                                  label = "We scored!", color = "danger",
-                                  size = "lg"),
-                       br(),
-                       actionBttn(
-                         inputId = paste0("undo_score_", left_team),
-                         label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                       )#,
+                       div(id = paste0(left_team, '_score_and_undo'),
+                        actionBttn(paste0(left_team, "_score_button"), 
+                                   label = "We scored!", color = "danger",
+                                   size = "lg"),
+                        actionBttn(
+                          inputId = paste0("undo_score_", left_team),
+                          label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                        )#,
                        # h3(textOutput(paste0("player_names_", left_team)))
+                      )
                      )
               ), 
               # Round
-              column(width = 4, align = "center",
-                     h1("Round", style = "font-size: 5rem; font-weight: 600;"),
-                     uiOutput("round_num"),
-                     uiOutput("round_control_buttons")
+              column(width = 4, align = "center", style = 'padding: 0;',
+                     div(id = 'scoreboard_center_controls',
+                         h1("Round", style = "font-size: 5rem; font-weight: 600;"),
+                         uiOutput("round_num"),
+                         uiOutput("round_control_buttons")
+                     )
 
               ),
               # Team B
              column(width = 4, align = "center",
                     
                     wellPanel(
+                      class = paste0('scoreboard_well ', 'well_', right_team),
                       style = paste(well_panel_style, team_colours[[right_team]]),
                       # Header
-                      h1(paste("Team", toupper(right_team)), style = h1_style),
+                      h1(class = 'team_name',
+                         paste("Team", toupper(right_team)), style = h1_style),
                       # Score
-                      h2(textOutput(paste0("score_", right_team))),
+                      h2(class = 'team_score numbers',
+                         textOutput(paste0("score_", right_team))),
                       # Score button
-                      actionBttn(paste0(right_team, "_score_button"), 
+                      div(id = paste0(right_team, "_score_and_undo"),
+                          actionBttn(paste0(right_team, "_score_button"), 
                                  label = "We scored!", color = "danger",
                                  size = "lg"),
-                      br(),
-                      actionBttn(
-                        inputId = paste0("undo_score_", right_team),
-                        label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                      )#,
+                          actionBttn(
+                            inputId = paste0("undo_score_", right_team),
+                            label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                          )#,
                       # h3(textOutput(paste0("player_names_", right_team)))
+                      )
                     )
              )
               )
@@ -388,11 +405,17 @@ extra_player_ui = function(current_tab, player, player_choices){
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
-               actionBttn(inputId = remove_type,  label = "X", style = "jelly",
-                              color = "danger", size = "sm"),
+            class = 'additional_players_form',
+              div(class = 'input_close_and_name',
+                actionBttn(inputId = remove_type,  label = "X", style = "jelly",
+                               color = "danger", size = "sm"),
+                h1(id = paste0("name_", player_team, player_num),
+                   paste0('Player ', player_num)
+                )
+               ),
                # Add extra player text input 
                selectizeInput(inputId = input_type, 
-                              label = paste('Player', player_num), c(`Player Name`='', player_choices), options = list(create = TRUE)),
+                              label = NULL, c(`Player Name`='', player_choices), options = list(create = TRUE)),
 
              # Add remove player button outside fluid row
              
@@ -1082,6 +1105,15 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                                        fontWeight = 600)
                                 }
                               }),
+        foot_paddle_points = colDef("Foot Paddle Points", 
+                               minWidth = 115,
+                               maxWidth = 150,
+                               style = function(value) {
+                                 if(max(stats_eligible[, "foot_paddle_points"], na.rm=T) == value){
+                                   list(color = snappa_pal[5],
+                                        fontWeight = 600)
+                                 }
+                               }),
         clink_points = colDef("Clink Points", 
                                minWidth = 82,
                                maxWidth = 150,

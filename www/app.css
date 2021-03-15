@@ -101,12 +101,18 @@
     opacity: 0.9;
 }
 
+
 .dropdown-menu {
   background-color: var(--bg-col);
   text-align: center;
   flex-flow: column;
   padding: 5px;
   width: max-content;
+}
+
+.numbers {
+  font-size:18rem; 
+    line-height: 20rem;
 }
 
 
@@ -124,12 +130,6 @@
     margin-bottom: 2rem;
 }
 
-#remove_A3, #remove_A4, #remove_B3, #remove_B4 {
-    position: relative; 
-    top:-11vh; 
-    z-index:1;
-}
-
 .bootstrap-select .dropdown-toggle .filter-option {
     text-align: center!important;
 }
@@ -139,11 +139,17 @@
 #previous_round {
     font-size: 1.5rem;
     margin-bottom: 2rem;
+    border-radius: 15px;
+    height: 9vh;
+    width: 40%;
 }
 
 #next_round {
     font-size: 2.5rem;
     margin-bottom: 2rem;
+    border-radius: 15px;
+    height: 10vh;
+    width: 40%;
 }
 
 #round_num {
@@ -151,10 +157,6 @@
     line-height: 20rem;
 }
 
-#A_score_button, #B_score_button {
-    font-size: 2.1rem;
-    
-}
 
 #score_A, #score_B {
     font-size: 20rem; 
@@ -189,13 +191,11 @@ label[for='foot'] {
     font-size: x-large;
 }
 
-#undo_score_A {
-    right: 3vw;
-    margin-top: 5vh;
-}
-#undo_score_B {
-    left: 3vw;
-    margin-top: 5vh;
+#undo_score_A, #undo_score_B {
+    width: 80%;
+    flex: 1 3 5vh;
+    border-radius: 15px;
+    font-size: 2rem;
 }
 
 
@@ -416,6 +416,141 @@ label.control-label[for='score'] {
   margin-bottom: 20px;
   border-bottom: 1px solid #adc4c2;
 }
+
+.input_well, .scoreboard_well, #start_game, #next_round, #previous_round, #switch_sides, #A_score_button, #undo_score_A, #B_score_button, #undo_score_B {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+/* Styling for 'we-scored' button and box around it */
+#A_score_and_undo, #B_score_and_undo {
+    flex: 2 1 50%;
+    padding-bottom: 2vh;
+    
+}
+
+#A_score_button, #B_score_button {
+  width: 95%;
+  flex: 3 1 20vh;
+  border-radius: 15px;
+  font-size: 3rem;
+  text-align: center;
+  padding: 3vw 0vw;
+  margin-bottom: 3vh;
+}
+
+#round_control_buttons {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+/* Styling for the landing page: size of input wells, flex on player forms, and additional styling due to the close button on 
+players 3 and 4 */
+.input_well {
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.player_input_forms {
+  flex-grow: 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;  
+  height: auto;
+}
+
+.additional_players_form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+}
+
+
+#extra_player_A3, #extra_player_A4, #extra_player_B3, #extra_player_B4 {
+  height: 10vh;
+  width: 80%;
+  border-radius: 15px;
+  font-size: 2rem;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+#start_game {
+  border-radius: 15px;
+}
+
+.selectize-input {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+.input_close_and_name {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+.input_close_and_name > h1{
+  text-align: center;
+  font-weight: bold;
+  color: white;
+  font-size: 4.2rem;
+  flex: 5 0 80%;
+}
+
+#remove_A3, #remove_A4, #remove_B3, #remove_B4 {
+    height: 5vh;
+    width: 15%;
+    align-self: center;
+    position: relative;
+    left: 47%;
+    top: 75px;
+    z-index: 100;
+}
+
+.additional_players_form > .shiny-input-container {
+  width: 100%;
+}
+
+.input_close_and_name > button {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+#switch_sides {
+  height: 6vh;
+  width: 80%;
+  border-radius: 15px;
+}
+
+#scoreboard_center_controls {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+#round_value > h3 {
+  text-align: center;
+}
+
+.scoreboard_well {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+.team_name {
+  padding-top: 2vh;
+  flex: 1 1 auto;
+}
+.team_score {
+  flex: 1 1 auto;
+}
+
+/* Controls for text shading on wells */
+
 
 
 /* End my CSS */
@@ -669,11 +804,20 @@ input[type=radio]{
     .well .shiny-input-container {
         width: 80%;
     }
+    .additional_players_form > .shiny-input-container {
+        width: 100%;
+    }
 }
 
+
+
+
 @media (max-width: 1200px) {
-    .well .shiny-input-container {
+    .well  {
         width: auto;
+    }
+    .shiny-input-container {
+        width: 100%;
     }
 }
 
@@ -719,15 +863,11 @@ input[type=radio]{
         margin: 0;
     }
     
-    #remove_A3, #remove_A4, #remove_B3, #remove_B4 {
-        top:-15vh; 
-    }
-    
     #start_game {
         padding: 2vh 2vw 2vh 2vw;
     }
     
-    #undo_score_A {
+/*    #undo_score_A {
         padding: 1vh 1vw 1vh 1vw;
         right: 6vw;
         font-size: 2.5vh;
@@ -738,19 +878,25 @@ input[type=radio]{
         left: 6vw;
         font-size: 2.5vh;
     }
-    
+ */   
     #previous_round{
-        font-size: 1rem;
-        padding: 2vh 2vw 2vh 2vw;
-        margin-bottom: 1vh;
+        font-size: 1.5rem;
+        padding: 0vh 1vw 0vh 1vw;
+        margin-bottom: 2vh;
         margin-top: 1vh;
+        min-height: 9vh;
+        width: 75%;
+        order: 2;
     }
     
     #next_round {
         font-size: 2rem;
-        padding: 2vh 2vw 2vh 2vw;
-        margin-bottom: 1vh;
+        padding: 0vh 1vw 0vh 1vw;
+        margin-bottom: 0vh;
         margin-top: 1vh;
+        min-height: 15vh;
+        width: 90%;
+        order: 1;
     }
     
     #round_num {
@@ -778,6 +924,17 @@ input[type=radio]{
         font-size: 2.5rem;
         margin: 1vh;
     }
-
+    
+    #round_control_buttons {
+      height: 20vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      
+    }
     
 }
+
+
+
