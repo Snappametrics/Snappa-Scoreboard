@@ -567,6 +567,23 @@ this will impact every modal */
   color: white;
 }
 
+.timeline_card_header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.timeline_button_off {
+  display: none;
+}
+
+.timeline_button_on { 
+  align-self: flex-start;
+}
+
+.timeline_card_position {
+  flex: 4 1 auto;
+}
+
 .timeline_card_team_B {
   align-self: flex-end;
 }
@@ -620,6 +637,7 @@ this will impact every modal */
 .score_entry_center {
   overflow-y: scroll;
 }
+
 
 
 /* End my CSS */

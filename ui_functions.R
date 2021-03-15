@@ -100,16 +100,28 @@ timeline_score_check = function(round) {
   )
 }
 
-timeline_card = function(timeline_reactive) {
+timeline_card = function(timeline_reactive, is_last) {
   player = timeline_reactive$player_name
   position = timeline_reactive$position
   team = timeline_reactive$team
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   points = timeline_reactive$points
    
+  
+  # For now, this handles creation of the cards based on whether or not the person is the last one, in which case 
+  # an X button is added. This is... a far from ideal way to handle changing one line of a UI, but conditional evaluation
+  # that works in another way would likely require some lazy evaluation black magic that remains a total mystery to me
+  
   div(class = str_c('timeline_card timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
       div(class = 'timeline_card_header',
-          p(position)
+          div(class = str_c('timeline_button_', if_else(is_last, 'on', 'off')),
+            actionBttn(inputId = 'timeline_remove_card',
+                      icon = icon('times'),
+                      style = 'jelly',
+                      size = 'xs')
+          ),
+          p(class = 'timeline_card_position', 
+            position)
       ),
       div(class = 'timeline_card_name_and_entry',
         h3(class = 'timeline_card_name', player),

@@ -740,6 +740,9 @@ server <- function(input, output, session) {
                   points = 0))
   })
   
+  observeEvent(input$timeline_remove_card, {
+    vals$score_timeline = vals$score_timeline[-nrow(vals$score_timeline), ]
+  })
 
   output$team_B_score_check_buttons = renderUI({
     vals$eligible_shooters[['B']] %>%
@@ -759,7 +762,8 @@ server <- function(input, output, session) {
     vals$score_timeline %>%
       pmap(function(...){
         current_entry = tibble(...)
-        timeline_card(current_entry)
+        timeline_card(current_entry,
+                      is_last = current_entry$position == max(vals$score_timeline$position))
       })
 
   })
