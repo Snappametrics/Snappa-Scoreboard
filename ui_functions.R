@@ -108,14 +108,15 @@ timeline_card = function(timeline_reactive, is_last) {
   points = timeline_reactive$points
    
   
-  # For now, this handles creation of the cards based on whether or not the person is the last one, in which case 
-  # an X button is added. This is... a far from ideal way to handle changing one line of a UI, but conditional evaluation
-  # that works in another way would likely require some lazy evaluation black magic that remains a total mystery to me
+  # This is a bit of a ham-fisted way to do conditional UI creation, but it works without needing
+  # to do anything around lazy evaluation. It does create a lot of buttons that are not necessary,
+  # but it maintains the unique identifier on the correct button so that the event handler works
   
   div(class = str_c('timeline_card timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
       div(class = 'timeline_card_header',
-          div(class = str_c('timeline_button_', if_else(is_last, 'on', 'off')),
-            actionBttn(inputId = 'timeline_remove_card',
+          div(class = str_c('timeline_button ', if_else(is_last, 'on', 'off')),
+            #if_else needed here or else the event handler won't work
+            actionBttn(inputId = if_else(is_last, 'timeline_remove_card', 'extraneous_button'),
                       icon = icon('times'),
                       style = 'jelly',
                       size = 'xs')
@@ -145,24 +146,30 @@ timeline_card = function(timeline_reactive, is_last) {
           )
         ),
       div(class = 'other_cool_stuff_array',
-          # # More to be done here for sure, like header and the like
-          # awesomeCheckbox(
-          #   inputId = "paddle", 
-          #   label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
-          #   status = "warning"
-          # ),
-          # # Was it a clink?
-          # awesomeCheckbox(
-          #   inputId = "clink", 
-          #   label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
-          #   status = "warning"
-          # ),
-          # # feet?
-          # awesomeCheckbox(
-          #   inputId = "foot", 
-          #   label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
-          #   status = "warning"
-          # )
+         h6(class = 'other_cool_stuff_header', 
+            'How did the die fly?'),
+         div(class = 'timeline_card_other_well',
+             div(class = 'timeline_card_hand score_information',
+                 h6('hand'),
+                 awesomeCheckbox(inputId = str_c('hand_', position),
+                                 label = NULL)
+                 ),
+             div(class = 'timeline_card_head score_information',
+                 h6('head'),
+                 awesomeCheckbox(inputId = str_c('head_', position),
+                                 label = NULL)
+                 ),
+             div(class = 'timeline_card_foot score_information',
+                 h6('foot'),
+                 awesomeCheckbox(inputId = str_c('foot_', position),
+                                 label = NULL)
+             ),
+             div(class = 'timeline_card_clink score_information',
+                 h6('clink'),
+                 awesomeCheckbox(inputId = str_c('clink_', position),
+                                 label = NULL)
+             )
+          )
       )
   )
 }
