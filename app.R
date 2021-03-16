@@ -674,6 +674,9 @@ server <- function(input, output, session) {
                   team = 'A',
                   points = 0)
       )
+    # I'm not sure why this is being converted into an integer at the moment but it's not ideal
+    position = max(vals$score_timeline$position) %>% as.integer()
+   
   })
   
   observeEvent(input[["timeline_add_A2"]], {
@@ -739,11 +742,11 @@ server <- function(input, output, session) {
                   team = 'B',
                   points = 0))
   })
-  
   observeEvent(input$timeline_remove_card, {
     vals$score_timeline = vals$score_timeline[-nrow(vals$score_timeline), ]
   })
 
+  
   output$team_B_score_check_buttons = renderUI({
     vals$eligible_shooters[['B']] %>%
       imap(~{
@@ -762,10 +765,10 @@ server <- function(input, output, session) {
     vals$score_timeline %>%
       pmap(function(...){
         current_entry = tibble(...)
+        position = current_entry$position
         timeline_card(current_entry,
-                      is_last = current_entry$position == max(vals$score_timeline$position))
+                      is_last = position == max(vals$score_timeline$position))
       })
-
   })
   
   output$score_entry_centerbar = renderUI({
@@ -776,6 +779,8 @@ server <- function(input, output, session) {
                    if_else(15*nrow(vals$score_timeline) < 85, 15*nrow(vals$score_timeline),  85),  'vh; width: 1vw;}'))
     )
   })
+
+
 
 # Score Validation --------------------------------------------------------
 
@@ -2486,6 +2491,20 @@ observeEvent(input$resume_no, {
     showModal(
       timeline_score_check(round = round_num()))
     
+    lapply(1:20, function(position) {
+        if (!is.null(input[[str_c('timeline_points_down', position)]])) { 
+          observeEvent(input[[str_c('timeline_points_down_', position)]], {
+            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
+                                                           vals$score_timeline$points[position] - 1, 0)
+          })
+          observeEvent(input[[str_c('timeline_points_up_', position)]], {
+            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] + 1 <= 7, 
+                                                           vals$score_timeline$points[position] + 1, 7)
+          })
+        } else {
+          invisible()
+        }
+    })  
     
   })
   
