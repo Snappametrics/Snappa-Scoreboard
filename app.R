@@ -566,13 +566,13 @@ server <- function(input, output, session) {
     
     eligible_shooters = list('A' = tibble(player_name = NULL), 
                              'B' = tibble(player_name = NULL)),
-    score_timeline = tibble(position = NULL, 
-                            player_name = NULL,
-                            team = NULL,
-                            points = NULL,
-                            paddle = NULL,
-                            header = NULL,
-                            foot = NULL)
+    score_timeline = tibble(position = NA_integer_, 
+                            player_name = NA_character_,
+                            team = NA_character_,
+                            points = NA_integer_,
+                            paddle = NA,
+                            header = NA,
+                            foot = NA) %>% slice(0)
   )
   
   
@@ -625,18 +625,14 @@ server <- function(input, output, session) {
     length(active_player_inputs()[active_player_inputs() != ""])
   })
   
-  #timeline tracker, the thing that gets mapped over and added to in order to put player
-  # along the timeline input
-  # player_touched_timeline = reactive({
-  #   tribble(~position, ~player, ~team)
-  # })
+
   
 
 # Outputs -----------------------------------------------------------------
 
   
 # Outputs for the timeline score check ------------------------------------
-
+  
   output$team_A_score_check_buttons = renderUI({
     vals$eligible_shooters[['A']] %>%
         imap(~{
@@ -668,79 +664,77 @@ server <- function(input, output, session) {
   
   observeEvent(input[["timeline_add_A1"]], {
     # update the reactive with the new player information
+    browser()
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][1], 
                   team = 'A',
-                  points = 0)
+                  points = 0
       )
-    # I'm not sure why this is being converted into an integer at the moment but it's not ideal
-    position = max(vals$score_timeline$position) %>% as.integer()
-   
   })
   
   observeEvent(input[["timeline_add_A2"]], {
     # update the reactive with the new player information
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][2], 
                   team = 'A',
-                  points = 0))
+                  points = 0)
   })
   
   observeEvent(input[["timeline_add_A3"]], {
     # update the reactive with the new player information
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+     add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][3], 
                   team = 'A',
-                  points = 0))
+                  points = 0)
   })
   
   observeEvent(input[["timeline_add_A4"]], {
     # update the reactive with the new player information
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+     add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][4], 
                   team = 'A',
-                  points = 0))
+                  points = 0)
   })
   
   
   observeEvent(input[["timeline_add_B1"]], {
     # update the reactive with the new player information
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][1], 
                   team = 'B',
-                  points = 0))
+                  points = 0)
   })
   
   observeEvent(input[["timeline_add_B2"]], {
     # update the reactive with the new player information
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][2], 
                   team = 'B',
-                  points = 0))
+                  points = 0)
   })
   
   observeEvent(input[["timeline_add_B3"]], {
     # update the reactive with the new player information
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][3], 
                   team = 'B',
-                  points = 0))
+                  points = 0)
   })
   
   observeEvent(input[["timeline_add_B4"]], {
     # update the reactive with the new player information
     vals$score_timeline = vals$score_timeline %>%
-      bind_rows(c(position = nrow(vals$score_timeline) + 1, 
+      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][4], 
                   team = 'B',
-                  points = 0))
+                  points = 0)
   })
   observeEvent(input$timeline_remove_card, {
     vals$score_timeline = vals$score_timeline[-nrow(vals$score_timeline), ]
@@ -780,7 +774,28 @@ server <- function(input, output, session) {
     )
   })
 
-
+# This observe event fires whenever the score timeline is updated, creating a series of observers that will help to 
+# observe the series of cards, of arbitrary length
+  observeEvent(vals$score_timeline$position, {
+    if (length(vals$score_timeline$position) > 0) {
+      vals$score_timeline$position %>% 
+        map(function(position){
+          observeEvent(input[[paste0('timeline_points_down_', position)]], {
+            browser()
+            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
+                                                           vals$score_timeline$points[position] - 1,
+                                                           0)
+          })
+          
+          observeEvent(input[[paste0('timeline_points_up_', position)]], {
+            browser()
+            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] + 1 <= 7, 
+                                                           vals$score_timeline$points[position] + 1,
+                                                           7)
+          })
+        })
+    }
+  })
 
 # Score Validation --------------------------------------------------------
 
