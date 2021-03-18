@@ -3,7 +3,6 @@
 # a scores table to be passed on, since the snappaneers table that is also
 # called would always be the same
 app_update_player_stats = function(scores_df, neers, game){
-  g.id = game
   output = scores_df %>% 
     # Join scores to snappaneers to get each player's team
     left_join(neers, by = "player_id") %>% 
@@ -25,7 +24,7 @@ app_update_player_stats = function(scores_df, neers, game){
   
   output = troll_check(snappaneers = neers,
                        player_stats = output,
-                       game_id = g.id)
+                       game_id = game)
   return(output)
 }
 
