@@ -575,7 +575,11 @@ server <- function(input, output, session) {
                             foot = NA,
                             clink = NA) %>% slice(0),
     
-    timeline_length = c(NULL)
+    timeline_length = c(NULL),
+    # A really dumb fix to this issue probably, but this constant tracks the 
+    # highest value that has been obtained on the timeline length so that 
+    # it doesn't add an additional observer on the same button.  
+    max_timeline_length = 0
   )
   
   
@@ -833,11 +837,12 @@ server <- function(input, output, session) {
     # invoked. If you don't do this, then the app updates vals$score_timeline$points, which is an update the vals$score_timeline,
     # which causes the statement to run again, which causes a runaway in the number of points scored.
     
-    # mapping also doesn't work here becuase it will add duplicate observers to old cards every time a new card is created.
+    # mapping also doesn't work here because it will add duplicate observers to old cards every time a new card is created.
     # that also causes a runaway
     
-    if (vals$timeline_length > 0) {
+    if (vals$timeline_length > vals$max_timeline_length) {
         position = vals$timeline_length
+        vals$max_timeline_length = vals$timeline_length
           observeEvent(input[[paste0('timeline_points_down_', position)]], {
             vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
                                                            vals$score_timeline$points[position] - 1,

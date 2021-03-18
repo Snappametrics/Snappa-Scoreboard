@@ -119,13 +119,14 @@ timeline_card = function(timeline_reactive, is_last) {
             actionBttn(inputId = if_else(is_last, 'timeline_remove_card', 'extraneous_button'),
                       icon = icon('times'),
                       style = 'jelly',
+                      color = if_else(team == 'A', 'danger', 'primary'),
                       size = 'xs')
           ),
           p(class = 'timeline_card_position', 
             position)
       ),
       div(class = 'timeline_card_name_and_entry',
-        h3(class = 'timeline_card_name', player),
+        h2(class = 'timeline_card_name', player),
         div(class = 'timeline_card_points_array',
             h4(class = 'points_label',
               'Points'),
@@ -135,13 +136,15 @@ timeline_card = function(timeline_reactive, is_last) {
               actionBttn(inputId = str_c('timeline_points_down_', position),
                          icon = icon('arrow-left'),
                          style = 'jelly',
-                         size = 'xs'),
+                         color = if_else(team == 'A', 'danger', 'primary'),
+                         size = 'sm'),
               h4(class = 'points_amount',
                  points),
               actionBttn(inputId = str_c('timeline_points_up_', position),
                          icon = icon('arrow-right'),
                          style = 'jelly',
-                         size = 'xs')
+                         color = if_else(team == 'A', 'danger', 'primary'),
+                         size = 'sm')
             )
           )
         ),
@@ -152,21 +155,25 @@ timeline_card = function(timeline_reactive, is_last) {
              div(class = 'timeline_card_hand score_information',
                  h6('hand'),
                  awesomeCheckbox(inputId = str_c('hand_', position),
+                                 status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)
                  ),
              div(class = 'timeline_card_head score_information',
                  h6('head'),
                  awesomeCheckbox(inputId = str_c('head_', position),
+                                 status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)
                  ),
              div(class = 'timeline_card_foot score_information',
                  h6('foot'),
                  awesomeCheckbox(inputId = str_c('foot_', position),
+                                 status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)
              ),
              div(class = 'timeline_card_clink score_information',
                  h6('clink'),
                  awesomeCheckbox(inputId = str_c('clink_', position),
+                                 status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)
              )
           )

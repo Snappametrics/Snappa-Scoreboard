@@ -605,13 +605,11 @@ this will impact every modal */
 }
 
 .timeline_card_name {
-  flex: 2 1 60%;
+  flex: 2 1 50%;
   font-weight: bold;
   align-self: center;
 }
-.timeline_card_name_and_entry > div {
-  flex: 1 0 40% ;
-}
+
 .timeline_card_name_and_entry > div label {
   font-size: 1.5rem;
 }
@@ -621,9 +619,10 @@ this will impact every modal */
   align-self:center;
 }
 
-.timeline_points_array {
+.timeline_card_points_array {
   display: flex;
   flex-direction: column;
+  flex: 1 0 50% 
 }
 
 .timeline_points_array > .points_label {
@@ -632,7 +631,7 @@ this will impact every modal */
 
 .timeline_card_points_control {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 #score_entry_centerbar {
