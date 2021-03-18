@@ -3086,26 +3086,6 @@ observeEvent(input$add_player_A3, {
     db_update_player_stats(vals$player_stats_db)
     
     
-    # Should be made unnecessary by adding
-    # players immediately 
-    
-    # dbAppendTable(
-    #   conn = con, 
-    #   name = "players",
-    #   value = anti_join(vals$players_db, players_tbl))
-    
-    #Update Scores
-    dbWriteTable(
-      conn = con,
-      name = "scores",
-      value = vals$scores_db,
-      append = T)
-    
-    # Update player_stats
-    # dbAppendTable(
-    #   conn = con, 
-    #   name = "player_stats",
-    #   value = vals$player_stats_db)
     # Confirmation that data was sent to db
     sendSweetAlert(session, 
                    title = "The die is cast",
