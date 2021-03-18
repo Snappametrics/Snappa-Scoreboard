@@ -205,14 +205,49 @@ rowAny <- function(x) {
   rowSums(x) > 0
 } 
 
-db_update_player_stats = function(player_stats){
-  current_game = unique(player_stats$game_id)
-  del_rows = sql(str_c("DELETE FROM player_stats 
-                 WHERE game_id = ", current_game, ";"))
+db_update_player_stats = function(player_stats, specific_player){
   
-  dbExecute(con, del_rows)
+  # Add quotes around character vars for update query
+  player_stats = mutate(player_stats, across(where(is_character), ~str_c("'", ., "'")))
   
-  dbWriteTable(con, "player_stats", player_stats, append = T)
+  
+  # If updating the whole table
+  
+  if(missing(specific_player)){
+    # Convert tibble to list of character strings in the format: COLNAME = VALUE
+    # Separated for each player in player_stats
+    col_updates = player_stats %>% 
+      group_by(player_id) %>% 
+      # Transpose each player id's row
+      group_map(~t(.), .keep = T) %>% 
+      map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>% 
+      # Set names for use with imap
+      set_names(player_stats$player_id)
+    
+    update_player_stats_queries = imap(col_updates, 
+                                       ~str_c("UPDATE player_stats
+                                             SET ", .x,
+                                              " WHERE game_id = ", unique(player_stats$game_id),
+                                              " AND player_id = ", .y, ";"))
+    walk(update_player_stats_queries, ~dbExecute(con, .))
+  } else {
+    
+    
+    # If a player is specified, only update their row
+    
+    col_updates = t(filter(player_stats, player_id == specific_player)) %>% 
+      str_c(rownames(.), " = ", ., collapse = ", ")
+    
+    update_player_stats_query = str_c("UPDATE player_stats
+                              SET ", col_updates,
+                              " WHERE game_id = ", unique(player_stats$game_id),
+                              " AND player_id = ", specific_player, ";")
+    
+    dbExecute(con, update_player_stats_query)
+  }
+  
+  
+  
 }
 
 db_update_round = function(round, game){
