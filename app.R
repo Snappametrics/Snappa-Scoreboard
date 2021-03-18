@@ -1819,6 +1819,7 @@ observe({
       vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
         as.integer()
       
+      # Initialize the current game's game_stats table
       vals$game_stats_db = bind_rows(vals$game_stats_db,
                                      tibble(
                                        game_id = vals$game_id,
@@ -1840,14 +1841,20 @@ observe({
                                        arena = input$arena_select
                                      ))
       
-      
-      # Initialize the current game's player_stats table
-      vals$player_stats_db = slice(vals$player_stats_db, 0)
-      
       dbWriteTable(
         conn = con, 
         name = "game_stats",
         value = vals$game_stats_db,
+        append = T
+      )
+      
+      # Initialize the current game's player_stats table
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      
+      dbWriteTable(
+        conn = con, 
+        name = "player_stats",
+        value = vals$player_stats_db,
         append = T
       )
     }
