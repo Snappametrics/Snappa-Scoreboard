@@ -3051,22 +3051,22 @@ observeEvent(input$add_player_A3, {
       replace_na(list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
       mutate(night_dice = if_else(now(tzone = "America/Los_Angeles") %>% hour() > 20, T, F)) %>% 
       left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
-      select(-contains("_old", ignore.case = F))
+      select(-contains("_old", ignore.case = F)) %>% 
+      # Add quotes around character vars for update query
+      mutate(across(where(is_character), ~str_c("'", ., "'")))
     
     
-    # As with player_stats, I perform the update by deleting the relevant row in the DB table and reinserting the
-    # one that we need
+    # Convert tibble to character string in the format: COLNAME = VALUE
+    col_updates = t(vals$game_stats_db) %>% 
+      str_c(rownames(.), " = ", ., collapse = ", ")
     
-    del_game_row = str_c("DELETE FROM game_stats 
-                 WHERE game_id = ", vals$game_id, ";")
+    update_game_query = str_c("UPDATE game_stats
+                              SET ", col_updates,
+                              " WHERE game_id = ", vals$game_id, ";")
     
-    dbExecute(con, del_game_row)
+    dbExecute(con, update_game_query)
   
-    dbWriteTable(
-      conn = con, 
-      name = "game_stats",
-      value = vals$game_stats_db,
-      append = T)
+
     
     # Update player stats table one final time
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
