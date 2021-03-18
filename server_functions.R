@@ -5,7 +5,9 @@
 app_update_player_stats = function(scores_df, neers, game){
   output = scores_df %>% 
     # Join scores to snappaneers to get each player's team
-    left_join(neers, by = "player_id") %>% 
+    right_join(neers, by = "player_id") %>% 
+    # Fill in game_id for players who have not scored yet
+    replace_na(list(game_id = game)) %>% 
     # Group by game and player, (team and shots are held consistent)
     group_by(game_id, player_id, team, shots) %>% 
     # Calculate summary stats
@@ -14,13 +16,18 @@ app_update_player_stats = function(scores_df, neers, game){
               twos = sum((points_scored == 2)),
               threes = sum((points_scored == 3)),
               impossibles = sum((points_scored > 3)),
-              paddle_points = sum(points_scored* (paddle | foot)),
-              clink_points = sum(points_scored*clink),
-              points_per_round = total_points / last(shots),
-              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
-              def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
-    ungroup()
+              paddle_points = sum(points_scored * (paddle | foot)),
+              clink_points = sum(points_scored * clink),
+              points_per_round = na_if(total_points / last(shots), Inf),
+              off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
+              def_ppr = na_if(sum(points_scored * (paddle | foot)) /last(shots), Inf),
+              toss_efficiency = sum(!(paddle | foot)) / last(shots)) %>% 
+    ungroup() %>% 
+    # Replace NA values with 0s
+    replace_na(list(total_points = 0, 
+                    ones = 0, twos = 0, threes = 0, impossibles = 0, 
+                    paddle_points = 0, clink_points = 0, 
+                    points_per_round = 0, off_ppr = 0, def_ppr = 0, toss_efficiency = 0))
   
   output = troll_check(snappaneers = neers,
                        player_stats = output,
