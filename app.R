@@ -572,7 +572,9 @@ server <- function(input, output, session) {
                             points = NA_integer_,
                             paddle = NA,
                             header = NA,
-                            foot = NA) %>% slice(0)
+                            foot = NA) %>% slice(0),
+    
+    timeline_length = c(NULL)
   )
   
   
@@ -625,7 +627,6 @@ server <- function(input, output, session) {
     length(active_player_inputs()[active_player_inputs() != ""])
   })
   
-
   
 
 # Outputs -----------------------------------------------------------------
@@ -671,6 +672,7 @@ server <- function(input, output, session) {
                   team = 'A',
                   points = 0
       )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   
   observeEvent(input[["timeline_add_A2"]], {
@@ -776,19 +778,17 @@ server <- function(input, output, session) {
 
 # This observe event fires whenever the score timeline is updated, creating a series of observers that will help to 
 # observe the series of cards, of arbitrary length
-  observeEvent(vals$score_timeline$position, {
+  observeEvent(vals$timeline_length, {
     if (length(vals$score_timeline$position) > 0) {
       vals$score_timeline$position %>% 
         map(function(position){
           observeEvent(input[[paste0('timeline_points_down_', position)]], {
-            browser()
             vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
                                                            vals$score_timeline$points[position] - 1,
                                                            0)
           })
           
           observeEvent(input[[paste0('timeline_points_up_', position)]], {
-            browser()
             vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] + 1 <= 7, 
                                                            vals$score_timeline$points[position] + 1,
                                                            7)
