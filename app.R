@@ -572,7 +572,8 @@ server <- function(input, output, session) {
                             points = NA_integer_,
                             paddle = NA,
                             header = NA,
-                            foot = NA) %>% slice(0),
+                            foot = NA,
+                            clink = NA) %>% slice(0),
     
     timeline_length = c(NULL)
   )
@@ -644,6 +645,21 @@ server <- function(input, output, session) {
                    size = 'md'
         )
       })
+      
+    })
+  
+  output$team_B_score_check_buttons = renderUI({
+    vals$eligible_shooters[['B']] %>%
+      imap(~{
+        actionBttn(inputId = str_c('timeline_add_B', .y),
+                   label = .x,
+                   style = "jelly",
+                   color = 'primary',
+                   size = 'md'
+        )
+      })
+  })
+    
     # I'm certain this can be handled in a better way, but my monkey brain
     # is reasoning about it this way right now
     
@@ -661,16 +677,18 @@ server <- function(input, output, session) {
     #                       team = 'A'))
     #         })
     #     })
-  })
   
   observeEvent(input[["timeline_add_A1"]], {
     # update the reactive with the new player information
-    browser()
     vals$score_timeline = vals$score_timeline %>%
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][1], 
                   team = 'A',
-                  points = 0
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
       )
     vals$timeline_length = length(vals$score_timeline$position)
   })
@@ -681,7 +699,13 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][2], 
                   team = 'A',
-                  points = 0)
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
+              )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   
   observeEvent(input[["timeline_add_A3"]], {
@@ -690,7 +714,13 @@ server <- function(input, output, session) {
      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][3], 
                   team = 'A',
-                  points = 0)
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
+             )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   
   observeEvent(input[["timeline_add_A4"]], {
@@ -699,7 +729,13 @@ server <- function(input, output, session) {
      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][4], 
                   team = 'A',
-                  points = 0)
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
+             )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   
   
@@ -709,7 +745,13 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][1], 
                   team = 'B',
-                  points = 0)
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
+              )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   
   observeEvent(input[["timeline_add_B2"]], {
@@ -718,7 +760,13 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][2], 
                   team = 'B',
-                  points = 0)
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
+              )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   
   observeEvent(input[["timeline_add_B3"]], {
@@ -727,7 +775,13 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][3], 
                   team = 'B',
-                  points = 0)
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
+              )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   
   observeEvent(input[["timeline_add_B4"]], {
@@ -736,25 +790,21 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][4], 
                   team = 'B',
-                  points = 0)
+                  points = 0,
+                  paddle = F,
+                  header = F,
+                  foot = F,
+                  clink = F
+              )
+    vals$timeline_length = length(vals$score_timeline$position)
   })
   observeEvent(input$timeline_remove_card, {
     vals$score_timeline = vals$score_timeline[-nrow(vals$score_timeline), ]
+    vals$timeline_length = length(vals$score_timeline$position)
   })
 
   
-  output$team_B_score_check_buttons = renderUI({
-    vals$eligible_shooters[['B']] %>%
-      imap(~{
-        actionBttn(inputId = str_c('timeline_add_B', .y),
-                   label = .x,
-                   style = "jelly",
-                   color = 'primary',
-                   size = 'md'
-        )
-      })
-    
-})
+
 
 
   output$score_entry_center = renderUI({
@@ -779,9 +829,15 @@ server <- function(input, output, session) {
 # This observe event fires whenever the score timeline is updated, creating a series of observers that will help to 
 # observe the series of cards, of arbitrary length
   observeEvent(vals$timeline_length, {
-    if (length(vals$score_timeline$position) > 0) {
-      vals$score_timeline$position %>% 
-        map(function(position){
+    #timeline_length is used here so that we have a new reactive, which does not update every time the score_timeline change is 
+    # invoked. If you don't do this, then the app updates vals$score_timeline$points, which is an update the vals$score_timeline,
+    # which causes the statement to run again, which causes a runaway in the number of points scored.
+    
+    # mapping also doesn't work here becuase it will add duplicate observers to old cards every time a new card is created.
+    # that also causes a runaway
+    
+    if (vals$timeline_length > 0) {
+        position = vals$timeline_length
           observeEvent(input[[paste0('timeline_points_down_', position)]], {
             vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
                                                            vals$score_timeline$points[position] - 1,
@@ -793,7 +849,8 @@ server <- function(input, output, session) {
                                                            vals$score_timeline$points[position] + 1,
                                                            7)
           })
-        })
+    } else {
+      invisible()
     }
   })
 
@@ -2492,7 +2549,6 @@ observeEvent(input$resume_no, {
   
   observeEvent(input$A_score_button, {
     vals$error_msg <- NULL
-    
     vals$eligible_shooters[['A']] = snappaneers() %>% 
       filter(team == 'A') %>%
       pull(player_name) %>%
@@ -2505,21 +2561,6 @@ observeEvent(input$resume_no, {
     
     showModal(
       timeline_score_check(round = round_num()))
-    
-    lapply(1:20, function(position) {
-        if (!is.null(input[[str_c('timeline_points_down', position)]])) { 
-          observeEvent(input[[str_c('timeline_points_down_', position)]], {
-            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
-                                                           vals$score_timeline$points[position] - 1, 0)
-          })
-          observeEvent(input[[str_c('timeline_points_up_', position)]], {
-            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] + 1 <= 7, 
-                                                           vals$score_timeline$points[position] + 1, 7)
-          })
-        } else {
-          invisible()
-        }
-    })  
     
   })
   
