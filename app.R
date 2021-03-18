@@ -2494,14 +2494,17 @@ observeEvent(input$resume_no, {
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
                                  new_score)
+      
       #Update the db with the new score
-  
-      dbWriteTable(con, "scores", anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
+      dbWriteTable(con, "scores", 
+                   anti_join(vals$scores_db, dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", vals$game_id)), 
+                             by = "score_id"), 
+                   append = T)
       
       
       # Update player stats table
       vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
-      db_update_player_stats(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
 
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
@@ -2609,9 +2612,11 @@ observeEvent(input$resume_no, {
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
                                  new_score)
-      #Update the server with the new score
+      #Update the db with the new score
       dbWriteTable(con, "scores", 
-                   anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
+                   anti_join(vals$scores_db, dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", vals$game_id)), 
+                             by = "score_id"), 
+                   append = T)
       
       
       # Update player stats in the app
@@ -2619,7 +2624,7 @@ observeEvent(input$resume_no, {
                                                      snappaneers(), 
                                                      game = vals$game_id)    
       #Update the DB with the new player_stats
-      db_update_player_stats(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
