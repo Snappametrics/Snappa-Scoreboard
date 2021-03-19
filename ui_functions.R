@@ -108,7 +108,17 @@ timeline_score_check = function(round) {
                         uiOutput('team_B_score_check_buttons')
                        )
                 )
-              )
+              ),
+              footer = div(id = 'timeline_dialog_footer',
+                           actionBttn(inputId = 'timeline_clear',
+                                      label = 'Clear current entries',
+                                      icon = icon('broom'),
+                                      color = 'warning',
+                                      style = 'jelly'),
+                           actionBttn(inputId = 'timeline_submit',
+                                      label = 'input score',
+                                      style = 'jelly',
+                                      color = 'royal'))
   )
 }
 
@@ -165,25 +175,25 @@ timeline_card = function(timeline_reactive, is_last) {
             'How did the die fly?'),
          div(class = 'timeline_card_other_well',
              div(class = 'timeline_card_hand score_information',
-                 h6('hand'),
+                 h6(emo::ji('hand'), 'hand'),
                  awesomeCheckbox(inputId = str_c('hand_', position),
                                  status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)
                  ),
              div(class = 'timeline_card_head score_information',
-                 h6('head'),
+                 h6(emo::ji('brain'), 'head'),
                  awesomeCheckbox(inputId = str_c('head_', position),
                                  status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)
                  ),
              div(class = 'timeline_card_foot score_information',
-                 h6('foot'),
+                 h6(emo::ji('foot'), 'foot'),
                  awesomeCheckbox(inputId = str_c('foot_', position),
                                  status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)
              ),
              div(class = 'timeline_card_clink score_information',
-                 h6('clink'),
+                 h6(emo::ji('ear'), 'clink'),
                  awesomeCheckbox(inputId = str_c('clink_', position),
                                  status = if_else(team == 'A', 'danger', 'primary'),
                                  label = NULL)

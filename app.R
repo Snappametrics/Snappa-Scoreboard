@@ -637,7 +637,7 @@ server <- function(input, output, session) {
 # Outputs -----------------------------------------------------------------
 
   
-# Outputs for the timeline score check ------------------------------------
+# Outputs and observers for the timeline score check ------------------------------------
   
   output$team_A_score_check_buttons = renderUI({
     vals$eligible_shooters[['A']] %>%
@@ -822,12 +822,15 @@ server <- function(input, output, session) {
   })
   
   output$score_entry_centerbar = renderUI({
-    color = if_else(vals$score_timeline[nrow(vals$score_timeline), ]$team == 'A', 'red', 'blue')
-    div(id = 'entry_timeline_bar',
-        tags$style(type = 'text/css', 
-                   str_c('#entry_timeline_bar {background-color:', color, '; height:', 
-                   if_else(15*vals$timeline_length < 85, 15*vals$timeline_length,  85),  'vh; width: 1vw;}'))
-    )
+    vals$score_timeline %>%
+      pmap(function(...) {
+        entry = tibble(...)
+        color = if_else(entry$team == 'A', 'red', 'blue')
+        div(id = str_c('entry_timeline_bar_', entry$position),
+            tags$style(type = 'text/css', 
+                       str_c('#entry_timeline_bar_', entry$position, ' {background-color:', color, '; height: 31vh; width: 1vw;}'))
+        )
+      })
   })
 
 # This observe event fires whenever the score timeline is updated, creating a series of observers that will help to 
@@ -857,6 +860,12 @@ server <- function(input, output, session) {
     } else {
       invisible()
     }
+  })
+  
+  
+# Observer for clearing the timeline
+  observeEvent(input$timeline_clear, {
+    vals$score_timeline = vals$score_timeline %>% slice(0)
   })
 
 # Score Validation --------------------------------------------------------

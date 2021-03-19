@@ -544,7 +544,7 @@ this will impact every modal */
 
 .modal-content {
   max-height:90vh;
-  min-height:45vh;
+  min-height:20vh;
   overflow-y: scroll;
 }
 
@@ -556,6 +556,20 @@ this will impact every modal */
 .modal-footer {
   position: relative;
   bottom: 0vh;
+}
+.timeline_dialog_footer {
+    position: fixed;
+    bottom: 0vh;
+    width: auto;
+    right: 2vw;
+    left: 2vw;
+    display: flex;
+    justify-content: space-between;
+    background-color: white;
+    z-index: 1;
+    height: 7vh;
+    padding-bottom: 1vh;
+    padding-top: 1vh;
 }
 
 #score_round_message {
@@ -606,8 +620,9 @@ this will impact every modal */
 
 .timeline_card {
   width: 25vw;
-  height: fit-content;
+  height: 30vh;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+  margin-bottom: 1vh;
 }
 
 .timeline_card_team_A {
