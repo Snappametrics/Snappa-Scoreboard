@@ -1900,7 +1900,7 @@ observe({
     # In the event that there was a sink which caused this, also popup the sink menu
     last_score = vals$scores_db[ max(vals$scores_db$score_id),]
     
-    sink_casualty_popup(session, score_row = last_score, players = snappaneers()$player_name)
+    sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
 
   }, once = T, ignoreNULL = T)
   
@@ -2135,7 +2135,7 @@ observeEvent(input$resume_no, {
     )
     # In the event that there was a sink which caused this, also popup the sink menu
     last_score = vals$scores_db[ max(vals$scores_db$score_id),]
-    sink_casualty_popup(session, score_row = last_score, players = snappaneers()$player_name)
+    sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
   })
   
   observeEvent(input$sink_casualty, {
