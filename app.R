@@ -826,7 +826,7 @@ server <- function(input, output, session) {
     div(id = 'entry_timeline_bar',
         tags$style(type = 'text/css', 
                    str_c('#entry_timeline_bar {background-color:', color, '; height:', 
-                   if_else(15*nrow(vals$score_timeline) < 85, 15*nrow(vals$score_timeline),  85),  'vh; width: 1vw;}'))
+                   if_else(15*vals$timeline_length < 85, 15*vals$timeline_length,  85),  'vh; width: 1vw;}'))
     )
   })
 

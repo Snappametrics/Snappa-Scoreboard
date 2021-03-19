@@ -509,6 +509,7 @@ players 3 and 4 */
   display: flex;
   flex-direction: column;
   text-align: center;
+  z-index: 2;
 }
 
 #round_value > h3 {
@@ -536,13 +537,63 @@ this will impact every modal */
 
 .modal-dialog.modal-lg {
   width: 90vw;
+  position: absolute;
+  left:5vw;
+  right: 5vw;
+}
+
+.modal-content {
+  max-height:90vh;
+  min-height:45vh;
+  overflow-y: scroll;
+}
+
+.modal-body {
+  padding: 0px 15px 15px 15px;
+  min-height: 50vh;
+}
+
+.modal-footer {
+  position: relative;
+  bottom: 0vh;
+}
+
+#score_round_message {
+  position: fixed;
+  text-align: center;
+  background-color: white;
+  width: 87vw;
+  z-index: 2;
+}
+.timeline_team_buttons {
+  position: fixed;
+  top: 10vh;
+  
+}
+
+#team_buttons_A {
+  left: 5%;
+}
+
+#team_buttons_B {
+  right: 5%;
+}
+
+#timeline_team_A_header {
+  font-size: 3rem;
+  color: red;
+}
+
+#timeline_team_B_header {
+  font-size: 3rem;
+  color: blue;
 }
 
 #team_A_score_check_buttons, #team_B_score_check_buttons {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  height: 70vh;
+  height: 35vh;
 }
 
 
@@ -550,12 +601,12 @@ this will impact every modal */
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  margin-top: 5vh;
+  margin-top: 10vh;
 }
 
 .timeline_card {
-  width: 20vw;
-  height:30vh;
+  width: 25vw;
+  height: fit-content;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -631,13 +682,14 @@ this will impact every modal */
 
 .timeline_card_points_control {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
 }
 
 #score_entry_centerbar {
-  position: fixed;
+  position: absolute;
   top: 10vh;
   left: 50%;
+  z-index:1;
 }
 
 .score_entry_center {

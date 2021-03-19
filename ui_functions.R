@@ -80,22 +80,34 @@ score_check <- function(team, players, round) {
 timeline_score_check = function(round) {
   timeline_color = c('red', 'blue')
   
-  modalDialog(
-    align = 'center', easyClose = T, size = 'l',
-              h2(HTML(str_c('Score recorded in ', round))),
+  modalDialog(align = 'center', easyClose = T, size = 'l',
+              div(id = 'score_round_message',
+                  br(),
+                h2(HTML(str_c('Score recorded in ', round)))
+              ),
               fluidRow(
                 column(2,
-                      h1("Team A"),
-                      uiOutput('team_A_score_check_buttons')
+                       tags$style(type = "text/css", '{height: fit-content}'),
+                      div(id = 'team_buttons_A',
+                          class = 'timeline_team_buttons', 
+                        h1(id = 'timeline_team_A_header',
+                           "Team A"),
+                        uiOutput('team_A_score_check_buttons')
+                      )
                       ),
                 column(8,
                       uiOutput('score_entry_center'),
                       uiOutput('score_entry_centerbar')
                        ),
                 column(2,
-                       h1('Team B'),
-                       uiOutput('team_B_score_check_buttons')
+                       tags$style(type = "text/css", '{height: fit-content}'),
+                       div(id = 'team_buttons_B',
+                         class = 'timeline_team_buttons',
+                        h1(id = 'timeline_team_B_header',
+                          'Team B'),
+                        uiOutput('team_B_score_check_buttons')
                        )
+                )
               )
   )
 }
