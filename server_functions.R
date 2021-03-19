@@ -21,8 +21,8 @@ app_update_player_stats = function(scores_df, neers, game){
               points_per_round = na_if(total_points / last(shots), Inf),
               off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
               def_ppr = na_if(sum(points_scored * (paddle | foot)) /last(shots), Inf),
-              toss_efficiency = sum(!(paddle | foot)) / last(shots)) %>% 
-    ungroup() %>% 
+              toss_efficiency = sum(!(paddle | foot)) / last(shots), 
+              .groups = "drop") %>% 
     # Replace NA values with 0s
     replace_na(list(total_points = 0, 
                     ones = 0, twos = 0, threes = 0, impossibles = 0, 
