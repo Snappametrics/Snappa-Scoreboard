@@ -177,35 +177,63 @@ sink_casualty_popup = function(session, score_row, players = snappaneers()$playe
 
 tifu_casualty_popup <- function(players) {
   # Ask what happened and to whom
-  modalDialog(align = "center", easyClose = T, size = "l",
-              # Header
-              h2(HTML("You <del>love</del> hate to see that!"),
-                 style = "margin-bottom: 2vh;"),
+  modalDialog(align = "center", easyClose = T, size = "l", style = "margin:7vh 4vw 0;",
               
-                column(12,
-                       # What happened?
+              
+              fluidRow(style="display: flex;",
+                column(8,
+                       style="display: flex; flex-flow: column; align-self: center; align-items: flex-start;",
+                       h2("Friendly Fire!", class = "h1"),
+                       # Header
+                       h2(HTML("You <del>love</del> hate to see that!"),
+                          style = "margin-bottom: 2vh;")
+                       ),
+                column(4,
+                       tags$img(src = str_c("gifs/", sample(list.files("www/gifs"), 1)), class = "casualty-gif")
+                       )
+              ),
+              fluidRow(
+              
+                column(8, style = "text-align: left;",
+                       # to whom?
                        radioGroupButtons(
-                         inputId = "casualty_type",
-                         label = "What happened?",
-                         choices = c("Self sink", "Team sink"),
-                         direction = "horizontal",
-                         individual = T,
+                         inputId = "tifu_accused",
+                         label = "Who was the shooter?",
+                         choices = players,
                          size = "lg",
                          checkIcon = list(
-                           yes = tags$i(class = "fa fa-bitbucket"))
+                           yes = tags$i(class = "fa fa-trash"))
                        ),
                        # to whom?
                        radioGroupButtons(
                          inputId = "tifu_casualty",
-                         label = "Casualty",
+                         label = "Who was the casualty?",
                          choices = players,
-                         size = "lg"
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-beer"))
                        )
+                ),
+                
+                column(4, style = "text-align:left;",
+                       # What happened?
+                       radioGroupButtons(
+                         inputId = "casualty_type",
+                         label = "How friendly we talking?",
+                         choices = c("Self sink", "Team sink"),
+                         direction = "vertical",
+                         # individual = T,
+                         justified = T,
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-bitbucket"))
+                       )
+                )
               ),
               
               footer = tagList(
-                modalButton("Sorry, fat fingered it"),
-                actionButton("tifu_confirm", label = "Sadly, it happened.")
+                modalButton("Back"),
+                actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "color: var(--bg-col);")
               )
   )
   
