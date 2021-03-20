@@ -502,11 +502,12 @@ server <- function(input, output, session) {
     # Live data
     # Updates when a game is completed
     db_tbls = reactivePoll(
-      intervalMillis = 1000*60,
+      intervalMillis = 1000*120,
       session = session,
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
       valueFunc = function() {
-        map(tbls,
+        set_names(
+          map(tbls,
             function(table){
               dbGetQuery(con,
                          sql(
@@ -517,8 +518,8 @@ server <- function(input, output, session) {
                            )
                          )
               )
-            }) %>% 
-          set_names(tbls)
+            }),
+          tbls)
       }
     ),
     recent_scores = reactivePoll(
