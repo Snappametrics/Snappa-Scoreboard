@@ -1991,7 +1991,7 @@ output$scores_tbl = renderReactable({
     })
     )
     
-    delay(200, shinyjs::click("start_game"))
+    shinyjs::click("start_game")
 })
   
 # Close the modal dialog if you say no and remove
