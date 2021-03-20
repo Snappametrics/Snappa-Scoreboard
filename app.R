@@ -1893,8 +1893,7 @@ observe({
     sendSweetAlert(session, 
                    title = "Halftime", 
                    type = "info",
-                   text = HTML(str_c("Change places!", 
-                                     "<audio preload='auto' src='change_places.mp3' type='audio/mp3'></audio>")), html = T)
+                   text = HTML(str_c("Change places!")), html = T)
 
     shinyjs::click("switch_sides")
     
@@ -1905,18 +1904,7 @@ observe({
 
   }, once = T, ignoreNULL = T)
   
-  observeEvent(c(
-    input$ok_A,
-    input$ok_B
-  ), {
-    if(all(input$score == 3, !input$clink)){
-      insertUI(selector = "#round_num",
-               where = "afterEnd",
-               ui = HTML('<audio preload="auto" src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
-      
-    }
-  },
-  ignoreNULL = T, ignoreInit = T)
+
 
 
 observeEvent(input$game_summary, {
