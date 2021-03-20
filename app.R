@@ -1863,7 +1863,7 @@ observe({
     # Setup a reactive poll for cooldowns to check if any casualty rules are still in effect
     # but have not made their way around the horn yet
     vals$cooldowns = reactivePoll(
-      intervalMillis = 100*30,
+      intervalMillis = 100*70,
       session = session,
       checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
                                                         WHERE game_id = ", vals$game_id)))},
