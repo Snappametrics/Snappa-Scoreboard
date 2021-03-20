@@ -77,6 +77,12 @@
     border-radius: 7px;
 }
 
+.casualty-gif {
+  margin: 2vh 1vw;
+  box-shadow: 2px 3px 3px var(--gray-4);
+  border-radius: 2px;
+}
+
 .shiny-notification-content-text {
     min-width: 35vw;
     white-space: nowrap;
@@ -727,7 +733,7 @@ input:focus {
 }
 
 .shiny-input-radiogroup {
-    margin: 2vh 0;
+    margin: 3vh 0;
 }
 
 .shiny-options-group {
