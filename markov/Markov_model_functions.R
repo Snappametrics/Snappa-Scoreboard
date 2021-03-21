@@ -423,7 +423,6 @@ transition_list = tables$game_team_pair %>%
           
           # A change for the "average teams" case. You have to make sure
           # that the score doesn't go from something like 21 to 0
-          
           if (new_score - old_score < 0) {
             invisible() 
           } else {
