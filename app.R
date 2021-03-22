@@ -2309,110 +2309,110 @@ observeEvent(input$resume_no, {
   # New Player A3
   #   - Add A3 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_A3, {
-    # Set input want to true
-    vals$want_A3 = T
-    
-    # Get add player button inputs
-    val <- paste0("#",getInputs("edit_add_A3"))
-    add_player_input("edit", val, "A", 3, current_choices(), session)
-    
-  })
+  # observeEvent(input$edit_add_A3, {
+  #   # Set input want to true
+  #   vals$want_A3 = T
+  #   
+  #   # Get add player button inputs
+  #   val <- paste0("#",getInputs("edit_add_A3"))
+  #   add_player_input("edit", val, "A", 3, current_choices(), session)
+  #   
+  # })
   
   # Remove A3
   #   - Insert add new player action button
   #   - Remove A3 player name input
-  observeEvent(input$edit_remove_A3, {
-    remove_p3_input("edit", "A", session)
-    
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_A3 = F
-    vals$want_A4 = F
-    
-  })
+  # observeEvent(input$edit_remove_A3, {
+  #   remove_p3_input("edit", "A", session)
+  #   
+  #   #Don't consider these elements when looking at
+  #   # total length of players. Prevents the game
+  #   # from getting locked out after players have
+  #   # been added
+  #   vals$want_A3 = F
+  #   vals$want_A4 = F
+  #   
+  # })
   
   
   # New Player A4
   #   - Add A4 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_A4, {
-    # Set input want to true
-    vals$want_A4 = T
-    
-    # Get UI inputs for extra player button
-    vals <- paste0("#",getInputs("edit_add_A4"))
-    
-    add_player_input("edit", vals, "A", 4, current_choices(), session)
-    
-  })
+  # observeEvent(input$edit_add_A4, {
+  #   # Set input want to true
+  #   vals$want_A4 = T
+  #   
+  #   # Get UI inputs for extra player button
+  #   vals <- paste0("#",getInputs("edit_add_A4"))
+  #   
+  #   add_player_input("edit", vals, "A", 4, current_choices(), session)
+  #   
+  # })
   
   # Remove A4
   #   - Insert add new player action button
   #   - Remove A4 player name input
-  observeEvent(input$edit_remove_A4, {
-    remove_p4_input("edit", "A", session)
-    
-    vals$want_A4 = F
-    
-  })  
+  # observeEvent(input$edit_remove_A4, {
+  #   remove_p4_input("edit", "A", session)
+  #   
+  #   vals$want_A4 = F
+  #   
+  # })  
   
   
   # New Player B3
   #   - Add B3 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_B3, {
-    
-    # Set want check to true
-    vals$want_B3 = T
-    
-    # Get inputs for add player button
-    vals <- paste0("#",getInputs("edit_add_B3"))
-    
-    add_player_input("edit", vals, "B", 3, current_choices(), session)
-  })
+  # observeEvent(input$edit_add_B3, {
+  #   
+  #   # Set want check to true
+  #   vals$want_B3 = T
+  #   
+  #   # Get inputs for add player button
+  #   vals <- paste0("#",getInputs("edit_add_B3"))
+  #   
+  #   add_player_input("edit", vals, "B", 3, current_choices(), session)
+  # })
   
   # Remove B3
   #   - Insert add new player action button
   #   - Remove B3 player name input
-  observeEvent(input$edit_remove_B3, {
-    remove_p3_input("edit", "B", session)
-    
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_B3 = F
-    vals$want_B4 = F
-    
-  })
+  # observeEvent(input$edit_remove_B3, {
+  #   remove_p3_input("edit", "B", session)
+  #   
+  #   #Don't consider these elements when looking at
+  #   # total length of players. Prevents the game
+  #   # from getting locked out after players have
+  #   # been added
+  #   vals$want_B3 = F
+  #   vals$want_B4 = F
+  #   
+  # })
   
   # New Player B4
   #   - Add B4 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_B4, {
-    # Set want check to true
-    vals$want_B4 = T
-    
-    # Get add player button inputs
-    vals <- paste0("#",getInputs("edit_add_B4"))
-    
-    add_player_input("edit", vals, "B", 4, current_choices(), session)
-  })
+  # observeEvent(input$edit_add_B4, {
+  #   # Set want check to true
+  #   vals$want_B4 = T
+  #   
+  #   # Get add player button inputs
+  #   vals <- paste0("#",getInputs("edit_add_B4"))
+  #   
+  #   add_player_input("edit", vals, "B", 4, current_choices(), session)
+  # })
   
   
   # Remove B4
   #   - Insert add new player action button
   #   - Remove B4 player name input
-  observeEvent(input$edit_remove_B4, {
-    remove_p4_input("edit", "B", session)
-    # Tells later checks to not worry about this
-    # empty slot in active_player_names
-    vals$want_B4 = F
-    
-  })  
+  # observeEvent(input$edit_remove_B4, {
+  #   remove_p4_input("edit", "B", session)
+  #   # Tells later checks to not worry about this
+  #   # empty slot in active_player_names
+  #   vals$want_B4 = F
+  #   
+  # })  
   
   
   
@@ -2952,9 +2952,9 @@ observeEvent(input$resume_no, {
 # Add/Edit Team Events ----------------------------------------------------
 
 
-observeEvent(input$add_player_A3, {
-  
-})  
+# observeEvent(input$add_player_A3, {
+#   
+# })  
   
   
   
@@ -3094,43 +3094,43 @@ observeEvent(input$add_player_A3, {
 
   
   
-  observeEvent(input$new_game, {
-    
-    showModal(
-      modalDialog( title = "Restart game", easyClose = T,
-        helpText("Are you sure?"),
-        footer = tagList(
-          actionBttn("new_game_sure", "Yup", style = "unite", color = "warning")
-        )
-      )
-    )
-    
-  })
+  # observeEvent(input$new_game, {
+  #   
+  #   showModal(
+  #     modalDialog( title = "Restart game", easyClose = T,
+  #       helpText("Are you sure?"),
+  #       footer = tagList(
+  #         actionBttn("new_game_sure", "Yup", style = "unite", color = "warning")
+  #       )
+  #     )
+  #   )
+  #   
+  # })
   
-  observeEvent(input$new_game_sure, {
-    # On a new game:
-    # 1. Switch to start screen
-    updateTabsetPanel(session, "switcher", selected = "start_screen")
-    
-    # 2. Reset player inputs
-    walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
-         function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$db_tbls()[["players"]]$player_name), 
-                                                options = list(create = TRUE)))
-    
-    # 3. Reset reactive values
-    # vals$game_stats_db = game_stats_tbl() %>% slice(0) %>% select(1:5)
-    # vals$player_stats_db = player_stats_tbl() %>% slice(0)
-    # vals$players_db = dbGetQuery(con, "SELECT * FROM players")
-    # vals$scores_db = scores_tbl() %>% slice(0)
-    # vals$score_id = as.integer(0)
-    # vals$shot_num = as.integer(1)
-    
-
-    
-    removeModal()
-    
-    
-  })
+  # observeEvent(input$new_game_sure, {
+  #   # On a new game:
+  #   # 1. Switch to start screen
+  #   updateTabsetPanel(session, "switcher", selected = "start_screen")
+  #   
+  #   # 2. Reset player inputs
+  #   walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
+  #        function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$db_tbls()[["players"]]$player_name), 
+  #                                               options = list(create = TRUE)))
+  #   
+  #   # 3. Reset reactive values
+  #   # vals$game_stats_db = game_stats_tbl() %>% slice(0) %>% select(1:5)
+  #   # vals$player_stats_db = player_stats_tbl() %>% slice(0)
+  #   # vals$players_db = dbGetQuery(con, "SELECT * FROM players")
+  #   # vals$scores_db = scores_tbl() %>% slice(0)
+  #   # vals$score_id = as.integer(0)
+  #   # vals$shot_num = as.integer(1)
+  #   
+  # 
+  #   
+  #   removeModal()
+  #   
+  #   
+  # })
 
 
 
