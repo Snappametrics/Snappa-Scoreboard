@@ -233,7 +233,7 @@ tifu_casualty_popup <- function(players) {
               
               footer = tagList(
                 modalButton("Back"),
-                actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "color: var(--bg-col);")
+                actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "background-color: var(--red);color: var(--bg-col);")
               )
   )
   
