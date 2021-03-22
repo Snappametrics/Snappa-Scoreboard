@@ -205,7 +205,25 @@ rowAny <- function(x) {
   rowSums(x) > 0
 } 
 
-db_update_player_stats = function(player_stats, specific_player){
+db_update_player_stats = function(player_stats, specific_player, round_button = F){
+  
+  if(round_button){
+    col_updates = select(player_stats, game_id, player_id, shots, points_per_round:toss_efficiency) %>% 
+      group_by(player_id) %>% 
+      # Transpose each player id's row
+      group_map(~t(.), .keep = T) %>% 
+      map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>% 
+      # Set names for use with imap
+      set_names(player_stats$player_id)
+    
+    update_player_stats_queries = imap(col_updates, 
+                                       ~str_c("UPDATE player_stats
+                                             SET ", .x,
+                                              " WHERE game_id = ", unique(player_stats$game_id),
+                                              " AND player_id = ", .y, ";"))
+    walk(update_player_stats_queries, ~dbExecute(con, .))
+    return(invisible())
+  }
   
   # Add quotes around character vars for update query
   player_stats = mutate(player_stats, across(where(is_character), ~str_c("'", ., "'")))
