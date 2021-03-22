@@ -2020,7 +2020,7 @@ observeEvent(input$resume_no, {
       # Update player stats in the app
       vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
       #Update the DB with the new player_stats
-      db_update_player_stats(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db, round_button = T)
       
       # Update round in game stats
       db_update_round(round = round_num(), game = vals$game_id)
@@ -2054,7 +2054,7 @@ observeEvent(input$resume_no, {
     # Update player stats in the app
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
     #Update the DB with the new player_stats (adds to shots)
-    db_update_player_stats(vals$player_stats_db)
+    db_update_player_stats(vals$player_stats_db, round_button = T)
     }
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
