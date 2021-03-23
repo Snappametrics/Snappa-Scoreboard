@@ -569,11 +569,8 @@ server <- function(input, output, session) {
     score_timeline = tibble(position = NA_integer_, 
                             player_name = NA_character_,
                             team = NA_character_,
-                            points = NA_integer_,
-                            paddle = NA,
-                            header = NA,
-                            foot = NA,
-                            clink = NA) %>% slice(0),
+                            points = NA_integer_) %>% 
+      slice(0),
     
     timeline_length = c(NULL),
     # A really dumb fix to this issue probably, but this constant tracks the 
@@ -632,6 +629,15 @@ server <- function(input, output, session) {
     length(active_player_inputs()[active_player_inputs() != ""])
   })
   
+  timeline_other_stuff = reactive({
+    seq(1:vals$timeline_length) %>%
+      map_dfr(function(position){
+        c(paddle = input[[str_c('hand_', position)]],
+          header = input[[str_c('head_', position)]],
+          footer = input[[str_c('foot_', position)]],
+          clink = input[[str_c('clink_', position)]])
+      })
+  })
   
 
 # Outputs -----------------------------------------------------------------
@@ -688,11 +694,7 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][1], 
                   team = 'A',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
+                  points = 0
       )
     vals$timeline_length = length(vals$score_timeline$position)
   })
@@ -703,12 +705,7 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][2], 
                   team = 'A',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
-              )
+                  points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
   
@@ -718,12 +715,7 @@ server <- function(input, output, session) {
      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][3], 
                   team = 'A',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
-             )
+                  points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
   
@@ -733,12 +725,7 @@ server <- function(input, output, session) {
      add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][4], 
                   team = 'A',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
-             )
+                  points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
   
@@ -749,12 +736,7 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][1], 
                   team = 'B',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
-              )
+                  points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
   
@@ -764,12 +746,7 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][2], 
                   team = 'B',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
-              )
+                  points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
   
@@ -779,12 +756,7 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][3], 
                   team = 'B',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
-              )
+                  points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
   
@@ -794,12 +766,7 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['B']][4], 
                   team = 'B',
-                  points = 0,
-                  paddle = F,
-                  header = F,
-                  foot = F,
-                  clink = F
-              )
+                  points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
   observeEvent(input$timeline_remove_card, {
@@ -846,6 +813,10 @@ server <- function(input, output, session) {
     if (vals$timeline_length > vals$max_timeline_length) {
         position = vals$timeline_length
         vals$max_timeline_length = vals$timeline_length
+          output[[str_c('card_points_', position)]] = renderUI({
+            timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
+          })
+        
           observeEvent(input[[paste0('timeline_points_down_', position)]], {
             vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
                                                            vals$score_timeline$points[position] - 1,
@@ -2577,6 +2548,17 @@ observeEvent(input$resume_no, {
       timeline_score_check(round = round_num()))
     
   })
+  
+  observeEvent(input$timeline_submit, {
+    # This process has a few different steps: 
+    # First, we augment the score timeline with information 
+    # about the "cool stuff" that we've seen from the players
+    browser()
+    vals$score_timeline = vals$score_timeline %>% bind_cols(
+      timeline_other_stuff()
+    )
+  })
+  
   
   # Team A presses score button
   observeEvent(input$ok_A, {

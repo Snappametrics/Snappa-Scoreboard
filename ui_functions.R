@@ -154,20 +154,7 @@ timeline_card = function(timeline_reactive, is_last) {
               'Points'),
             #Without assigning classes to each button and the points display,
             # I add a div to flex this horizontally
-            div(class = 'timeline_card_points_control',
-              actionBttn(inputId = str_c('timeline_points_down_', position),
-                         icon = icon('arrow-left'),
-                         style = 'jelly',
-                         color = if_else(team == 'A', 'danger', 'primary'),
-                         size = 'sm'),
-              h4(class = 'points_amount',
-                 points),
-              actionBttn(inputId = str_c('timeline_points_up_', position),
-                         icon = icon('arrow-right'),
-                         style = 'jelly',
-                         color = if_else(team == 'A', 'danger', 'primary'),
-                         size = 'sm')
-            )
+            uiOutput(str_c('card_points_', position))
           )
         ),
       div(class = 'other_cool_stuff_array',
@@ -202,6 +189,24 @@ timeline_card = function(timeline_reactive, is_last) {
       )
   )
 }
+
+timeline_card_points = function(position, points, team) {
+  div(class = 'timeline_card_points_control',
+      actionBttn(inputId = str_c('timeline_points_down_', position),
+                 icon = icon('arrow-left'),
+                 style = 'jelly',
+                 color = if_else(team == 'A', 'danger', 'primary'),
+                 size = 'sm'),
+      h4(class = 'points_amount',
+         points),
+      actionBttn(inputId = str_c('timeline_points_up_', position),
+                 icon = icon('arrow-right'),
+                 style = 'jelly',
+                 color = if_else(team == 'A', 'danger', 'primary'),
+                 size = 'sm')
+  )
+}
+
 
 dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") 
 {
