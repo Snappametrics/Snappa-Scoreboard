@@ -779,13 +779,7 @@ server <- function(input, output, session) {
 
 
   output$score_entry_center = renderUI({
-    vals$score_timeline %>%
-      pmap(function(...){
-        current_entry = tibble(...)
-        position = current_entry$position
-        timeline_card(current_entry,
-                      is_last = position == max(vals$score_timeline$position))
-      })
+    div(id = 'score_entry_anchor')
   })
   
   output$score_entry_centerbar = renderUI({
@@ -813,6 +807,14 @@ server <- function(input, output, session) {
     if (vals$timeline_length > vals$max_timeline_length) {
         position = vals$timeline_length
         vals$max_timeline_length = vals$timeline_length
+        
+        insertUI(selector = if_else(vals$max_timeline_length == 1, 
+                                    '#score_entry_anchor',
+                                    str_c('#timeline_card_', position - 1)),
+                 where = 'afterEnd',
+                 ui = timeline_card(vals$score_timeline[vals$max_timeline_length,]),
+                 immediate = T)
+        
           output[[str_c('card_points_', position)]] = renderUI({
             timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
           })
@@ -836,6 +838,10 @@ server <- function(input, output, session) {
   
 # Observer for clearing the timeline
   observeEvent(input$timeline_clear, {
+    # Destroy the ui
+    removeUI(selector = '.timeline_card',
+             multiple = TRUE,
+             immediate = TRUE)
     vals$score_timeline = vals$score_timeline %>% slice(0)
   })
 

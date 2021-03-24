@@ -122,7 +122,7 @@ timeline_score_check = function(round) {
   )
 }
 
-timeline_card = function(timeline_reactive, is_last) {
+timeline_card = function(timeline_reactive) {
   player = timeline_reactive$player_name
   position = timeline_reactive$position
   team = timeline_reactive$team
@@ -135,15 +135,8 @@ timeline_card = function(timeline_reactive, is_last) {
   # but it maintains the unique identifier on the correct button so that the event handler works
   
   div(class = str_c('timeline_card timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
+      id = str_c('timeline_card_', position),
       div(class = 'timeline_card_header',
-          div(class = str_c('timeline_button ', if_else(is_last, 'on', 'off')),
-            #if_else needed here or else the event handler won't work
-            actionBttn(inputId = if_else(is_last, 'timeline_remove_card', 'extraneous_button'),
-                      icon = icon('times'),
-                      style = 'jelly',
-                      color = if_else(team == 'A', 'danger', 'primary'),
-                      size = 'xs')
-          ),
           p(class = 'timeline_card_position', 
             position)
       ),

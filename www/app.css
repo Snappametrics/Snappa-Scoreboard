@@ -731,6 +731,19 @@ this will impact every modal */
   position: relative;
   bottom: 5vh;
 }
+
+#timeline_dialog_footer {
+    position: fixed;
+    bottom: 0vh;
+    width: 95%;
+    right: 1vw;
+    background-color: white;
+    height: 7vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
 /* End my CSS */
 
 body{
