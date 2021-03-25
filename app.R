@@ -2589,9 +2589,9 @@ observeEvent(input$resume_no, {
         lower_bound = 1
       }
       
-      table_fragment = vals$score_timeline[seq(lower_bound:point_position),]
+      table_fragment = vals$score_timeline[seq(lower_bound,point_position),]
       
-      point_entry = table_fragment[point_position, ] %>%
+      point_entry = table_fragment[nrow(table_fragment), ] %>%
       # We modify this entry to be akin to a row entry in the scores database, meaning
       # we need to add columns for the rally id, game id, score id, and a shooting boolean unless we 
       # delete that one (probably my preference),
@@ -2602,6 +2602,7 @@ observeEvent(input$resume_no, {
                rally_id = vals$rally_id,
                score_id = vals$score_id + index,
                round_num = round_num(),
+               keep = 'all',
                .before = position
                ) %>% 
         left_join(players_tbl, by = 'player_name')  %>%
@@ -2610,7 +2611,7 @@ observeEvent(input$resume_no, {
         select(-c(position, player_name))
         
       
-      assists_entry = table_fragment[-point_position,]
+      assists_entry = table_fragment[-nrow(table_fragment),]
       if (nrow(assists_entry) > 0) {
         # Similar to the above transformation, we do a few things here to get the
         # assists entry up to snuff. First, we mutate to add game_id, score_id, round number, touch id,
@@ -2622,12 +2623,24 @@ observeEvent(input$resume_no, {
                  score_id = vals$score_id + index,
                  round_num = round_num(),
                  touch_id = position - min(position) + 1,
+                 paddle = FALSE,
                  assist = FALSE) %>%
           select(-clink)
-        # This is easier than just conditionally mutating based on position. Perhaps a bit
-        # misleading though because it should probably only be true when being served to people on 
-        # the same team. 
-        assists_entry[nrow(assits_entry),]$assist = TRUE
+         # Okay, so this is a complete sin, but I'll need to review how to make it faster / better later.
+         # In order for a paddle to occur, it must be the case that there is a transition of teams within
+         # the assists table OR that the last person in the assist table has a different team than the
+         # person who scored the point. Which is no fun for writing code that feels like it's any good.
+         
+         if (nrow(assists_entry > 1)) {
+           for (i in seq(1, nrow(assists_entry) - 1)) {
+             assists_entry[i, ]$paddle = (assists_entry[i,]$team != assists_entry[i + 1,]$team) 
+           }
+         }
+          assists_entry[nrow(assists_entry), ]$paddle = assists_entry[nrow(assists_entry),]$team != point_entry$scoring_team
+        # Assist is define as the condition when the last player to touch the die in the assists table
+        # and the player who scored are on the same team.
+          assists_entry[nrow(assists_entry),]$assist = point_entry$scoring_team == assists_entry[nrow(assists_entry),]$team
+
       } else {
         invisible()
       }
