@@ -123,16 +123,17 @@ timeline_score_check = function(round) {
 }
 
 timeline_card = function(timeline_reactive) {
+  
   player = timeline_reactive$player_name
   position = timeline_reactive$position
   team = timeline_reactive$team
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   points = timeline_reactive$points
-   
+  bootstrap_status = if_else(team == 'A', 'danger', 'primary')
   
-  # This is a bit of a ham-fisted way to do conditional UI creation, but it works without needing
-  # to do anything around lazy evaluation. It does create a lot of buttons that are not necessary,
-  # but it maintains the unique identifier on the correct button so that the event handler works
+  # This solution works in the world where we do not uniquely namespace each individual card.
+  # The modular approach is also possible, but I imagine that the eventual choice of implementation
+  # is a matter of speed
   
   div(class = str_c('timeline_card timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
       id = str_c('timeline_card_', position),
@@ -157,25 +158,25 @@ timeline_card = function(timeline_reactive) {
              div(class = 'timeline_card_hand score_information',
                  h6(emo::ji('hand'), 'hand'),
                  awesomeCheckbox(inputId = str_c('hand_', position),
-                                 status = if_else(team == 'A', 'danger', 'primary'),
+                                 status = bootstrap_status,
                                  label = NULL)
                  ),
              div(class = 'timeline_card_head score_information',
                  h6(emo::ji('brain'), 'head'),
                  awesomeCheckbox(inputId = str_c('head_', position),
-                                 status = if_else(team == 'A', 'danger', 'primary'),
+                                 status = bootstrap_status,
                                  label = NULL)
                  ),
              div(class = 'timeline_card_foot score_information',
                  h6(emo::ji('foot'), 'foot'),
                  awesomeCheckbox(inputId = str_c('foot_', position),
-                                 status = if_else(team == 'A', 'danger', 'primary'),
+                                 status = bootstrap_status,
                                  label = NULL)
              ),
              div(class = 'timeline_card_clink score_information',
                  h6(emo::ji('ear'), 'clink'),
                  awesomeCheckbox(inputId = str_c('clink_', position),
-                                 status = if_else(team == 'A', 'danger', 'primary'),
+                                 status = bootstrap_status,
                                  label = NULL)
              )
           )
@@ -184,18 +185,20 @@ timeline_card = function(timeline_reactive) {
 }
 
 timeline_card_points = function(position, points, team) {
+  bootstrap_color = if_else(team == 'A', 'danger', 'primary')
+  
   div(class = 'timeline_card_points_control',
       actionBttn(inputId = str_c('timeline_points_down_', position),
                  icon = icon('arrow-left'),
                  style = 'jelly',
-                 color = if_else(team == 'A', 'danger', 'primary'),
+                 color = bootstrap_color,
                  size = 'sm'),
       h4(class = 'points_amount',
          points),
       actionBttn(inputId = str_c('timeline_points_up_', position),
                  icon = icon('arrow-right'),
                  style = 'jelly',
-                 color = if_else(team == 'A', 'danger', 'primary'),
+                 color = bootstrap_color,
                  size = 'sm')
   )
 }

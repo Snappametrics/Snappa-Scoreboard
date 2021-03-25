@@ -576,7 +576,9 @@ server <- function(input, output, session) {
     # A really dumb fix to this issue probably, but this constant tracks the 
     # highest value that has been obtained on the timeline length so that 
     # it doesn't add an additional observer on the same button.  
-    max_timeline_length = 0
+    max_timeline_length = 0,
+    
+    rally_id = 0
   )
   
   
@@ -797,42 +799,47 @@ server <- function(input, output, session) {
 # This observe event fires whenever the score timeline is updated, creating a series of observers that will help to 
 # observe the series of cards, of arbitrary length
   observeEvent(vals$timeline_length, {
+    
+    # No matter what, when the length changes, a new card should be created. It doesn't matter whether or not
+    # that card has been seen before, because the only way this generates a duplicate is if the original card
+    # was removed. However, we cannot have a new observer created, which is the point of the expression below
+    # this chunk
+    position = vals$timeline_length
+    
+    insertUI(selector = if_else(position == 1, 
+                                '#score_entry_anchor',
+                                str_c('#timeline_card_', position - 1)),
+             where = 'afterEnd',
+             ui = timeline_card(vals$score_timeline[position,]),
+             immediate = T)
+    
     #timeline_length is used here so that we have a new reactive, which does not update every time the score_timeline change is 
     # invoked. If you don't do this, then the app updates vals$score_timeline$points, which is an update the vals$score_timeline,
     # which causes the statement to run again, which causes a runaway in the number of points scored.
     
-    # mapping also doesn't work here because it will add duplicate observers to old cards every time a new card is created.
+    output[[str_c('card_points_', position)]] = renderUI({
+      timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
+    })
+
+    
+    # mapping doesn't work here because it will add duplicate observers to old cards every time a new card is created.
     # that also causes a runaway
     
-    if (vals$timeline_length > vals$max_timeline_length) {
-        position = vals$timeline_length
-        vals$max_timeline_length = vals$timeline_length
-        
-        insertUI(selector = if_else(vals$max_timeline_length == 1, 
-                                    '#score_entry_anchor',
-                                    str_c('#timeline_card_', position - 1)),
-                 where = 'afterEnd',
-                 ui = timeline_card(vals$score_timeline[vals$max_timeline_length,]),
-                 immediate = T)
-        
-          output[[str_c('card_points_', position)]] = renderUI({
-            timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
-          })
-        
-          observeEvent(input[[paste0('timeline_points_down_', position)]], {
-            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
-                                                           vals$score_timeline$points[position] - 1,
-                                                           0)
-          })
-          
-          observeEvent(input[[paste0('timeline_points_up_', position)]], {
-            vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] + 1 <= 7, 
-                                                           vals$score_timeline$points[position] + 1,
-                                                           7)
-          })
-    } else {
-      invisible()
-    }
+    req(vals$timeline_length > vals$max_timeline_length)
+  
+    vals$max_timeline_length = vals$timeline_length
+    
+    observeEvent(input[[paste0('timeline_points_down_', position)]], {
+      vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
+                                                     vals$score_timeline$points[position] - 1,
+                                                     0)
+    })
+    
+    observeEvent(input[[paste0('timeline_points_up_', position)]], {
+      vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] + 1 <= 7, 
+                                                     vals$score_timeline$points[position] + 1,
+                                                     7)
+    })
   })
   
   
@@ -2563,6 +2570,70 @@ observeEvent(input$resume_no, {
     vals$score_timeline = vals$score_timeline %>% bind_cols(
       timeline_other_stuff()
     )
+    # At this stage, we also determine the rally id
+    vals$rally_id = vals$rally_id + 1
+    
+    # Next is segmentation. We need to understand exactly how many points are present within the 
+    # timeline that has been created and split the timeline into distinct chunks based on that information
+    scoring_events = which(vals$score_timeline$points > 0)
+    num_scoring_events = length(scoring_events)
+    
+    imap(scoring_events, function(point_position, index) {
+      # This creates the individual table elements and enhances them based on
+      # which table they belong in 
+      browser()
+      
+      if(index > 1) {
+        lower_bound = scoring_events[index - 1] + 1
+      } else {
+        lower_bound = 1
+      }
+      
+      table_fragment = vals$score_timeline[seq(lower_bound:point_position),]
+      
+      point_entry = table_fragment[point_position, ] %>%
+      # We modify this entry to be akin to a row entry in the scores database, meaning
+      # we need to add columns for the rally id, game id, score id, and a shooting boolean unless we 
+      # delete that one (probably my preference),
+      # we modify player name to be the player id instead (can be accomplished with players_tbl)
+      # we rename the columns as needed
+      # we select out the stuff that we don't need anymore, viz. position and player_name
+        mutate(game_id = vals$game_id,
+               rally_id = vals$rally_id,
+               score_id = vals$score_id + index,
+               round_num = round_num(),
+               .before = position
+               ) %>% 
+        left_join(players_tbl, by = 'player_name')  %>%
+        rename(points_scored = points,
+               scoring_team = team) %>%
+        select(-c(position, player_name))
+        
+      
+      assists_entry = table_fragment[-point_position,]
+      if (nrow(assists_entry) > 0) {
+        # Similar to the above transformation, we do a few things here to get the
+        # assists entry up to snuff. First, we mutate to add game_id, score_id, round number, touch id,
+        # and assist / cross (a boolean). what's nice here is that touch id will just be the same
+        # as the position id - the minimum position within this table + 1
+        # Then, we select to remove clink, which is not needed in the assists table
+         assists_entry = assists_entry %>%
+           mutate(game_id = vals$game_id, 
+                 score_id = vals$score_id + index,
+                 round_num = round_num(),
+                 touch_id = position - min(position) + 1,
+                 assist = FALSE) %>%
+          select(-clink)
+        # This is easier than just conditionally mutating based on position. Perhaps a bit
+        # misleading though because it should probably only be true when being served to people on 
+        # the same team. 
+        assists_entry[nrow(assits_entry),]$assist = TRUE
+      } else {
+        invisible()
+      }
+    })
+    
+    
   })
   
   

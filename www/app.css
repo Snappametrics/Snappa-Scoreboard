@@ -557,20 +557,6 @@ this will impact every modal */
   position: relative;
   bottom: 0vh;
 }
-.timeline_dialog_footer {
-    position: fixed;
-    bottom: 0vh;
-    width: auto;
-    right: 2vw;
-    left: 2vw;
-    display: flex;
-    justify-content: space-between;
-    background-color: white;
-    z-index: 1;
-    height: 7vh;
-    padding-bottom: 1vh;
-    padding-top: 1vh;
-}
 
 #score_round_message {
   position: fixed;
@@ -735,13 +721,14 @@ this will impact every modal */
 #timeline_dialog_footer {
     position: fixed;
     bottom: 0vh;
-    width: 95%;
+    width: 98%;
     right: 1vw;
     background-color: white;
-    height: 7vh;
+    height: 6vh;
     display: flex;
     align-items: center;
-    justify-content: space-between
+    justify-content: space-between;
+    z-index: 1;
 }
 
 /* End my CSS */
