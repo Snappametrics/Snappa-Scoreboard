@@ -632,9 +632,9 @@ server <- function(input, output, session) {
   })
   
   timeline_other_stuff = reactive({
-    seq(1:vals$timeline_length) %>%
+    seq.int(1:vals$timeline_length) %>%
       map_dfr(function(position){
-        c(paddle = input[[str_c('hand_', position)]],
+        c(hand = input[[str_c('hand_', position)]],
           header = input[[str_c('head_', position)]],
           footer = input[[str_c('foot_', position)]],
           clink = input[[str_c('clink_', position)]])
@@ -679,9 +679,9 @@ server <- function(input, output, session) {
     #     map(function(player){
     #       # understand the new position of the card you're putting into place
     #       new_position = nrow(vals$score_timeline) + 1
-    #       browser()
+    #       
     #       observeEvent(input[[str_c("timeline_add_A", player)]], {
-    #         browser()
+    #         
     #       # update the reactive with the new player information
     #         vals$score_timeline = vals$score_timeline %>%
     #           bind_rows(c(position = new_position, 
@@ -2566,7 +2566,6 @@ observeEvent(input$resume_no, {
     # This process has a few different steps: 
     # First, we augment the score timeline with information 
     # about the "cool stuff" that we've seen from the players
-    browser()
     vals$score_timeline = vals$score_timeline %>% bind_cols(
       timeline_other_stuff()
     )
@@ -2578,10 +2577,10 @@ observeEvent(input$resume_no, {
     scoring_events = which(vals$score_timeline$points > 0)
     num_scoring_events = length(scoring_events)
     
-    imap(scoring_events, function(point_position, index) {
+    points_entries = imap_dfr(scoring_events, function(point_position, index) {
       # This creates the individual table elements and enhances them based on
       # which table they belong in 
-      browser()
+
       
       if(index > 1) {
         lower_bound = scoring_events[index - 1] + 1
@@ -2589,7 +2588,7 @@ observeEvent(input$resume_no, {
         lower_bound = 1
       }
       
-      table_fragment = vals$score_timeline[seq(lower_bound,point_position),]
+      table_fragment = vals$score_timeline[seq.int(lower_bound,point_position),]
       
       point_entry = table_fragment[nrow(table_fragment), ] %>%
       # We modify this entry to be akin to a row entry in the scores database, meaning
@@ -2597,19 +2596,21 @@ observeEvent(input$resume_no, {
       # delete that one (probably my preference),
       # we modify player name to be the player id instead (can be accomplished with players_tbl)
       # we rename the columns as needed
-      # we select out the stuff that we don't need anymore, viz. position and player_name
         mutate(game_id = vals$game_id,
-               rally_id = vals$rally_id,
-               score_id = vals$score_id + index,
-               round_num = round_num(),
-               keep = 'all',
-               .before = position
-               ) %>% 
+                 rally_id = vals$rally_id,
+                 score_id = vals$score_id + index,
+                 round_num = round_num(),
+                 paddle = (hand | footer | header),
+                 .keep = 'all',
+                 .before = position
+                 ) %>% 
         left_join(players_tbl, by = 'player_name')  %>%
         rename(points_scored = points,
                scoring_team = team) %>%
         select(-c(position, player_name))
         
+      #TODO: Submit to scores table
+      
       
       assists_entry = table_fragment[-nrow(table_fragment),]
       if (nrow(assists_entry) > 0) {
@@ -2631,21 +2632,33 @@ observeEvent(input$resume_no, {
          # the assists table OR that the last person in the assist table has a different team than the
          # person who scored the point. Which is no fun for writing code that feels like it's any good.
          
+         
          if (nrow(assists_entry > 1)) {
-           for (i in seq(1, nrow(assists_entry) - 1)) {
+           for (i in seq.int(1, nrow(assists_entry) - 1)) {
              assists_entry[i, ]$paddle = (assists_entry[i,]$team != assists_entry[i + 1,]$team) 
            }
          }
-          assists_entry[nrow(assists_entry), ]$paddle = assists_entry[nrow(assists_entry),]$team != point_entry$scoring_team
-        # Assist is define as the condition when the last player to touch the die in the assists table
+        assists_entry[nrow(assists_entry), ]$paddle = assists_entry[nrow(assists_entry),]$team != point_entry$scoring_team
+        # Assist is defined as the condition when the last player to touch the die in the assists table
         # and the player who scored are on the same team.
-          assists_entry[nrow(assists_entry),]$assist = point_entry$scoring_team == assists_entry[nrow(assists_entry),]$team
-
+        assists_entry[nrow(assists_entry),]$assist = point_entry$scoring_team == assists_entry[nrow(assists_entry),]$team
+        
+        #TODO: Submit to assists table here
+        
+       
       } else {
         invisible()
       }
+      # We only need to return point_entry because we don't do anything with the 
+      # assists at the client level. 
+      return(point_entry)
     })
     
+    
+    # Now, handle client-side information
+    #TODO: make sure that this works even if a team doesn't score any points
+    vals$current_scores$team_A = vals$current_scores$team_A + sum(points_entries[scoring_team == 'A']$points_scored, na.rm = T)
+    vals$current_scores$team_B = vals$current_scores$team_A + sum(points_entries[scoring_team == 'B']$points_scored, na.rm = T)
     
   })
   
