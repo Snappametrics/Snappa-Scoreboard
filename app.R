@@ -817,6 +817,7 @@ server <- function(input, output, session) {
     # invoked. If you don't do this, then the app updates vals$score_timeline$points, which is an update the vals$score_timeline,
     # which causes the statement to run again, which causes a runaway in the number of points scored.
     
+    # These get messed up once timeline gets set to 0, because there is no longer a team to be inserted
     output[[str_c('card_points_', position)]] = renderUI({
       timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
     })
@@ -2576,19 +2577,19 @@ observeEvent(input$resume_no, {
     # timeline that has been created and split the timeline into distinct chunks based on that information
     scoring_events = which(vals$score_timeline$points > 0)
     num_scoring_events = length(scoring_events)
-    
+    browser()
     points_entries = imap_dfr(scoring_events, function(point_position, index) {
       # This creates the individual table elements and enhances them based on
       # which table they belong in 
+      browser()
 
-      
       if(index > 1) {
-        lower_bound = scoring_events[index - 1] + 1
+        first_position = scoring_events[index - 1] + 1
       } else {
-        lower_bound = 1
+        first_position = 1
       }
       
-      table_fragment = vals$score_timeline[seq.int(lower_bound,point_position),]
+      table_fragment = vals$score_timeline[seq.int(first_position, point_position),]
       
       point_entry = table_fragment[nrow(table_fragment), ] %>%
       # We modify this entry to be akin to a row entry in the scores database, meaning
@@ -2658,9 +2659,47 @@ observeEvent(input$resume_no, {
     
     browser()
     # Now, handle client-side information
-    #TODO: make sure that this works even if a team doesn't score any points
     vals$current_scores$team_A = vals$current_scores$team_A + sum(points_entries[points_entries$scoring_team == 'A', ]$points_scored, na.rm = T)
     vals$current_scores$team_B = vals$current_scores$team_B + sum(points_entries[points_entries$scoring_team == 'B', ]$points_scored, na.rm = T)
+    
+    vals$scores_db = bind_rows(vals$scores_db,
+                               points_entry)
+    
+    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    db_update_player_stats(vals$player_stats_db)
+    
+    # Perform usual checks for rebuttal
+    vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
+                                   vals$current_scores$team_B,
+                                   round_num(), score_to())
+    
+    #    if (!is.null(vals$rebuttal)) {
+    if (vals$rebuttal == T & vals$rebuttal_tag == T) {
+      game_notification(rebuttal = T, 
+                        round = round_num(),
+                        current_scores = vals$current_scores)
+    } else {
+      invisible()
+    }
+    # A fix to issue 45 where games would be prompted to end even though
+    # a team has technically left rebuttal (meaning tag needs to be false)
+    
+    if (vals$rebuttal_tag == T & vals$rebuttal == F){
+      vals$rebuttal_tag = F
+      team_in_rebuttal = str_sub(round_num(), start = -1)
+      text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+      showNotification(HTML(str_c("<span style='color:", text_colour, "'>Team ", 
+                                  team_in_rebuttal, "</span>",
+                                  " has exited rebuttal!")
+      ), 
+      duration = 20, closeButton = F
+      )
+    }  
+    
+    #### This can perform a sink check, always on the last element of scores_timeline 
+    
+    
+    
     
   })
   
