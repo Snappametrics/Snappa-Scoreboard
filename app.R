@@ -52,7 +52,7 @@ player_stats_tbl = dbGetQuery(con, "SELECT * FROM player_stats")
 game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
 # Make a list of table templates
-tbls = c("players", "scores", "player_stats", "game_stats")
+tbls = c("players", "scores_assists", "player_stats", "game_stats")
 tbl_templates = map(tbls, function(table){
   dbGetQuery(con, str_c("SELECT * FROM ", table, " LIMIT 0")) 
 }) %>% 
@@ -635,8 +635,8 @@ server <- function(input, output, session) {
     seq.int(1:vals$timeline_length) %>%
       map_dfr(function(position){
         c(hand = input[[str_c('hand_', position)]],
-          header = input[[str_c('head_', position)]],
-          footer = input[[str_c('foot_', position)]],
+          head = input[[str_c('head_', position)]],
+          foot = input[[str_c('foot_', position)]],
           clink = input[[str_c('clink_', position)]])
       })
   })
@@ -2589,7 +2589,7 @@ observeEvent(input$resume_no, {
       }
       
       table_fragment = vals$score_timeline[seq.int(lower_bound,point_position),]
-      
+      browser()
       point_entry = table_fragment[nrow(table_fragment), ] %>%
       # We modify this entry to be akin to a row entry in the scores database, meaning
       # we need to add columns for the rally id, game id, score id, and a shooting boolean unless we 
@@ -2600,7 +2600,7 @@ observeEvent(input$resume_no, {
                  rally_id = vals$rally_id,
                  score_id = vals$score_id + index,
                  round_num = round_num(),
-                 paddle = (hand | footer | header),
+                 paddle = (hand | foot | head),
                  .keep = 'all',
                  .before = position
                  ) %>% 
@@ -2610,7 +2610,7 @@ observeEvent(input$resume_no, {
         select(-c(position, player_name))
         
       #TODO: Submit to scores table
-      
+      dbWriteTable(con, 'scores_assists', point_entry, append = T)
       
       assists_entry = table_fragment[-nrow(table_fragment),]
       if (nrow(assists_entry) > 0) {
@@ -2621,12 +2621,14 @@ observeEvent(input$resume_no, {
         # Then, we select to remove clink, which is not needed in the assists table
          assists_entry = assists_entry %>%
            mutate(game_id = vals$game_id, 
-                 score_id = vals$score_id + index,
-                 round_num = round_num(),
-                 touch_id = position - min(position) + 1,
-                 paddle = FALSE,
-                 assist = FALSE) %>%
-          select(-clink)
+                  rally_id = vals$rally_id,
+                  score_id = vals$score_id + index,
+                  touch_id = position - min(position) + 1,
+                  round_num = round_num(),
+                  paddle = FALSE,
+                  assist = FALSE) %>%
+           left_join(players_tbl, by = 'player_name') %>%
+           select(-c(clink, position, player_name, points))
          # Okay, so this is a complete sin, but I'll need to review how to make it faster / better later.
          # In order for a paddle to occur, it must be the case that there is a transition of teams within
          # the assists table OR that the last person in the assist table has a different team than the
@@ -2644,7 +2646,7 @@ observeEvent(input$resume_no, {
         assists_entry[nrow(assists_entry),]$assist = point_entry$scoring_team == assists_entry[nrow(assists_entry),]$team
         
         #TODO: Submit to assists table here
-        
+        dbWriteTable(con, 'assists', assists_entry, append = T)
        
       } else {
         invisible()
