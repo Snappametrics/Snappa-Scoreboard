@@ -2589,7 +2589,7 @@ observeEvent(input$resume_no, {
       }
       
       table_fragment = vals$score_timeline[seq.int(lower_bound,point_position),]
-      browser()
+      
       point_entry = table_fragment[nrow(table_fragment), ] %>%
       # We modify this entry to be akin to a row entry in the scores database, meaning
       # we need to add columns for the rally id, game id, score id, and a shooting boolean unless we 
@@ -2656,11 +2656,11 @@ observeEvent(input$resume_no, {
       return(point_entry)
     })
     
-    
+    browser()
     # Now, handle client-side information
     #TODO: make sure that this works even if a team doesn't score any points
-    vals$current_scores$team_A = vals$current_scores$team_A + sum(points_entries[scoring_team == 'A']$points_scored, na.rm = T)
-    vals$current_scores$team_B = vals$current_scores$team_A + sum(points_entries[scoring_team == 'B']$points_scored, na.rm = T)
+    vals$current_scores$team_A = vals$current_scores$team_A + sum(points_entries[points_entries$scoring_team == 'A', ]$points_scored, na.rm = T)
+    vals$current_scores$team_B = vals$current_scores$team_B + sum(points_entries[points_entries$scoring_team == 'B', ]$points_scored, na.rm = T)
     
   })
   
