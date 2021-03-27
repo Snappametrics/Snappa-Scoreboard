@@ -2908,11 +2908,14 @@ observeEvent(input$resume_no, {
                                              3, F,
                                              5, T,
                                              7, T))){
+      # In database
       dbSendQuery(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
       )
+      # In reactive
+      vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
     }
       
     
@@ -2957,11 +2960,14 @@ observeEvent(input$resume_no, {
                                              3, F,
                                              5, T,
                                              7, T))){
+      # In database
       dbSendQuery(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
       )
+      # In reactive
+      vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
     }
     
   })
