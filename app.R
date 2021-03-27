@@ -2128,6 +2128,10 @@ observeEvent(input$resume_no, {
       player_id = casualty,
       casualty_type = type
     )
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
+    
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
@@ -2154,6 +2158,10 @@ observeEvent(input$resume_no, {
       casualty_type = "Sunk"
     )
     
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
+    
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
