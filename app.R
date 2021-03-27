@@ -1873,15 +1873,16 @@ observe({
     vals$cooldowns = reactivePoll(
       intervalMillis = 100*70,
       session = session,
-      checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
-                                                        WHERE game_id = ", vals$game_id)))},
+      # checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
+      #                                                   WHERE game_id = ", vals$game_id)))},
+      checkFunc = function() {nrow(vals$casualties)},
       valueFunc = function() {
         map(
           # Map over each type of score-based casualty
           unique(casualty_rules$casualty_title), 
-          ~cooldown_check(current_game = vals$game_id, 
+          ~cooldown_check(casualties = vals$casualties[vals$casualties$casualty_type == .x, ], 
+                          scores = vals$scores_db, 
                           current_round = round_num(), 
-                          casualty_to_check = .x,
                           rounds = rounds)) %>% 
           # Set the names of the list
           set_names(unique(casualty_rules$casualty_title))}
