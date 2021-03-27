@@ -1817,6 +1817,9 @@ observe({
         # Initialize the current game's player_stats table
         vals$player_stats_db = lost_player_stats
         
+        # Pull in lost game casualties 
+        vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game)))
+        
     } else {
       
       # LAST GAME WAS FINISHED
