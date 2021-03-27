@@ -196,14 +196,15 @@ tifu_casualty_popup <- function(players) {
               
                 column(8, style = "text-align: left;",
                        # to whom?
-                       radioGroupButtons(
-                         inputId = "tifu_accused",
-                         label = "Who was the shooter?",
-                         choices = players,
-                         size = "lg",
-                         checkIcon = list(
-                           yes = tags$i(class = "fa fa-trash"))
-                       ),
+                       uiOutput("friendly_firer"),
+                       # radioGroupButtons(
+                       #   inputId = "tifu_accused",
+                       #   label = "Who was the shooter?",
+                       #   choices = players,
+                       #   size = "lg",
+                       #   checkIcon = list(
+                       #     yes = tags$i(class = "fa fa-trash"))
+                       # ),
                        # to whom?
                        radioGroupButtons(
                          inputId = "tifu_casualty",
