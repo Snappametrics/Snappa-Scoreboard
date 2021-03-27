@@ -2178,6 +2178,26 @@ observeEvent(input$resume_no, {
     
   })
   
+  # observeEvent(input$tifu_casualty, {
+  #   browser()
+  #   
+  # })
+  
+  output$friendly_firer = renderUI({
+    team_chemistry_issues = snappaneers()[which(snappaneers()$player_name == input$tifu_casualty), "team", drop=T]
+    
+    
+    radioGroupButtons(
+      inputId = "tifu_accused",
+      label = "Who was the shooter?",
+      choices = snappaneers()[snappaneers()$team == team_chemistry_issues, "player_name", drop=T],
+      size = "lg",
+      checkIcon = list(
+        yes = tags$i(class = "fa fa-trash", 
+                     style = paste("color:", if_else(team_chemistry_issues == "A", "#e26a6a", "#2574a9"))))
+    )
+  })
+  
   observeEvent(input$tifu_confirm, {
     # Convert player name to ID
     casualty = select(snappaneers(), starts_with("player")) %>% 
@@ -2188,7 +2208,7 @@ observeEvent(input$resume_no, {
     new_casualty = tibble(
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
-      score_id = vals$score_id,
+      score_id = NA_integer_,
       player_id = casualty,
       casualty_type = input$casualty_type
     )
