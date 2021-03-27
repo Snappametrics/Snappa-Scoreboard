@@ -529,6 +529,13 @@ server <- function(input, output, session) {
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
     ),
+    casualties = tibble(
+      casualty_id = numeric(), 
+      game_id  = numeric(), 
+      score_id = numeric(), 
+      player_id = numeric(), 
+      casualty_type = character()
+      ),
     
     
     # setup cooldowns as a list of false bools
