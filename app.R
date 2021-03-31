@@ -771,6 +771,7 @@ server <- function(input, output, session) {
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
   })
+  
   observeEvent(input$timeline_remove_card, {
     vals$score_timeline = vals$score_timeline[-nrow(vals$score_timeline), ]
     vals$timeline_length = length(vals$score_timeline$position)
@@ -813,7 +814,7 @@ server <- function(input, output, session) {
              ui = timeline_card(vals$score_timeline[position,]),
              immediate = T)
     
-    #timeline_length is used here so that we have a new reactive, which does not update every time the score_timeline change is 
+    # timeline_length is used here so that we have a new reactive, which does not update every time the score_timeline change is 
     # invoked. If you don't do this, then the app updates vals$score_timeline$points, which is an update the vals$score_timeline,
     # which causes the statement to run again, which causes a runaway in the number of points scored.
     
@@ -821,7 +822,9 @@ server <- function(input, output, session) {
     output[[str_c('card_points_', position)]] = renderUI({
       timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
     })
-
+    output[[str_c('mini_card_', position)]] = renderUI({
+      timeline_mini_card(vals$score_timeline[position,], timeline_other_stuff())
+    })
     
     # mapping doesn't work here because it will add duplicate observers to old cards every time a new card is created.
     # that also causes a runaway

@@ -135,53 +135,81 @@ timeline_card = function(timeline_reactive) {
   # The modular approach is also possible, but I imagine that the eventual choice of implementation
   # is a matter of speed
   
-  div(class = str_c('timeline_card timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
-      id = str_c('timeline_card_', position),
-      div(class = 'timeline_card_header',
-          p(class = 'timeline_card_position', 
-            position)
-      ),
-      div(class = 'timeline_card_name_and_entry',
-        h2(class = 'timeline_card_name', player),
-        div(class = 'timeline_card_points_array',
-            h4(class = 'points_label',
-              'Points'),
-            #Without assigning classes to each button and the points display,
-            # I add a div to flex this horizontally
-            uiOutput(str_c('card_points_', position))
-          )
+  div(class = str_c('timeline_card_holder timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
+    div(class = 'timeline_card',
+        id = str_c('timeline_card_', position),
+        div(class = 'timeline_card_header',
+            p(class = 'timeline_card_position', 
+              position)
         ),
-      div(class = 'other_cool_stuff_array',
-         h6(class = 'other_cool_stuff_header', 
-            'How did the die fly?'),
-         div(class = 'timeline_card_other_well',
-             div(class = 'timeline_card_hand score_information',
-                 h6(emo::ji('hand'), 'hand'),
-                 awesomeCheckbox(inputId = str_c('hand_', position),
-                                 status = bootstrap_status,
-                                 label = NULL)
-                 ),
-             div(class = 'timeline_card_head score_information',
-                 h6(emo::ji('brain'), 'head'),
-                 awesomeCheckbox(inputId = str_c('head_', position),
-                                 status = bootstrap_status,
-                                 label = NULL)
-                 ),
-             div(class = 'timeline_card_foot score_information',
-                 h6(emo::ji('foot'), 'foot'),
-                 awesomeCheckbox(inputId = str_c('foot_', position),
-                                 status = bootstrap_status,
-                                 label = NULL)
-             ),
-             div(class = 'timeline_card_clink score_information',
-                 h6(emo::ji('ear'), 'clink'),
-                 awesomeCheckbox(inputId = str_c('clink_', position),
-                                 status = bootstrap_status,
-                                 label = NULL)
-             )
-          )
+        div(class = 'timeline_card_name_and_entry',
+          h2(class = 'timeline_card_name', player),
+          div(class = 'timeline_card_points_array',
+              h4(class = 'points_label',
+                'Points'),
+              #Without assigning classes to each button and the points display,
+              # I add a div to flex this horizontally
+              uiOutput(str_c('card_points_', position))
+            )
+          ),
+        div(class = 'other_cool_stuff_array',
+           h6(class = 'other_cool_stuff_header', 
+              'How did the die fly?'),
+           div(class = 'timeline_card_other_well',
+               div(class = 'timeline_card_hand score_information',
+                   h6(emo::ji('hand'), 'hand'),
+                   awesomeCheckbox(inputId = str_c('hand_', position),
+                                   status = bootstrap_status,
+                                   label = NULL)
+                   ),
+               div(class = 'timeline_card_head score_information',
+                   h6(emo::ji('brain'), 'head'),
+                   awesomeCheckbox(inputId = str_c('head_', position),
+                                   status = bootstrap_status,
+                                   label = NULL)
+                   ),
+               div(class = 'timeline_card_foot score_information',
+                   h6(emo::ji('foot'), 'foot'),
+                   awesomeCheckbox(inputId = str_c('foot_', position),
+                                   status = bootstrap_status,
+                                   label = NULL)
+               ),
+               div(class = 'timeline_card_clink score_information',
+                   h6(emo::ji('ear'), 'clink'),
+                   awesomeCheckbox(inputId = str_c('clink_', position),
+                                   status = bootstrap_status,
+                                   label = NULL)
+               )
+            )
+        )
+        
+    ),
+    tags$script(HTML(
+      str_c(
+        '$(document).click(function() {
+          var container = $("#timeline_card_', position, '");
+          if (!container.is(event.target) &&
+              !container.has(event.target).length) {
+                container.hide();
+                $(".mini_card_', position, '").css("display", "flex");
+                $("#entry_timeline_bar_', position, '").css("height", "6vh");
+            }
+          }
+        );'
       )
+      # str_c('$(.timeline_card_', position, ').focusout(function() {
+      #           $(this).css("display", "hidden");
+      #           $(.mini_card_', position, ').css("display", "flex");
+      #           $(entry_timeline_bar_', position, ').css("height", "6vh");
+      #       }'
+      #       )
+      )
+    ),
+    
+    uiOutput(str_c('mini_card_', position))
   )
+  
+  
 }
 
 timeline_card_points = function(position, points, team) {
@@ -203,6 +231,45 @@ timeline_card_points = function(position, points, team) {
   )
 }
 
+timeline_mini_card = function(timeline_reactive_row, other_stuff) {
+  # This is the "twin" to each timeline card. The mini card is a way of having a short form
+  # version of the data which people have entered which appears when focus has left the particular
+  # card that the user is scoping out. With this, it is hopefully possible to include elements. This 
+  # component includes both the ui elements for the mini card, as well as the JS that handles a transition
+  # away from the full card to the mini version
+  
+  team = timeline_reactive_row$team
+  player = timeline_reactive_row$player_name
+  points = timeline_reactive_row$points
+  position = timeline_reactive_row$position
+  
+  browser()
+  # This statement just makes sure that the render doesn't run into errors
+  # when the first card is created an other stuff is length 0
+  if (nrow(other_stuff) > 0) {
+  
+    div(class = str_c('mini_card mini_card_', if_else(team == 'A', 'team_A', 'team_B')),
+        div(class = 'mini_card_identifier',
+            h4(class = 'mini_card_position', 
+              position),
+            h3(class = 'mini_card_name', player)
+        ),
+        div(class = 'mini_card_shot_details',
+            h6(class = 'mini_card_emojis',
+               if_else(other_stuff[position, ]$hand, as.character(emo::ji('hand')), ''),
+               if_else(other_stuff[position, ]$head, as.character(emo::ji('brain')), ''),
+               if_else(other_stuff[position, ]$foot, as.character(emo::ji('foot')), ''),
+               if_else(other_stuff[position, ]$clink, as.character(emo::ji('ear')), '')
+            )
+        ),
+        div(class = 'mini_card_points',
+            h4(str_c('Points: ', points))
+        )
+    )
+  } else {
+    invisible()
+  }
+}
 
 dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") 
 {

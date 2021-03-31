@@ -611,21 +611,27 @@ this will impact every modal */
   margin-bottom: 1vh;
 }
 
-.timeline_card_team_A {
+.mini_card {
+  width: 25vw;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+  margin-bottom: 1vh;
+}
+
+.timeline_card_team_A, .mini_card_team_A {
   align-self: flex-start;
 }
 
-.timeline_card_team_A .timeline_card_header {
+.timeline_card_team_A .timeline_card_header, .mini_card_team_A {
   background-color: red;
   color: white;
 }
 
 
-.timeline_card_team_B {
+.timeline_card_team_B, .mini_card_team_B {
   align-self: flex-end;
 }
 
-.timeline_card_team_B .timeline_card_header {
+.timeline_card_team_B .timeline_card_header, .mini_card_team_B {
   background-color: blue;
   color: white;
 }
@@ -650,6 +656,7 @@ this will impact every modal */
 .timeline_card_position {
   flex: 4 1 auto;
   margin: 0px;
+  align-self: center;
 }
 
 .timeline_card_name_and_entry {
@@ -684,6 +691,33 @@ this will impact every modal */
 .timeline_card_points_control {
   display: flex;
   justify-content: space-around;
+}
+
+.mini_card {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 5vh;
+}
+
+.mini_card_identifier {
+  display: flex;
+  justify-content: space-around;
+  flex: 0 1 70%;
+}
+
+.mini_card_position {
+  align-self: center;
+}
+
+.mini_card_name {
+  align-self: center;
+  margin: 0;
+}
+
+.mini_card_points {
+  align-self: center;
+  margin-right: 1vw;
 }
 
 #score_entry_centerbar {
