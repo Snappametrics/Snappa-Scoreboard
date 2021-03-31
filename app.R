@@ -67,6 +67,7 @@ tbl_templates = map(tbls, function(table){
 # Define UI for application that draws a histogram
 ui <- dashboardPagePlus(
   collapse_sidebar = TRUE,
+  
   dashboardHeaderPlus(title = tagList(
     # Corner logo
     span(class = "logo-lg", "Snappa Scoreboard"), 
@@ -369,12 +370,17 @@ ui <- dashboardPagePlus(
 ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
-    )
-  ),
-  useShinyjs(),
-  # This is supposed to go at the top tho
-  use_waiter()
+    ),
+    useShinyjs(),
+    extendShinyjs(script = 'js/shinyjs.timeline_card_collapse.js',
+                  functions = c('timeline_card_collapse')),
+    extendShinyjs(script = 'js/shinyjs.timeline_card_expand.js',
+              functions = c('timeline_card_expand')),
+    # This is supposed to go at the top tho
+    use_waiter()
 
+  ),
+ 
 
 
 
@@ -786,15 +792,19 @@ server <- function(input, output, session) {
   })
   
   output$score_entry_centerbar = renderUI({
-    vals$score_timeline %>%
-      pmap(function(...) {
-        entry = tibble(...)
-        color = if_else(entry$team == 'A', 'red', 'blue')
-        div(id = str_c('entry_timeline_bar_', entry$position),
-            tags$style(type = 'text/css', 
-                       str_c('#entry_timeline_bar_', entry$position, ' {background-color:', color, '; height: 31vh; width: 1vw;}'))
-        )
-      })
+    
+    div(id = 'score_entry_centerbar_top')
+    
+    # vals$score_timeline %>%
+    #   pmap(function(...) {
+    #     entry = tibble(...)
+    #     color = if_else(entry$team == 'A', 'red', 'blue')
+    #     div(class = 'entry_timeline_bar_block',
+    #         id = str_c('entry_timeline_bar_', entry$position),
+    #         tags$style(type = 'text/css', 
+    #                    str_c('#entry_timeline_bar_', entry$position, ' {background-color:', color, ';}'))
+    #     )
+    #   })
   })
 
 # This observe event fires whenever the score timeline is updated, creating a series of observers that will help to 
@@ -809,10 +819,30 @@ server <- function(input, output, session) {
     
     insertUI(selector = if_else(position == 1, 
                                 '#score_entry_anchor',
-                                str_c('#timeline_card_', position - 1)),
+                                str_c('#card_holder_', position - 1)),
              where = 'afterEnd',
              ui = timeline_card(vals$score_timeline[position,]),
              immediate = T)
+    
+    # InsertUI is used to generate the blocks of each timeline so that they can be changed in a way
+    # that will persist across re-renders (the old way of doing this by mapping does not allow for
+    # a change of this kind)
+    insertUI(selector = if_else(position == 1,
+                                '#score_entry_centerbar_top',
+                                str_c('#entry_timeline_bar_', position - 1)),
+             where = 'afterEnd',
+             ui =  div(class = 'entry_timeline_bar_block',
+                                id = str_c('entry_timeline_bar_', position),
+                                tags$style(type = 'text/css', 
+                                           str_c('#entry_timeline_bar_', position, 
+                                                 ' {background-color:', 
+                                                 if_else(vals$score_timeline[position,]$team == 'A',
+                                                         'red', 'blue'),
+                                                 ';}'))
+                            ) 
+             )
+    
+    
     
     # timeline_length is used here so that we have a new reactive, which does not update every time the score_timeline change is 
     # invoked. If you don't do this, then the app updates vals$score_timeline$points, which is an update the vals$score_timeline,
@@ -822,15 +852,23 @@ server <- function(input, output, session) {
     output[[str_c('card_points_', position)]] = renderUI({
       timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
     })
+    browser()
     output[[str_c('mini_card_', position)]] = renderUI({
-      timeline_mini_card(vals$score_timeline[position,], timeline_other_stuff())
+      timeline_mini_card(vals$score_timeline[position,],
+                         is_max_position = position == nrow(vals$score_timeline),
+                         timeline_other_stuff())
     })
+    
+   
     
     # mapping doesn't work here because it will add duplicate observers to old cards every time a new card is created.
     # that also causes a runaway
     
     req(vals$timeline_length > vals$max_timeline_length)
-  
+    
+    # This is the realm of things which only need to be done once per element that we see. They
+    # add observers which handle events and thus don't need to be rewritten every time a card
+    # is created, just when a new one is created
     vals$max_timeline_length = vals$timeline_length
     
     observeEvent(input[[paste0('timeline_points_down_', position)]], {
@@ -844,16 +882,27 @@ server <- function(input, output, session) {
                                                      vals$score_timeline$points[position] + 1,
                                                      7)
     })
+    # Handles the transition from full-sized card to mini-card
+    js$timeline_card_collapse(position)
+    # The reverse: handles the transition from mini-card to full-sized card.
+    js$timeline_card_expand(position)
+    
+    
   })
   
   
 # Observer for clearing the timeline
   observeEvent(input$timeline_clear, {
     # Destroy the ui
-    removeUI(selector = '.timeline_card',
+    removeUI(selector = '.timeline_card_holder',
              multiple = TRUE,
              immediate = TRUE)
     vals$score_timeline = vals$score_timeline %>% slice(0)
+    
+    removeUI(selector = '.entry_timeline_bar_block',
+             multiple = T,
+             immediate = T)
+    
   })
 
 # Score Validation --------------------------------------------------------

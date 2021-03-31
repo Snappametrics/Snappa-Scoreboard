@@ -694,10 +694,14 @@ this will impact every modal */
 }
 
 .mini_card {
-  display: flex;
+  display: none;
   flex-direction: row;
   justify-content: space-between;
   height: 5vh;
+}
+
+.mini_card.on_screen {
+  display: flex;
 }
 
 .mini_card_identifier {
@@ -720,11 +724,24 @@ this will impact every modal */
   margin-right: 1vw;
 }
 
+.mini_card_shot_details {
+    flex: 1 0 30%;
+    align-self: center;
+}
+
 #score_entry_centerbar {
   position: absolute;
   top: 10vh;
   left: 50%;
   z-index:1;
+}
+
+.entry_timeline_bar_block {
+   height: 31vh; width: 1vw;
+}
+
+.bar_block_minimized {
+  height: 6vh;
 }
 
 .score_entry_center {

@@ -136,6 +136,7 @@ timeline_card = function(timeline_reactive) {
   # is a matter of speed
   
   div(class = str_c('timeline_card_holder timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
+      id = str_c('card_holder_', position),
     div(class = 'timeline_card',
         id = str_c('timeline_card_', position),
         div(class = 'timeline_card_header',
@@ -184,27 +185,6 @@ timeline_card = function(timeline_reactive) {
         )
         
     ),
-    tags$script(HTML(
-      str_c(
-        '$(document).click(function() {
-          var container = $("#timeline_card_', position, '");
-          if (!container.is(event.target) &&
-              !container.has(event.target).length) {
-                container.hide();
-                $(".mini_card_', position, '").css("display", "flex");
-                $("#entry_timeline_bar_', position, '").css("height", "6vh");
-            }
-          }
-        );'
-      )
-      # str_c('$(.timeline_card_', position, ').focusout(function() {
-      #           $(this).css("display", "hidden");
-      #           $(.mini_card_', position, ').css("display", "flex");
-      #           $(entry_timeline_bar_', position, ').css("height", "6vh");
-      #       }'
-      #       )
-      )
-    ),
     
     uiOutput(str_c('mini_card_', position))
   )
@@ -231,7 +211,7 @@ timeline_card_points = function(position, points, team) {
   )
 }
 
-timeline_mini_card = function(timeline_reactive_row, other_stuff) {
+timeline_mini_card = function(timeline_reactive_row, is_max_position, other_stuff) {
   # This is the "twin" to each timeline card. The mini card is a way of having a short form
   # version of the data which people have entered which appears when focus has left the particular
   # card that the user is scoping out. With this, it is hopefully possible to include elements. This 
@@ -243,19 +223,20 @@ timeline_mini_card = function(timeline_reactive_row, other_stuff) {
   points = timeline_reactive_row$points
   position = timeline_reactive_row$position
   
-  browser()
   # This statement just makes sure that the render doesn't run into errors
   # when the first card is created an other stuff is length 0
   if (nrow(other_stuff) > 0) {
-  
-    div(class = str_c('mini_card mini_card_', if_else(team == 'A', 'team_A', 'team_B')),
+    div(class = str_c('mini_card mini_card_', if_else(team == 'A', 'team_A', 'team_B'), 
+                      # This condition is here so that re-renders do not remove the card from 
+                      # the screen after we do our lovely js transition to the mini-cards
+                      if_else(is_max_position,'', ' on_screen' )),
         div(class = 'mini_card_identifier',
             h4(class = 'mini_card_position', 
               position),
             h3(class = 'mini_card_name', player)
         ),
         div(class = 'mini_card_shot_details',
-            h6(class = 'mini_card_emojis',
+            h5(class = 'mini_card_emojis',
                if_else(other_stuff[position, ]$hand, as.character(emo::ji('hand')), ''),
                if_else(other_stuff[position, ]$head, as.character(emo::ji('brain')), ''),
                if_else(other_stuff[position, ]$foot, as.character(emo::ji('foot')), ''),
