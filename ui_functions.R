@@ -137,7 +137,7 @@ timeline_card = function(timeline_reactive) {
   
   div(class = str_c('timeline_card_holder timeline_card_', if_else(team == 'A', 'team_A', 'team_B')),
       id = str_c('card_holder_', position),
-    div(class = 'timeline_card',
+    div(class = 'timeline_card card_expanded',
         id = str_c('timeline_card_', position),
         div(class = 'timeline_card_header',
             p(class = 'timeline_card_position', 

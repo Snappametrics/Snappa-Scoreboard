@@ -131,6 +131,9 @@ ui <- dashboardPagePlus(
     )
     ),
   dashboardBody(
+    useShinyjs(),
+    extendShinyjs(script = 'js/shinyjs.timeline_card_functions.js',
+                  functions = c('timeline_card_collapse', 'timeline_card_expand')),
     tabItems(
 
       # Player Input ------------------------------------------------------------
@@ -371,11 +374,6 @@ ui <- dashboardPagePlus(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
     ),
-    useShinyjs(),
-    extendShinyjs(script = 'js/shinyjs.timeline_card_collapse.js',
-                  functions = c('timeline_card_collapse')),
-    extendShinyjs(script = 'js/shinyjs.timeline_card_expand.js',
-              functions = c('timeline_card_expand')),
     # This is supposed to go at the top tho
     use_waiter()
 
@@ -651,7 +649,7 @@ server <- function(input, output, session) {
 # Outputs -----------------------------------------------------------------
 
   
-# Outputs and observers for the timeline score check ------------------------------------
+# Timeline score check ------------------------------------
   
   output$team_A_score_check_buttons = renderUI({
     vals$eligible_shooters[['A']] %>%
@@ -859,7 +857,13 @@ server <- function(input, output, session) {
                          timeline_other_stuff())
     })
     
-   
+    # Handles the transition from full-sized card to mini-card
+    seq.int(1, position) %>%
+      map(function(pos) {
+        js$timeline_card_collapse(pos)
+        # The reverse: handles the transition from mini-card to full-sized card.
+        js$timeline_card_expand(position = pos)
+        })
     
     # mapping doesn't work here because it will add duplicate observers to old cards every time a new card is created.
     # that also causes a runaway
@@ -882,10 +886,6 @@ server <- function(input, output, session) {
                                                      vals$score_timeline$points[position] + 1,
                                                      7)
     })
-    # Handles the transition from full-sized card to mini-card
-    js$timeline_card_collapse(position)
-    # The reverse: handles the transition from mini-card to full-sized card.
-    js$timeline_card_expand(position)
     
     
   })
@@ -2629,11 +2629,11 @@ observeEvent(input$resume_no, {
     # timeline that has been created and split the timeline into distinct chunks based on that information
     scoring_events = which(vals$score_timeline$points > 0)
     num_scoring_events = length(scoring_events)
-    browser()
+    
     points_entries = imap_dfr(scoring_events, function(point_position, index) {
       # This creates the individual table elements and enhances them based on
       # which table they belong in 
-      browser()
+      
 
       if(index > 1) {
         first_position = scoring_events[index - 1] + 1
@@ -2709,7 +2709,7 @@ observeEvent(input$resume_no, {
       return(point_entry)
     })
     
-    browser()
+    
     # Now, handle client-side information
     vals$current_scores$team_A = vals$current_scores$team_A + sum(points_entries[points_entries$scoring_team == 'A', ]$points_scored, na.rm = T)
     vals$current_scores$team_B = vals$current_scores$team_B + sum(points_entries[points_entries$scoring_team == 'B', ]$points_scored, na.rm = T)
