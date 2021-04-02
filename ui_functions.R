@@ -193,7 +193,9 @@ timeline_card = function(timeline_reactive) {
 }
 
 timeline_card_points = function(position, points, team) {
-  bootstrap_color = if_else(team == 'A', 'danger', 'primary')
+  ### TODO: Fix the bug here with the colors not being recognized for some reason
+  
+  bootstrap_color = if_else(team == 'A', "danger", "primary")
   
   div(class = 'timeline_card_points_control',
       actionBttn(inputId = str_c('timeline_points_down_', position),

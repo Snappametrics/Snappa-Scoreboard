@@ -856,14 +856,7 @@ server <- function(input, output, session) {
                          is_max_position = position == nrow(vals$score_timeline),
                          timeline_other_stuff())
     })
-    
-    # Handles the transition from full-sized card to mini-card
-    seq.int(1, position) %>%
-      map(function(pos) {
-        js$timeline_card_collapse(pos)
-        # The reverse: handles the transition from mini-card to full-sized card.
-        js$timeline_card_expand(position = pos)
-        })
+   
     
     # mapping doesn't work here because it will add duplicate observers to old cards every time a new card is created.
     # that also causes a runaway
@@ -886,6 +879,11 @@ server <- function(input, output, session) {
                                                      vals$score_timeline$points[position] + 1,
                                                      7)
     })
+    
+    # Handles the transition from full-sized card to mini-card
+    js$timeline_card_collapse(len = position)
+    # The reverse: handles the transition from mini-card to full-sized card.
+    js$timeline_card_expand(len = position)
     
     
   })
