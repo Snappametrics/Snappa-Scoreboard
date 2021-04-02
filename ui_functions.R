@@ -150,7 +150,7 @@ timeline_card = function(timeline_reactive) {
                 'Points'),
               #Without assigning classes to each button and the points display,
               # I add a div to flex this horizontally
-              uiOutput(str_c('card_points_', position))
+            uiOutput(paste0('card_points_', position))
             )
           ),
         div(class = 'other_cool_stuff_array',
@@ -185,7 +185,7 @@ timeline_card = function(timeline_reactive) {
         )
         
     ),
-    
+    #And now the mini card, which is
     uiOutput(str_c('mini_card_', position))
   )
   
@@ -194,9 +194,9 @@ timeline_card = function(timeline_reactive) {
 
 timeline_card_points = function(position, points, team) {
   ### TODO: Fix the bug here with the colors not being recognized for some reason
-  
+
   bootstrap_color = if_else(team == 'A', "danger", "primary")
-  
+
   div(class = 'timeline_card_points_control',
       actionBttn(inputId = str_c('timeline_points_down_', position),
                  icon = icon('arrow-left'),
@@ -213,7 +213,7 @@ timeline_card_points = function(position, points, team) {
   )
 }
 
-timeline_mini_card = function(timeline_reactive_row, is_max_position, other_stuff) {
+timeline_mini_card = function(timeline_reactive_row, other_stuff_row) {
   # This is the "twin" to each timeline card. The mini card is a way of having a short form
   # version of the data which people have entered which appears when focus has left the particular
   # card that the user is scoping out. With this, it is hopefully possible to include elements. This 
@@ -224,14 +224,14 @@ timeline_mini_card = function(timeline_reactive_row, is_max_position, other_stuf
   player = timeline_reactive_row$player_name
   points = timeline_reactive_row$points
   position = timeline_reactive_row$position
-  
   # This statement just makes sure that the render doesn't run into errors
   # when the first card is created an other stuff is length 0
-  if (nrow(other_stuff) > 0) {
-    div(class = str_c('mini_card mini_card_', if_else(team == 'A', 'team_A', 'team_B'), 
+  if (!(any(is.na(other_stuff_row)))) {
+    div(class = str_c('mini_card mini_card_', if_else(team == 'A', 'team_A', 'team_B')
                       # This condition is here so that re-renders do not remove the card from 
                       # the screen after we do our lovely js transition to the mini-cards
-                      if_else(is_max_position,'', ' on_screen' )),
+                      # if_else(is_max_position,'', ' on_screen' )
+                      ),
         div(class = 'mini_card_identifier',
             h4(class = 'mini_card_position', 
               position),
@@ -239,10 +239,10 @@ timeline_mini_card = function(timeline_reactive_row, is_max_position, other_stuf
         ),
         div(class = 'mini_card_shot_details',
             h5(class = 'mini_card_emojis',
-               if_else(other_stuff[position, ]$hand, as.character(emo::ji('hand')), ''),
-               if_else(other_stuff[position, ]$head, as.character(emo::ji('brain')), ''),
-               if_else(other_stuff[position, ]$foot, as.character(emo::ji('foot')), ''),
-               if_else(other_stuff[position, ]$clink, as.character(emo::ji('ear')), '')
+               if_else(other_stuff_row$hand, as.character(emo::ji('hand')), ''),
+               if_else(other_stuff_row$head, as.character(emo::ji('brain')), ''),
+               if_else(other_stuff_row$foot, as.character(emo::ji('foot')), ''),
+               if_else(other_stuff_row$clink, as.character(emo::ji('ear')), '')
             )
         ),
         div(class = 'mini_card_points',

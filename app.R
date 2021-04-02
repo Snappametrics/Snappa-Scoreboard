@@ -573,7 +573,11 @@ server <- function(input, output, session) {
     score_timeline = tibble(position = NA_integer_, 
                             player_name = NA_character_,
                             team = NA_character_,
-                            points = NA_integer_) %>% 
+                            points = NA_integer_,
+                            hand = F,
+                            head = F,
+                            foot = F,
+                            clink =F) %>%
       slice(0),
     
     timeline_length = c(NULL),
@@ -700,9 +704,10 @@ server <- function(input, output, session) {
       add_row(position = nrow(vals$score_timeline) + 1, 
                   player_name = vals$eligible_shooters[['A']][1], 
                   team = 'A',
-                  points = 0
+                  points = 0,
       )
     vals$timeline_length = length(vals$score_timeline$position)
+    
   })
   
   observeEvent(input[["timeline_add_A2"]], {
@@ -786,7 +791,16 @@ server <- function(input, output, session) {
 
 
   output$score_entry_center = renderUI({
-    div(id = 'score_entry_anchor')
+   seq.int(1, vals$timeline_length) %>% map(function(num) {
+      entry = isolate(vals$score_timeline[num,])
+      timeline_card(entry)
+      
+      # output[[str_c('mini_card_', entry$position)]] = renderUI({
+      #   timeline_mini_card(vals$score_timeline[entry$position,],
+      #                      is_max_position = entry$position == nrow(vals$score_timeline),
+      #                      timeline_other_stuff())
+      # })
+    })
   })
   
   output$score_entry_centerbar = renderUI({
@@ -815,12 +829,12 @@ server <- function(input, output, session) {
     # this chunk
     position = vals$timeline_length
     
-    insertUI(selector = if_else(position == 1, 
-                                '#score_entry_anchor',
-                                str_c('#card_holder_', position - 1)),
-             where = 'afterEnd',
-             ui = timeline_card(vals$score_timeline[position,]),
-             immediate = T)
+    # insertUI(selector = if_else(position == 1, 
+    #                             '#score_entry_anchor',
+    #                             str_c('#card_holder_', position - 1)),
+    #          where = 'afterEnd',
+    #          ui = timeline_card(vals$score_timeline[position,]),
+    #          immediate = T)
     
     # InsertUI is used to generate the blocks of each timeline so that they can be changed in a way
     # that will persist across re-renders (the old way of doing this by mapping does not allow for
@@ -850,13 +864,13 @@ server <- function(input, output, session) {
     output[[str_c('card_points_', position)]] = renderUI({
       timeline_card_points(position, vals$score_timeline$points[position], vals$score_timeline$team[position])
     })
-    browser()
+
     output[[str_c('mini_card_', position)]] = renderUI({
+      browser()
       timeline_mini_card(vals$score_timeline[position,],
-                         is_max_position = position == nrow(vals$score_timeline),
-                         timeline_other_stuff())
+                         timeline_other_stuff()[position,])
     })
-   
+
     
     # mapping doesn't work here because it will add duplicate observers to old cards every time a new card is created.
     # that also causes a runaway
@@ -867,6 +881,11 @@ server <- function(input, output, session) {
     # add observers which handle events and thus don't need to be rewritten every time a card
     # is created, just when a new one is created
     vals$max_timeline_length = vals$timeline_length
+    
+    
+    observeEvent(input[[paste0('hand_', position)]] == T, {
+      vals$score_timeline$hand[position] = T
+    })
     
     observeEvent(input[[paste0('timeline_points_down_', position)]], {
       vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
