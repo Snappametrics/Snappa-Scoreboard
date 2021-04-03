@@ -213,7 +213,7 @@ timeline_card_points = function(position, points, team) {
   )
 }
 
-timeline_mini_card = function(timeline_reactive_row, other_stuff_row) {
+timeline_mini_card = function(timeline_reactive_row, render, other_stuff_row) {
   # This is the "twin" to each timeline card. The mini card is a way of having a short form
   # version of the data which people have entered which appears when focus has left the particular
   # card that the user is scoping out. With this, it is hopefully possible to include elements. This 
@@ -227,10 +227,10 @@ timeline_mini_card = function(timeline_reactive_row, other_stuff_row) {
   # This statement just makes sure that the render doesn't run into errors
   # when the first card is created an other stuff is length 0
   if (!(any(is.na(other_stuff_row)))) {
-    div(class = str_c('mini_card mini_card_', if_else(team == 'A', 'team_A', 'team_B')
+    div(class = str_c('mini_card mini_card_', if_else(team == 'A', 'team_A', 'team_B'),
                       # This condition is here so that re-renders do not remove the card from 
                       # the screen after we do our lovely js transition to the mini-cards
-                      # if_else(is_max_position,'', ' on_screen' )
+                      if_else(render, ' on_screen', '' )
                       ),
         div(class = 'mini_card_identifier',
             h4(class = 'mini_card_position', 

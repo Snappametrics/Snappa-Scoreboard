@@ -586,7 +586,8 @@ server <- function(input, output, session) {
     # it doesn't add an additional observer on the same button.  
     max_timeline_length = 0,
     
-    rally_id = 0
+    rally_id = 0,
+    should_mini_card_render = c(F)
   )
   
   
@@ -648,6 +649,7 @@ server <- function(input, output, session) {
           clink = input[[str_c('clink_', position)]])
       })
   })
+  
   
 
 # Outputs -----------------------------------------------------------------
@@ -867,7 +869,8 @@ server <- function(input, output, session) {
 
     output[[str_c('mini_card_', position)]] = renderUI({
       browser()
-      timeline_mini_card(vals$score_timeline[position,],
+      timeline_mini_card(isolate(vals$score_timeline[position,]),
+                         render = vals$should_mini_card_render[position],
                          timeline_other_stuff()[position,])
     })
 
@@ -882,21 +885,22 @@ server <- function(input, output, session) {
     # is created, just when a new one is created
     vals$max_timeline_length = vals$timeline_length
     
-    
-    observeEvent(input[[paste0('hand_', position)]] == T, {
-      vals$score_timeline$hand[position] = T
-    })
-    
     observeEvent(input[[paste0('timeline_points_down_', position)]], {
       vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
                                                      vals$score_timeline$points[position] - 1,
                                                      0)
+      render_vector = vector(mode = "logical", length = vals$timeline_length)
+      render_vector[-position] = TRUE
+      vals$should_mini_card_render = render_vector
     })
     
     observeEvent(input[[paste0('timeline_points_up_', position)]], {
       vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] + 1 <= 7, 
                                                      vals$score_timeline$points[position] + 1,
                                                      7)
+      render_vector = vector(mode = "logical", length = vals$timeline_length)
+      render_vector[-position] = TRUE
+      vals$should_mini_card_render = render_vector
     })
     
     # Handles the transition from full-sized card to mini-card
