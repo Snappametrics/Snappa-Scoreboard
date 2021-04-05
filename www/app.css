@@ -609,6 +609,7 @@ this will impact every modal */
   height: 30vh;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
   margin-bottom: 1vh;
+  border-radius: 15px;
 }
 
 
@@ -617,6 +618,7 @@ this will impact every modal */
   width: 25vw;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
   margin-bottom: 1vh;
+  border-radius: 15px;
 }
 
 .timeline_card_team_A, .mini_card_team_A {
@@ -644,6 +646,8 @@ this will impact every modal */
   justify-content: flex-start;
   align-items: center;
   height: 5vh;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
   
 }
 

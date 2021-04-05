@@ -140,7 +140,7 @@ timeline_card = function(timeline_reactive) {
     div(class = 'timeline_card card_expanded',
         id = str_c('timeline_card_', position),
         div(class = 'timeline_card_header',
-            p(class = 'timeline_card_position', 
+            p(class = 'timeline_card_posfition', 
               position)
         ),
         div(class = 'timeline_card_name_and_entry',
@@ -184,7 +184,7 @@ timeline_card = function(timeline_reactive) {
             )
         )
         
-    ),
+    ), 
     
     uiOutput(str_c('mini_card_', position))
   )

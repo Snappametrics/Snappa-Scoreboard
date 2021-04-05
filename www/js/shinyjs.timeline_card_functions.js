@@ -70,7 +70,7 @@ shinyjs.timeline_card_expand = function(params) {
   // with the addition of each card. This should unbind all the previous click handlers and add fresh
   // ones with each call to the function
   if (len > 1) {
-    for (let i = 1; i < len; i++) {
+    for (let i = 1; i <= len; i++) {
       $('#mini_card_' + i).off('mousedown.' + i);
       }
   }
