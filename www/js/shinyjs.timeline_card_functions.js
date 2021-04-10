@@ -76,7 +76,15 @@ shinyjs.timeline_card_expand = function(params) {
   }
   for (let i = 1; i < len + 1; i++) { 
     $('#mini_card_' + i).on('mousedown.' + i, function() {
-      expand(i);
+            $('#mini_card_' + i + ' .mini_card').removeClass('on_screen');
+      $('#timeline_card_' + i).css({'display' : 'block', 'overflow-y': 'visible'});
+      $('#timeline_card_' + i).animate({'height': '30vh'}, 450, function() {
+        $('#timeline_card_' + i).css('height', '30vh');
+        $('#timeline_card_' + i).css('display', 'block');
+      });
+      $("#entry_timeline_bar_" + i).animate({'height': '31vh'}, 450, function() {
+        $("#entry_timeline_bar_" + i).removeClass('bar_block_minimized');
+      });
     });
   }
 };

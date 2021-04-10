@@ -710,6 +710,8 @@ server <- function(input, output, session) {
       )
     vals$timeline_length = length(vals$score_timeline$position)
     
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
+    
   })
   
   observeEvent(input[["timeline_add_A2"]], {
@@ -720,6 +722,8 @@ server <- function(input, output, session) {
                   team = 'A',
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
+    
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
   })
   
   observeEvent(input[["timeline_add_A3"]], {
@@ -730,6 +734,8 @@ server <- function(input, output, session) {
                   team = 'A',
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
+    
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
   })
   
   observeEvent(input[["timeline_add_A4"]], {
@@ -740,6 +746,8 @@ server <- function(input, output, session) {
                   team = 'A',
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
+    
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
   })
   
   
@@ -751,6 +759,8 @@ server <- function(input, output, session) {
                   team = 'B',
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
+    
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
   })
   
   observeEvent(input[["timeline_add_B2"]], {
@@ -761,6 +771,8 @@ server <- function(input, output, session) {
                   team = 'B',
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
+    
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
   })
   
   observeEvent(input[["timeline_add_B3"]], {
@@ -771,6 +783,8 @@ server <- function(input, output, session) {
                   team = 'B',
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
+    
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
   })
   
   observeEvent(input[["timeline_add_B4"]], {
@@ -781,6 +795,8 @@ server <- function(input, output, session) {
                   team = 'B',
                   points = 0)
     vals$timeline_length = length(vals$score_timeline$position)
+    
+    vals$should_mini_card_render = vector(mode = "logical", length = vals$timeline_length)
   })
   
   observeEvent(input$timeline_remove_card, {
@@ -793,7 +809,7 @@ server <- function(input, output, session) {
 
 
   output$score_entry_center = renderUI({
-   seq.int(1, vals$timeline_length) %>% map(function(num) {
+   seq.int(1, if_else(vals$timeline_length > 0, vals$timeline_length, 1L)) %>% map(function(num) {
       entry = isolate(vals$score_timeline[num,])
       timeline_card(entry)
       
@@ -879,7 +895,6 @@ server <- function(input, output, session) {
     # that also causes a runaway
     
     req(vals$timeline_length > vals$max_timeline_length)
-    
     # This is the realm of things which only need to be done once per element that we see. They
     # add observers which handle events and thus don't need to be rewritten every time a card
     # is created, just when a new one is created
@@ -889,9 +904,11 @@ server <- function(input, output, session) {
       vals$score_timeline$points[position] = if_else(vals$score_timeline$points[position] - 1 >= 0, 
                                                      vals$score_timeline$points[position] - 1,
                                                      0)
+
       render_vector = vector(mode = "logical", length = vals$timeline_length)
       render_vector[-position] = TRUE
       vals$should_mini_card_render = render_vector
+      
     })
     
     observeEvent(input[[paste0('timeline_points_up_', position)]], {
