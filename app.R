@@ -2175,6 +2175,7 @@ observeEvent(input$resume_no, {
   # })
   
   output$friendly_firer = renderUI({
+    req(input$casualty_type == "Team sink")
     team_chemistry_issues = snappaneers()[which(snappaneers()$player_name == input$tifu_casualty), "team", drop=T]
     
     
