@@ -2089,28 +2089,20 @@ observeEvent(input$resume_no, {
 
 # Score notifications -----------------------------------------------------
   
+  observe({
+    req(input$start_game)
+    validate(
+      need(vctrs::vec_in(vals$current_scores, 
+                         haystack = casualty_rules[,1:2]), label = "casualty score"),
+      need(!any(flatten_lgl(vals$cooldowns())), label = "cooldowns")
+    )
+    casualty_popup(session,
+                   score = vals$current_scores,
+                   rules = casualty_rules,
+                   players = snappaneers()$player_name)
+  }, autoDestroy = F)
   
 
-  
-  observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
-               {
-                 validate(
-                   need( 
-                     vctrs::vec_in(vals$current_scores, 
-                                   haystack = casualty_rules[,1:2]), label = "casualty"),
-                   # Are any of the cooldowns active?
-                   need(!any(flatten_lgl(vals$cooldowns())), label = "Cooldowns")
-                 )
-
-                 casualty_popup(session,
-                                score = vals$current_scores, 
-                                rules = casualty_rules, 
-                                players = snappaneers()$player_name)
-
-                 
-                 
-               }, ignoreInit = T)
-  
   observeEvent(input$casualty, {
     # Convert player name to ID
     casualty = select(snappaneers(), starts_with("player")) %>% 
