@@ -195,8 +195,17 @@ tifu_casualty_popup <- function(players) {
               fluidRow(
               
                 column(8, style = "text-align: left;",
-                       # to whom?
-                       uiOutput("friendly_firer"),
+                       # Casualty
+                       radioGroupButtons(
+                         inputId = "tifu_casualty",
+                         label = "Who was the casualty?",
+                         choices = players,
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-beer"))
+                       ),
+                       # Shooter
+                       uiOutput("friendly_firer")
                        # radioGroupButtons(
                        #   inputId = "tifu_accused",
                        #   label = "Who was the shooter?",
@@ -206,14 +215,7 @@ tifu_casualty_popup <- function(players) {
                        #     yes = tags$i(class = "fa fa-trash"))
                        # ),
                        # to whom?
-                       radioGroupButtons(
-                         inputId = "tifu_casualty",
-                         label = "Who was the casualty?",
-                         choices = players,
-                         size = "lg",
-                         checkIcon = list(
-                           yes = tags$i(class = "fa fa-beer"))
-                       )
+                       
                 ),
                 
                 column(4, style = "text-align:left;",
