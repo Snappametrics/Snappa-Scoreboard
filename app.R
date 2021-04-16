@@ -2221,8 +2221,11 @@ observeEvent(input$resume_no, {
     
     removeModal()
     
-    showNotification(str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
-                                input$tifu_casualty), duration = 7, closeButton = F)
+    showNotification(if_else(input$casualty_type == "Team sink", 
+                             str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
+                                   players_tbl[match(as.integer(input$tifu_casualty), players_tbl$player_id), 2], "!"),
+                             "The good news is that you only get 1 peasant point!"
+                             ), duration = 7, closeButton = F)
   })
   
 
