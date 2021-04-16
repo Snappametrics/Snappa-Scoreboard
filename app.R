@@ -534,7 +534,8 @@ server <- function(input, output, session) {
       game_id  = numeric(), 
       score_id = numeric(), 
       player_id = numeric(), 
-      casualty_type = character()
+      casualty_type = character(),
+      reported_player = character()
       ),
     
     
@@ -2117,7 +2118,8 @@ observeEvent(input$resume_no, {
       game_id = vals$game_id,
       score_id = vals$score_id,
       player_id = casualty,
-      casualty_type = type
+      casualty_type = type,
+      reported_player = NA_character_
     )
     # Add to casualties reactive
     vals$casualties = add_row(vals$casualties, new_casualty)
@@ -2146,7 +2148,8 @@ observeEvent(input$resume_no, {
       game_id = vals$game_id,
       score_id = vals$score_id,
       player_id = casualty,
-      casualty_type = "Sunk"
+      casualty_type = "Sunk",
+      reported_player = NA_character_
     )
     
     # Add to casualties reactive
