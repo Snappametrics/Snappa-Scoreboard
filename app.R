@@ -2167,7 +2167,7 @@ observeEvent(input$resume_no, {
   
   observeEvent(input$tifu, {
     showModal(
-      tifu_casualty_popup(players = snappaneers()$player_name)
+      tifu_casualty_popup(players = deframe(snappaneers()[, c("player_name", "player_id")]))
     )
     
   })
