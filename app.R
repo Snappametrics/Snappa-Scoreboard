@@ -2179,33 +2179,34 @@ observeEvent(input$resume_no, {
   
   output$friendly_firer = renderUI({
     req(input$casualty_type == "Team sink")
-    team_chemistry_issues = snappaneers()[which(snappaneers()$player_name == input$tifu_casualty), "team", drop=T]
+    team_chemistry_issues = snappaneers()[which(snappaneers()$player_id == input$tifu_casualty), "team", drop=T]
     
     
     radioGroupButtons(
       inputId = "tifu_accused",
       label = "Who was the shooter?",
-      choices = snappaneers()[snappaneers()$team == team_chemistry_issues, "player_name", drop=T],
+      choices = deframe(snappaneers()[snappaneers()$team == team_chemistry_issues, c("player_name", "player_id")]),
       size = "lg",
       checkIcon = list(
         yes = tags$i(class = "fa fa-trash", 
                      style = paste("color:", if_else(team_chemistry_issues == "A", "#e26a6a", "#2574a9"))))
     )
+    
+    
   })
   
+
+  
+  
   observeEvent(input$tifu_confirm, {
-    # Convert player name to ID
-    casualty = select(snappaneers(), starts_with("player")) %>% 
-      deframe() %>% 
-      pluck(input$tifu_casualty)
-    
     # Insert casualty details
     new_casualty = tibble(
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
       score_id = NA_integer_,
-      player_id = casualty,
-      casualty_type = input$casualty_type
+      player_id = as.integer(input$tifu_casualty),
+      casualty_type = input$casualty_type,
+      reported_player = if_else(input$casualty_type == "Team sink", as.integer(input$tifu_accused), NA_integer_)
     )
     # Add to casualties reactive
     vals$casualties = add_row(vals$casualties, new_casualty)
