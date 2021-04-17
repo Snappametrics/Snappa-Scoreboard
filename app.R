@@ -2179,13 +2179,15 @@ observeEvent(input$resume_no, {
   
   output$friendly_firer = renderUI({
     req(input$casualty_type == "Team sink")
-    team_chemistry_issues = snappaneers()[which(snappaneers()$player_id == input$tifu_casualty), "team", drop=T]
-    
+    team_chemistry_issues = snappaneers()[which(snappaneers()$player_id == as.integer(input$tifu_casualty)), "team", drop=T]
     
     radioGroupButtons(
       inputId = "tifu_accused",
       label = "Who was the shooter?",
-      choices = deframe(snappaneers()[snappaneers()$team == team_chemistry_issues, c("player_name", "player_id")]),
+      choices = deframe(
+        snappaneers()[snappaneers()$team == team_chemistry_issues & snappaneers()$player_id != as.integer(input$tifu_casualty), 
+                      c("player_name", "player_id")]
+      ),
       size = "lg",
       checkIcon = list(
         yes = tags$i(class = "fa fa-trash", 
