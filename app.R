@@ -51,12 +51,15 @@ casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text,
 
 # DB Tables ---------------------------------------------------------------
 
-
 # Pull db tables for tibble templates
-players_tbl = dbGetQuery(con, "SELECT * FROM players")
-scores_tbl = dbGetQuery(con, "SELECT * FROM scores") 
-player_stats_tbl = dbGetQuery(con, "SELECT * FROM player_stats")
-game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
+# players_tbl = dbGetQuery(con, "SELECT * FROM players")
+# scores_tbl = dbGetQuery(con, "SELECT * FROM scores") 
+# player_stats_tbl = dbGetQuery(con, "SELECT * FROM player_stats")
+# game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
+players_tbl = tbl(con, "players")
+# scores_tbl = tbl(con, "scores") 
+# player_stats_tbl = tbl(con, "player_stats")
+# game_stats_tbl = tbl(con, "game_stats") 
 
 # Makea list of table templates
 tbls = c("players", "scores", "player_stats", "game_stats", "score_progression", "career_stats")
