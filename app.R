@@ -3222,9 +3222,9 @@ observeEvent(input$resume_no, {
 }
 
 # Disconnect from the server at the end  
-onStop(function() {
-  dbDisconnect(conn = con)
-})
+# onStop(function() {
+#   dbDisconnect(conn = con)
+# })
 
 # Run the application 
 shinyApp(ui = ui, server = server)
