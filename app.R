@@ -2151,9 +2151,9 @@ observeEvent(input$resume_no, {
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
       score_id = vals$score_id,
-      player_id = casualty,
+      player_id = as.integer(casualty),
       casualty_type = type,
-      reported_player = NA_character_
+      reported_player = NA_integer_
     )
     # Add to casualties reactive
     vals$casualties = add_row(vals$casualties, new_casualty)
@@ -2181,9 +2181,9 @@ observeEvent(input$resume_no, {
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
       score_id = vals$score_id,
-      player_id = casualty,
+      player_id = as.integer(casualty),
       casualty_type = "Sunk",
-      reported_player = NA_character_
+      reported_player = NA_integer_
     )
     
     # Add to casualties reactive
