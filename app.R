@@ -152,7 +152,7 @@ ui <- dashboardPagePlus(
       tabItem(tabName = "player_input",
               fluidRow(
                 team_input_ui("A", 
-                              player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]),
+                              player_choices = pull(tbl(con, "thirstiest_players"), "player_name")),
                 
                 # Column 2 - empty
                 column(4,  align = "center",
@@ -182,7 +182,7 @@ ui <- dashboardPagePlus(
                 
                 # Column 3 - Team B
                 team_input_ui("B", 
-                              player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1])
+                              player_choices = pull(tbl(con, "thirstiest_players"), "player_name"))
               )
               ),
 
@@ -272,11 +272,14 @@ ui <- dashboardPagePlus(
                 boxPlus(width = 12,
                         # Player Select
                         selectInput("player_select", label = "Player", selectize = F,
-                                    choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
-                                                            FROM players AS p
-                                                            INNER JOIN player_stats AS ps
-                                                            ON p.player_id = ps.player_id")) %>%
-                                      deframe() %>% sample())
+                                    # choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
+                                    #                         FROM players AS p
+                                    #                         INNER JOIN player_stats AS ps
+                                    #                         ON p.player_id = ps.player_id")) %>%
+                                    tbl(con, "players") %>% 
+                                      inner_join(tbl(con, "player_stats"), by = "player_id") %>% 
+                                      distinct(player_name, player_id) %>% 
+                                      collect() %>% deframe() %>% sample())
                 )
               )
               ,
@@ -495,7 +498,7 @@ server <- function(input, output, session) {
   vals <- reactiveValues(
     # Initialize new game, player, and score IDs, as well as the shot number
     game_id = NULL,
-    new_player_id = sum(dbGetQuery(con, "SELECT MAX(player_id) FROM players"),1),
+    new_player_id = max(pull(tbl(con, "players"),"player_id"))+1L,
     score_id = as.integer(0),
     shot_num = as.integer(1),
     
@@ -509,20 +512,28 @@ server <- function(input, output, session) {
     db_tbls = reactivePoll(
       intervalMillis = 1000*120,
       session = session,
-      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
+      # checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
+      checkFunc = function() { tbl(con, "game_stats") %>% 
+          filter(game_complete) %>% tally() %>% pull()},
       valueFunc = function() {
         set_names(
           map(tbls,
-            function(table){
-              dbGetQuery(con,
-                         sql(
-                           str_c("SELECT * FROM ", table,
-                                 if_else(table %in% c("scores", "player_stats", "game_stats"),
-                                         " WHERE game_id IN (SELECT game_id FROM game_stats WHERE game_complete is true)",
-                                         "")
-                           )
-                         )
-              )
+              function(table){
+                tbl(con, table) %>% 
+                  when(table %in% c("scores", "player_stats", "game_stats") ~ inner_join(., 
+                                                                                         select(filter(tbl(con, "game_stats"), game_complete), game_id), 
+                                                                                         by = "game_id"),
+                       ~ .)
+                
+              # dbGetQuery(con,
+              #            sql(
+              #              str_c("SELECT * FROM ", table,
+              #                    if_else(table %in% c("scores", "player_stats", "game_stats"),
+              #                            " WHERE game_id IN (SELECT game_id FROM game_stats WHERE game_complete is true)",
+              #                            "")
+              #              )
+              #            )
+              # )
             }),
           tbls)
       }
@@ -530,8 +541,10 @@ server <- function(input, output, session) {
     recent_scores = reactivePoll(
       intervalMillis = 100*30,
       session = session,
-      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
-      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
+      # checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
+      checkFunc = function() {tbl(con, "recent_scores") %>% 
+          tally() %>% pull()},
+      valueFunc = function() {tbl(con, "recent_scores")}
     ),
     casualties = tibble(
       casualty_id = numeric(), 
@@ -539,7 +552,7 @@ server <- function(input, output, session) {
       score_id = numeric(), 
       player_id = numeric(), 
       casualty_type = character(),
-      reported_player = character()
+      reported_player = integer()
       ),
     
     
@@ -620,7 +633,8 @@ server <- function(input, output, session) {
     ) %>% 
       # Remove empty player inputs
       filter(player_name != "") %>% 
-      left_join(vals$db_tbls()[["players"]], by = "player_name") %>% 
+      # left_join(vals$db_tbls()[["players"]], by = "player_name") %>% 
+      left_join(collect(vals$db_tbls()[["players"]]), by = "player_name") %>% 
       # Add shot count
       add_shot_count(shot_num = vals$shot_num)
   })
@@ -815,6 +829,7 @@ server <- function(input, output, session) {
 
     # Take top 5 recent scores
     head(vals$recent_scores(), n = 5) %>% 
+      collect() %>% 
       reactable(compact = T, 
                 defaultColDef = colDef(name = "", style = list(padding = "5px 0px"),
                                        # Hide header
@@ -872,7 +887,8 @@ server <- function(input, output, session) {
   
   output$summary_plot = renderPlot({
     game_summary_plot(player_stats = vals$player_stats_db,
-                      players = vals$db_tbls()[["players"]],
+                      # players = vals$db_tbls()[["players"]],
+                      players = collect(vals$db_tbls()[["players"]]),
                       scores = vals$scores_db,
                       game = vals$game_id)
   })
@@ -885,11 +901,13 @@ server <- function(input, output, session) {
 
   output$team_a_summary = render_gt({
     make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$db_tbls()[["player_stats"]],
+                       # player_stats = vals$db_tbls()[["player_stats"]],
+                       player_stats = collect(vals$db_tbls()[["player_stats"]]),
                        neers = snappaneers(), 
                        team_name = "A", 
                        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$db_tbls()[["scores"]]) %>%
+                       # past_scores = vals$db_tbls()[["scores"]]) %>%
+                       past_scores = collect(vals$db_tbls()[["scores"]])) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
                        team = "A",
@@ -898,11 +916,13 @@ server <- function(input, output, session) {
   
   output$team_b_summary = render_gt({
     make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$db_tbls()[["player_stats"]],
+                       # player_stats = vals$db_tbls()[["player_stats"]],
+                       player_stats = collect(vals$db_tbls()[["player_stats"]]),
                        neers = snappaneers(), 
                        team_name = "B", 
                        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$db_tbls()[["scores"]]) %>%
+                       # past_scores = vals$db_tbls()[["scores"]]) %>%
+                       past_scores = collect(vals$db_tbls()[["scores"]])) %>%
       team_summary_tab(.,
                        game_over = vals$game_over, 
                        team = "B",
@@ -921,7 +941,8 @@ server <- function(input, output, session) {
 
   output$leaderboard_rt = renderReactable({
     # Create the rank column, arrange the data, and select the columns
-    aggregated_data = vals$db_tbls()[["career_stats"]]
+    # aggregated_data = vals$db_tbls()[["career_stats"]]
+    aggregated_data = collect(vals$db_tbls()[["career_stats"]])
     
     # Separate out those with under 5 games
     dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
@@ -932,7 +953,9 @@ server <- function(input, output, session) {
   
 
   output$scoring_heatmap = renderPlot({
-    score_heatmap(vals$db_tbls()[["score_progression"]])
+    # score_heatmap(vals$db_tbls()[["score_progression"]])
+    score_heatmap(collect(vals$db_tbls()[["score_progression"]]))
+    
   })
   
   output$heatmap_info <- renderUI({
@@ -940,7 +963,8 @@ server <- function(input, output, session) {
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
-    freq = filter(vals$db_tbls()[["score_progression"]], score_a == y, score_b == x) %>% 
+    # freq = filter(vals$db_tbls()[["score_progression"]], score_a == y, score_b == x) %>% 
+    freq = filter(collect(vals$db_tbls()[["score_progression"]]), score_a == y, score_b == x) %>% 
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
@@ -955,8 +979,10 @@ server <- function(input, output, session) {
     inner_join(vals$db_tbls()[["players"]], 
                vals$db_tbls()[["player_stats"]], 
                by = "player_id") %>%
-      inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
-                 by = "game_id") %>% 
+      # inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
+      #            by = "game_id") %>% 
+      inner_join(select(vals$db_tbls()[["game_stats"]], game_id, points_a, points_b), by = "game_id") %>% 
+      collect() %>% 
       # Identify which games were won
       mutate(winning = if_else(points_a > points_b, "A", "B"),
              won_game = (team == winning))
@@ -968,7 +994,8 @@ server <- function(input, output, session) {
   
   # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
-    recent_games = filter(vals$db_tbls()[["player_stats"]], player_id == input$player_select) %>% 
+    # recent_games = filter(vals$db_tbls()[["player_stats"]], player_id == input$player_select) %>% 
+    recent_games = filter(collect(vals$db_tbls()[["player_stats"]]), player_id == !!input$player_select) %>% 
       mutate(avg_points = mean(!!sym(input$stat_select)),
              max_points = max(!!sym(input$stat_select))) %>% 
       when(input$sample_select != "All" ~ (.) %>% 
@@ -1046,7 +1073,8 @@ server <- function(input, output, session) {
   })
   
   output$game_history_title = renderText({
-    str_c(players_tbl[players_tbl$player_id == input$player_select, "player_name"], 
+    # str_c(players_tbl[players_tbl$player_id == input$player_select, "player_name"], 
+    str_c(filter(players_tbl, player_id == 1) %>% pull(player_name),
           "'s Game History")
   })
   
@@ -1377,7 +1405,7 @@ server <- function(input, output, session) {
     markov_simulate_games(team_transition_names()$team_A, 
                           team_transition_names()$team_B,
                           iterations = vals$markov_vals$iterations ,
-                          points_to_win = score_to(),
+                          points_to_win = input$score_to,
                           transitions_list = readRDS("markov/transition_probabilities.Rdata"),
                           current_scores_A = vals$markov_vals$A_score,
                           current_scores_B = vals$markov_vals$B_score)
@@ -1432,7 +1460,7 @@ observeEvent(input$simulation_go, {
                           "A_score" = input$simulation_scores_A,
                           "B_score" = input$simulation_scores_B)
 
-} )
+}, ignoreInit = T )
 #Output to make the team score inputs reactive
 output$simulation_score_A = renderUI({
   numericInput("simulation_scores_A", label = "Team A Starting Score",
@@ -1761,7 +1789,8 @@ observe({
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
-      if(!(die_thrower %in% vals$db_tbls()[["players"]]$player_name)){
+      # if(!(die_thrower %in% vals$db_tbls()[["players"]]$player_name)){
+      if(!(die_thrower %in% pull(vals$db_tbls()[["players"]], player_name))){
         
         # Update the players database right here with the player name
         
@@ -2230,7 +2259,8 @@ observeEvent(input$resume_no, {
     
     showNotification(if_else(input$casualty_type == "Team sink", 
                              str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
-                                   players_tbl[match(as.integer(input$tifu_casualty), players_tbl$player_id), 2], "!"),
+                                   # players_tbl[match(as.integer(input$tifu_casualty), players_tbl$player_id), 2], "!"),
+                                   filter(players_tbl, player_id == as.integer(input$tifu_casualty)) %>% pull(player_name), "!"),
                              "The good news is that you only get 1 peasant point!"
                              ), duration = 7, closeButton = F)
   })
@@ -2508,7 +2538,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == !!input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
       shooting_team_lgl = all(str_detect(round_num(), "A"), scorers_team == "A") # Are they on team A & did they score for team A?
@@ -2625,7 +2655,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == !!input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
