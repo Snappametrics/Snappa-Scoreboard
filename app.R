@@ -11,6 +11,7 @@
 
 library(extrafont)
 library(DBI)
+library(pool)
 library(RPostgres)
 library(tidyverse)
 library(lubridate)
