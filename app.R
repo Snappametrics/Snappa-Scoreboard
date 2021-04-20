@@ -1948,7 +1948,7 @@ observe({
     
     sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
 
-  }, once = T, ignoreNULL = T)
+  }, once = T, ignoreInit = T)
   
 
 
@@ -2284,7 +2284,7 @@ observeEvent(input$resume_no, {
     val <- paste0("#",getInputs("extra_player_A3"))
     add_player_input("start", val, "A", 3, current_choices(), session)
     
-  })
+  }, ignoreInit = T)
   
   # Remove A3
   #   - Insert add new player action button
@@ -2299,7 +2299,7 @@ observeEvent(input$resume_no, {
     vals$want_A3 = F
     vals$want_A4 = F
     
-  })
+  }, ignoreInit = T)
   
   
   # New Player A4
@@ -2314,7 +2314,7 @@ observeEvent(input$resume_no, {
     
     add_player_input("start", vals, "A", 4, current_choices(), session)
     
-  })
+  }, ignoreInit = T)
   
   # Remove A4
   #   - Insert add new player action button
@@ -2324,7 +2324,7 @@ observeEvent(input$resume_no, {
     
     vals$want_A4 = F
     
-  })  
+  }, ignoreInit = T)  
   
   
   # New Player B3
@@ -2339,7 +2339,7 @@ observeEvent(input$resume_no, {
     vals <- paste0("#",getInputs("extra_player_B3"))
     
     add_player_input("start", vals, "B", 3, current_choices(), session)
-  })
+  }, ignoreInit = T)
 
   # Remove B3
   #   - Insert add new player action button
@@ -2354,7 +2354,7 @@ observeEvent(input$resume_no, {
     vals$want_B3 = F
     vals$want_B4 = F
     
-  })
+  }, ignoreInit = T)
   
   # New Player B4
   #   - Add B4 text input
@@ -2367,7 +2367,7 @@ observeEvent(input$resume_no, {
     vals <- paste0("#",getInputs("extra_player_B4"))
     
     add_player_input("start", vals, "B", 4, current_choices(), session)
-  })
+  }, ignoreInit = T)
   
 
   # Remove B4
@@ -2379,7 +2379,7 @@ observeEvent(input$resume_no, {
     # empty slot in active_player_names
     vals$want_B4 = F
 
-  })  
+  }, ignoreInit = T)  
   
   
 
@@ -2515,7 +2515,7 @@ observeEvent(input$resume_no, {
       score_check(team = "A", 
                   players = eligible_shooters,
                   round = round_num()))
-  })
+  }, ignoreInit = T, ignoreNULL = T)
   
   # Team A presses score button
   observeEvent(input$ok_A, {
@@ -2523,7 +2523,6 @@ observeEvent(input$resume_no, {
     # set score
     score = as.integer(input$score)
     vals$score <- score
-    
     
     # Check score i not null, remove the dialog box
     if (!is.null(vals$score)) {
@@ -2617,7 +2616,7 @@ observeEvent(input$resume_no, {
     }
     
 
-  })
+  }, ignoreInit = T)
   
   # Team B ---------------------------------------------------------
   
@@ -2635,7 +2634,7 @@ observeEvent(input$resume_no, {
         players = eligible_shooters,
         round = round_num()))
     
-  })
+  }, ignoreInit = T)
   
   # Score validation
   observeEvent(input$ok_B, {
@@ -2735,7 +2734,7 @@ observeEvent(input$resume_no, {
     }
     
     
-  })
+  }, ignoreInit = T)
   
   
 
@@ -2775,7 +2774,7 @@ observeEvent(input$resume_no, {
       html = T
     )
     
-  })
+  }, ignoreInit = T)
   
   # Team B
   observeEvent(input$undo_score_B, {
@@ -2804,7 +2803,7 @@ observeEvent(input$resume_no, {
       html = T
     )
     
-  })
+  }, ignoreNULL = T, ignoreInit = T)
   
   ## Last score table outputs
   
@@ -2975,7 +2974,7 @@ observeEvent(input$resume_no, {
     }
       
     
-  })
+  }, ignoreInit = T)
   
   # Team B
   # Undo score B
@@ -3026,7 +3025,7 @@ observeEvent(input$resume_no, {
       vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
     }
     
-  })
+  }, ignoreInit = T)
   
   
   
@@ -3062,7 +3061,7 @@ observeEvent(input$resume_no, {
       )
     )
 
-  })
+  }, ignoreInit = T)
   
   observeEvent(input$finish_game_sure, {
     
@@ -3079,7 +3078,7 @@ observeEvent(input$resume_no, {
       )
     )
     
-  })
+  }, ignoreInit = T)
   
 
 # Send to DB --------------------------------------------------------------
@@ -3172,7 +3171,7 @@ observeEvent(input$resume_no, {
                game_summary(vals$game_stats_db))
     )
     
-  })
+  }, ignoreInit = T)
   
 
 # Restart game ------------------------------------------------------------
