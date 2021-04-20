@@ -169,7 +169,7 @@ ui <- dashboardPagePlus(
                        disabled(actionBttn("start_game", 
                                            label = "Throw dice?", style = "pill", color = "primary", 
                                            icon = icon("dice"), size = "sm")),
-                       uiOutput("validate_start"),
+                       # uiOutput("validate_start"),
                        
                        helpText("Note: All players must enter their name before the game can begin")
                        # 
@@ -1716,11 +1716,11 @@ observe({
     }
     
 
-  })
+  }, ignoreInit = T)
   
   
   # Create a UI output which validates that there are four players and the names are unique
-  output$validate_start = reactive({
+  validate_start = observe({
     # If one of the first two players on each team
     # is removed, disable the button again.
     # This goes above the validate check because 
