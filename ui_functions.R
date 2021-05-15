@@ -1795,6 +1795,26 @@ bar_chart <- function(label, width = "100%", height = "14px", fill = "#00bfc4", 
   div(style = list(display = "flex", alignItems = "center"), label, chart)
 }
 
+game_summary_diff_style = function(column){
+  str_c("
+                    function(rowInfo) {
+                        var value = rowInfo.row.", column,"
+                      // input:
+                      //  - rowInfo, an object containing row info
+                      //  - colInfo, an object containing column info (optional)
+                      //  - state, an object containing the table state (optional)
+                      var neg = /\\-/
+                      var pos = /\\+/
+                      if (neg.test(value)) {
+                        return { color: '#e26a6a' }
+                      } 
+                      else if (pos.test(value)) {
+                        return { color: '#67a283' }
+                      }
+                    }
+                  ")
+}
+
 theme_snappa = function(title_family = "Inter SemiBold",
                         text_family = "Inter",
                         base_size = 12, 
