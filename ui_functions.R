@@ -1045,6 +1045,85 @@ team_summary_tab = function(df, game_over, score_difference, team){
     tab_theme_snappa()
 }
 
+team_summary_tab_rt = function(df, game_over, score_difference, team){
+  winning = unique(df$winning)
+  if (game_over){
+    subtitle_name = if_else(winning, "the winners.", "the losers.")
+  } else{
+    subtitle_name = if_else(winning, 
+                            "in the lead.", 
+                            str_c("chasing ", 
+                                  score_difference,
+                                  ".")
+    )
+  }
+  
+  
+  title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
+  
+  
+  hide_diff_cols = head(df, 1) %>% # Take the first row of a column
+    mutate_all(as.character) %>% # prevents errors in pivot_longer
+    # convert to column-value pair dataframe
+    pivot_longer(everything(), names_to = "column", values_to = "value") %>% 
+    # remove the value
+    select(-value) %>% 
+    # Craft the desired label
+    # Below I remove the year, replace underscores with spaces, and convert to title case
+    mutate(label = case_when(
+      column == "player_name" ~ "Player",
+      str_detect(column, "_diff$") ~ "Diff.",
+      T ~ ""
+    )) %>% 
+    # Deframe to named vector
+    deframe()
+  
+  browser()
+  
+  df %>% 
+    reactable(defaultSorted = "total_points",
+              showSortable = F,
+              resizable = T,
+              defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0), 
+                                     align = "left", defaultSortOrder = "desc"),
+              highlight = T,
+              compact = T, 
+              width = "100%",
+              class = "snappaneers-tbl",
+              # Column Groups
+              columnGroups = list(
+                colGroup(name = "Total Points", columns = c("total_points", "total_points_diff")),
+                colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
+                colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff")),
+                colGroup(name = "Def. PPR", columns = c("def_ppr", "def_ppr_diff")),
+                colGroup(name = "Toss Efficiency", columns = c("toss_efficiency", "toss_efficiency_diff"))
+              ),
+              # Columns
+              columns = list(
+                player_id = colDef(show = F),
+                player_name = colDef(name = "Player"),
+                team = colDef(show = F),
+                winning = colDef(show = F),
+                total_points = colDef(name = "", width = 40),
+                total_points_diff = colDef(name = "Diff.", width = 50, 
+                                           style = JS(game_summary_style("total_points_diff"))),
+                paddle_points = colDef(name = "", width = 40),
+                paddle_points_diff = colDef(name = "Diff.", width = 50, 
+                                            style = JS(game_summary_style("paddle_points_diff"))),
+                off_ppr = colDef(name = "", width = 50, format = colFormat(digits = 2)),
+                off_ppr_diff = colDef(name = "Diff.", width = 60, 
+                                      style = JS(game_summary_style("off_ppr_diff"))),
+                def_ppr = colDef(name = "", width = 40, format = colFormat(digits = 2)),
+                def_ppr_diff = colDef(name = "Diff.", width = 60, 
+                                      style = JS(game_summary_style("def_ppr_diff"))),
+                toss_efficiency = colDef(name = "", width = 40, format = colFormat(percent = T, digits = 0)),
+                toss_efficiency_diff = colDef(name = "Diff.", width = 60, 
+                                              style = JS(game_summary_style("toss_efficiency_diff")))
+              )
+              )
+}
+
+
 leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
   stats_eligible = career_stats_data %>% 
     filter(rank < dividing_line)
