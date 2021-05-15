@@ -530,12 +530,12 @@ server <- function(input, output, session) {
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
     ),
     casualties = tibble(
-      casualty_id = numeric(), 
-      game_id  = numeric(), 
-      score_id = numeric(), 
-      player_id = numeric(), 
+      casualty_id = integer(), 
+      game_id  = integer(), 
+      score_id = integer(), 
+      player_id = integer(), 
       casualty_type = character(),
-      reported_player = character()
+      reported_player = integer()
       ),
     
     
@@ -2120,7 +2120,7 @@ observeEvent(input$resume_no, {
       score_id = vals$score_id,
       player_id = casualty,
       casualty_type = type,
-      reported_player = NA_character_
+      reported_player = NA_integer_
     )
     # Add to casualties reactive
     vals$casualties = add_row(vals$casualties, new_casualty)
@@ -2150,7 +2150,7 @@ observeEvent(input$resume_no, {
       score_id = vals$score_id,
       player_id = casualty,
       casualty_type = "Sunk",
-      reported_player = NA_character_
+      reported_player = NA_integer_
     )
     
     # Add to casualties reactive
