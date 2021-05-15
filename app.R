@@ -122,9 +122,9 @@ ui <- dashboardPagePlus(
         label = "What score are you playing to?",
         min = 21, max = 50, value = 21
       ),
-      actionBttn("tifu", "Friendly Fire", 
+      disabled(actionBttn("tifu", "Friendly Fire", 
                  style = "material-flat",
-                 size = "sm", color = "danger"),
+                 size = "sm", color = "danger")),
       # actionBttn("new_game", "Restart", 
       #            icon = icon("plus"), size = "sm",
       #            style = "material-flat", color = "warning"),
@@ -529,6 +529,14 @@ server <- function(input, output, session) {
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
     ),
+    casualties = tibble(
+      casualty_id = integer(), 
+      game_id  = integer(), 
+      score_id = integer(), 
+      player_id = integer(), 
+      casualty_type = character(),
+      reported_player = integer()
+      ),
     
     
     # setup cooldowns as a list of false bools
@@ -1710,11 +1718,10 @@ observe({
     #   => enable start button
     
     if(sum(length(unique(snappaneers()$player_name)), 
-           sum(
              c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
              isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
              isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)) 
+             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
              )
            ) == num_players()){ 
       shinyjs::enable("start_game")
@@ -1810,6 +1817,9 @@ observe({
         # Initialize the current game's player_stats table
         vals$player_stats_db = lost_player_stats
         
+        # Pull in lost game casualties 
+        vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game)))
+        
     } else {
       
       # LAST GAME WAS FINISHED
@@ -1866,15 +1876,16 @@ observe({
     vals$cooldowns = reactivePoll(
       intervalMillis = 100*70,
       session = session,
-      checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
-                                                        WHERE game_id = ", vals$game_id)))},
+      # checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
+      #                                                   WHERE game_id = ", vals$game_id)))},
+      checkFunc = function() {nrow(vals$casualties)},
       valueFunc = function() {
         map(
           # Map over each type of score-based casualty
           unique(casualty_rules$casualty_title), 
-          ~cooldown_check(current_game = vals$game_id, 
+          ~cooldown_check(casualties = vals$casualties[vals$casualties$casualty_type == .x, ], 
+                          scores = vals$scores_db, 
                           current_round = round_num(), 
-                          casualty_to_check = .x,
                           rounds = rounds)) %>% 
           # Set the names of the list
           set_names(unique(casualty_rules$casualty_title))}
@@ -1883,6 +1894,7 @@ observe({
     
     
     shinyjs::enable("game_summary")
+    shinyjs::enable("tifu")
 
   })
   
@@ -2079,28 +2091,20 @@ observeEvent(input$resume_no, {
 
 # Score notifications -----------------------------------------------------
   
+  observe({
+    req(input$start_game)
+    validate(
+      need(vctrs::vec_in(vals$current_scores, 
+                         haystack = casualty_rules[,1:2]), label = "casualty score"),
+      need(!any(flatten_lgl(vals$cooldowns())), label = "cooldowns")
+    )
+    casualty_popup(session,
+                   score = vals$current_scores,
+                   rules = casualty_rules,
+                   players = snappaneers()$player_name)
+  }, autoDestroy = F)
   
 
-  
-  observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
-               {
-                 validate(
-                   need( 
-                     vctrs::vec_in(vals$current_scores, 
-                                   haystack = casualty_rules[,1:2]), label = "casualty"),
-                   # Are any of the cooldowns active?
-                   need(!any(flatten_lgl(vals$cooldowns())), label = "Cooldowns")
-                 )
-
-                 casualty_popup(session,
-                                score = vals$current_scores, 
-                                rules = casualty_rules, 
-                                players = snappaneers()$player_name)
-
-                 
-                 
-               }, ignoreInit = T)
-  
   observeEvent(input$casualty, {
     # Convert player name to ID
     casualty = select(snappaneers(), starts_with("player")) %>% 
@@ -2115,8 +2119,13 @@ observeEvent(input$resume_no, {
       game_id = vals$game_id,
       score_id = vals$score_id,
       player_id = casualty,
-      casualty_type = type
+      casualty_type = type,
+      reported_player = NA_integer_
     )
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
+    
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
@@ -2140,9 +2149,14 @@ observeEvent(input$resume_no, {
       game_id = vals$game_id,
       score_id = vals$score_id,
       player_id = casualty,
-      casualty_type = "Sunk"
+      casualty_type = "Sunk",
+      reported_player = NA_integer_
     )
     
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
+    
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
@@ -2154,26 +2168,52 @@ observeEvent(input$resume_no, {
   
   observeEvent(input$tifu, {
     showModal(
-      tifu_casualty_popup(players = snappaneers()$player_name)
+      tifu_casualty_popup(players = isolate(snappaneers()))
     )
     
   })
   
+  output$casualty_validation = renderUI({
+    if(input$casualty_type == "Team sink"){
+      sinker_team = snappaneers()[snappaneers()$player_id == input$tifu_accused, "team", drop = T]
+      sinkee_team = snappaneers()[snappaneers()$player_id == input$tifu_casualty, "team", drop = T]
+      
+      # Team sink: 
+      validate(
+        # both players are on same team
+        need(sinker_team == sinkee_team, message = "That's not a team sink!"),
+        # players are not the same
+        need(input$tifu_accused != input$tifu_casualty, message = "That's a self sink!")
+      )
+    } else {
+      # Self sink: 
+      validate(
+        # players are the same
+        need(input$tifu_accused == input$tifu_casualty, message = "That's not a self sink!")
+      )
+    }
+
+    actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "background-color: var(--red);color: var(--bg-col);")
+  })
+  
+
+
   observeEvent(input$tifu_confirm, {
-    # Convert player name to ID
-    casualty = select(snappaneers(), starts_with("player")) %>% 
-      deframe() %>% 
-      pluck(input$tifu_casualty)
-    
+
     # Insert casualty details
     new_casualty = tibble(
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
-      score_id = vals$score_id,
-      player_id = casualty,
-      casualty_type = input$casualty_type
+      score_id = NA_integer_,
+      player_id = as.integer(input$tifu_casualty),
+      casualty_type = input$casualty_type,
+      reported_player = if_else(input$tifu_casualty == input$tifu_accused, NA_integer_, as.integer(input$tifu_accused))
     )
+
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
     
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
@@ -2183,8 +2223,11 @@ observeEvent(input$resume_no, {
     
     removeModal()
     
-    showNotification(str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
-                                input$tifu_casualty), duration = 7, closeButton = F)
+    showNotification(if_else(input$casualty_type == "Team sink", 
+                             str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
+                                   players_tbl[match(as.integer(input$tifu_casualty), players_tbl$player_id), 2], "!"),
+                             "The good news is that you only get 1 peasant point!"
+                             ), duration = 7, closeButton = F)
   })
   
 
@@ -2886,11 +2929,14 @@ observeEvent(input$resume_no, {
                                              3, F,
                                              5, T,
                                              7, T))){
+      # In database
       dbSendQuery(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
       )
+      # In reactive
+      vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
     }
       
     
@@ -2935,11 +2981,14 @@ observeEvent(input$resume_no, {
                                              3, F,
                                              5, T,
                                              7, T))){
+      # In database
       dbSendQuery(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
       )
+      # In reactive
+      vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
     }
     
   })

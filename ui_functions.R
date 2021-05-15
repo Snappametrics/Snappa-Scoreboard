@@ -176,6 +176,7 @@ sink_casualty_popup = function(session, score_row, players = snappaneers()$playe
 
 
 tifu_casualty_popup <- function(players) {
+  player_choices = deframe(players[, c("player_name", "player_id")])
   # Ask what happened and to whom
   modalDialog(align = "center", easyClose = T, size = "l", style = "margin:7vh 4vw 0;",
               
@@ -195,24 +196,34 @@ tifu_casualty_popup <- function(players) {
               fluidRow(
               
                 column(8, style = "text-align: left;",
-                       # to whom?
-                       radioGroupButtons(
-                         inputId = "tifu_accused",
-                         label = "Who was the shooter?",
-                         choices = players,
-                         size = "lg",
-                         checkIcon = list(
-                           yes = tags$i(class = "fa fa-trash"))
-                       ),
-                       # to whom?
+                       # Casualty
                        radioGroupButtons(
                          inputId = "tifu_casualty",
                          label = "Who was the casualty?",
-                         choices = players,
+                         choices = player_choices,
                          size = "lg",
                          checkIcon = list(
                            yes = tags$i(class = "fa fa-beer"))
+                       ),
+                       # Shooter
+                       radioGroupButtons(
+                         inputId = "tifu_accused",
+                         label = "Who was the shooter?",
+                         choices = player_choices,
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-trash"))
                        )
+                       # radioGroupButtons(
+                       #   inputId = "tifu_accused",
+                       #   label = "Who was the shooter?",
+                       #   choices = players,
+                       #   size = "lg",
+                       #   checkIcon = list(
+                       #     yes = tags$i(class = "fa fa-trash"))
+                       # ),
+                       # to whom?
+                       
                 ),
                 
                 column(4, style = "text-align:left;",
@@ -233,7 +244,8 @@ tifu_casualty_popup <- function(players) {
               
               footer = tagList(
                 modalButton("Back"),
-                actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "background-color: var(--red);color: var(--bg-col);")
+                uiOutput("casualty_validation", style = "margin:0px 15px;align-self:center;")
+                
               )
   )
   
