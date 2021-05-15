@@ -176,6 +176,7 @@ sink_casualty_popup = function(session, score_row, players = snappaneers()$playe
 
 
 tifu_casualty_popup <- function(players) {
+  player_choices = deframe(players[, c("player_name", "player_id")])
   # Ask what happened and to whom
   modalDialog(align = "center", easyClose = T, size = "l", style = "margin:7vh 4vw 0;",
               
@@ -199,13 +200,20 @@ tifu_casualty_popup <- function(players) {
                        radioGroupButtons(
                          inputId = "tifu_casualty",
                          label = "Who was the casualty?",
-                         choices = players,
+                         choices = player_choices,
                          size = "lg",
                          checkIcon = list(
                            yes = tags$i(class = "fa fa-beer"))
                        ),
                        # Shooter
-                       uiOutput("friendly_firer")
+                       radioGroupButtons(
+                         inputId = "tifu_accused",
+                         label = "Who was the shooter?",
+                         choices = player_choices,
+                         size = "lg",
+                         checkIcon = list(
+                           yes = tags$i(class = "fa fa-trash"))
+                       )
                        # radioGroupButtons(
                        #   inputId = "tifu_accused",
                        #   label = "Who was the shooter?",
