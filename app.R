@@ -200,33 +200,7 @@ ui <- dashboardPagePlus(
                           column(4, align = "center", 
                                  uiOutput("active_die_right"))
                           ),
-                 team_scoreboard_ui(), 
-                 
-                 wellPanel(class = "buttons-row",
-                           fluidRow(column(width = 5, align = "left",
-                                           # Recent Scores
-                                           dropdown(
-                                             class = "recent_scores",
-                                             inputId = "recent_scores_",
-                                             gt_output("recent_scores"),
-                                             style = "bordered",
-                                             status = "primary",
-                                             size = "sm", 
-                                             up = T,
-                                             label = "Recent Scores",
-                                             icon = icon("backward"),
-                                             animate = animateOptions(
-                                               enter = animations$fading_entrances$fadeInUp,
-                                               exit = animations$fading_exits$fadeOutDown
-                                             )
-                                           )
-                           ),
-                           column(width = 2, align = "center"
-                           ),
-                           column(width = 5, align = "right"
-                           )
-                           )
-                 )
+                 team_scoreboard_ui()
                  
                )
       ),
