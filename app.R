@@ -841,10 +841,18 @@ server <- function(input, output, session) {
   }
   
   output$summary_plot = renderPlot({
-    game_summary_plot(player_stats = vals$player_stats_db,
-                      players = vals$db_tbls()[["players"]],
-                      scores = vals$scores_db,
-                      game = vals$game_id)
+    if(input$start_game == 0){
+      game_summary_plot(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
+                        players = vals$db_tbls()[["players"]],
+                        scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
+                        game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
+    } else {
+      game_summary_plot(player_stats = vals$player_stats_db,
+                        players = vals$db_tbls()[["players"]],
+                        scores = vals$scores_db,
+                        game = vals$game_id)
+    }
+    
   })
   
   
@@ -854,29 +862,55 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$db_tbls()[["player_stats"]],
-                       neers = snappaneers(), 
-                       team_name = "A", 
-                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$db_tbls()[["scores"]]) %>%
-      team_summary_tab(.,
-                       game_over = vals$game_over, 
-                       team = "A",
-                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    if(input$start_game == 0){
+      last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
+                         team_name = "A", 
+                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
+        team_summary_tab(.,
+                         game_over = T, 
+                         team = "A",
+                         score_difference = abs(last_game$points_A - last_game$points_B))
+    } else {
+      make_summary_table(current_player_stats = vals$player_stats_db, 
+                         player_stats = vals$db_tbls()[["player_stats"]],
+                         neers = snappaneers(), 
+                         team_name = "A", 
+                         current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                         past_scores = vals$db_tbls()[["scores"]]) %>%
+        team_summary_tab(.,
+                         game_over = vals$game_over, 
+                         team = "A",
+                         score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    }
   })  
   
   output$team_b_summary = render_gt({
-    make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$db_tbls()[["player_stats"]],
-                       neers = snappaneers(), 
-                       team_name = "B", 
-                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$db_tbls()[["scores"]]) %>%
-      team_summary_tab(.,
-                       game_over = vals$game_over, 
-                       team = "B",
-                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    if(input$start_game == 0){
+      last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
+                         team_name = "B", 
+                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
+        team_summary_tab(.,
+                         game_over = T, 
+                         team = "B",
+                         score_difference = abs(last_game$points_A - last_game$points_B))
+    } else {
+      make_summary_table(current_player_stats = vals$player_stats_db, 
+                         player_stats = vals$db_tbls()[["player_stats"]],
+                         neers = snappaneers(), 
+                         team_name = "B", 
+                         current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                         past_scores = vals$db_tbls()[["scores"]]) %>%
+        team_summary_tab(.,
+                         game_over = vals$game_over, 
+                         team = "B",
+                         score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    }
   })  
   
   
@@ -1895,12 +1929,20 @@ observe({
 
 
 observeEvent(input$game_summary, {
-  showModal(
-    tags$div(id= "game_summary", 
-             game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
-                                                              points_b = vals$current_scores$team_B)))
+  if(input$start_game == 0){
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary(filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id)))
+      )
     )
-  )
+  } else {
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
+                                                                points_b = vals$current_scores$team_B)))
+      )
+    )
+  }
   
 })
 output$scores_tbl = renderReactable({
