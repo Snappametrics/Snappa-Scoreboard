@@ -18,7 +18,7 @@ library(lubridate)
 library(dbplyr)
 library(tidyverse)
 
-source("database/db_connect.R")
+source("database/dbconnect.R")
 # I take the functions for the Markov modeling from the script of functions
 source("markov/Markov_model_functions.R")
 
@@ -113,4 +113,5 @@ all_transitions = append(all_transitions, average_team_transitions)
 
   
 saveRDS(all_transitions, file = "markov/transition_probabilities.Rdata")
+
 
