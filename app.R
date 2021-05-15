@@ -2168,40 +2168,38 @@ observeEvent(input$resume_no, {
   
   observeEvent(input$tifu, {
     showModal(
-      tifu_casualty_popup(players = deframe(snappaneers()[, c("player_name", "player_id")]))
+      tifu_casualty_popup(players = isolate(snappaneers()))
     )
     
   })
   
-  # observeEvent(input$tifu_casualty, {
-  #   browser()
-  #   
-  # })
-  
-  output$friendly_firer = renderUI({
-    req(input$casualty_type == "Team sink")
-    team_chemistry_issues = snappaneers()[which(snappaneers()$player_id == as.integer(input$tifu_casualty)), "team", drop=T]
-    
-    radioGroupButtons(
-      inputId = "tifu_accused",
-      label = "Who was the shooter?",
-      choices = deframe(
-        snappaneers()[snappaneers()$team == team_chemistry_issues & snappaneers()$player_id != as.integer(input$tifu_casualty), 
-                      c("player_name", "player_id")]
-      ),
-      size = "lg",
-      checkIcon = list(
-        yes = tags$i(class = "fa fa-trash", 
-                     style = paste("color:", if_else(team_chemistry_issues == "A", "#e26a6a", "#2574a9"))))
-    )
-    
-    
+  output$casualty_validation = renderUI({
+    if(input$casualty_type == "Team sink"){
+      sinker_team = snappaneers()[snappaneers()$player_id == input$tifu_accused, "team", drop = T]
+      sinkee_team = snappaneers()[snappaneers()$player_id == input$tifu_casualty, "team", drop = T]
+      
+      # Team sink: 
+      validate(
+        # both players are on same team
+        need(sinker_team == sinkee_team, message = "That's not a team sink!"),
+        # players are not the same
+        need(input$tifu_accused != input$tifu_casualty, message = "That's a self sink!")
+      )
+    } else {
+      # Self sink: 
+      validate(
+        # players are the same
+        need(input$tifu_accused == input$tifu_casualty, message = "That's not a self sink!")
+      )
+    }
+
+    actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "background-color: var(--red);color: var(--bg-col);")
   })
   
 
-  
-  
+
   observeEvent(input$tifu_confirm, {
+
     # Insert casualty details
     new_casualty = tibble(
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
@@ -2209,8 +2207,9 @@ observeEvent(input$resume_no, {
       score_id = NA_integer_,
       player_id = as.integer(input$tifu_casualty),
       casualty_type = input$casualty_type,
-      reported_player = if_else(input$casualty_type == "Team sink", as.integer(input$tifu_accused), NA_integer_)
+      reported_player = if_else(input$tifu_casualty == input$tifu_accused, NA_integer_, as.integer(input$tifu_accused))
     )
+
     # Add to casualties reactive
     vals$casualties = add_row(vals$casualties, new_casualty)
     

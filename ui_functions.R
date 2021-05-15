@@ -244,7 +244,8 @@ tifu_casualty_popup <- function(players) {
               
               footer = tagList(
                 modalButton("Back"),
-                actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "background-color: var(--red);color: var(--bg-col);")
+                uiOutput("casualty_validation", style = "margin:0px 15px;align-self:center;")
+                
               )
   )
   
