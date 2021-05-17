@@ -718,7 +718,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   ##
   ## Scenario 1: Game is in progress
   ##
-  in_progress = isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
+  in_progress = isFALSE(pull(dbGetQuery(con, sql(str_c("SELECT game_complete FROM game_stats WHERE game_id =", current_game, ";"))), 
                              game_complete))
   if (in_progress){
     
