@@ -888,6 +888,7 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = renderReactable({
+
     if(input$start_game == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
@@ -895,27 +896,22 @@ server <- function(input, output, session) {
                          neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
                          team_name = "A", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
-        team_summary_tab_rt(.,
-                         game_over = T, 
-                         team = "A",
-                         score_difference = abs(last_game$points_A - last_game$points_B))
+        team_summary_tab_rt(.)
     } else {
       make_summary_table(current_player_stats = vals$player_stats_db, 
-                         player_stats = vals$db_tbls()[["player_stats"]],
+                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
                          neers = snappaneers(), 
                          team_name = "A", 
                          current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                         past_scores = vals$db_tbls()[["scores"]]) %>%
-        team_summary_tab_rt(.,
-                         game_over = vals$game_over, 
-                         team = "A",
-                         score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)) %>%
+        team_summary_tab_rt(.)
     }
   })  
   
   
   
   output$team_b_summary = renderReactable({
+
     if(input$start_game == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
@@ -923,21 +919,15 @@ server <- function(input, output, session) {
                          neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
                          team_name = "B", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
-        team_summary_tab_rt(.,
-                            game_over = T, 
-                            team = "B",
-                            score_difference = abs(last_game$points_A - last_game$points_B))
+        team_summary_tab_rt(.)
     } else {
       make_summary_table(current_player_stats = vals$player_stats_db, 
-                         player_stats = vals$db_tbls()[["player_stats"]],
+                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
                          neers = snappaneers(), 
                          team_name = "B", 
                          current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                         past_scores = vals$db_tbls()[["scores"]]) %>%
-        team_summary_tab_rt(.,
-                            game_over = vals$game_over, 
-                            team = "B",
-                            score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)) %>%
+        team_summary_tab_rt(.)
     }
   })  
   

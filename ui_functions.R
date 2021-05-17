@@ -1047,38 +1047,7 @@ team_summary_tab = function(df, game_over, score_difference, team){
     tab_theme_snappa()
 }
 
-team_summary_tab_rt = function(df, game_over, score_difference, team){
-  winning = unique(df$winning)
-  if (game_over){
-    subtitle_name = if_else(winning, "the winners.", "the losers.")
-  } else{
-    subtitle_name = if_else(winning, 
-                            "in the lead.", 
-                            str_c("chasing ", 
-                                  score_difference,
-                                  ".")
-    )
-  }
-  
-  
-  title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
-  
-  
-  hide_diff_cols = head(df, 1) %>% # Take the first row of a column
-    mutate_all(as.character) %>% # prevents errors in pivot_longer
-    # convert to column-value pair dataframe
-    pivot_longer(everything(), names_to = "column", values_to = "value") %>% 
-    # remove the value
-    select(-value) %>% 
-    # Craft the desired label
-    # Below I remove the year, replace underscores with spaces, and convert to title case
-    mutate(label = case_when(
-      column == "player_name" ~ "Player",
-      str_detect(column, "_diff$") ~ "Diff.",
-      T ~ ""
-    )) %>% 
-    # Deframe to named vector
-    deframe()
+team_summary_tab_rt = function(df){
 
   df %>% 
     reactable(defaultSorted = "total_points",
