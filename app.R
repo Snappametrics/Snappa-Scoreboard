@@ -816,7 +816,6 @@ server <- function(input, output, session) {
 
   
   game_summary = function(df) {
-    browser()
     if (df$game_complete){
       subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
       subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
@@ -1943,26 +1942,72 @@ observe({
   }, once = T, ignoreNULL = T)
   
 
+output$game_summary = renderUI({
+  if (input$start_game == 0){
+    df = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+    subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
+    subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
+  } else{
+    df = replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
+                                             points_b = vals$current_scores$team_B))
+    score_difference = abs(df$points_a - df$points_b)
+    
+    subtitle_a = if_else(df$points_a > df$points_b, 
+                         "in the lead.", 
+                         str_c("chasing ", 
+                               score_difference,
+                               ".")
+    )
+    subtitle_b = if_else(df$points_a < df$points_b, 
+                         "in the lead.", 
+                         str_c("chasing ", 
+                               score_difference,
+                               ".")
+    )
+  }
+  modalDialog(
+    title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", rounds[df$rounds])),  
+    style = str_c("background-color: ", snappa_pal[1], ";"),
+    
+    
+    
+    
+    # Tables
+    fluidRow(
+      column(6, align = "center",
+             h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+             h4(subtitle_a, align = "left"),
+             reactableOutput("team_a_summary")
+      ),
+      column(6,align = "center",# offset = 2,
+             h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+             h4(subtitle_b, align = "left"),
+             reactableOutput("team_b_summary")
+      )
+    ),
+    # Summary plot
+    plotOutput("summary_plot", height = "50vh"),
+    reactableOutput("scores_tbl"),
+    
+    footer = NULL,
+    easyClose = T,
+    size = "l"
+  )
+})
+
+
 
 
 observeEvent(input$game_summary, {
-  if(input$start_game == 0){
-    showModal(
-      tags$div(id= "game_summary", 
-               game_summary(filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id)))
-      )
-    )
-  } else {
-    showModal(
-      tags$div(id= "game_summary", 
-               game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
-                                                                points_b = vals$current_scores$team_B)))
-      )
-    )
-  }
-  
+
+  showModal(
+    uiOutput("game_summary")
+  )
+
+
 })
 output$scores_tbl = renderReactable({
+
   if(input$start_game == 0){
     scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)) %>% 
       arrange(-score_id) %>% 
