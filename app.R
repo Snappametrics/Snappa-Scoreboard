@@ -816,18 +816,44 @@ server <- function(input, output, session) {
 
   
   game_summary = function(df) {
-    
-    modalDialog(title = str_c("Score: ", df$points_a, " - ", df$points_b),  style = str_c("background-color: ", snappa_pal[1], ";"),
+    browser()
+    if (df$game_complete){
+      subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
+      subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
+    } else{
+      score_difference = abs(df$points_a - df$points_b)
       
-      # h1(str_c(vals$current_scores$team_A, " - ", vals$current_scores$team_B), align = "center"),
-      # ,
+      subtitle_a = if_else(df$points_a > df$points_b, 
+                              "in the lead.", 
+                              str_c("chasing ", 
+                                    score_difference,
+                                    ".")
+                           )
+      subtitle_b = if_else(df$points_a < df$points_b, 
+                                        "in the lead.", 
+                                        str_c("chasing ", 
+                                              score_difference,
+                                              ".")
+                           )
+    }
+    modalDialog(
+      title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", rounds[df$rounds])),  
+      style = str_c("background-color: ", snappa_pal[1], ";"),
+      
+      
+      
+      
       # Tables
       fluidRow(
         column(6, align = "center",
+               h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+               h4(subtitle_a, align = "left"),
                reactableOutput("team_a_summary")
         ),
         column(6,align = "center",# offset = 2,
-               gt_output("team_b_summary")
+               h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+               h4(subtitle_b, align = "left"),
+               reactableOutput("team_b_summary")
         )
       ),
       # Summary plot
