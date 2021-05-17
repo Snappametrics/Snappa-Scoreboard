@@ -1860,10 +1860,14 @@ game_summary_plot = function(player_stats, players, scores, game){
 snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
 options(reactable.theme = reactableTheme(
   color = "gray20",
-  backgroundColor = snappa_pal[1],
+  backgroundColor = snappa_pal[1], 
+  tableBodyStyle = list(
+    padding = "4px 2px"
+  ),
   borderColor = "#DEDDDD",
   headerStyle = list(
     alignSelf = "flex-end",
+    fontSize = "13px",
     borderBottom = "3px solid #7c7c7c"
   ))
 )
