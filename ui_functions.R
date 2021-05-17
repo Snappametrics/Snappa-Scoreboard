@@ -1893,10 +1893,10 @@ game_summary_diff_style = function(column){
                       var neg = /\\-/
                       var pos = /\\+/
                       if (neg.test(value)) {
-                        return { color: '#e26a6a' }
+                        return { color: '#e26a6a', padding: '4px 2px 4px 0px' }
                       } 
                       else if (pos.test(value)) {
-                        return { color: '#67a283' }
+                        return { color: '#67a283', padding: '4px 2px 4px 0px' }
                       }
                     }
                   ")
