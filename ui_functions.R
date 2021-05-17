@@ -820,8 +820,10 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            def_ppr_diff = def_ppr - def_ppr_wavg,
            toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
            # Format each difference for the table
-           across(matches("points_diff"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 1), ")")),
-           across(matches("(per_round|ppr)_diff$"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 2), ")")),
+           # across(matches("points_diff"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 1), ")")),
+           # across(matches("(per_round|ppr)_diff$"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 2), ")")),
+           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 2))),
            toss_efficiency_diff = map_chr(toss_efficiency_diff, 
                                           ~case_when(. >= 0 ~ toss_percent_plus(.), 
                                                      . < 0 ~ toss_percent_minus(.)))) %>% 
