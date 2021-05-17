@@ -697,12 +697,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
                 values_from = team_size, 
                 names_glue = "size_{team}")
 
-  equivalent_games = team_players$player_id %>%
+  equivalent_games_player_stats = team_players$player_id %>%
     map(function(player){
       # Subset each player's stats  to each player's stats and identify equivalent games
       player_stats[player_stats$player_id == player & player_stats$game_id != current_game, ] %>% 
         # Join team sizes to player stats
-        inner_join(team_sizes) %>%
+        inner_join(team_sizes, by = "game_id") %>%
         # Keep cases where the team sizes are equivalent
         filter(if_else(team == "A", size_A, size_B) == team_size,
                if_else(team == "B", size_A, size_B) == opponent_size)
