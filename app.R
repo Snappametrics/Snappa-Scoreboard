@@ -1966,7 +1966,8 @@ output$game_summary = renderUI({
     )
   }
   modalDialog(
-    title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", rounds[df$rounds])),  
+    title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", 
+                       coalesce(rounds[df$rounds], round_num()))),  
     style = str_c("background-color: ", snappa_pal[1], ";"),
     
     
