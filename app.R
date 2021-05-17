@@ -1945,11 +1945,21 @@ observeEvent(input$game_summary, {
   
 })
 output$scores_tbl = renderReactable({
-  filter(vals$scores_db, game_id == vals$game_id) %>% 
-    arrange(-score_id) %>% 
-    inner_join(snappaneers(), by = "player_id") %>% 
-    select(score_id, player_name, round_num, Points = points_scored,
-           Paddle = paddle, Clink = clink, Foot = foot) %>% 
+  if(input$start_game == 0){
+    scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)) %>% 
+      arrange(-score_id) %>% 
+      inner_join(vals$db_tbls()[["players"]], by = "player_id") %>% 
+      select(score_id, player_name, round_num, Points = points_scored,
+             Paddle = paddle, Clink = clink, Foot = foot)
+  } else {
+    scores = filter(vals$scores_db, game_id == vals$game_id) %>% 
+      arrange(-score_id) %>% 
+      inner_join(snappaneers(), by = "player_id") %>% 
+      select(score_id, player_name, round_num, Points = points_scored,
+             Paddle = paddle, Clink = clink, Foot = foot)
+  }
+   
+  scores %>% 
     reactable(compact = T,
               columns = list(
                 player_name = colDef(name = "Player"),
