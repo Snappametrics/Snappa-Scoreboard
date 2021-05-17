@@ -733,25 +733,23 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     ## Scenario 2: Game is complete
     ##
   } else {
-    round_comparison = 999
-    
+
     scores_comparison = past_scores
   }
 
   # List scores which occurred at or before the current game's round
-  equivalent_games_scores = team_players$player_id %>%
-    imap(function(player, index){
+  historical_scores = team_players$player_id %>%
+    imap_dfr(function(player, index){
       # Join each player's equivalent games to their scores from those games
-      inner_join(equivalent_games[[index]], 
+      inner_join(equivalent_games_player_stats[[index]], 
                 scores_comparison, 
                 by = c("game_id", "player_id"))
     })
   
-  # Bind that list together to make historical scores
-  historical_scores = bind_rows(equivalent_games_scores) %>% 
-    # When in progress, keep the shot counter generated from current_shots
-    when(in_progress ~ (.) %>% mutate(shots = current_shots),
-         ~ (.))
+  # When in progress, keep the shot counter generated from current_shots
+  if(in_progress){
+    historical_scores = mutate(historical_scores, shots = current_shots)
+  }
   
   # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
   # That means I have to recreate player_stats using this table 
