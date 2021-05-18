@@ -788,15 +788,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     mutate(team_score = sum(total_points)) %>% 
     ungroup() %>% 
     mutate(winning = (team_score == max(team_score))) %>% 
-    # Merge in player info
-    inner_join(player_info) %>% 
-    select(team, winning, player_id, player_name, 
+    filter(team == team_name) %>% 
+    select(team, winning, player_id,  
            total_points, paddle_points, clink_points, threes, 
            points_per_round:toss_efficiency)
   
   historical_stats = comparison_player_stats %>% 
-    # Join in player name
-    inner_join(select(player_summary, player_id, team), by = "player_id") %>% 
     select(game_id, player_id, 
            shots, total_points, paddle_points, clink_points, sinks = threes, 
            points_per_round:toss_efficiency) %>%
@@ -833,10 +830,10 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
            contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
   
-  df = select(player_summary_historical,
-              -contains("clink"), -contains("sink"), -contains("points_per"))
+  inner_join(select(team_players, player_id, player_name),
+             select(player_summary_historical,
+                    -contains("clink"), -contains("sink"), -contains("points_per")), by = "player_id")
   
-  return(df)
 }
 
 
