@@ -1702,10 +1702,10 @@ observe({
     
     if(switch_is_even){
       removeUI("#ScoreboardUI", immediate=T)
-      insertUI(selector = ".buttons-row", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
+      insertUI(selector = "#dice-row", ui = team_scoreboard_ui("B", "A"), where = "afterEnd")
     } else {
       removeUI("#ScoreboardUI", immediate = T)
-      insertUI(selector = ".buttons-row", ui = team_scoreboard_ui(), where = "beforeBegin")
+      insertUI(selector = "#dice-row", ui = team_scoreboard_ui(), where = "afterEnd")
     }
     
 
