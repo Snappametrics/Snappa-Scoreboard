@@ -771,7 +771,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
               points_per_round = total_points / last(shots),
               off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
               def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum(!(paddle | foot ))/last(shots),
+              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
               .groups = "drop")
   
   player_info = team_player_stats %>% 
