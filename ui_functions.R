@@ -733,16 +733,11 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
     
     scores_comparison = past_scores
   }
-  browser()
   # List scores which occurred at or before the current game's round
-  historical_scores = team_players$player_id %>%
-    imap_dfr(function(player, index){
-      # Join each player's equivalent games to their scores from those games
-      left_join(equivalent_player_stats, 
-                scores_comparison, 
-                by = c("game_id", "player_id")) %>% 
-        filter(!(game_id %in% 38:48))
-    })
+  historical_scores = left_join(equivalent_player_stats, 
+                                                    scores_comparison, 
+                                                    by = c("game_id", "player_id")) %>% 
+    filter(!(game_id %in% 38:48))
   
   # When in progress, keep the shot counter generated from current_shots
   if(in_progress){
@@ -771,7 +766,7 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
               toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
               .groups = "drop")
   
-  player_info = team_player_stats %>% 
+  player_info = player_stats %>% 
     # Filter player stats
     select(game_id, player_id, team) %>% 
     inner_join(neers, by = c("player_id", "team")) 
@@ -785,7 +780,6 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
     mutate(team_score = sum(total_points)) %>% 
     ungroup() %>% 
     mutate(winning = (team_score == max(team_score))) %>% 
-    filter(team == team_name) %>% 
     select(team, winning, player_id,  
            total_points, paddle_points, clink_points, threes, 
            points_per_round:toss_efficiency)
@@ -827,7 +821,7 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
            contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
            contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
   
-  inner_join(select(team_players, player_id, player_name),
+  inner_join(select(neers, player_id, player_name),
              select(player_summary_historical,
                     -contains("clink"), -contains("sink"), -contains("points_per")), by = "player_id")
   
