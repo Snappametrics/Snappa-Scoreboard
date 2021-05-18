@@ -18,9 +18,11 @@ shinyjs.timeline_card_collapse = function(params) {
   // earlier card and then click away from it
   for (let i = 1; i < len + 1; i++) { 
     var container = $("#timeline_card_" + i);
-    $('.modal-content').mousedown(function() {
+    $('.modal-content').click(function() {
             if (!container.is(event.target) &&
-                !container.has(event.target).length &&
+                // What on earth does this line do?
+                // !container.has(event.target).length &&
+                //
                 !$('#mini_card_' + i + ' .mini_card').is(event.target)) {
                   container.animate({'height': '0vh'}, 450, function() {
                     container.css('display', 'none');
@@ -71,11 +73,11 @@ shinyjs.timeline_card_expand = function(params) {
   // ones with each call to the function
   if (len > 1) {
     for (let i = 1; i <= len; i++) {
-      $('#mini_card_' + i).off('mousedown.' + i);
+      $('#mini_card_' + i).off('click.' + i);
       }
   }
   for (let i = 1; i < len + 1; i++) { 
-    $('#mini_card_' + i).on('mousedown.' + i, function() {
+    $('#mini_card_' + i).on('click.' + i, function() {
       expand(i);
     });
   }
