@@ -741,7 +741,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   historical_scores = team_players$player_id %>%
     imap_dfr(function(player, index){
       # Join each player's equivalent games to their scores from those games
-      inner_join(equivalent_games_player_stats[[index]], 
+      left_join(equivalent_games_player_stats[[index]], 
                 scores_comparison, 
                 by = c("game_id", "player_id"))
     })
@@ -756,6 +756,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   
   # Calculate game performance in equivalent games
   comparison_player_stats = historical_scores %>% 
+    replace_na(list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
     # Group by game and player, (team and shots are held consistent)
     group_by(game_id, player_id, shots) %>% 
     # Calculate summary stats
