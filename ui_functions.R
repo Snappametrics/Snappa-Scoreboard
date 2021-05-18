@@ -1254,7 +1254,7 @@ game_summary_tab_rt = function(df){
                 team = colDef(grouped = JS("function(cellInfo) {
                               // Display just the cell value
                               return 'Team '+ cellInfo.value
-                            }"), name = "",
+                            }"), name = "", maxWidth = 80,
                               headerStyle = list(border = "none"),
                               style = JS("function(rowInfo) {
                                             if (rowInfo.row.team == 'A' ) {
