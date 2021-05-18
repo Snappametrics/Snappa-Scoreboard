@@ -743,7 +743,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
       # Join each player's equivalent games to their scores from those games
       left_join(equivalent_games_player_stats[[index]], 
                 scores_comparison, 
-                by = c("game_id", "player_id"))
+                by = c("game_id", "player_id")) %>% 
+        filter(!(game_id %in% 38:48))
     })
   
   # When in progress, keep the shot counter generated from current_shots
