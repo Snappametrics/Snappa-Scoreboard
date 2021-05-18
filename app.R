@@ -890,12 +890,12 @@ server <- function(input, output, session) {
 
     if(input$start_game == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
-      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+      make_single_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
                          neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
                          team_name = "A", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
-        team_summary_tab_rt(.)
+        game_summary_tab_rt(.)
     } else {
       make_summary_table(current_player_stats = vals$player_stats_db, 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
@@ -1974,17 +1974,18 @@ output$game_summary = renderUI({
     
     
     # Tables
-    fluidRow(
-      column(6, align = "center",
-             h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
-             h4(subtitle_a, align = "left"),
-             reactableOutput("team_a_summary")
-      ),
-      column(6,align = "center",# offset = 2,
-             h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
-             h4(subtitle_b, align = "left"),
-             reactableOutput("team_b_summary")
-      )
+    fluidRow(align = "center",
+      reactableOutput("team_a_summary")
+      # column(6, align = "center",
+      #        h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+      #        h4(subtitle_a, align = "left"),
+      #        reactableOutput("team_a_summary")
+      # ),
+      # column(6,align = "center",# offset = 2,
+      #        h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+      #        h4(subtitle_b, align = "left"),
+      #        reactableOutput("team_b_summary")
+      # )
     ),
     # Summary plot
     plotOutput("summary_plot", height = "50vh"),
