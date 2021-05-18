@@ -771,8 +771,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
               points_per_round = total_points / last(shots),
               off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
               def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
-    ungroup()
+              toss_efficiency = sum(!(paddle | foot ))/last(shots),
+              .groups = "drop")
   
   player_info = team_player_stats %>% 
     # Filter player stats
@@ -796,7 +796,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   
   historical_stats = comparison_player_stats %>% 
     # Join in player name
-    inner_join(select(player_summary, player_id, team)) %>% 
+    inner_join(select(player_summary, player_id, team), by = "player_id") %>% 
     select(game_id, player_id, 
            shots, total_points, paddle_points, clink_points, sinks = threes, 
            points_per_round:toss_efficiency) %>%
@@ -807,7 +807,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
       across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
       across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
              .fns = ~weighted.mean(., w = shots), 
-             .names = "{col}_wavg")
+             .names = "{col}_wavg"),
+      .groups = "drop"
     )
   
   player_summary_historical = full_join(player_summary, historical_stats, by = "player_id") %>% 
