@@ -1231,15 +1231,15 @@ game_summary_tab_rt = function(df){
                                             } else if (rowInfo.row.team == 'B'& rowInfo.level < 1) {
                                                 var color = '#2574a980'
                                             } else {
-                                                var color = '#FFFfff'
+                                                var color = '#fafaf9'
                                             }
-                                            return { backgroundColor: color}
+                                            return { backgroundColor: color, padding: '4px 2px 4px 0px'}
                                         }"
                                      )), 
               highlight = T,
               compact = T,
               groupBy = "team",
-              width = "100%",
+              width = "80%", 
               class = "snappaneers-tbl",
               # Column Groups
               columnGroups = list(
@@ -1262,11 +1262,12 @@ game_summary_tab_rt = function(df){
                                             } else if (rowInfo.row.team == 'B') {
                                                 var color = '#2574a980'
                                             } 
-                                            return { backgroundColor: color, color: '#ffffff' }
+                                            return { backgroundColor: color, color: '#fafaf9' }
                                         }"
                               )),
                 player_id = colDef(show = F),
-                player_name = colDef(name = "Player", maxWidth = 60, align = "left", headerStyle = list(textAlign = "left")),
+                player_name = colDef(name = "Player", minWidth = 65, align = "left", 
+                                     headerStyle = list(textAlign = "left")),
                 winning = colDef(show = F),
                 total_points = colDef(name = "", minWidth = 19, maxWidth = 30),
                 total_points_diff = colDef(name = "Diff", minWidth = 30, maxWidth = 40, 
@@ -1277,10 +1278,10 @@ game_summary_tab_rt = function(df){
                 off_ppr = colDef(name = "", minWidth = 30, maxWidth = 50, format = colFormat(digits = 2)),
                 off_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
                                       style = JS(game_summary_diff_style("off_ppr_diff"))),
-                def_ppr = colDef(name = "", minWidth = 30, format = colFormat(digits = 2)),
+                def_ppr = colDef(name = "", minWidth = 30, maxWidth = 40, format = colFormat(digits = 2)),
                 def_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
                                       style = JS(game_summary_diff_style("def_ppr_diff"))),
-                toss_efficiency = colDef(name = "", minWidth = 29, format = colFormat(percent = T, digits = 0)),
+                toss_efficiency = colDef(name = "", minWidth = 29, maxWidth = 40, format = colFormat(percent = T, digits = 0)),
                 toss_efficiency_diff = colDef(name = "Diff", minWidth = 32, maxWidth = 40, 
                                               style = JS(game_summary_diff_style("toss_efficiency_diff")))
               ),
