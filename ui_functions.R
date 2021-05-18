@@ -1224,8 +1224,18 @@ game_summary_tab_rt = function(df){
                 fontSize = "12px"
               ),
               defaultColDef = colDef(format = colFormat(digits = 0), 
-                                     align = "right", defaultSortOrder = "desc",
-                                     style = list(padding = "4px 2px"), headerStyle = list(textAlign = "right")), 
+                                     align = "right", defaultSortOrder = "desc", headerStyle = list(textAlign = "right"),
+                                     style = JS("function(rowInfo, cellInfo) {
+                                            if (rowInfo.row.team == 'A' & rowInfo.level < 1) {
+                                                var color =  '#e26a6a80'
+                                            } else if (rowInfo.row.team == 'B'& rowInfo.level < 1) {
+                                                var color = '#2574a980'
+                                            } else {
+                                                var color = '#FFFfff'
+                                            }
+                                            return { backgroundColor: color}
+                                        }"
+                                     )), 
               highlight = T,
               compact = T,
               groupBy = "team",
@@ -1233,7 +1243,6 @@ game_summary_tab_rt = function(df){
               class = "snappaneers-tbl",
               # Column Groups
               columnGroups = list(
-                colGroup(name = "", columns = c("team", "player_name")),
                 colGroup(name = "Total Points", columns = c("total_points", "total_points_diff")),
                 colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
                 colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
@@ -1245,7 +1254,17 @@ game_summary_tab_rt = function(df){
                 team = colDef(grouped = JS("function(cellInfo) {
                               // Display just the cell value
                               return 'Team '+ cellInfo.value
-                            }")),
+                            }"), name = "",
+                              headerStyle = list(border = "none"),
+                              style = JS("function(rowInfo) {
+                                            if (rowInfo.row.team == 'A' ) {
+                                                var color =  '#e26a6a80'
+                                            } else if (rowInfo.row.team == 'B') {
+                                                var color = '#2574a980'
+                                            } 
+                                            return { backgroundColor: color, color: '#ffffff' }
+                                        }"
+                              )),
                 player_id = colDef(show = F),
                 player_name = colDef(name = "Player", maxWidth = 60, align = "left", headerStyle = list(textAlign = "left")),
                 winning = colDef(show = F),
