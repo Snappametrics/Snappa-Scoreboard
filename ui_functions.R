@@ -1214,6 +1214,61 @@ team_summary_tab = function(df, game_over, score_difference, team){
     tab_theme_snappa()
 }
 
+game_summary_tab_rt = function(df){
+  browser()
+  df %>% 
+    reactable(defaultSorted = "total_points",
+              sortable = F,
+              resizable = T,
+              style = list(
+                fontSize = "12px"
+              ),
+              defaultColDef = colDef(format = colFormat(digits = 0), 
+                                     align = "right", defaultSortOrder = "desc",
+                                     style = list(padding = "4px 2px"), headerStyle = list(textAlign = "right")), 
+              highlight = T,
+              compact = T,
+              groupBy = "team",
+              width = "100%",
+              class = "snappaneers-tbl",
+              # Column Groups
+              columnGroups = list(
+                colGroup(name = "", columns = c("team", "player_name")),
+                colGroup(name = "Total Points", columns = c("total_points", "total_points_diff")),
+                colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
+                colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                colGroup(name = "Def. PPR", columns = c("def_ppr", "def_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                colGroup(name = "Toss Efficiency", columns = c("toss_efficiency", "toss_efficiency_diff"))
+              ),
+              # Columns
+              columns = list(
+                team = colDef(grouped = JS("function(cellInfo) {
+                              // Display just the cell value
+                              return 'Team '+ cellInfo.value
+                            }")),
+                player_id = colDef(show = F),
+                player_name = colDef(name = "Player", maxWidth = 60, align = "left", headerStyle = list(textAlign = "left")),
+                winning = colDef(show = F),
+                total_points = colDef(name = "", minWidth = 19, maxWidth = 30),
+                total_points_diff = colDef(name = "Diff", minWidth = 30, maxWidth = 40, 
+                                           style = JS(game_summary_diff_style("total_points_diff"))),
+                paddle_points = colDef(name = "", minWidth = 19, maxWidth = 40),
+                paddle_points_diff = colDef(name = "Diff", minWidth = 30, maxWidth = 40, 
+                                            style = JS(game_summary_diff_style("paddle_points_diff"))),
+                off_ppr = colDef(name = "", minWidth = 30, maxWidth = 50, format = colFormat(digits = 2)),
+                off_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
+                                      style = JS(game_summary_diff_style("off_ppr_diff"))),
+                def_ppr = colDef(name = "", minWidth = 30, format = colFormat(digits = 2)),
+                def_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
+                                      style = JS(game_summary_diff_style("def_ppr_diff"))),
+                toss_efficiency = colDef(name = "", minWidth = 29, format = colFormat(percent = T, digits = 0)),
+                toss_efficiency_diff = colDef(name = "Diff", minWidth = 32, maxWidth = 40, 
+                                              style = JS(game_summary_diff_style("toss_efficiency_diff")))
+              ),
+              defaultExpanded = TRUE
+    )
+}
+
 team_summary_tab_rt = function(df){
 
   df %>% 
