@@ -2107,7 +2107,18 @@ game_summary_diff_style = function(column){
                       } 
                       else if (pos.test(value)) {
                         return { color: '#67a283', padding: '4px 2px 4px 0px' }
+                      } else if (value == '0') {
+                        return { padding: '4px 2px 4px 0px' }
+                      } else {
+                      if (rowInfo.row.team == 'A' & rowInfo.level < 1) {
+                                                var color =  '#e26a6a80'
+                                            } else if (rowInfo.row.team == 'B' & rowInfo.level < 1) {
+                                                var color = '#2574a980'
+                                            } 
+                      
+                                     
                       }
+                      return { backgroundColor: color, color: '#ffffff', padding: '4px 2px 4px 0px'}
                     }
                   ")
 }
