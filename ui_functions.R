@@ -1312,14 +1312,14 @@ team_summary_tab_rt = function(df){
   df %>% 
     reactable(defaultSorted = "total_points",
               sortable = F,
-              resizable = T,
+              resizable = F,
               style = list(
                 fontSize = "12px"
               ),
               defaultColDef = colDef(format = colFormat(digits = 0), 
                                      align = "right", defaultSortOrder = "desc",
                                      style = list(padding = "4px 2px"), headerStyle = list(textAlign = "right")), 
-              highlight = T,
+              highlight = F,
               compact = T,
               width = "400px",
               class = "snappaneers-tbl",
