@@ -2038,8 +2038,8 @@ game_flow = function(player_stats, players, scores, game){
                        limits = c(0, max_round+5),
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
-    labs(title = "How the die flies",
-         subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
+    # labs(title = "How the die flies",
+    #      subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
     theme_snappa(md=T)
 }
 
