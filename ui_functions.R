@@ -823,7 +823,7 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
   
   inner_join(select(neers, player_id, player_name),
              select(player_summary_historical,
-                    -contains("clink"), -contains("sink"), -contains("points_per")), by = "player_id")
+                    -contains("points_per")), by = "player_id")
   
 }
 
@@ -1244,7 +1244,9 @@ game_summary_tab_rt = function(df){
               # Column Groups
               columnGroups = list(
                 colGroup(name = "Total Points", columns = c("total_points", "total_points_diff")),
+                colGroup(name = "Clink Points", columns = c("clink_points", "clink_points_diff")),
                 colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
+                colGroup(name = "Sinks", columns = c("sinks")),
                 colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
                 colGroup(name = "Def. PPR", columns = c("def_ppr", "def_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
                 colGroup(name = "Toss Efficiency", columns = c("toss_efficiency", "toss_efficiency_diff"))
@@ -1267,31 +1269,38 @@ game_summary_tab_rt = function(df){
                                      style = rt_team_highlight),
                 winning = colDef(show = F),
                 total_points = colDef(name = "", 
-                                      minWidth = 19, maxWidth = 30, 
+                                      minWidth = 25, 
                                       defaultSortOrder = "desc"),
                 total_points_diff = colDef(name = "Diff", 
-                                           minWidth = 30, maxWidth = 40, 
+                                           minWidth = 30, 
                                            style = JS(game_summary_diff_style("total_points_diff"))),
                 paddle_points = colDef(name = "", 
-                                       minWidth = 19, maxWidth = 40),
+                                       minWidth = 25),
                 paddle_points_diff = colDef(name = "Diff", 
-                                            minWidth = 30, maxWidth = 40, 
+                                            minWidth = 30, 
                                             style = JS(game_summary_diff_style("paddle_points_diff"))),
+                clink_points = colDef(name = "", 
+                                       minWidth = 19),
+                clink_points_diff = colDef(name = "Diff", 
+                                            minWidth = 30, 
+                                            style = JS(game_summary_diff_style("clink_points_diff"))),
+                sinks = colDef(name = "", 
+                                      minWidth = 30),
                 off_ppr = colDef(name = "", 
-                                 minWidth = 30, maxWidth = 50, 
+                                 minWidth = 30, 
                                  format = colFormat(digits = 2)),
                 off_ppr_diff = colDef(name = "Diff", 
-                                      minWidth = 36, maxWidth = 60, 
+                                      minWidth = 36, 
                                       style = JS(game_summary_diff_style("off_ppr_diff"))),
                 def_ppr = colDef(name = "", 
-                                 minWidth = 30, maxWidth = 40, format = colFormat(digits = 2)),
+                                 minWidth = 30, format = colFormat(digits = 2)),
                 def_ppr_diff = colDef(name = "Diff", 
-                                      minWidth = 36, maxWidth = 60, 
+                                      minWidth = 36, 
                                       style = JS(game_summary_diff_style("def_ppr_diff"))),
                 toss_efficiency = colDef(name = "", 
-                                         minWidth = 29, maxWidth = 40, format = colFormat(percent = T, digits = 0)),
+                                         minWidth = 29, format = colFormat(percent = T, digits = 0)),
                 toss_efficiency_diff = colDef(name = "Diff", 
-                                              minWidth = 32, maxWidth = 40, 
+                                              minWidth = 32, 
                                               style = JS(game_summary_diff_style("toss_efficiency_diff")))
               ),
               defaultExpanded = TRUE
