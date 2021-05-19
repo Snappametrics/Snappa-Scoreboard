@@ -2033,7 +2033,8 @@ game_flow = function(player_stats, players, scores, game){
                        limits = c(0, max_score+5-(max_score%%5)),
                        expand = expansion())+
     scale_x_continuous(name = "Round", 
-                       breaks = scales::breaks_pretty(n =10), 
+                       breaks = scales::breaks_pretty(n =7), 
+                       labels = function(x){c("0", rounds[pretty(x, n = 7)])},
                        limits = c(0, max_round+5),
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
