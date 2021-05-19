@@ -1217,14 +1217,14 @@ team_summary_tab = function(df, game_over, score_difference, team){
 game_summary_tab_rt = function(df){
   browser()
   df %>% 
-    reactable(defaultSorted = "total_points",
+    reactable(defaultSorted = c("winning", "total_points"),
               sortable = F,
               resizable = T,
               style = list(
                 fontSize = "12px"
               ),
               defaultColDef = colDef(format = colFormat(digits = 0), 
-                                     align = "right", defaultSortOrder = "desc", headerStyle = list(textAlign = "right"),
+                                     align = "right", headerStyle = list(textAlign = "right"),
                                      style = JS("function(rowInfo, cellInfo) {
                                             if (rowInfo.row.team == 'A' & rowInfo.level < 1) {
                                                 var color =  '#e26a6a80'
@@ -1233,12 +1233,12 @@ game_summary_tab_rt = function(df){
                                             } else {
                                                 var color = '#fafaf9'
                                             }
-                                            return { backgroundColor: color, padding: '4px 2px 4px 0px'}
+                                            return { backgroundColor: color, padding: '4px 2px'}
                                         }"
                                      )), 
-              highlight = T,
+              highlight = F,
               compact = T,
-              groupBy = "team",
+              groupBy = "team", 
               width = "80%", 
               class = "snappaneers-tbl",
               # Column Groups
