@@ -2104,25 +2104,40 @@ game_summary_diff_style = function(column){
                       var neg = /\\-/
                       var pos = /\\+/
                       if (neg.test(value)) {
-                        return { color: '#e26a6a', padding: '4px 2px 4px 0px' }
+                        var colour = '#e26a6a'
+                        var bg_col = '#fafaf9'
+                        
                       } 
                       else if (pos.test(value)) {
-                        return { color: '#67a283', padding: '4px 2px 4px 0px' }
+                        var colour = '#67a283'
+                        var bg_col = '#fafaf9'
+                        
                       } else if (value == '0') {
-                        return { padding: '4px 2px 4px 0px' }
+                        var colour = 'gray20'
+                        var bg_col = '#fafaf9'
+                        
                       } else {
-                      if (rowInfo.row.team == 'A' & rowInfo.level < 1) {
-                                                var color =  '#e26a6a80'
-                                            } else if (rowInfo.row.team == 'B' & rowInfo.level < 1) {
-                                                var color = '#2574a980'
-                                            } 
-                      
+                        if (rowInfo.row.team == 'A' & rowInfo.level < 1) {
+                          var bgcol =  '#e26a6a80'
+                        } else if (rowInfo.row.team == 'B' & rowInfo.level < 1) {
+                          var bgcol = '#2574a980'
+                        } 
                                      
                       }
-                      return { backgroundColor: color, color: '#ffffff', padding: '4px 2px 4px 0px'}
+                      
+                      return { backgroundColor: bgcol, color: colour, padding: '4px 2px'}
                     }
                   ")
 }
+
+rt_team_highlight = JS("function(rowInfo) {
+                                            if (rowInfo.row.team == 'A' ) {
+                                                var color =  '#e26a6a80'
+                                            } else if (rowInfo.row.team == 'B') {
+                                                var color = '#2574a980'
+                                            } 
+                                            return { backgroundColor: color, color: '#fafaf9', fontWeight: 600 }
+                                        }")
 
 theme_snappa = function(title_family = "Inter SemiBold",
                         text_family = "Inter",
