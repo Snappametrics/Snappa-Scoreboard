@@ -1881,7 +1881,7 @@ observe({
       )
       
       # Initialize the current game's player_stats table
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
       
       dbWriteTable(
         conn = con, 
@@ -2132,7 +2132,7 @@ observeEvent(input$resume_no, {
     # This is for the case when there hasn't been a scoring point yet, which causes this to fail in the transition
     # between rounds 1A and 1B. Clumsy, perhaps, but it works
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db, round_button = T)
       
@@ -2166,7 +2166,7 @@ observeEvent(input$resume_no, {
     } else {
       
     # Update player stats in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
     #Update the DB with the new player_stats (adds to shots)
     db_update_player_stats(vals$player_stats_db, round_button = T)
     }
@@ -2637,7 +2637,7 @@ observeEvent(input$resume_no, {
       
       
       # Update player stats table
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
       db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
 
       # Congratulate paddlers
@@ -2754,7 +2754,7 @@ observeEvent(input$resume_no, {
       
       
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, 
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, 
                                                      snappaneers(), 
                                                      game = vals$game_id)    
       #Update the DB with the new player_stats
@@ -3021,7 +3021,7 @@ observeEvent(input$resume_no, {
     
     
     # Update player stats table in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
     
@@ -3073,7 +3073,7 @@ observeEvent(input$resume_no, {
                       " AND game_id = ", vals$game_id)
     )    
     # Update player_stats 
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
     
@@ -3221,7 +3221,7 @@ observeEvent(input$resume_no, {
 
     
     # Update player stats table one final time
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     
     db_update_player_stats(vals$player_stats_db)
     
