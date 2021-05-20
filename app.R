@@ -207,7 +207,7 @@ ui <- dashboardPage(
       
       
       tabItem(tabName = "career_stats",
-              boxPlus(width = 12,
+              box(width = 12, title = "Top Snappaneers",
                     style = str_c("background:", snappa_pal[1]), align = "center",
                     div(class = "top-snappaneers",
                         div(class = "snappaneers-header",
@@ -221,7 +221,7 @@ ui <- dashboardPage(
                         )
                     )
                 ),
-                boxPlus(width = 12,
+                box(width = 12,
                     style = str_c("background:", snappa_pal[1]), align = "center",
                                  plotOutput("scoring_heatmap", height = "75vw",
                                             hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
@@ -236,7 +236,7 @@ ui <- dashboardPage(
       tabItem(tabName = "player_stats",
               fluidRow(
                 # Filters
-                boxPlus(width = 12,
+                box(width = 12,
                         # Player Select
                         selectInput("player_select", label = "Player", selectize = F,
                                     choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
@@ -253,7 +253,7 @@ ui <- dashboardPage(
               )
               ,
               fluidRow(
-                boxPlus(title = "Player Form",
+                box(title = "Player Form",
                         collapsible = T,
                         closable = F,
                         status = "primary",
@@ -261,27 +261,27 @@ ui <- dashboardPage(
                                  column(width = 5,
                                         # Stat selection
                                         selectInput("stat_select", label = NULL, selectize = F,
-                                                    choices = c("Total Points" = "total_points", 
-                                                                "Paddle Points" = "paddle_points", 
-                                                                "Toss Efficiency" = "toss_efficiency"), 
-                                                    selected = "total_points")), 
+                                                    choices = c("Total Points" = "total_points",
+                                                                "Paddle Points" = "paddle_points",
+                                                                "Toss Efficiency" = "toss_efficiency"),
+                                                    selected = "total_points")),
                                  column(width = 1, style = "padding-right:3vw;padding-left:0",
                                         tags$span("Last", style = "font-weight:600;")
                                  ),
                                  column(width = 3,
                                         # Sample size selection
-                                        selectInput("sample_select", label = NULL, selectize = F, 
-                                                    choices = c(5, 10, 20, "All"), 
+                                        selectInput("sample_select", label = NULL, selectize = F,
+                                                    choices = c(5, 10, 20, "All"),
                                                     selected = 5)),
                                  column(width = 1, style = "padding-left:0;",
                                         tags$span(" games", style = "font-weight:600;")
                                  )
-                                 
+
                         ),
                         plotOutput("player_form")
               ),
               # Top Teammates
-              boxPlus(title = "Top Teammates",
+              box(title = "Top Teammates",
                       collapsible = T,
                       closable = F,
                       status = "primary",
@@ -290,45 +290,45 @@ ui <- dashboardPage(
                                       width = "100%")
               )
               # Form plot
-              
+
               ),
               fluidRow(
-                boxPlus(title = textOutput("game_history_title"),
+                box(title = textOutput("game_history_title"),
                         collapsible = T, width = 12,
                         closable = F,
                         collapsed = T,
                         status = "primary",
                         reactableOutput("player_game_stats"))
               )
-              
+
               ),
 
 # Edit teams --------------------------------------------------------
-      tabItem(tabName = "edit_teams",
-              fluidRow(
-                team_edit_column("A"),
-
-                # Column 2 - empty
-                column(4,  align = "center"),
-                team_edit_column("B")
-              )
-      ),
+      # tabItem(tabName = "edit_teams",
+      #         fluidRow(
+      #           team_edit_column("A"),
+      # 
+      #           # Column 2 - empty
+      #           column(4,  align = "center"),
+      #           team_edit_column("B")
+      #         )
+      # ),
 
 # Win Probability Model ---------------------------------------------
     tabItem(tabName = "markov_model_summary",
         div(id = "waiter",
-                boxPlus(title = "Simulation Parameters",
+                box(title = "Simulation Parameters",
                 width = 12,
-                collapsable = T, 
+                collapsable = T,
                 closable = F,
                 fluidRow(
-                  column(width = 4, align = "left", 
+                  column(width = 4, align = "left",
                     uiOutput("simulation_score_A")
                   ),
                   column(width = 4, align = "center",
                     sliderTextInput(
                       inputId = "num_simulations",
-                      label = "Number of Simulations", 
+                      label = "Number of Simulations",
                       choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
                       grid = TRUE
                     ),
@@ -336,38 +336,38 @@ ui <- dashboardPage(
                                "Run the Simulations!",
                                color = 'primary',
                                style = 'pill',
-                               size = "lg")     
+                               size = "lg")
                   ),
                   column(width = 4, align = "right",
                     uiOutput("simulation_score_B")
                   )
                 )
-                    
+
             ),
         div(class = "simulation_results",
             uiOutput('simulation_warning'),
             uiOutput("simulation_blurb"),
             plotOutput("simulation_probability_bar",
                        height = 100),
-            boxPlus(title = "Team Score Shares by Game",
+            box(title = "Team Score Shares by Game",
                     collapsible = T,
                     closable = F,
                     plotOutput("simulation_score_shares")),
-            boxPlus(title = "Overlap of Total Scores",
+            box(title = "Overlap of Total Scores",
                     collapsible = T,
                     closable = F,
                     plotOutput("simulation_overlap"))
             )
-      )
-    )
+        )
+        )
 ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
     )
-  ),
-  useShinyjs(),
+  )
+  # 
   # This is supposed to go at the top tho
-  use_waiter()
+  
 
 
 
