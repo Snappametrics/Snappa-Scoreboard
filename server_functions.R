@@ -31,6 +31,54 @@ aggregate_player_stats = function(scores_df, snappaneers, game){
 
 }
 
+aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
+  
+  if(is_integer(unique(scores_df$game_id))){
+    game = unique(scores_df$game_id)
+  }
+  browser()
+  sink_criteria = env_parents(current_env()) %>% 
+    keep(~env_has(., "sink_criteria")) %>% 
+    map_dfr(., env_get, "sink_criteria")
+  
+  scores_df %>% 
+    # Join scores to snappaneers to get each player's team
+    right_join(snappaneers, by = "player_id") %>% 
+    detect_sink(., sink_criteria) %>% 
+    # Fill in game_id for players who have not scored yet
+    replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, team, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              normal_points = sum(points_scored * !(paddle | clink | sink)),
+              sinks = sum(sink), # NEW
+              sink_points = sum(points_scored*sink),
+              paddle_sinks = sum(sink*paddle), # NEW
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored * (paddle | foot)),
+              foot_points = sum(points_scored * foot), # NEW
+              clink_points = sum(points_scored * clink),
+              points_per_round = na_if(total_points / last(shots), Inf),
+              off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
+              def_ppr = na_if(sum(points_scored * (paddle | foot)) / last(shots), Inf),
+              toss_efficiency = sum((points_scored>0) * !(paddle | foot)) / last(shots), 
+              .groups = "drop") %>% 
+    # Replace NA values with 0s
+    replace_na(list(points_per_round = 0, off_ppr = 0, def_ppr = 0, toss_efficiency = 0))
+  
+}
+
+detect_sink = function(scores, criteria){
+  # Detect sinks in a dataframe of score data
+  left_join(scores, 
+            mutate(criteria, sink = T), by = c("points_scored", "clink")) %>% 
+    replace_na(list(sink = F))
+}
+
 toss_percent_plus = function(x){
   str_c("+", round(x*100, 0), "%")
 }
