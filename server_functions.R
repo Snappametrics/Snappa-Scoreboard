@@ -1,3 +1,15 @@
+casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text,
+                         12, 7, "12-7", "Roll off to see who is taking the kamikaze to the face",
+                         7, 12, "12-7", "Roll off to see who is taking the kamikaze to the face",
+                         18, 12, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.",
+                         12, 18, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.",
+                         20, 03, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams",
+                         03, 20, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams")
+
+sink_criteria = tribble(~points_scored, ~clink, 
+                        3, F,
+                        5, T,
+                        7, T)
 # For the sake of code simplicity, I'm going to define a function which
 # writes player_stats_db off of scores. This should only require
 # a scores table to be passed on, since the snappaneers table that is also
