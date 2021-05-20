@@ -71,75 +71,72 @@ tbl_templates = map(tbls, function(table){
 # UI ----------------------------------------------------------------------
 
 # Define UI for application that draws a histogram
-ui <- dashboardPagePlus(
-  collapse_sidebar = TRUE,
-  dashboardHeaderPlus(title = tagList(
+ui <- dashboardPage(
+  header = dashboardHeader(title = tagList(
     # Corner logo
-    span(class = "logo-lg", "Snappa Scoreboard"), 
-    img(class = "logo-mini", src = "die_hex.png", style = "padding:.25vw;")),
-    
-    enable_rightsidebar = TRUE,
-    rightSidebarIcon = "gears",
+    span(class = "logo-lg", "Snappa Scoreboard"),
+    img(class = "logo-mini", src = "die_hex.png", style = "padding:.25vw;")
+  ),
+                           
     
     # Left side header
-    left_menu = tagList(
+    leftUi = tagList(
       dropdownBlock2(
         id = "recent_scores_dropdown",
         title = "Recent Scores",
         icon = "backward",
         badgeStatus = NULL,
         reactableOutput("recent_scores_rt"),
-        actionBttn("game_summary", 
+        actionBttn("game_summary",
                    "Detailed Game Summary",
                    style = "material-flat",
                    color = "primary",
                    icon = icon("chart-bar"),
                    size = "sm")
-      ),
+      )
       # Right side header
     ),
     tags$li(class = "dropdown", socialButton(
-        url = "https://github.com/mdewey131/Snappa-Scoreboard",
-        type = "github"
+        href = "https://github.com/mdewey131/Snappa-Scoreboard",
+        icon = icon("github")
     ),
     style = "padding-top:9px;"
     )
     ),
-  dashboardSidebar(
+  sidebar = dashboardSidebar(
     sidebarMenuOutput("sidebar_menu"),
     collapsed = TRUE
   ),
-  rightsidebar = rightSidebar(
-    background = "dark",
-    rightSidebarTabContent(
-      id = 1,
-      title = "Game Options",
-      icon = "desktop",
-      active = TRUE,
-      align = "center",
-      sliderInput(
-        inputId = "score_to",
-        label = "What score are you playing to?",
-        min = 21, max = 50, value = 21
-      ),
-      disabled(actionBttn("tifu", "Friendly Fire", 
-                 style = "material-flat",
-                 size = "sm", color = "danger")),
-      # actionBttn("new_game", "Restart", 
+  controlbar = dashboardControlbar(
+    skin = "dark",
+    controlbarMenu(
+    #   id = 1,
+      controlbarItem(
+        title = "Game Options",
+        sliderInput(
+          inputId = "score_to",
+          label = "What score are you playing to?",
+          min = 21, max = 50, value = 21
+        ),
+        disabled(actionBttn("tifu", "Friendly Fire",
+                            style = "material-flat",
+                            size = "sm", color = "danger")),
+        br(),
+        actionBttn("finish_game", "Finish",
+                   icon = icon("check"), size = "sm",
+                   style = "material-flat", color = "warning")
+      )
+      
+      # icon = "desktop",
+      # actionBttn("new_game", "Restart",
       #            icon = icon("plus"), size = "sm",
       #            style = "material-flat", color = "warning"),
-      br(),
-      actionBttn("finish_game", "Finish",
-                 icon = icon("check"), size = "sm",
-                 style = "material-flat", color = "warning")
-    ),
-    rightSidebarTabContent(
-      id = 2,
-      title = "Tab 2",
-      textInput("caption", "Caption", "Data Summary")
+      
     )
     ),
-  dashboardBody(
+  body = dashboardBody(
+    useShinyjs(),
+    use_waiter(),
     tabItems(
 
       # Player Input ------------------------------------------------------------
