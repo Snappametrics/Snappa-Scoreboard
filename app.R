@@ -811,56 +811,51 @@ server <- function(input, output, session) {
 # Game Summary Stats ------------------------------------------------------
   
 
-  
-  game_summary = function(df) {
-    if (df$game_complete){
-      subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
-      subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
-    } else{
-      score_difference = abs(df$points_a - df$points_b)
+  output$a_breakdown = renderPlot({
+    
+    if(input$start_game == 0){
+      player_score_breakdown(ps_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+                             ps_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id, 
+                             ps_players = vals$db_tbls()[["players"]],
+                             ps_team = "A")
+    } else {
+      player_score_breakdown(ps_player_stats = vals$player_stats_db, 
+                             ps_game = vals$game_id, 
+                             ps_players = vals$db_tbls()[["players"]],
+                             ps_team = "A")
       
-      subtitle_a = if_else(df$points_a > df$points_b, 
-                              "in the lead.", 
-                              str_c("chasing ", 
-                                    score_difference,
-                                    ".")
-                           )
-      subtitle_b = if_else(df$points_a < df$points_b, 
-                                        "in the lead.", 
-                                        str_c("chasing ", 
-                                              score_difference,
-                                              ".")
-                           )
     }
-    modalDialog(
-      title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", rounds[df$rounds])),  
-      style = str_c("background-color: ", snappa_pal[1], ";"),
+  })
+  output$b_breakdown = renderPlot({
+    
+    if(input$start_game == 0){
+      player_score_breakdown(ps_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+                             ps_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id, 
+                             ps_players = vals$db_tbls()[["players"]],
+                             ps_team = "B")
+    } else {
+      player_score_breakdown(ps_player_stats = vals$player_stats_db, 
+                             ps_game = vals$game_id, 
+                             ps_players = vals$db_tbls()[["players"]],
+                             ps_team = "B")
       
+    }
+  })
+  
+  output$game_flow = renderPlot({
+    if(input$start_game == 0){
+      game_flow(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
+                players = vals$db_tbls()[["players"]], 
+                scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
+                game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
+    } else {
+      game_flow(player_stats = vals$player_stats_db,
+                players = vals$db_tbls()[["players"]], 
+                scores = vals$scores_db,
+                game = vals$game_id)
       
-      
-      
-      # Tables
-      fluidRow(
-        column(6, align = "center",
-               h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
-               h4(subtitle_a, align = "left"),
-               reactableOutput("team_a_summary")
-        ),
-        column(6,align = "center",# offset = 2,
-               h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
-               h4(subtitle_b, align = "left"),
-               reactableOutput("team_b_summary")
-        )
-      ),
-      # Summary plot
-        plotOutput("summary_plot", height = "50vh"),
-      reactableOutput("scores_tbl"),
-      
-      footer = NULL,
-      easyClose = T,
-      size = "l"
-    )
-  }
+    }
+  })
   
   output$summary_plot = renderPlot({
     if(input$start_game == 0){
@@ -887,12 +882,12 @@ server <- function(input, output, session) {
 
     if(input$start_game == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
-      make_single_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
                          neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
                          team_name = "A", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
-        game_summary_tab_rt(.)
+        team_summary_tab_rt(.)
     } else {
       make_summary_table(current_player_stats = vals$player_stats_db, 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
@@ -1883,7 +1878,7 @@ observe({
       )
       
       # Initialize the current game's player_stats table
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
       
       dbWriteTable(
         conn = con, 
@@ -1972,20 +1967,36 @@ output$game_summary = renderUI({
     
     # Tables
     fluidRow(align = "center",
-      reactableOutput("team_a_summary")
-      # column(6, align = "center",
-      #        h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
-      #        h4(subtitle_a, align = "left"),
-      #        reactableOutput("team_a_summary")
-      # ),
-      # column(6,align = "center",# offset = 2,
-      #        h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
-      #        h4(subtitle_b, align = "left"),
-      #        reactableOutput("team_b_summary")
-      # )
+      # reactableOutput("team_a_summary")
+      column(6, align = "center",
+             h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+             h4(subtitle_a, align = "left"),
+             reactableOutput("team_a_summary")
+      ),
+      column(6,align = "center",# offset = 2,
+             h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+             h4(subtitle_b, align = "left"),
+             reactableOutput("team_b_summary")
+      )
     ),
     # Summary plot
-    plotOutput("summary_plot", height = "50vh"),
+    fluidRow(align = "center",
+      column(3, style = "padding-right:0",
+             plotOutput("a_breakdown", width = "100%", height = "30vh")
+      ),
+      column(6,style = "padding:0",
+             div(style = "margin:0px 5px; padding:5px;",
+                 h4("How the die flies", align = "left"),
+                 h5("Point progression throughout the game", align = "left")
+                 )
+             ,
+             plotOutput("game_flow")
+      ),
+      column(3, style = "padding-left:0",
+             plotOutput("b_breakdown", width = "100%", height = "30vh")
+      )
+    ),
+    # plotOutput("summary_plot", height = "50vh"),
     reactableOutput("scores_tbl"),
     
     footer = NULL,
@@ -2118,7 +2129,7 @@ observeEvent(input$resume_no, {
     # This is for the case when there hasn't been a scoring point yet, which causes this to fail in the transition
     # between rounds 1A and 1B. Clumsy, perhaps, but it works
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
       #Update the DB with the new player_stats
       db_update_player_stats(vals$player_stats_db, round_button = T)
       
@@ -2152,7 +2163,7 @@ observeEvent(input$resume_no, {
     } else {
       
     # Update player stats in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
     #Update the DB with the new player_stats (adds to shots)
     db_update_player_stats(vals$player_stats_db, round_button = T)
     }
@@ -2623,7 +2634,7 @@ observeEvent(input$resume_no, {
       
       
       # Update player stats table
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
       db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
 
       # Congratulate paddlers
@@ -2740,7 +2751,7 @@ observeEvent(input$resume_no, {
       
       
       # Update player stats in the app
-      vals$player_stats_db = app_update_player_stats(vals$scores_db, 
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, 
                                                      snappaneers(), 
                                                      game = vals$game_id)    
       #Update the DB with the new player_stats
@@ -3007,7 +3018,7 @@ observeEvent(input$resume_no, {
     
     
     # Update player stats table in the app
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
     
@@ -3059,7 +3070,7 @@ observeEvent(input$resume_no, {
                       " AND game_id = ", vals$game_id)
     )    
     # Update player_stats 
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     #Update the DB with the new player_stats
     db_update_player_stats(vals$player_stats_db)
     
@@ -3207,7 +3218,7 @@ observeEvent(input$resume_no, {
 
     
     # Update player stats table one final time
-    vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
     
     db_update_player_stats(vals$player_stats_db)
     
