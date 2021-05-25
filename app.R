@@ -1596,64 +1596,34 @@ observe({
   lost_game_id = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% pull()
 
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
-  total_lost_game_score = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE game_id = ", lost_game_id)) %>% 
-    pull() %>% 
-    replace_na(0)
+  db_scores = dbGetQuery(con,
+                         sql(
+                           "SELECT 
+                                scoring_team AS team,
+                                SUM(points_scored) AS points
+                              FROM scores
+                              WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
+                              GROUP BY game_id, scoring_team")
+  ) %>% collect()
+  scores = tibble(team = c('A', 'B'))
+  scores = scores %>% 
+    left_join(db_scores) %>%
+    replace_na(list(points = 0)) %>%
+    mutate(points = as.integer(points))
   
   # Discard that game if it's 0-0 and continue on with business as usual, else
   # allow players to restart
-  if (total_lost_game_score == 0){
+  if (pull(scores[scores$team == 'A',], points) == 0 & 
+      pull(scores[scores$team == 'B',], points) == 0){
     delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
     dbExecute(con, delete_query)
   } else {
-  
+  showModal(restart_game_UI('restart',
+                  scores[scores$team == 'A',] %>% pull(points), 
+                  scores[scores$team == 'B',] %>% pull(points))
+  )
   restart_game_server('restart')
   
-
-  # showModal(
-  #   modalDialog(
-  #     title = "Hol' up, did you want to continue the previous game?",
-  #     style = str_c("background-color:", snappa_pal[1], ";"),
-  #     div(
-  #       h3("Summary of the Previous Game", 
-  #          align = 'center')
-  #     ),
-  #     
-  #     # br(),
-  #     
-  #     # br(),
-  #     
-  #     br(),
-  #     renderUI({glance_ui_game(lost_game_id)}),
-  #     
-  #     footer = tagList(
-  #               fluidRow(
-  #                 column(9, align = "left",
-  #                        helpText("Warning: 'No' will delete the game from the database", 
-  #                                 style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
-  #                        ),
-  #                 column(1,
-  #                        actionBttn("resume_no",
-  #                                   label = "No",
-  #                                   style = "material-flat",
-  #                                   color = "danger",
-  #                                   size = "md")
-  #                        ),
-  #                 column(1,
-  #                        actionBttn("resume_yes",
-  #                                   label = "Yes",
-  #                                   style = "material-flat", 
-  #                                   color = "warning",
-  #                                   size = "md")
-  #                        )
-  #               )
-  #             ),
-  #     size = "l",
-  #     easyClose = F,
-  #     fade = F
-  #   )
-  #  
-  # )
   }
   
 })
