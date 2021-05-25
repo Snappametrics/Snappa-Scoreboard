@@ -1,3 +1,7 @@
+sink_criteria = tribble(~points_scored, ~clink, 
+                        3, F,
+                        5, T,
+                        7, T)
 # For the sake of code simplicity, I'm going to define a function which
 # writes player_stats_db off of scores. This should only require
 # a scores table to be passed on, since the snappaneers table that is also
@@ -36,10 +40,9 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
   if(is_integer(unique(scores_df$game_id))){
     game = unique(scores_df$game_id)
   }
-  browser()
-  sink_criteria = env_parents(current_env()) %>% 
-    keep(~env_has(., "sink_criteria")) %>% 
-    map_dfr(., env_get, "sink_criteria")
+  sink_criteria = rlang::env_parents(rlang::current_env()) %>% 
+    keep(~rlang::env_has(., "sink_criteria")) %>% 
+    map_dfr(., rlang::env_get, "sink_criteria")
   
   scores_df %>% 
     # Join scores to snappaneers to get each player's team
