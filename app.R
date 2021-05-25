@@ -1607,7 +1607,6 @@ observe({
     dbExecute(con, delete_query)
   } else {
   
-  browser()
   restart_game_server('restart')
   
 

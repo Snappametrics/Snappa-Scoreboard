@@ -1,7 +1,8 @@
 # Restart game module
 
 #showModal(
-restart_game_UI = function(id) {
+restart_game_UI = function(id, team_A_points, team_B_points) {
+  ns <- NS(id)
   modalDialog(
     title = "Hol' up, did you want to continue the previous game?",
     style = str_c("background-color:", snappa_pal[1], ";"),
@@ -19,37 +20,43 @@ restart_game_UI = function(id) {
     ## several things
     fluidRow(
       column(4,
-             align = 'left',
+             align = 'center',
              h3(class = 'modal_team_title', id = 'modal_team_title_A',
-                'Team A')
-             
+                'Team A'),
+             h3(class = 'modal_team_points', id = 'modal_team_points_A',
+                team_A_points)
              ),
-      column(2, align = 'center',
-             h3('Summary of Previous Game'),
-             textOutput(id('incomplete_game_score'))
+      column(4, align = 'center'
              ),
       column(4,
-             align = 'right',
+             align = 'center',
              h3(class = 'modal_team_title', id = 'modal_team_title_B',
-                'Team B')
+                'Team B'),
+             h3(class = 'modal_team_points', id = 'modal_team_points_B',
+                team_B_points)
+    
              )
     ),
  #   reactableOutput(ns('incomplete_game_summary'))
     
     footer = tagList(
       fluidRow(
-        column(9, align = "left",
-               helpText("This will delete the game from our database", 
+        column(8, align = "left",
+               helpText(
+                 h4('Would you like to continue the previous game?',
+                    style = "color: black; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;"),
+                 span("This will delete the game from our database", 
                         style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
+                 )
         ),
-        column(1,
-               actionBttn("keep_incomplete_game",
-                          label = "Keep Previous Game",
+        column(2,
+               actionBttn(ns("restart_incomplete_game"),
+                          label = "Restart Game",
                           style = "material-flat", 
                           color = "default",
                           size = "md")
         ),
-        column(1,
+        column(2,
                actionBttn(ns("delete_incomplete_game"),
                           label = "Delete Game",
                           style = "material-flat",
@@ -69,11 +76,8 @@ restart_game_UI = function(id) {
 restart_game_server = function(id) {
   moduleServer(id,
                function(input, output, session) {
+                 browser()
                  
-                 team_scores = reactive({
-                   dbGetQuery(con,
-                              sql('SELECT '))
-                 })
                  game_id = reactive({
                    pull_game_id = sql('SELECT MAX(game_id) FROM game_stats')
                    
@@ -81,22 +85,34 @@ restart_game_server = function(id) {
                    return(game_id)
                    
                  })
-                 
-                 output$incomplete_game_score = renderText(
-                   str_c(team_scores()['points_A'],
-                         ' - ',
-                         team_scores()['points_B']
-                   )
-                 )
-                 
-                 
+                 team_scores = reactive({
+                   db_scores = dbGetQuery(con,
+                                       sql(
+                                        "SELECT 
+                                          scoring_team AS team,
+                                          SUM(points_scored) AS points
+                                        FROM scores
+                                        WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
+                                        GROUP BY game_id, scoring_team")
+                                ) %>% collect()
+                   
+                   scores = tibble(team = c('A', 'B'))
+                   scores = scores %>% 
+                     left_join(db_scores) %>%
+                     replace_na(list(points = 0)) %>%
+                     mutate(points = as.integer(points))
+                   return(scores)
+                 })
               #   output$incomplete_game_summary = 
                    
                  # I just don't want to believe that this is the best way
                  # to do this
                  observe({
                    browser()
-                   showModal(restart_game_UI(id))
+                   showModal(restart_game_UI(id,
+                                             team_scores()[team_scores()$team == 'A',] %>% pull(points), 
+                                             team_scores()[team_scores()$team == 'B',] %>% pull(points))
+                             )
                    })
                  
                  observeEvent(input$keep_incomplete_game, {
