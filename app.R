@@ -1981,7 +1981,7 @@ output$game_summary = renderUI({
     ),
     # Summary plot
     fluidRow(align = "center",
-      column(3, style = "padding-right:0",
+      column(3, style = "padding-right:0; top:60px;",
              plotOutput("a_breakdown", width = "100%", height = "30vh")
       ),
       column(6,style = "padding:0",
@@ -1992,7 +1992,7 @@ output$game_summary = renderUI({
              ,
              plotOutput("game_flow")
       ),
-      column(3, style = "padding-left:0",
+      column(3, style = "padding-left:0; top:60px;",
              plotOutput("b_breakdown", width = "100%", height = "30vh")
       )
     ),
