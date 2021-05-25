@@ -829,8 +829,7 @@ server <- function(input, output, session) {
   output$b_breakdown = renderPlot({
     
     if(input$start_game == 0){
-      browser()
-      player_score_breakdown(snappaneers = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), 
+      player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$db_tbls()[["players"]],
                              ps_team = "B")
