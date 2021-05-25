@@ -2212,7 +2212,7 @@ rt_team_highlight = JS("function(rowInfo) {
                                         }")
 
 theme_snappa = function(title_family = "Inter SemiBold",
-                        text_family = "Inter",
+                        text_family = "Inter Medium",
                         base_size = 12, 
                         text_color = "gray20",
                         bg_color = snappa_pal[1], line_colour = "#DEDDDD",
