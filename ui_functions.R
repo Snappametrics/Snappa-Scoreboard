@@ -1926,7 +1926,6 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
   
   
   browser()
-  aggregate_player_stats_and_sinks(scores, snappaneers)
   df = ps_player_stats %>% 
     select(player_id, team, total_points:clink_points) %>% 
     arrange(-total_points) %>%
@@ -1977,50 +1976,57 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
       )
     
     # Option 1:
-    # scores_df %>% 
-    #   # Join scores to snappaneers to get each player's team
-    #   right_join(snappaneers, by = "player_id") %>% 
-    #   filter(team == "A") %>% 
-    #   detect_sink(., sink_criteria) %>% 
-    #   # Fill in game_id for players who have not scored yet
-    #   replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
-    #   # Group by game and player, (team and shots are held consistent)
-    #   group_by(game_id, player_id, team, shots) %>% 
-    #   # Calculate summary stats
-    #   summarise(total_points = sum(points_scored),
-    #             ones = sum((points_scored == 1)),
-    #             twos = sum((points_scored == 2)),
-    #             threes = sum((points_scored == 3)),
-    #             normal_points = sum(points_scored * !(paddle | clink | sink)),
-    #             sinks = sum(sink), # NEW
-    #             sink_points = sum(points_scored*sink),
-    #             paddle_sinks = sum(sink*paddle), # NEW
-    #             impossibles = sum((points_scored > 3)),
-    #             paddle_points = sum(points_scored * (paddle | foot)),
-    #             foot_points = sum(points_scored * foot), # NEW
-    #             clink_points = sum(points_scored * clink),
-    #             points_per_round = na_if(total_points / last(shots), Inf),
-    #             off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
-    #             def_ppr = na_if(sum(points_scored * (paddle | foot)) / last(shots), Inf),
-    #             toss_efficiency = sum((points_scored>0) * !(paddle | foot)) / last(shots), 
-    #             .groups = "drop") %>% 
-    #   # Replace NA values with 0s
-    #   replace_na(list(points_per_round = 0, off_ppr = 0, def_ppr = 0, toss_efficiency = 0)) %>% 
-    #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>% 
-    #   mutate(total = total_points) %>% 
-    #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>% 
-    #   arrange(team, desc(total), player_id, desc(points)) %>% 
-    #   mutate(player_id = fct_inorder(factor(player_id)),
-    #          type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal", "total"), ordered = T),
-    #          bar_width = if_else(type == "total", .1, 10)) %>% 
-    #   ggplot(., aes(x = player_id, y = points), width = .$bar_width/100)+
-    #   geom_col(aes(fill = type), colour = snappa_pal[1], position = position_dodge())+
+    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>% 
+    #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+    #   mutate(total = total_points) %>%
+    #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+    #   arrange(team, desc(total), player_id, desc(points)) %>%
+    #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal", "total"), ordered = T),
+    #          bar_width = if_else(type == "total", .1, 10))
+    #   
+    # filter(plot_df, type !="total") %>%
+    #   left_join(ps_players, by = "player_id") %>% 
+    #   ggplot(., aes(x = type, y = points))+
+    #   geom_col(aes(fill = type), 
+    #            colour = snappa_pal[1])+
+    #   geom_text(aes(y = points + .5, label = na_if(points, 0)),
+    #             family = "Inter Medium", colour = "black")+
+    #   geom_col(data = filter(plot_df, type =="total"), 
+    #            aes(fill = type), width = .25, position = position_dodge(width = 1), colour = snappa_pal[1])+
     #   scale_fill_manual(name = NULL, drop=F,
-    #                     values = c("normal" = "#67A283", "paddle" = "#793E8E", "clink" = "#54B6F2", "sink" = "#FFA630", "foot" = "#011936", "total" = "gray20"))+#090C9B
-    #   scale_x_discrete(drop=T)+
+    #                     values = c("normal" = "#67A283", "paddle" = "#793E8E", "clink" = "#54B6F2", "sink" = "#FFA630", "foot" = "#011936", "total" = "gray20"),
+    #                     guide = guide_legend(direction = "vertical", ncol = 1, reverse = T))+#090C9B
+    #   scale_x_discrete(drop=F, position = "top")+
     #   coord_flip()+
-    #   theme_snappa()
+    #   facet_wrap(~player_name, ncol = 1, strip.position = "left", as.table = F)+
+    #   theme_snappa(md=T, text_family = "Inter Medium")+
+    #   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), 
+    #         strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)))
     
+    # Option 2:
+    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
+    #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+    #   mutate(total = total_points) %>%
+    #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+    #   arrange(team, desc(total), player_id, desc(points)) %>%
+    #   filter(type != "total") %>% 
+    #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"), 
+    #                        labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
+    
+    # plot_df %>%
+    #   left_join(ps_players, by = "player_id") %>% 
+    #   ggplot(., aes(x = type, y = points))+
+    #   geom_col(aes(fill = type), colour = snappa_pal[1], position = position_dodge(width = 1))+
+    #   geom_text(aes(y = points/2, label = na_if(points, 0)), colour = snappa_pal[1])+
+    #   scale_fill_manual(name = NULL, drop=F,
+    #                     values = c("Normal" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Foot" = "#090C9B"),
+    #                     guide = guide_legend(direction = "horizontal", nrow = 1, reverse = T))+#090C9B
+    #   coord_polar()+
+    #   facet_wrap(~player_name, ncol=1, strip.position = "left", as.table = F)+
+    #   theme_snappa(md=T)+
+    #   theme(axis.title = element_blank(), axis.line = element_blank(), axis.text.y.left = element_blank(),
+    #         legend.position = "bottom",
+    #         axis.text.x = element_blank(), strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)), panel.grid.major = element_blank())
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
     # plot+
