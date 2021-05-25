@@ -2087,14 +2087,23 @@ game_flow = function(player_stats, players, scores, game){
                        limits = c(0, max_score+5-(max_score%%5)),
                        expand = expansion())+
     scale_x_continuous(name = "Round", 
-                       breaks = scales::breaks_pretty(n =7), 
-                       labels = function(x){c("0", rounds[pretty(x, n = 7)])},
+                       breaks = breaks_rounds(n =7), 
                        limits = c(0, max_round+5),
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
     # labs(title = "How the die flies",
     #      subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
     theme_snappa(md=T)
+}
+
+breaks_rounds = function (n = 5, ...) {
+  scales:::force_all(n, ...)
+  n_default <- n
+  function(x, n = n_default) {
+    breaks <- pretty(x, n, ...)
+    names(breaks) <- c("0", rounds)[breaks+1]
+    breaks
+  }
 }
 
 game_summary_plot = function(player_stats, players, scores, game){
