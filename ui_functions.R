@@ -1968,8 +1968,8 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
         legend.margin = margin(0,-30,0,-30),
         legend.text.align = .5,
         axis.text.x = element_blank(),
-        axis.text.y.left = element_text(margin = margin(l = -5, r = -5), hjust = 1),
-        axis.text.y.right = element_text(margin = margin(l = -5, r = -5), hjust = 0)
+        axis.text.y.left = element_text(margin = margin(l = 0, r = -5), hjust = 1),
+        axis.text.y.right = element_text(margin = margin(l = -5, r = 0), hjust = 0)
       )
     
     # Option 1:
