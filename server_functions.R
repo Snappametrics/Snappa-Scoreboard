@@ -49,8 +49,14 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
     game = unique(scores_df$game_id)
   }
   browser()
+  # This is the environment hopping mayhem. 
+  # environments are kinda confusing, and I don't know how to call sink_criteria without passing it as an argument
+  # Based Hadley trying to teach me: https://adv-r.hadley.nz/environments.html#environments
+  
+  # Check each parent environment for sink_criteria
   sink_criteria = env_parents(current_env()) %>% 
     keep(~env_has(., "sink_criteria")) %>% 
+    # Only keep the one that does and use it to access the criteria
     map_dfr(., env_get, "sink_criteria")
   
   scores_df %>% 
@@ -60,7 +66,7 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
     # Fill in game_id for players who have not scored yet
     replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
     # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, team, shots) %>% 
+    group_by(game_id, player_id, player_name, team, shots) %>% 
     # Calculate summary stats
     summarise(total_points = sum(points_scored),
               ones = sum((points_scored == 1)),
