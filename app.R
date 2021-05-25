@@ -884,7 +884,7 @@ server <- function(input, output, session) {
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]], by = "player_id"), 
                          team_name = "A", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
         team_summary_tab_rt(.)
@@ -907,7 +907,7 @@ server <- function(input, output, session) {
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]], by = "player_id"), 
                          team_name = "B", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
         team_summary_tab_rt(.)

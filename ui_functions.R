@@ -2037,7 +2037,7 @@ game_flow = function(player_stats, players, scores, game){
     # Filter player stats
     filter(game_id == !!game) %>% 
     select(game_id, player_id, team) %>% 
-    inner_join(players)
+    inner_join(players, by = "player_id")
   
   # player_scores = vals$scores_db %>% 
   # inner_join(snappaneers(), by = c("player_id")) %>%
@@ -2061,7 +2061,8 @@ game_flow = function(player_stats, players, scores, game){
     group_by(game_id, player_id, player_name, team) %>% 
     summarise(round = min(round)-1, 
               points_scored = 0, 
-              cum_score = 0)
+              cum_score = 0,
+              .groups = "drop")
   
   player_label_df = player_scores %>% 
     filter(game_id == !!game) %>% 
