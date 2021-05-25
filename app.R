@@ -819,9 +819,10 @@ server <- function(input, output, session) {
                              ps_players = vals$db_tbls()[["players"]],
                              ps_team = "A")
     } else {
-      player_score_breakdown(ps_player_stats = vals$player_stats_db, 
-                             ps_game = vals$game_id, 
+      player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "A"), player_id, team, shots),
+                             scores = vals$scores_db, 
                              ps_players = vals$db_tbls()[["players"]],
+                             ps_game = vals$game_id, 
                              ps_team = "A")
       
     }
@@ -829,14 +830,15 @@ server <- function(input, output, session) {
   output$b_breakdown = renderPlot({
     
     if(input$start_game == 0){
-      player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
+      player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$db_tbls()[["players"]],
                              ps_team = "B")
     } else {
-      player_score_breakdown(ps_player_stats = vals$player_stats_db, 
-                             ps_game = vals$game_id, 
+      player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "B"), player_id, team, shots),
+                             scores = vals$scores_db, 
                              ps_players = vals$db_tbls()[["players"]],
+                             ps_game = vals$game_id, 
                              ps_team = "B")
       
     }
