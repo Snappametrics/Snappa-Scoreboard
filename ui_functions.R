@@ -1917,31 +1917,28 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
   # The issue being that each score type is NOT mutually exclusive
 
   if(ps_team == "A"){
-    team_margin = margin(0,-20,0,0)
+    team_margin = margin(0,0,0,0)
   } else {
-    team_margin = margin(0,0,0, -20)
+    team_margin = margin(0,0,0,0)
   }
   reverse_legend = (!!ps_team == "A")
   
   
   
-  browser()
-  df = ps_player_stats %>% 
-    select(player_id, team, total_points:clink_points) %>% 
-    arrange(-total_points) %>%
-    # Calculate sink points and "normal" points
-    # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
-    mutate(sink = threes*3,
-           normal_toss = total_points-(paddle_points+clink_points+sink),
-           normal_toss = if_else(normal_toss < 0, 0, normal_toss)) %>% 
-    select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
+  df = aggregate_player_stats_and_sinks(scores, snappaneers) %>% 
+    select(player_id, team, total_points, normal_points, sink_points,  paddle_points, clink_points) %>%
+    mutate(total = total_points) %>% 
     # Pivot to get point type
-    pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
+    pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>% 
+    filter(type != "total") %>% 
     # Convert point type to factor
-    mutate(point_type = factor(point_type, levels = c("Sink", "Clink", "Paddle", "Normal toss"), ordered = T)) %>% 
-    group_by(player_name) %>%
-    mutate(point_pct = points/sum(points)) %>% 
-    replace_na(list(point_pct = 0))
+    mutate(point_type = factor(type, 
+                               labels = c("Sink", "Clink", "Paddle", "Normal toss"), 
+                               levels = c("sink", "clink", "paddle", "normal"), ordered = T)) %>% 
+    group_by(player_id) %>%
+    mutate(point_pct = points/total) %>% 
+    replace_na(list(point_pct = 0)) %>% 
+    left_join(ps_players, by = "player_id") 
   
   
   
