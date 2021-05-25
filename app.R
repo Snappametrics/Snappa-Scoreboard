@@ -3233,8 +3233,7 @@ observeEvent(input$resume_no, {
     
 
     showModal(
-      tags$div(id= "game_summary", 
-               game_summary(vals$game_stats_db))
+      uiOutput("game_summary")
     )
     
   })
