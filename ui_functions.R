@@ -2395,6 +2395,7 @@ tab_theme_snappa = function(data,
                             row_group.border.left.style = NULL, row_group.border.left.width = NULL, 
                             row_group.border.left.color = NULL, row_group.border.right.style = NULL, 
                             row_group.border.right.width = NULL, row_group.border.right.color = NULL, 
+                            row_group.default_label = NULL, 
                             # Table body
                             table_body.hlines.style = NULL, table_body.hlines.width = NULL, 
                             table_body.hlines.color = NULL, 
