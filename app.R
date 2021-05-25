@@ -28,7 +28,7 @@ library(waiter)
 library(htmltools)
 
 
-source("database/db_connect.R")
+source("database/test_dbconnect.R")
 source("ui_functions.R")
 source("server_functions.R")
 source("markov/Markov_model_functions.R")
@@ -1592,8 +1592,9 @@ observe({
       message = FALSE
     )
   )
-  lost_game_id = dbGetQuery(con, "SELECT game_id FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% pull()
-  
+  # There's no way this is faster than just selecting max. Is there a reason to do this?
+  lost_game_id = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% pull()
+
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
   total_lost_game_score = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE game_id = ", lost_game_id)) %>% 
     pull() %>% 
@@ -1606,50 +1607,54 @@ observe({
     dbExecute(con, delete_query)
   } else {
   
-  showModal(
-    modalDialog(
-      title = "Hol' up, did you want to continue the previous game?",
-      style = str_c("background-color:", snappa_pal[1], ";"),
-      div(
-        h3("Summary of the Previous Game", 
-           align = 'center')
-      ),
-      
-      # br(),
-      
-      # br(),
-      
-      br(),
-      renderUI({glance_ui_game(lost_game_id)}),
-      
-      footer = tagList(
-                fluidRow(
-                  column(9, align = "left",
-                         helpText("Warning: 'No' will delete the game from the database", 
-                                  style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
-                         ),
-                  column(1,
-                         actionBttn("resume_no",
-                                    label = "No",
-                                    style = "material-flat",
-                                    color = "danger",
-                                    size = "md")
-                         ),
-                  column(1,
-                         actionBttn("resume_yes",
-                                    label = "Yes",
-                                    style = "material-flat", 
-                                    color = "warning",
-                                    size = "md")
-                         )
-                )
-              ),
-      size = "l",
-      easyClose = F,
-      fade = F
-    )
-   
-  )
+  browser()
+  restart_game_server('restart')
+  
+
+  # showModal(
+  #   modalDialog(
+  #     title = "Hol' up, did you want to continue the previous game?",
+  #     style = str_c("background-color:", snappa_pal[1], ";"),
+  #     div(
+  #       h3("Summary of the Previous Game", 
+  #          align = 'center')
+  #     ),
+  #     
+  #     # br(),
+  #     
+  #     # br(),
+  #     
+  #     br(),
+  #     renderUI({glance_ui_game(lost_game_id)}),
+  #     
+  #     footer = tagList(
+  #               fluidRow(
+  #                 column(9, align = "left",
+  #                        helpText("Warning: 'No' will delete the game from the database", 
+  #                                 style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
+  #                        ),
+  #                 column(1,
+  #                        actionBttn("resume_no",
+  #                                   label = "No",
+  #                                   style = "material-flat",
+  #                                   color = "danger",
+  #                                   size = "md")
+  #                        ),
+  #                 column(1,
+  #                        actionBttn("resume_yes",
+  #                                   label = "Yes",
+  #                                   style = "material-flat", 
+  #                                   color = "warning",
+  #                                   size = "md")
+  #                        )
+  #               )
+  #             ),
+  #     size = "l",
+  #     easyClose = F,
+  #     fade = F
+  #   )
+  #  
+  # )
   }
   
 })
@@ -1854,22 +1859,24 @@ observe({
     
     # Setup a reactive poll for cooldowns to check if any casualty rules are still in effect
     # but have not made their way around the horn yet
-    vals$cooldowns = reactivePoll(
-      intervalMillis = 100*30,
-      session = session,
-      checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
-                                                        WHERE game_id = ", vals$game_id)))},
-      valueFunc = function() {
-        map(
-          # Map over each type of score-based casualty
-          unique(casualty_rules$casualty_title), 
-          ~cooldown_check(current_game = vals$game_id, 
-                          current_round = round_num(), 
-                          casualty_to_check = .x,
-                          rounds = rounds)) %>% 
-          # Set the names of the list
-          set_names(unique(casualty_rules$casualty_title))}
-    )
+
+    
+    # vals$cooldowns = reactivePoll(
+    #   intervalMillis = 100*30,
+    #   session = session,
+    #   checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties
+    #                                                     WHERE game_id = ", vals$game_id)))},
+    #   valueFunc = function() {
+    #     map(
+    #       # Map over each type of score-based casualty
+    #       unique(casualty_rules$casualty_title),
+    #       ~cooldown_check(current_game = vals$game_id,
+    #                       current_round = round_num(),
+    #                       casualty_to_check = .x,
+    #                       rounds = rounds)) %>%
+    #       # Set the names of the list
+    #       set_names(unique(casualty_rules$casualty_title))}
+    # )
     
     
     
@@ -2085,24 +2092,24 @@ observeEvent(input$resume_no, {
   
 
   
-  observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
-               {
-                 validate(
-                   need( 
-                     vctrs::vec_in(vals$current_scores, 
-                                   haystack = casualty_rules[,1:2]), label = "casualty"),
-                   # Are any of the cooldowns active?
-                   need(!any(flatten_lgl(vals$cooldowns())), label = "Cooldowns")
-                 )
-
-                 casualty_popup(session,
-                                score = vals$current_scores, 
-                                rules = casualty_rules, 
-                                players = snappaneers()$player_name)
-
-                 
-                 
-               }, ignoreInit = T)
+  # observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
+  #              {
+  #                validate(
+  #                  need( 
+  #                    vctrs::vec_in(vals$current_scores, 
+  #                                  haystack = casualty_rules[,1:2]), label = "casualty"),
+  #                  # Are any of the cooldowns active?
+  #                  need(!any(flatten_lgl(vals$cooldowns())), label = "Cooldowns")
+  #                )
+  # 
+  #                casualty_popup(session,
+  #                               score = vals$current_scores, 
+  #                               rules = casualty_rules, 
+  #                               players = snappaneers()$player_name)
+  # 
+  #                
+  #                
+  #              }, ignoreInit = T)
   
   observeEvent(input$casualty, {
     # Convert player name to ID
