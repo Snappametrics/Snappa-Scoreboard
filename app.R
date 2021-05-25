@@ -19,6 +19,7 @@ library(shinyjs)
 library(shinyWidgets)
 library(shinydashboard)
 library(shinydashboardPlus)
+library(shinycssloaders)
 library(gt)
 library(reactable)
 library(ggrepel)
@@ -1973,18 +1974,21 @@ output$game_summary = renderUI({
       column(6, align = "center",
              h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
              h4(subtitle_a, align = "left"),
-             reactableOutput("team_a_summary")
+             withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
+                         proxy.height = "145px", color.background = snappa_pal[1])
       ),
       column(6,align = "center",# offset = 2,
              h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
              h4(subtitle_b, align = "left"),
-             reactableOutput("team_b_summary")
+             withSpinner(reactableOutput("team_b_summary"), color = snappa_pal[3], 
+                         proxy.height = "145px", color.background = snappa_pal[1])
       )
     ),
     # Summary plot
     fluidRow(align = "center",
       column(3, style = "padding-right:0; top:60px;",
-             plotOutput("a_breakdown", width = "100%", height = "30vh")
+             withSpinner(plotOutput("a_breakdown", width = "100%", height = "30vh"), color = snappa_pal[2], 
+                         proxy.height = "200px", color.background = snappa_pal[1])
       ),
       column(6,style = "padding:0",
              div(style = "margin:0px 5px; padding:5px;",
@@ -1992,17 +1996,19 @@ output$game_summary = renderUI({
                  h5("Point progression throughout the game", align = "left")
                  )
              ,
-             plotOutput("game_flow")
+             withSpinner(plotOutput("game_flow"), color.background = snappa_pal[1],
+                         color = snappa_pal[4])
       ),
       column(3, style = "padding-left:0; top:60px;",
-             plotOutput("b_breakdown", width = "100%", height = "30vh")
+             withSpinner(plotOutput("b_breakdown", width = "100%", height = "30vh"), color = snappa_pal[3], 
+                         proxy.height = "200px", color.background = snappa_pal[1])
       )
     ),
     # plotOutput("summary_plot", height = "50vh"),
-    reactableOutput("scores_tbl"),
+    # reactableOutput("scores_tbl"),
     
-    footer = NULL,
-    easyClose = T,
+    footer = NULL, 
+    easyClose = TRUE,
     size = "l"
   )
 })
