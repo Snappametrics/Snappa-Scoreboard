@@ -1975,57 +1975,6 @@ game_summary = reactive({
     
   }
   
-  # modalDialog(
-  #   title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", 
-  #                      coalesce(rounds[df$rounds], round_num()))),  
-  #   style = str_c("background-color: ", snappa_pal[1], ";"),
-  #   
-  #   
-  #   
-  #   
-  #   # Tables
-  #   fluidRow(align = "center",
-  #     # reactableOutput("team_a_summary")
-  #     column(6, align = "center",
-  #            h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
-  #            h4(subtitle_a, align = "left"),
-  #            withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
-  #                        proxy.height = "145px", color.background = snappa_pal[1])
-  #     ),
-  #     column(6,align = "center",# offset = 2,
-  #            h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
-  #            h4(subtitle_b, align = "left"),
-  #            withSpinner(reactableOutput("team_b_summary"), color = snappa_pal[3], 
-  #                        proxy.height = "145px", color.background = snappa_pal[1])
-  #     )
-  #   ),
-  #   # Summary plot
-  #   fluidRow(align = "center",
-  #     column(3, style = "padding-right:0; top:60px;",
-  #            withSpinner(plotOutput("a_breakdown", width = "100%", height = "30vh"), color = snappa_pal[2], 
-  #                        proxy.height = "200px", color.background = snappa_pal[1])
-  #     ),
-  #     column(6,style = "padding:0",
-  #            div(style = "margin:0px 5px; padding:5px;",
-  #                h4("How the die flies", align = "left"),
-  #                h5("Point progression throughout the game", align = "left")
-  #                )
-  #            ,
-  #            withSpinner(plotOutput("game_flow"), color.background = snappa_pal[1],
-  #                        color = snappa_pal[4])
-  #     ),
-  #     column(3, style = "padding-left:0; top:60px;",
-  #            withSpinner(plotOutput("b_breakdown", width = "100%", height = "30vh"), color = snappa_pal[3], 
-  #                        proxy.height = "200px", color.background = snappa_pal[1])
-  #     )
-  #   ),
-  #   # plotOutput("summary_plot", height = "50vh"),
-  #   # reactableOutput("scores_tbl"),
-  #   
-  #   footer = NULL, 
-  #   easyClose = TRUE,
-  #   size = "l"
-  # )
 })
 
 
