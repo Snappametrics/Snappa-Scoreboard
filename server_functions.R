@@ -57,7 +57,7 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
     keep(~rlang::env_has(., "sink_criteria")) %>% 
     # Only keep the one that does and use it to access the criteria
     map_dfr(., rlang::env_get, "sink_criteria")
-
+  
   scores_df %>% 
     # Join scores to snappaneers to get each player's team
     right_join(snappaneers, by = "player_id") %>% 
@@ -65,7 +65,7 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
     # Fill in game_id for players who have not scored yet
     replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
     # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, player_name, team, shots) %>% 
+    group_by(game_id, player_id, team, shots) %>% 
     # Calculate summary stats
     summarise(total_points = sum(points_scored),
               ones = sum((points_scored == 1)),
