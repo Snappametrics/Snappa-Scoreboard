@@ -1937,12 +1937,20 @@ observe({
   }, once = T, ignoreNULL = T)
   
 
-output$game_summary = renderUI({
-  if (input$start_game == 0){
+game_summary = reactive({
+  if (input$start_game == 0 | is_integer(pluck(reactiveValuesToList(session$input), "send_to_db"))){
     df = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
     subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
     subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
-  } else{
+    
+    list(
+      df = df,
+      subtitle_a = subtitle_a,
+      subtitle_b = subtitle_b
+    )
+    
+  } else {
+    
     df = replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
                                              points_b = vals$current_scores$team_B))
     score_difference = abs(df$points_a - df$points_b)
