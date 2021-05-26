@@ -53,10 +53,10 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
   # Based Hadley trying to teach me: https://adv-r.hadley.nz/environments.html#environments
   
   # Check each parent environment for sink_criteria
-  sink_criteria = env_parents(current_env()) %>% 
-    keep(~env_has(., "sink_criteria")) %>% 
+  sink_criteria = rlang::env_parents(rlang::current_env()) %>% 
+    keep(~rlang::env_has(., "sink_criteria")) %>% 
     # Only keep the one that does and use it to access the criteria
-    map_dfr(., env_get, "sink_criteria")
+    map_dfr(., rlang::env_get, "sink_criteria")
 
   scores_df %>% 
     # Join scores to snappaneers to get each player's team
