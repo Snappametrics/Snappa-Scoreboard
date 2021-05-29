@@ -28,7 +28,7 @@ library(waiter)
 library(htmltools)
 
 
-source("database/db_connect.R")
+source("database/dbconnect.R")
 source("ui_functions.R")
 source("server_functions.R")
 source("markov/Markov_model_functions.R")
@@ -89,12 +89,12 @@ ui <- dashboardPagePlus(
         icon = "backward",
         badgeStatus = NULL,
         reactableOutput("recent_scores_rt"),
-        disabled(actionBttn("game_summary", 
+        actionBttn("game_summary", 
                    "Detailed Game Summary",
                    style = "material-flat",
                    color = "primary",
                    icon = icon("chart-bar"),
-                   size = "sm"))
+                   size = "sm")
       ),
       # Right side header
     ),
@@ -122,13 +122,14 @@ ui <- dashboardPagePlus(
         label = "What score are you playing to?",
         min = 21, max = 50, value = 21
       ),
-      actionBttn("tifu", "Friendly Fire", 
+      disabled(actionBttn("tifu", "Friendly Fire", 
                  style = "material-flat",
-                 size = "sm", color = "danger"),
-      actionBttn("new_game", "Restart", 
-                 icon = icon("plus"), size = "sm",
-                 style = "material-flat", color = "warning"),
-      actionBttn("finish_game", "Finish", 
+                 size = "sm", color = "danger")),
+      # actionBttn("new_game", "Restart", 
+      #            icon = icon("plus"), size = "sm",
+      #            style = "material-flat", color = "warning"),
+      br(),
+      actionBttn("finish_game", "Finish",
                  icon = icon("check"), size = "sm",
                  style = "material-flat", color = "warning")
     ),
@@ -199,33 +200,7 @@ ui <- dashboardPagePlus(
                           column(4, align = "center", 
                                  uiOutput("active_die_right"))
                           ),
-                 team_scoreboard_ui(), 
-                 
-                 wellPanel(class = "buttons-row",
-                           fluidRow(column(width = 5, align = "left",
-                                           # Recent Scores
-                                           dropdown(
-                                             class = "recent_scores",
-                                             inputId = "recent_scores_",
-                                             gt_output("recent_scores"),
-                                             style = "bordered",
-                                             status = "primary",
-                                             size = "sm", 
-                                             up = T,
-                                             label = "Recent Scores",
-                                             icon = icon("backward"),
-                                             animate = animateOptions(
-                                               enter = animations$fading_entrances$fadeInUp,
-                                               exit = animations$fading_exits$fadeOutDown
-                                             )
-                                           )
-                           ),
-                           column(width = 2, align = "center"
-                           ),
-                           column(width = 5, align = "right"
-                           )
-                           )
-                 )
+                 team_scoreboard_ui()
                  
                )
       ),
@@ -502,11 +477,12 @@ server <- function(input, output, session) {
     # Live data
     # Updates when a game is completed
     db_tbls = reactivePoll(
-      intervalMillis = 1000*60,
+      intervalMillis = 1000*120,
       session = session,
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
       valueFunc = function() {
-        map(tbls,
+        set_names(
+          map(tbls,
             function(table){
               dbGetQuery(con,
                          sql(
@@ -517,8 +493,8 @@ server <- function(input, output, session) {
                            )
                          )
               )
-            }) %>% 
-          set_names(tbls)
+            }),
+          tbls)
       }
     ),
     recent_scores = reactivePoll(
@@ -527,6 +503,14 @@ server <- function(input, output, session) {
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
       valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
     ),
+    casualties = tibble(
+      casualty_id = integer(), 
+      game_id  = integer(), 
+      score_id = integer(), 
+      player_id = integer(), 
+      casualty_type = character(),
+      reported_player = integer()
+      ),
     
     
     # setup cooldowns as a list of false bools
@@ -857,10 +841,18 @@ server <- function(input, output, session) {
   }
   
   output$summary_plot = renderPlot({
-    game_summary_plot(player_stats = vals$player_stats_db,
-                      players = vals$db_tbls()[["players"]],
-                      scores = vals$scores_db,
-                      game = vals$game_id)
+    if(input$start_game == 0){
+      game_summary_plot(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
+                        players = vals$db_tbls()[["players"]],
+                        scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
+                        game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
+    } else {
+      game_summary_plot(player_stats = vals$player_stats_db,
+                        players = vals$db_tbls()[["players"]],
+                        scores = vals$scores_db,
+                        game = vals$game_id)
+    }
+    
   })
   
   
@@ -870,29 +862,55 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = render_gt({
-    make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$db_tbls()[["player_stats"]],
-                       neers = snappaneers(), 
-                       team_name = "A", 
-                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$db_tbls()[["scores"]]) %>%
-      team_summary_tab(.,
-                       game_over = vals$game_over, 
-                       team = "A",
-                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    if(input$start_game == 0){
+      last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
+                         team_name = "A", 
+                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
+        team_summary_tab(.,
+                         game_over = T, 
+                         team = "A",
+                         score_difference = abs(last_game$points_A - last_game$points_B))
+    } else {
+      make_summary_table(current_player_stats = vals$player_stats_db, 
+                         player_stats = vals$db_tbls()[["player_stats"]],
+                         neers = snappaneers(), 
+                         team_name = "A", 
+                         current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                         past_scores = vals$db_tbls()[["scores"]]) %>%
+        team_summary_tab(.,
+                         game_over = vals$game_over, 
+                         team = "A",
+                         score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    }
   })  
   
   output$team_b_summary = render_gt({
-    make_summary_table(current_player_stats = vals$player_stats_db, 
-                       player_stats = vals$db_tbls()[["player_stats"]],
-                       neers = snappaneers(), 
-                       team_name = "B", 
-                       current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                       past_scores = vals$db_tbls()[["scores"]]) %>%
-      team_summary_tab(.,
-                       game_over = vals$game_over, 
-                       team = "B",
-                       score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    if(input$start_game == 0){
+      last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]]), 
+                         team_name = "B", 
+                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
+        team_summary_tab(.,
+                         game_over = T, 
+                         team = "B",
+                         score_difference = abs(last_game$points_A - last_game$points_B))
+    } else {
+      make_summary_table(current_player_stats = vals$player_stats_db, 
+                         player_stats = vals$db_tbls()[["player_stats"]],
+                         neers = snappaneers(), 
+                         team_name = "B", 
+                         current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+                         past_scores = vals$db_tbls()[["scores"]]) %>%
+        team_summary_tab(.,
+                         game_over = vals$game_over, 
+                         team = "B",
+                         score_difference = abs(vals$current_scores$team_A - vals$current_scores$team_B))
+    }
   })  
   
   
@@ -1708,11 +1726,10 @@ observe({
     #   => enable start button
     
     if(sum(length(unique(snappaneers()$player_name)), 
-           sum(
              c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
              isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
              isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)) 
+             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
              )
            ) == num_players()){ 
       shinyjs::enable("start_game")
@@ -1808,6 +1825,9 @@ observe({
         # Initialize the current game's player_stats table
         vals$player_stats_db = lost_player_stats
         
+        # Pull in lost game casualties 
+        vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game)))
+        
     } else {
       
       # LAST GAME WAS FINISHED
@@ -1819,6 +1839,7 @@ observe({
       vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
         as.integer()
       
+      # Initialize the current game's game_stats table
       vals$game_stats_db = bind_rows(vals$game_stats_db,
                                      tibble(
                                        game_id = vals$game_id,
@@ -1840,14 +1861,20 @@ observe({
                                        arena = input$arena_select
                                      ))
       
-      
-      # Initialize the current game's player_stats table
-      vals$player_stats_db = slice(vals$player_stats_db, 0)
-      
       dbWriteTable(
         conn = con, 
         name = "game_stats",
         value = vals$game_stats_db,
+        append = T
+      )
+      
+      # Initialize the current game's player_stats table
+      vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      
+      dbWriteTable(
+        conn = con, 
+        name = "player_stats",
+        value = vals$player_stats_db,
         append = T
       )
     }
@@ -1855,17 +1882,18 @@ observe({
     # Setup a reactive poll for cooldowns to check if any casualty rules are still in effect
     # but have not made their way around the horn yet
     vals$cooldowns = reactivePoll(
-      intervalMillis = 100*30,
+      intervalMillis = 100*70,
       session = session,
-      checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
-                                                        WHERE game_id = ", vals$game_id)))},
+      # checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
+      #                                                   WHERE game_id = ", vals$game_id)))},
+      checkFunc = function() {nrow(vals$casualties)},
       valueFunc = function() {
         map(
           # Map over each type of score-based casualty
           unique(casualty_rules$casualty_title), 
-          ~cooldown_check(current_game = vals$game_id, 
+          ~cooldown_check(casualties = vals$casualties[vals$casualties$casualty_type == .x, ], 
+                          scores = vals$scores_db, 
                           current_round = round_num(), 
-                          casualty_to_check = .x,
                           rounds = rounds)) %>% 
           # Set the names of the list
           set_names(unique(casualty_rules$casualty_title))}
@@ -1873,7 +1901,7 @@ observe({
     
     
     
-    shinyjs::enable("game_summary")
+    shinyjs::enable("tifu")
 
   })
   
@@ -1885,39 +1913,35 @@ observe({
     sendSweetAlert(session, 
                    title = "Halftime", 
                    type = "info",
-                   text = HTML(str_c("Change places!", 
-                                     "<audio preload='auto' src='change_places.mp3' type='audio/mp3'></audio>")), html = T)
+                   text = HTML(str_c("Change places!")), html = T)
 
     shinyjs::click("switch_sides")
     
     # In the event that there was a sink which caused this, also popup the sink menu
     last_score = vals$scores_db[ max(vals$scores_db$score_id),]
     
-    sink_casualty_popup(session, score_row = last_score, players = snappaneers()$player_name)
+    sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
 
   }, once = T, ignoreNULL = T)
   
-  observeEvent(c(
-    input$ok_A,
-    input$ok_B
-  ), {
-    if(all(input$score == 3, !input$clink)){
-      insertUI(selector = "#round_num",
-               where = "afterEnd",
-               ui = HTML('<audio preload="auto" src="sploosh.mp3" type="audio/mp3" autoplay controls style="display:none;"></audio>'))
-      
-    }
-  },
-  ignoreNULL = T, ignoreInit = T)
+
 
 
 observeEvent(input$game_summary, {
-  showModal(
-    tags$div(id= "game_summary", 
-             game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
-                                                              points_b = vals$current_scores$team_B)))
+  if(input$start_game == 0){
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary(filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id)))
+      )
     )
-  )
+  } else {
+    showModal(
+      tags$div(id= "game_summary", 
+               game_summary(replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
+                                                                points_b = vals$current_scores$team_B)))
+      )
+    )
+  }
   
 })
 output$scores_tbl = renderReactable({
@@ -1995,7 +2019,7 @@ output$scores_tbl = renderReactable({
     })
     )
     
-    delay(200, shinyjs::click("start_game"))
+    shinyjs::click("start_game")
 })
   
 # Close the modal dialog if you say no and remove
@@ -2024,7 +2048,7 @@ observeEvent(input$resume_no, {
       # Update player stats in the app
       vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
       #Update the DB with the new player_stats
-      db_update_player_stats(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db, round_button = T)
       
       # Update round in game stats
       db_update_round(round = round_num(), game = vals$game_id)
@@ -2058,7 +2082,7 @@ observeEvent(input$resume_no, {
     # Update player stats in the app
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
     #Update the DB with the new player_stats (adds to shots)
-    db_update_player_stats(vals$player_stats_db)
+    db_update_player_stats(vals$player_stats_db, round_button = T)
     }
 
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
@@ -2082,28 +2106,20 @@ observeEvent(input$resume_no, {
 
 # Score notifications -----------------------------------------------------
   
+  observe({
+    req(input$start_game)
+    validate(
+      need(vctrs::vec_in(vals$current_scores, 
+                         haystack = casualty_rules[,1:2]), label = "casualty score"),
+      need(!any(flatten_lgl(vals$cooldowns())), label = "cooldowns")
+    )
+    casualty_popup(session,
+                   score = vals$current_scores,
+                   rules = casualty_rules,
+                   players = snappaneers()$player_name)
+  }, autoDestroy = F)
   
 
-  
-  observeEvent(input$next_round | input$previous_round | input$ok_A | input$ok_B,
-               {
-                 validate(
-                   need( 
-                     vctrs::vec_in(vals$current_scores, 
-                                   haystack = casualty_rules[,1:2]), label = "casualty"),
-                   # Are any of the cooldowns active?
-                   need(!any(flatten_lgl(vals$cooldowns())), label = "Cooldowns")
-                 )
-
-                 casualty_popup(session,
-                                score = vals$current_scores, 
-                                rules = casualty_rules, 
-                                players = snappaneers()$player_name)
-
-                 
-                 
-               }, ignoreInit = T)
-  
   observeEvent(input$casualty, {
     # Convert player name to ID
     casualty = select(snappaneers(), starts_with("player")) %>% 
@@ -2118,8 +2134,13 @@ observeEvent(input$resume_no, {
       game_id = vals$game_id,
       score_id = vals$score_id,
       player_id = casualty,
-      casualty_type = type
+      casualty_type = type,
+      reported_player = NA_integer_
     )
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
+    
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
@@ -2128,7 +2149,7 @@ observeEvent(input$resume_no, {
     )
     # In the event that there was a sink which caused this, also popup the sink menu
     last_score = vals$scores_db[ max(vals$scores_db$score_id),]
-    sink_casualty_popup(session, score_row = last_score, players = snappaneers()$player_name)
+    sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
   })
   
   observeEvent(input$sink_casualty, {
@@ -2143,9 +2164,14 @@ observeEvent(input$resume_no, {
       game_id = vals$game_id,
       score_id = vals$score_id,
       player_id = casualty,
-      casualty_type = "Sunk"
+      casualty_type = "Sunk",
+      reported_player = NA_integer_
     )
     
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
+    
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
@@ -2157,26 +2183,52 @@ observeEvent(input$resume_no, {
   
   observeEvent(input$tifu, {
     showModal(
-      tifu_casualty_popup(players = snappaneers()$player_name)
+      tifu_casualty_popup(players = isolate(snappaneers()))
     )
     
   })
   
+  output$casualty_validation = renderUI({
+    if(input$casualty_type == "Team sink"){
+      sinker_team = snappaneers()[snappaneers()$player_id == input$tifu_accused, "team", drop = T]
+      sinkee_team = snappaneers()[snappaneers()$player_id == input$tifu_casualty, "team", drop = T]
+      
+      # Team sink: 
+      validate(
+        # both players are on same team
+        need(sinker_team == sinkee_team, message = "That's not a team sink!"),
+        # players are not the same
+        need(input$tifu_accused != input$tifu_casualty, message = "That's a self sink!")
+      )
+    } else {
+      # Self sink: 
+      validate(
+        # players are the same
+        need(input$tifu_accused == input$tifu_casualty, message = "That's not a self sink!")
+      )
+    }
+
+    actionButton("tifu_confirm", label = "Report", class = "btn-primary", style = "background-color: var(--red);color: var(--bg-col);")
+  })
+  
+
+
   observeEvent(input$tifu_confirm, {
-    # Convert player name to ID
-    casualty = select(snappaneers(), starts_with("player")) %>% 
-      deframe() %>% 
-      pluck(input$tifu_casualty)
-    
+
     # Insert casualty details
     new_casualty = tibble(
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
-      score_id = vals$score_id,
-      player_id = casualty,
-      casualty_type = input$casualty_type
+      score_id = NA_integer_,
+      player_id = as.integer(input$tifu_casualty),
+      casualty_type = input$casualty_type,
+      reported_player = if_else(input$tifu_casualty == input$tifu_accused, NA_integer_, as.integer(input$tifu_accused))
     )
+
+    # Add to casualties reactive
+    vals$casualties = add_row(vals$casualties, new_casualty)
     
+    # Add to db
     dbWriteTable(
       conn = con, 
       name = "casualties", 
@@ -2186,8 +2238,11 @@ observeEvent(input$resume_no, {
     
     removeModal()
     
-    showNotification(str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
-                                input$tifu_casualty), duration = 7, closeButton = F)
+    showNotification(if_else(input$casualty_type == "Team sink", 
+                             str_c("Nothing wrong with just a little bit of horseplay every now and then, ", 
+                                   players_tbl[match(as.integer(input$tifu_casualty), players_tbl$player_id), 2], "!"),
+                             "The good news is that you only get 1 peasant point!"
+                             ), duration = 7, closeButton = F)
   })
   
 
@@ -2313,110 +2368,110 @@ observeEvent(input$resume_no, {
   # New Player A3
   #   - Add A3 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_A3, {
-    # Set input want to true
-    vals$want_A3 = T
-    
-    # Get add player button inputs
-    val <- paste0("#",getInputs("edit_add_A3"))
-    add_player_input("edit", val, "A", 3, current_choices(), session)
-    
-  })
+  # observeEvent(input$edit_add_A3, {
+  #   # Set input want to true
+  #   vals$want_A3 = T
+  #   
+  #   # Get add player button inputs
+  #   val <- paste0("#",getInputs("edit_add_A3"))
+  #   add_player_input("edit", val, "A", 3, current_choices(), session)
+  #   
+  # })
   
   # Remove A3
   #   - Insert add new player action button
   #   - Remove A3 player name input
-  observeEvent(input$edit_remove_A3, {
-    remove_p3_input("edit", "A", session)
-    
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_A3 = F
-    vals$want_A4 = F
-    
-  })
+  # observeEvent(input$edit_remove_A3, {
+  #   remove_p3_input("edit", "A", session)
+  #   
+  #   #Don't consider these elements when looking at
+  #   # total length of players. Prevents the game
+  #   # from getting locked out after players have
+  #   # been added
+  #   vals$want_A3 = F
+  #   vals$want_A4 = F
+  #   
+  # })
   
   
   # New Player A4
   #   - Add A4 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_A4, {
-    # Set input want to true
-    vals$want_A4 = T
-    
-    # Get UI inputs for extra player button
-    vals <- paste0("#",getInputs("edit_add_A4"))
-    
-    add_player_input("edit", vals, "A", 4, current_choices(), session)
-    
-  })
+  # observeEvent(input$edit_add_A4, {
+  #   # Set input want to true
+  #   vals$want_A4 = T
+  #   
+  #   # Get UI inputs for extra player button
+  #   vals <- paste0("#",getInputs("edit_add_A4"))
+  #   
+  #   add_player_input("edit", vals, "A", 4, current_choices(), session)
+  #   
+  # })
   
   # Remove A4
   #   - Insert add new player action button
   #   - Remove A4 player name input
-  observeEvent(input$edit_remove_A4, {
-    remove_p4_input("edit", "A", session)
-    
-    vals$want_A4 = F
-    
-  })  
+  # observeEvent(input$edit_remove_A4, {
+  #   remove_p4_input("edit", "A", session)
+  #   
+  #   vals$want_A4 = F
+  #   
+  # })  
   
   
   # New Player B3
   #   - Add B3 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_B3, {
-    
-    # Set want check to true
-    vals$want_B3 = T
-    
-    # Get inputs for add player button
-    vals <- paste0("#",getInputs("edit_add_B3"))
-    
-    add_player_input("edit", vals, "B", 3, current_choices(), session)
-  })
+  # observeEvent(input$edit_add_B3, {
+  #   
+  #   # Set want check to true
+  #   vals$want_B3 = T
+  #   
+  #   # Get inputs for add player button
+  #   vals <- paste0("#",getInputs("edit_add_B3"))
+  #   
+  #   add_player_input("edit", vals, "B", 3, current_choices(), session)
+  # })
   
   # Remove B3
   #   - Insert add new player action button
   #   - Remove B3 player name input
-  observeEvent(input$edit_remove_B3, {
-    remove_p3_input("edit", "B", session)
-    
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_B3 = F
-    vals$want_B4 = F
-    
-  })
+  # observeEvent(input$edit_remove_B3, {
+  #   remove_p3_input("edit", "B", session)
+  #   
+  #   #Don't consider these elements when looking at
+  #   # total length of players. Prevents the game
+  #   # from getting locked out after players have
+  #   # been added
+  #   vals$want_B3 = F
+  #   vals$want_B4 = F
+  #   
+  # })
   
   # New Player B4
   #   - Add B4 text input
   #   - Remove the add new player action button
-  observeEvent(input$edit_add_B4, {
-    # Set want check to true
-    vals$want_B4 = T
-    
-    # Get add player button inputs
-    vals <- paste0("#",getInputs("edit_add_B4"))
-    
-    add_player_input("edit", vals, "B", 4, current_choices(), session)
-  })
+  # observeEvent(input$edit_add_B4, {
+  #   # Set want check to true
+  #   vals$want_B4 = T
+  #   
+  #   # Get add player button inputs
+  #   vals <- paste0("#",getInputs("edit_add_B4"))
+  #   
+  #   add_player_input("edit", vals, "B", 4, current_choices(), session)
+  # })
   
   
   # Remove B4
   #   - Insert add new player action button
   #   - Remove B4 player name input
-  observeEvent(input$edit_remove_B4, {
-    remove_p4_input("edit", "B", session)
-    # Tells later checks to not worry about this
-    # empty slot in active_player_names
-    vals$want_B4 = F
-    
-  })  
+  # observeEvent(input$edit_remove_B4, {
+  #   remove_p4_input("edit", "B", session)
+  #   # Tells later checks to not worry about this
+  #   # empty slot in active_player_names
+  #   vals$want_B4 = F
+  #   
+  # })  
   
   
   
@@ -2487,14 +2542,17 @@ observeEvent(input$resume_no, {
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
                                  new_score)
+      
       #Update the db with the new score
-  
-      dbWriteTable(con, "scores", anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
+      dbWriteTable(con, "scores", 
+                   anti_join(vals$scores_db, dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", vals$game_id)), 
+                             by = "score_id"), 
+                   append = T)
       
       
       # Update player stats table
       vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
-      db_update_player_stats(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
 
       # Congratulate paddlers
       if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
@@ -2602,9 +2660,11 @@ observeEvent(input$resume_no, {
       # Add the score to the scores table
       vals$scores_db = bind_rows(vals$scores_db,
                                  new_score)
-      #Update the server with the new score
+      #Update the db with the new score
       dbWriteTable(con, "scores", 
-                   anti_join(vals$scores_db, dbGetQuery(con, "SELECT * FROM scores")), append = T)
+                   anti_join(vals$scores_db, dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", vals$game_id)), 
+                             by = "score_id"), 
+                   append = T)
       
       
       # Update player stats in the app
@@ -2612,7 +2672,7 @@ observeEvent(input$resume_no, {
                                                      snappaneers(), 
                                                      game = vals$game_id)    
       #Update the DB with the new player_stats
-      db_update_player_stats(vals$player_stats_db)
+      db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
@@ -2884,11 +2944,14 @@ observeEvent(input$resume_no, {
                                              3, F,
                                              5, T,
                                              7, T))){
+      # In database
       dbSendQuery(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
       )
+      # In reactive
+      vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
     }
       
     
@@ -2933,11 +2996,14 @@ observeEvent(input$resume_no, {
                                              3, F,
                                              5, T,
                                              7, T))){
+      # In database
       dbSendQuery(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
       )
+      # In reactive
+      vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
     }
     
   })
@@ -2951,9 +3017,9 @@ observeEvent(input$resume_no, {
 # Add/Edit Team Events ----------------------------------------------------
 
 
-observeEvent(input$add_player_A3, {
-  
-})  
+# observeEvent(input$add_player_A3, {
+#   
+# })  
   
   
   
@@ -3051,22 +3117,22 @@ observeEvent(input$add_player_A3, {
       replace_na(list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
       mutate(night_dice = if_else(now(tzone = "America/Los_Angeles") %>% hour() > 20, T, F)) %>% 
       left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
-      select(-contains("_old", ignore.case = F))
+      select(-contains("_old", ignore.case = F)) %>% 
+      # Add quotes around character vars for update query
+      mutate(across(where(is_character), ~str_c("'", ., "'")))
     
     
-    # As with player_stats, I perform the update by deleting the relevant row in the DB table and reinserting the
-    # one that we need
+    # Convert tibble to character string in the format: COLNAME = VALUE
+    col_updates = t(vals$game_stats_db) %>% 
+      str_c(rownames(.), " = ", ., collapse = ", ")
     
-    del_game_row = str_c("DELETE FROM game_stats 
-                 WHERE game_id = ", vals$game_id, ";")
+    update_game_query = str_c("UPDATE game_stats
+                              SET ", col_updates,
+                              " WHERE game_id = ", vals$game_id, ";")
     
-    dbExecute(con, del_game_row)
+    dbExecute(con, update_game_query)
   
-    dbWriteTable(
-      conn = con, 
-      name = "game_stats",
-      value = vals$game_stats_db,
-      append = T)
+
     
     # Update player stats table one final time
     vals$player_stats_db = app_update_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
@@ -3074,26 +3140,6 @@ observeEvent(input$add_player_A3, {
     db_update_player_stats(vals$player_stats_db)
     
     
-    # Should be made unnecessary by adding
-    # players immediately 
-    
-    # dbAppendTable(
-    #   conn = con, 
-    #   name = "players",
-    #   value = anti_join(vals$players_db, players_tbl))
-    
-    #Update Scores
-    dbWriteTable(
-      conn = con,
-      name = "scores",
-      value = vals$scores_db,
-      append = T)
-    
-    # Update player_stats
-    # dbAppendTable(
-    #   conn = con, 
-    #   name = "player_stats",
-    #   value = vals$player_stats_db)
     # Confirmation that data was sent to db
     sendSweetAlert(session, 
                    title = "The die is cast",
@@ -3113,43 +3159,43 @@ observeEvent(input$add_player_A3, {
 
   
   
-  observeEvent(input$new_game, {
-    
-    showModal(
-      modalDialog( title = "Restart game", easyClose = T,
-        helpText("Are you sure?"),
-        footer = tagList(
-          actionBttn("new_game_sure", "Yup", style = "unite", color = "warning")
-        )
-      )
-    )
-    
-  })
+  # observeEvent(input$new_game, {
+  #   
+  #   showModal(
+  #     modalDialog( title = "Restart game", easyClose = T,
+  #       helpText("Are you sure?"),
+  #       footer = tagList(
+  #         actionBttn("new_game_sure", "Yup", style = "unite", color = "warning")
+  #       )
+  #     )
+  #   )
+  #   
+  # })
   
-  observeEvent(input$new_game_sure, {
-    # On a new game:
-    # 1. Switch to start screen
-    updateTabsetPanel(session, "switcher", selected = "start_screen")
-    
-    # 2. Reset player inputs
-    walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
-         function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$db_tbls()[["players"]]$player_name), 
-                                                options = list(create = TRUE)))
-    
-    # 3. Reset reactive values
-    # vals$game_stats_db = game_stats_tbl() %>% slice(0) %>% select(1:5)
-    # vals$player_stats_db = player_stats_tbl() %>% slice(0)
-    # vals$players_db = dbGetQuery(con, "SELECT * FROM players")
-    # vals$scores_db = scores_tbl() %>% slice(0)
-    # vals$score_id = as.integer(0)
-    # vals$shot_num = as.integer(1)
-    
-
-    
-    removeModal()
-    
-    
-  })
+  # observeEvent(input$new_game_sure, {
+  #   # On a new game:
+  #   # 1. Switch to start screen
+  #   updateTabsetPanel(session, "switcher", selected = "start_screen")
+  #   
+  #   # 2. Reset player inputs
+  #   walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
+  #        function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$db_tbls()[["players"]]$player_name), 
+  #                                               options = list(create = TRUE)))
+  #   
+  #   # 3. Reset reactive values
+  #   # vals$game_stats_db = game_stats_tbl() %>% slice(0) %>% select(1:5)
+  #   # vals$player_stats_db = player_stats_tbl() %>% slice(0)
+  #   # vals$players_db = dbGetQuery(con, "SELECT * FROM players")
+  #   # vals$scores_db = scores_tbl() %>% slice(0)
+  #   # vals$score_id = as.integer(0)
+  #   # vals$shot_num = as.integer(1)
+  #   
+  # 
+  #   
+  #   removeModal()
+  #   
+  #   
+  # })
 
 
 
