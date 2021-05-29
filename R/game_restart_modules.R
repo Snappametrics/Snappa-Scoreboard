@@ -37,7 +37,7 @@ restart_game_UI = function(id, team_A_points, team_B_points) {
     
              )
     ),
- #   reactableOutput(ns('incomplete_game_summary'))
+    reactableOutput(ns('incomplete_game_summary')),
     
     footer = tagList(
       fluidRow(
@@ -84,7 +84,40 @@ restart_game_server = function(id) {
                    
                  })
 
-              #   output$incomplete_game_summary = 
+                output$incomplete_game_summary = renderReactable({
+                  # Maybe this is fast?
+                  browser()
+                  base_table = dbGetQuery(con, 
+                                            sql('SELECT 
+                                                  players.player_name AS player,
+                                                  scoring_team AS team,
+                                                  SUM(points_scored) AS points,
+                                                  SUM(CASE 
+                                                        WHEN paddle = TRUE THEN 1 
+                                                        ELSE 0 END) AS paddle_points,
+                                                  SUM(CASE 
+                                                        WHEN clink = TRUE THEN 1
+                                                        ELSE 0 END) AS clink_points
+                                                FROM (SELECT * 
+                                                      FROM scores 
+                                                      WHERE game_id = (SELECT MAX(game_id)
+                                                                       FROM scores)
+                                                ) AS scores
+                                                LEFT JOIN players ON 
+                                                players.player_id = scores.player_id
+                                                GROUP BY players.player_name, scoring_team')
+                                            ) %>% collect()
+                  # Yeah. It's fast. This should probably just be a query to player_stats, 
+                  # particularly considering that we need to know the total number 
+                  # of players on each team, which has traditionally been stored there
+                  summary_table = withSpinner(reactable(base_table),
+                                type= 1)
+                  return(summary_table)
+                  
+                
+                }
+                  
+                )
                  
                  observeEvent(input$restart_incomplete_game, {
                    # This needs to get rid of the modal dialog, enter in the player names (bleh)
