@@ -156,7 +156,8 @@ ui <- dashboardPagePlus(
                          inputId = "arena_select",
                          label = "Arena",
                          selected = "Greenhaus 2: Electric Boogaloo",
-                         choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo"),
+                         choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo",
+                                     'The Oasis'),
                          options = pickerOptions(
                            mobile = T,
                            showTick = T
