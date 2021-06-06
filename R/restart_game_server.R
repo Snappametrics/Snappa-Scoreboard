@@ -1,78 +1,3 @@
-# Restart game module
-
-#showModal(
-restart_game_UI = function(id, team_A_points, team_B_points) {
-  ns <- NS(id)
-  modalDialog(
-    title = "Hol' up, did you want to continue the previous game?",
-    style = str_c("background-color:", snappa_pal[1], ";"),
-    div(
-      h3("Summary of the Previous Game", 
-         align = 'center')
-    ),
-    
-    # br(),
-    
-    # br(),
-    
-    br(),
-    ## TODO: Need something here which is created by the module server. Probably
-    ## several things
-    fluidRow(
-      column(4,
-             align = 'center',
-             h3(class = 'modal_team_title', id = 'modal_team_title_A',
-                'Team A'),
-             h3(class = 'modal_team_points', id = 'modal_team_points_A',
-                team_A_points)
-             ),
-      column(4, align = 'center'
-             ),
-      column(4,
-             align = 'center',
-             h3(class = 'modal_team_title', id = 'modal_team_title_B',
-                'Team B'),
-             h3(class = 'modal_team_points', id = 'modal_team_points_B',
-                team_B_points)
-    
-             )
-    ),
-    reactableOutput(ns('incomplete_game_summary')),
-    
-    footer = tagList(
-      fluidRow(
-        column(8, align = "left",
-               helpText(
-                 h4('Would you like to continue the previous game?',
-                    style = "color: black; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;"),
-                 span("This will delete the game from our database", 
-                        style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
-                 )
-        ),
-        column(2,
-               actionBttn(ns("restart_incomplete_game"),
-                          label = "Restart Game",
-                          style = "material-flat", 
-                          color = "default",
-                          size = "md")
-        ),
-        column(2,
-               actionBttn(ns("delete_incomplete_game"),
-                          label = "Delete Game",
-                          style = "material-flat",
-                          color = "danger",
-                          size = "md")
-        )
-      )
-    ),
-    size = "l",
-    easyClose = F,
-    fade = F
-  )
-  
-}
-
-
 restart_game_server = function(id) {
   moduleServer(id,
                function(input, output, session) {
@@ -86,7 +11,6 @@ restart_game_server = function(id) {
 
                 output$incomplete_game_summary = renderReactable({
                   # Maybe this is fast?
-                  browser()
                   base_table = dbGetQuery(con, 
                                             sql('SELECT 
                                                   players.player_name AS player,
@@ -110,9 +34,8 @@ restart_game_server = function(id) {
                   # Yeah. It's fast. This should probably just be a query to player_stats, 
                   # particularly considering that we need to know the total number 
                   # of players on each team, which has traditionally been stored there
-                  summary_table = withSpinner(reactable(base_table),
-                                type= 1)
-                  return(summary_table)
+                  
+                  return(reactable(base_table))
                   
                 
                 }
@@ -122,6 +45,9 @@ restart_game_server = function(id) {
                  observeEvent(input$restart_incomplete_game, {
                    # This needs to get rid of the modal dialog, enter in the player names (bleh)
                    # and begin the game. 
+                   removeModal()
+                   
+                   
                    
                  })
                  observeEvent(input$delete_incomplete_game, {
