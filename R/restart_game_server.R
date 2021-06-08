@@ -9,11 +9,11 @@
 #'       \item{input_A2} {Name of Player A2 From Game to be Restarted, Else Blank}
 #'       \item{input_A3} {Name of Player A3 From Game to be Restarted, Else Blank}
 #'       \item{input_A4} {Name of Player A4 From Game to be Restarted, Else Blank}
-#'       \item{length_A} {Number of slots to fill (for other modules to process w/o checking for blanks)}
 #'       \item{input_B1} {Name of Player B1 From Game to be Restarted, Else Blank}
 #'       \item{input_B2} {Name of Player B2 From Game to be Restarted, Else Blank}
 #'       \item{input_B3} {Name of Player B3 From Game to be Restarted, Else Blank}
 #'       \item{input_B4} {Name of Player B4 From Game to be Restarted, Else Blank}
+#'       \item{length_A} {Number of slots to fill (for other modules to process w/o checking for blanks)}
 #'       \item{length_B} {Number of slots to fill (for other modules to process w/o checking for blanks)}
 #'  }
 
@@ -27,6 +27,21 @@ restart_game_server = function(id) {
                      pull(game_id)
                    return(game_id)
                    
+                 })
+                 
+                 missing_players = reactive({
+                   players = dbGetQuery(con,
+                                             sql('SELECT
+                                                    players.player_id,
+                                                    ps.team
+                                                 FROM player_stats AS ps
+                                                 INNER JOIN players
+                                                  ON players.player_id = ps.player_id
+                                                 WHERE ps.game_id = (
+                                                    SELECT MAX(game_id) 
+                                                    FROM player_stats
+                                                 )')) %>% collect()
+                   return(players)
                  })
 
                 output$incomplete_game_summary = renderReactable({
@@ -67,6 +82,8 @@ restart_game_server = function(id) {
                    # and begin the game. 
                    removeModal()
                    
+                   # This should now return the module output
+                   
                    
                    
                  })
@@ -74,6 +91,9 @@ restart_game_server = function(id) {
                    removeModal()
                    delete_query = str_c("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";")
                    dbExecute(con, delete_query)
+                   
+                   # This should return some boilerplate list to instruct the module which 
+                   # will assemble this information into a game_start screen state
                  }) 
                })
                  
