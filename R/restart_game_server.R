@@ -1,3 +1,23 @@
+#' Handles server-side processing of lost game information
+#' 
+#' 
+#'  @param id namespace of the application
+#'  
+#'  @return a list with the following components
+#'  \describe{
+#'       \item{input_A1} {Name of Player A1 From Game to be Restarted, Else Blank}
+#'       \item{input_A2} {Name of Player A2 From Game to be Restarted, Else Blank}
+#'       \item{input_A3} {Name of Player A3 From Game to be Restarted, Else Blank}
+#'       \item{input_A4} {Name of Player A4 From Game to be Restarted, Else Blank}
+#'       \item{length_A} {Number of slots to fill (for other modules to process w/o checking for blanks)}
+#'       \item{input_B1} {Name of Player B1 From Game to be Restarted, Else Blank}
+#'       \item{input_B2} {Name of Player B2 From Game to be Restarted, Else Blank}
+#'       \item{input_B3} {Name of Player B3 From Game to be Restarted, Else Blank}
+#'       \item{input_B4} {Name of Player B4 From Game to be Restarted, Else Blank}
+#'       \item{length_B} {Number of slots to fill (for other modules to process w/o checking for blanks)}
+#'  }
+
+
 restart_game_server = function(id) {
   moduleServer(id,
                function(input, output, session) {
