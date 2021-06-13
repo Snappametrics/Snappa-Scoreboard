@@ -212,7 +212,7 @@ ui <- dashboardPage(
                     style = str_c("background:", snappa_pal[1]), align = "center",
                     div(class = "top-snappaneers",
                         div(class = "snappaneers-header",
-                            div(class = "snappaneers-title", "Top Snappaneers"),
+                            # div(class = "snappaneers-title", "Top Snappaneers"),
                             "The deadliest die-throwers in all the land."
                         ),
                         reactableOutput("leaderboard_rt", width = "100%"),
@@ -1250,15 +1250,18 @@ server <- function(input, output, session) {
   })
   
   
-  
+  overall_player_stats = reactive({
+    dbGetQuery(con,
+    sql("SELECT *
+              FROM basic_career_stats ")
+    )
+  })
   
   
   output$player_stats_headers = renderUI({
-    player_stats = dbGetQuery(con, 
-                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks, foot_paddles, foot_sinks
-                                        FROM basic_career_stats ", 
-                                        "WHERE player_id = ", input$player_select))
-                              )
+    
+    player_stats = filter(overall_player_stats(), player_id == input$player_select)
+
     div(
       box(width = 6, status = "success", title = "General Stats", collapsible = T, 
           # Games Played

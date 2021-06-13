@@ -1363,12 +1363,12 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   
   career_stats_data %>% 
     reactable(
-      defaultPageSize = 20, 
+      defaultPageSize = 10, pagination = T, 
       defaultSorted = "rank",
       showSortable = T,
-      defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0), 
+      defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0, separators = T), 
                              align = "left", defaultSortOrder = "desc"),
-      highlight = T,
+      highlight = T, 
       # compact = T, 
       width = "100%",
       rowStyle = function(index) {
