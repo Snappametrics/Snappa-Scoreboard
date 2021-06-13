@@ -450,6 +450,33 @@ label.control-label[for='score'] {
   align-items: center;
 }
 
+/* Styling for restart game module */
+    .modal-dialog .modal-lg {
+        width: 95vw!important;
+    }
+    .restart_modal_team_points {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-around;
+    }
+    #restart_modal_team_points {
+      flex-direction: row-reverse;
+    }
+    #modal_team_title_A {
+      color: #e26a6a;
+    }
+    #modal_team_title_B {
+      color: #2574a9;
+    }
+    #resume_yes, #resume_no {
+        font-size: 2.5rem;
+        margin: 1vh;
+    }
+  
+
+
+
+
 /* Styling for the landing page: size of input wells, flex on player forms, and additional styling due to the close button on 
 players 3 and 4 */
 .input_well {
@@ -922,15 +949,6 @@ input[type=radio]{
         padding: 1.4vh;
     }
     
-    .modal-dialog .modal-lg {
-        width: 95vw!important;
-    }
-    
-    #resume_yes, #resume_no {
-        font-size: 2.5rem;
-        margin: 1vh;
-    }
-    
     #round_control_buttons {
       height: 20vh;
       display: flex;
@@ -939,6 +957,8 @@ input[type=radio]{
       align-items: center;
       
     }
+    
+
     
 }
 
