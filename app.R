@@ -1653,12 +1653,10 @@ observe({
                   scores[scores$team == 'A',] %>% pull(points), 
                   scores[scores$team == 'B',] %>% pull(points))
   )
-  restart_game_server('restart')
-  
+  restart_game_outputs <- restart_game_server('restart')
   }
   
 })
-
 
 # Game Start Validation ---------------------------------------------------
 
