@@ -608,8 +608,9 @@ server <- function(input, output, session) {
   
   
   
-  
-  
+
+# Restart Game Reactive ---------------------------------------------------
+  restart_game_outputs <- reactive({restart_game_server('restart')})  
 
 # Outputs -----------------------------------------------------------------
   
@@ -1653,7 +1654,6 @@ observe({
                   scores[scores$team == 'A',] %>% pull(points), 
                   scores[scores$team == 'B',] %>% pull(points))
   )
-  restart_game_outputs <- restart_game_server('restart')
   }
   
 })
@@ -1989,77 +1989,52 @@ observeEvent(input$game_summary, {
   
   
 # Restart a game after indicating you would like to do so
-  observeEvent(input$resume_yes, {
-    
-    
-    lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
-      as.integer()
-    
-    lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
-    
-    players = dbGetQuery(con, "SELECT * FROM players")
-  
-    lost_players = lost_player_stats %>%
-      left_join(players) %>%
-      select(player_name, team) %>% 
-      group_by(team) %>% 
-      mutate(player_input = str_c("name_", team, row_number())) %>% 
-      ungroup()
-    
-    input_list = lost_players %>%
-      select(player_input, player_name) %>% 
-      deframe()
-    
-    removeModal()
-    #Look at the number of lost players on each team to be certain of the values 
-    # that you want
-    
-    size_A = lost_players %>% filter(team == "A") %>%
-      summarize(sum = n()) %>%
-        deframe()
-    size_B = lost_players %>% filter(team == "B") %>% 
-      summarize(sum = n()) %>%
-        deframe()
-    
+  observeEvent(restart_game_outputs()$restart_game == T, {
+    browser()
+    req(restart_game_outputs()$restart_game == T)
+    #Look at the number of lost players on each team to be certain of the values
+    # that you wan
+
     # Check to see if you should be signaling to the app to care about extra
     # players
-     if (size_A == 3){
+     if (restart_game_outputs()$size_A == 3){
       shinyjs::click("extra_player_A3")
-    } else if (size_A == 4){
+    } else if (restart_game_outputs()$size_A == 4){
       shinyjs::click("extra_player_A3")
       shinyjs::click("extra_player_A4")
     } else {
       invisible()
     }
-    
-    if (size_B == 3){
+
+    if (restart_game_outputs()$size_B == 3){
       shinyjs::click("extra_player_B3")
-    } else if (size_B == 4){
+    } else if (restart_game_outputs()$size_B == 4){
       shinyjs::click("extra_player_B3")
       shinyjs::click("extra_player_B4")
     } else {
       invisible()
     }
-    
-    delay(10, iwalk(input_list, function(name, id){
-      
+
+    delay(10, iwalk(restart_game_outputs()$inputs, function(name, id){
       updateSelectizeInput(session, inputId = id, selected = name)
-      
     })
     )
-    
+
     shinyjs::click("start_game")
-})
+}, ignoreNULL = T,
+   ignoreInit = T
+)
+  
   
 # Close the modal dialog if you say no and remove
 # the old game from the DB
   
-observeEvent(input$resume_no, {
-  removeModal()
-  
-  delete_query = "DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"
-  dbExecute(con, delete_query)
-})
+# observeEvent(input$resume_no, {
+#   removeModal()
+#   
+#   delete_query = "DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"
+#   dbExecute(con, delete_query)
+# })
   
   
 
