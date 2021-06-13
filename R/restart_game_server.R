@@ -61,12 +61,16 @@ restart_game_server = function(id) {
                  })
                 
                  team_sizes = reactive({
-                   return(
-                     missing_players() %>% 
-                       group_by(team) %>%
+                     size_A = missing_players() %>% 
+                       filter(team == 'A') %>%
                        summarize(sum = n()) %>%
                        deframe()
-                   )
+                     size_B = missing_players() %>% 
+                       filter(team == 'B') %>%
+                       summarize(sum = n()) %>%
+                       deframe()
+                     return(list('size_A' = size_A,
+                                 'size_B' = size_B))
                  })
                  
                 output$summary_table_A <- renderReactable({
@@ -152,46 +156,8 @@ restart_game_server = function(id) {
                 )
                  
                  observeEvent(input$restart_incomplete_game, {
-                   
-                   
                    removeModal()
-                   #Look at the number of lost players on each team to be certain of the values 
-                   # that you want\
-                   size_B = missing_players() %>% filter(team == "B") %>%
-                     summarize(sum = n()) %>%
-                     deframe()
-                   # Check to see if you should be signaling to the app to care about extra
-                   # players
-                   # if (size_A == 3){
-                   #   shinyjs::click("extra_player_A3")
-                   # } else if (size_A == 4){
-                   #   shinyjs::click("extra_player_A3")
-                   #   shinyjs::click("extra_player_A4")
-                   # } else {
-                   #   invisible()
-                   # }
-                   # 
-                   # if (size_B == 3){
-                   #   shinyjs::click("extra_player_B3")
-                   # } else if (size_B == 4){
-                   #   shinyjs::click("extra_player_B3")
-                   #   shinyjs::click("extra_player_B4")
-                   # } else {
-                   #   invisible()
-                   # }
-                   
-                   # delay(10, iwalk(input_list, function(name, id){
-                   #   updateSelectizeInput(session, inputId = id, selected = name)
-                   # })
-                   # )
-                   # 
-                   # shinyjs::click("start_game")
-                   # This needs to get rid of the modal dialog, enter in the player names (bleh)
-                   # and begin the game. 
-                   
-                   # removeModal()
                    restart_game(T)
-                   # # This should now return the module output
                  })
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
@@ -202,9 +168,9 @@ restart_game_server = function(id) {
                  })
                  
                  return(list('restart_game' = restart_game,
-                             'inputs' = input_list,
-                             'size_A' = team_sizes()[team == 'A',],
-                             'size_B' = team_size()[team == 'B', ]))
+                             'inputs' = input_list(),
+                             'size_A' = team_sizes()[['size_A']],
+                             'size_B' = team_sizes()[['size_B']]))
                })
                  
 }

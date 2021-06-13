@@ -1655,7 +1655,6 @@ observe({
                   scores[scores$team == 'B',] %>% pull(points))
   )
   }
-  
 })
 
 # Game Start Validation ---------------------------------------------------
@@ -1989,9 +1988,8 @@ observeEvent(input$game_summary, {
   
   
 # Restart a game after indicating you would like to do so
-  observeEvent(restart_game_outputs()$restart_game == T, {
-    browser()
-    req(restart_game_outputs()$restart_game == T)
+  observeEvent(restart_game_outputs()$restart_game(), {
+    req(restart_game_outputs()$restart_game() == T)
     #Look at the number of lost players on each team to be certain of the values
     # that you wan
 
@@ -2014,13 +2012,12 @@ observeEvent(input$game_summary, {
     } else {
       invisible()
     }
-
-    delay(10, iwalk(restart_game_outputs()$inputs, function(name, id){
+    
+    iwalk(restart_game_outputs()$inputs, function(name, id){
       updateSelectizeInput(session, inputId = id, selected = name)
     })
-    )
 
-    shinyjs::click("start_game")
+    delay(10, shinyjs::click("start_game"))
 }, ignoreNULL = T,
    ignoreInit = T
 )
