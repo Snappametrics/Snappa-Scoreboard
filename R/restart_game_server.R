@@ -37,6 +37,15 @@ restart_game_server = function(id) {
                    return(players)
                  })
                  
+                 last_round <- reactive({
+                   query = dbGetQuery(con, 
+                              sql('SELECT last_round 
+                                  FROM game_stats 
+                                  WHERE game_id = (SELECT MAX(game_id) FROM game_stats);')
+                              ) %>% collect() %>%
+                     pull(last_round)
+                   return(query)
+                 })
                  input_list <- reactive({
                    player_inputs = missing_players() %>%
                      group_by(team) %>%
@@ -109,7 +118,20 @@ restart_game_server = function(id) {
                     reactable(presentation_table,
                               highlight = T,
                               columns = list(
-                                player_name = colDef(style = list(color = '#e26a6a' )) 
+                                player_name = 
+                                  colDef(
+                                    header = 'Player Name',
+                                    style = list(color = '#e26a6a'),
+                                    align = 'center',
+                                    width = 100) 
+                              ),
+                              defaultColDef = colDef(
+                                header = function(value) {
+                                  no_dash = gsub('_', ' ', value, fixed = T )
+                                  return(str_to_title(no_dash))
+                                },
+                                width = 75,
+                                align = 'center'
                               )
                           )
                     )
@@ -151,13 +173,32 @@ restart_game_server = function(id) {
                     reactable(presentation_table,
                               highlight = T,
                               columns = list(
-                                player_name = colDef(style = list(color = '#2574a9'))
+                                player_name = 
+                                  colDef(
+                                    header = 'Player Name',
+                                    style = list(color = '#2574a9'),
+                                    align = 'center',
+                                    width = 100)
+                              ),
+                              defaultColDef = colDef(
+                                header = function(value) {
+                                  no_dash = gsub('_', ' ', value, fixed = T )
+                                  return(str_to_title(no_dash))
+                                },
+                                width = 75,
+                                align = 'center'
                               )
-                            
                     )
                   )
                 }
                 )
+                output$round_num <- renderUI({
+                  team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+                  HTML(str_c('<h1 style = "font-size: 5rem">', 
+                             str_extract(last_round(), "[0-9]+"), 
+                             '<span style="color:', team_colours[[str_extract(last_round(), "[AB]+")]], ';">', str_extract(last_round(), "[AB]+"), "</span>",
+                             "</h1>"))
+                })
                  
                  observeEvent(input$restart_incomplete_game, {
                    removeModal()
