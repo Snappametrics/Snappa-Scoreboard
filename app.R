@@ -978,7 +978,8 @@ server <- function(input, output, session) {
            ~ (.)) %>% 
       arrange(game_id) %>% 
       mutate(game_num = row_number()) %>% 
-      inner_join(select(player_game_stats(), player_id, game_id, won_game))
+      inner_join(select(player_game_stats(), player_id, game_id, won_game),
+                 by = c("player_id", "game_id"))
     
     career_high = unique(recent_games$max_points)
 
