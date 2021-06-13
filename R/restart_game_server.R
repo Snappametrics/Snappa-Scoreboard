@@ -5,7 +5,9 @@
 #'  
 #'  @return a list with the following components
 #'  \describe{
-#'       \item{players_A, players_B} {Names of the players from each team  in the game to be restarted}
+#'       \item{ restart_game } {Passes a boolean to tell the app to restart using past game info}
+#'       \item{inputs} {A tibble with the name of the player and the inputID that will contain their name}
+#'       \item{size_A, size_B} {Sizes of each team to figure out whether or not to click the buttons to expand team sizes}
 #'  }
 
 
@@ -19,7 +21,7 @@ restart_game_server = function(id) {
                    return(game_id)
                    
                  })
-                 
+                 restart_game <- reactiveVal({F})
                  missing_players = reactive({
                    players = dbGetQuery(con,
                                              sql('SELECT
@@ -35,7 +37,38 @@ restart_game_server = function(id) {
                    return(players)
                  })
                  
+                 input_list <- reactive({
+                   player_inputs = missing_players() %>%
+                     group_by(team) %>%
+                     mutate(player_input = str_c("name_", team, row_number())) %>%
+                     ungroup()
+                   
+                   input_list = player_inputs %>%
+                     select(player_input, player_name) %>%
+                     deframe()
+                   return(input_list)
+                 })
+                 
+                 
+                 missing_player_stats <- reactive({
+                   dbGetQuery(con, 
+                              sql('SELECT * FROM player_stats
+                                  WHERE game_id = (
+                                    SELECT MAX(game_id)
+                                    FROM player_stats
+                                  )')) %>% collect()
+        
+                 })
                 
+                 team_sizes = reactive({
+                   return(
+                     missing_players() %>% 
+                       group_by(team) %>%
+                       summarize(sum = n()) %>%
+                       deframe()
+                   )
+                 })
+                 
                 output$summary_table_A <- renderReactable({
                   # Maybe this is fast?
                   base_table = dbGetQuery(con, 
@@ -119,16 +152,46 @@ restart_game_server = function(id) {
                 )
                  
                  observeEvent(input$restart_incomplete_game, {
+                   
+                   
+                   removeModal()
+                   #Look at the number of lost players on each team to be certain of the values 
+                   # that you want\
+                   size_B = missing_players() %>% filter(team == "B") %>%
+                     summarize(sum = n()) %>%
+                     deframe()
+                   # Check to see if you should be signaling to the app to care about extra
+                   # players
+                   # if (size_A == 3){
+                   #   shinyjs::click("extra_player_A3")
+                   # } else if (size_A == 4){
+                   #   shinyjs::click("extra_player_A3")
+                   #   shinyjs::click("extra_player_A4")
+                   # } else {
+                   #   invisible()
+                   # }
+                   # 
+                   # if (size_B == 3){
+                   #   shinyjs::click("extra_player_B3")
+                   # } else if (size_B == 4){
+                   #   shinyjs::click("extra_player_B3")
+                   #   shinyjs::click("extra_player_B4")
+                   # } else {
+                   #   invisible()
+                   # }
+                   
+                   # delay(10, iwalk(input_list, function(name, id){
+                   #   updateSelectizeInput(session, inputId = id, selected = name)
+                   # })
+                   # )
+                   # 
+                   # shinyjs::click("start_game")
                    # This needs to get rid of the modal dialog, enter in the player names (bleh)
                    # and begin the game. 
-                   removeModal()
-                   # This should now return the module output
-                   return(list('players_A' = reactive({missing_players()[missing_players()$team == 'A', 'player_name']}),
-                               'players_B' = reactive({missing_players()[missing_players()$team == 'B', 'player_name']})
-                               )
-                          )
                    
-                   
+                   # removeModal()
+                   restart_game(T)
+                   # # This should now return the module output
                  })
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
@@ -136,7 +199,12 @@ restart_game_server = function(id) {
                    dbExecute(con, delete_query)
                    # This should return some boilerplate list to instruct the module which 
                    # will assemble this information into a game_start screen state
-                 }) 
+                 })
+                 
+                 return(list('restart_game' = restart_game,
+                             'inputs' = input_list,
+                             'size_A' = team_sizes()[team == 'A',],
+                             'size_B' = team_size()[team == 'B', ]))
                })
                  
 }
