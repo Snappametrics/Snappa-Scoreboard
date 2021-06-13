@@ -860,21 +860,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # output$summary_plot = renderPlot({
-  #   if(input$start_game == 0){
-  #     game_summary_plot(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
-  #                       players = vals$db_tbls()[["players"]],
-  #                       scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
-  #                       game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
-  #   } else {
-  #     game_summary_plot(player_stats = vals$player_stats_db,
-  #                       players = vals$db_tbls()[["players"]],
-  #                       scores = vals$scores_db,
-  #                       game = vals$game_id)
-  #   }
-  #   
-  # })
-  
+
   
   
   
