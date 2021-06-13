@@ -1,20 +1,11 @@
 #' Handles server-side processing of lost game information
 #' 
 #' 
-#'  @param id namespace of the application
+#'  @param id namespace of the module
 #'  
 #'  @return a list with the following components
 #'  \describe{
-#'       \item{input_A1} {Name of Player A1 From Game to be Restarted, Else Blank}
-#'       \item{input_A2} {Name of Player A2 From Game to be Restarted, Else Blank}
-#'       \item{input_A3} {Name of Player A3 From Game to be Restarted, Else Blank}
-#'       \item{input_A4} {Name of Player A4 From Game to be Restarted, Else Blank}
-#'       \item{input_B1} {Name of Player B1 From Game to be Restarted, Else Blank}
-#'       \item{input_B2} {Name of Player B2 From Game to be Restarted, Else Blank}
-#'       \item{input_B3} {Name of Player B3 From Game to be Restarted, Else Blank}
-#'       \item{input_B4} {Name of Player B4 From Game to be Restarted, Else Blank}
-#'       \item{length_A} {Number of slots to fill (for other modules to process w/o checking for blanks)}
-#'       \item{length_B} {Number of slots to fill (for other modules to process w/o checking for blanks)}
+#'       \item{players_A, players_B} {Names of the players from each team  in the game to be restarted}
 #'  }
 
 
@@ -32,7 +23,7 @@ restart_game_server = function(id) {
                  missing_players = reactive({
                    players = dbGetQuery(con,
                                              sql('SELECT
-                                                    players.player_id,
+                                                    players.player_name,
                                                     ps.team
                                                  FROM player_stats AS ps
                                                  INNER JOIN players
@@ -43,7 +34,8 @@ restart_game_server = function(id) {
                                                  )')) %>% collect()
                    return(players)
                  })
-
+                 
+                
                 output$incomplete_game_summary = renderReactable({
                   # Maybe this is fast?
                   base_table = dbGetQuery(con, 
@@ -53,10 +45,12 @@ restart_game_server = function(id) {
                                                   SUM(points_scored) AS points,
                                                   SUM(CASE 
                                                         WHEN paddle = TRUE THEN 1 
-                                                        ELSE 0 END) AS paddle_points,
+                                                        ELSE 0 
+                                                      END) AS paddle_points,
                                                   SUM(CASE 
                                                         WHEN clink = TRUE THEN 1
-                                                        ELSE 0 END) AS clink_points
+                                                        ELSE 0 
+                                                      END) AS clink_points
                                                 FROM (SELECT * 
                                                       FROM scores 
                                                       WHERE game_id = (SELECT MAX(game_id)
@@ -69,8 +63,20 @@ restart_game_server = function(id) {
                   # Yeah. It's fast. This should probably just be a query to player_stats, 
                   # particularly considering that we need to know the total number 
                   # of players on each team, which has traditionally been stored there
-                  
-                  return(reactable(base_table))
+                  presentation_table = base_table %>%
+                    arrange(team, desc(points)) 
+                  return(
+                    reactable(presentation_table,
+                              highlight = T,
+                              rowStyle = function(index) {
+                                list(background = if_else(presentation_table$team[index] == 'A',
+                                                          'red',
+                                                          'blue')
+                                     )
+                                
+                              }
+                              )
+                         )
                   
                 
                 }
@@ -81,9 +87,11 @@ restart_game_server = function(id) {
                    # This needs to get rid of the modal dialog, enter in the player names (bleh)
                    # and begin the game. 
                    removeModal()
-                   
                    # This should now return the module output
-                   
+                   return(list('players_A' = missing_players()[missing_players()$team == 'A', 'player_name'],
+                               'players_B' = missing_players()[missing_players()$team == 'B', 'player_name']
+                               )
+                          )
                    
                    
                  })
