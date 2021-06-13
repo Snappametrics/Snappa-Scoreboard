@@ -36,7 +36,7 @@ restart_game_server = function(id) {
                  })
                  
                 
-                output$incomplete_game_summary = renderReactable({
+                output$summary_table_A <- renderReactable({
                   # Maybe this is fast?
                   base_table = dbGetQuery(con, 
                                             sql('SELECT 
@@ -63,24 +63,59 @@ restart_game_server = function(id) {
                   # Yeah. It's fast. This should probably just be a query to player_stats, 
                   # particularly considering that we need to know the total number 
                   # of players on each team, which has traditionally been stored there
-                  presentation_table = base_table %>%
+                  presentation_table = missing_players() %>%
+                    filter(team == 'A') %>%
+                    left_join(base_table, by = c('team' = 'team', 'player_name' = 'player')) %>%
+                    replace_na(list(points = 0, paddle_points = 0, clink_points = 0)) %>%
                     arrange(team, desc(points)) 
                   return(
                     reactable(presentation_table,
                               highlight = T,
-                              rowStyle = function(index) {
-                                list(background = if_else(presentation_table$team[index] == 'A',
-                                                          'red',
-                                                          'blue')
-                                     )
-                                
-                              }
+                              rowStyle = list(background = '#e26a6a' ) 
                               )
-                         )
+                          )
+                })
                   
-                
+                output$summary_table_B <- renderReactable({
+                  # Maybe this is fast?
+                  base_table = dbGetQuery(con, 
+                                          sql('SELECT 
+                                                  players.player_name AS player,
+                                                  scoring_team AS team,
+                                                  SUM(points_scored) AS points,
+                                                  SUM(CASE 
+                                                        WHEN paddle = TRUE THEN 1 
+                                                        ELSE 0 
+                                                      END) AS paddle_points,
+                                                  SUM(CASE 
+                                                        WHEN clink = TRUE THEN 1
+                                                        ELSE 0 
+                                                      END) AS clink_points
+                                                FROM (SELECT * 
+                                                      FROM scores 
+                                                      WHERE game_id = (SELECT MAX(game_id)
+                                                                       FROM scores)
+                                                ) AS scores
+                                                LEFT JOIN players ON 
+                                                players.player_id = scores.player_id
+                                                GROUP BY players.player_name, scoring_team')
+                  ) %>% collect()
+                  # Yeah. It's fast. This should probably just be a query to player_stats, 
+                  # particularly considering that we need to know the total number 
+                  # of players on each team, which has traditionally been stored there
+                  presentation_table = missing_players() %>%
+                    filter(team == 'B') %>%
+                    left_join(base_table, by = c('team' = 'team', 'player_name' = 'player')) %>%
+                    replace_na(list(points = 0, paddle_points = 0, clink_points = 0)) %>%
+                    arrange(team, desc(points)) 
+                  return(
+                    reactable(presentation_table,
+                              highlight = T,
+                              rowStyle = list(background = '#2574a9')
+                            
+                    )
+                  )
                 }
-                  
                 )
                  
                  observeEvent(input$restart_incomplete_game, {
@@ -88,8 +123,8 @@ restart_game_server = function(id) {
                    # and begin the game. 
                    removeModal()
                    # This should now return the module output
-                   return(list('players_A' = missing_players()[missing_players()$team == 'A', 'player_name'],
-                               'players_B' = missing_players()[missing_players()$team == 'B', 'player_name']
+                   return(list('players_A' = reactive({missing_players()[missing_players()$team == 'A', 'player_name']}),
+                               'players_B' = reactive({missing_players()[missing_players()$team == 'B', 'player_name']})
                                )
                           )
                    
@@ -97,9 +132,8 @@ restart_game_server = function(id) {
                  })
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
-                   delete_query = str_c("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";")
+                   delete_query = paste0("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";")
                    dbExecute(con, delete_query)
-                   
                    # This should return some boilerplate list to instruct the module which 
                    # will assemble this information into a game_start screen state
                  }) 

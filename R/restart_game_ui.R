@@ -24,27 +24,26 @@ restart_game_UI = function(id, team_A_points, team_B_points) {
     ## TODO: Need something here which is created by the module server. Probably
     ## several things
     fluidRow(
-      column(4,
+      column(6,
              align = 'center',
              h3(class = 'modal_team_title', id = 'modal_team_title_A',
                 'Team A'),
              h3(class = 'modal_team_points', id = 'modal_team_points_A',
-                team_A_points)
+                team_A_points),
+             withSpinner(reactableOutput(ns('summary_table_A')),
+                         type = 1)
       ),
-      column(4, align = 'center'
-      ),
-      column(4,
+      column(6,
              align = 'center',
              h3(class = 'modal_team_title', id = 'modal_team_title_B',
                 'Team B'),
              h3(class = 'modal_team_points', id = 'modal_team_points_B',
-                team_B_points)
+                team_B_points),
+             withSpinner(reactableOutput(ns('summary_table_B')),
+                         type = 1)
              
       )
     ),
-    withSpinner(reactableOutput(ns('incomplete_game_summary')),
-                type = 1),
-    
     footer = tagList(
       fluidRow(
         column(8, align = "left",
