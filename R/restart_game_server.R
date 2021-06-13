@@ -108,9 +108,11 @@ restart_game_server = function(id) {
                   return(
                     reactable(presentation_table,
                               highlight = T,
-                              rowStyle = list(background = '#e26a6a' ) 
+                              columns = list(
+                                player_name = colDef(style = list(color = '#e26a6a' )) 
                               )
                           )
+                    )
                 })
                   
                 output$summary_table_B <- renderReactable({
@@ -148,7 +150,9 @@ restart_game_server = function(id) {
                   return(
                     reactable(presentation_table,
                               highlight = T,
-                              rowStyle = list(background = '#2574a9')
+                              columns = list(
+                                player_name = colDef(style = list(color = '#2574a9'))
+                              )
                             
                     )
                   )

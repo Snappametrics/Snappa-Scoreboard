@@ -11,34 +11,29 @@ restart_game_UI = function(id, team_A_points, team_B_points) {
   modalDialog(
     title = "Hol' up, did you want to continue the previous game?",
     style = str_c("background-color:", snappa_pal[1], ";"),
-    div(
-      h3("Summary of the Previous Game", 
-         align = 'center')
-    ),
-    
-    # br(),
-    
-    # br(),
-    
-    br(),
-    ## TODO: Need something here which is created by the module server. Probably
-    ## several things
     fluidRow(
       column(6,
              align = 'center',
-             h3(class = 'modal_team_title', id = 'modal_team_title_A',
+             div(class = 'restart_modal_team_points',
+              h3(class = 'modal_team_title', id = 'modal_team_title_A',
                 'Team A'),
-             h3(class = 'modal_team_points', id = 'modal_team_points_A',
-                team_A_points),
+              h3(class = 'modal_team_points', id = 'modal_team_points_A',
+                team_A_points)
+             ),
+             br(),
              withSpinner(reactableOutput(ns('summary_table_A')),
                          type = 1)
       ),
       column(6,
              align = 'center',
-             h3(class = 'modal_team_title', id = 'modal_team_title_B',
+             div(class = 'restart_modal_team_points',
+                 id = 'restart_modal_points_B',
+                h3(class = 'modal_team_title', id = 'modal_team_title_B',
                 'Team B'),
-             h3(class = 'modal_team_points', id = 'modal_team_points_B',
-                team_B_points),
+                h3(class = 'modal_team_points', id = 'modal_team_points_B',
+                team_B_points)
+             ),
+             br(),
              withSpinner(reactableOutput(ns('summary_table_B')),
                          type = 1)
              
