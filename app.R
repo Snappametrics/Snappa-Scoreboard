@@ -961,7 +961,7 @@ server <- function(input, output, session) {
                  by = "game_id") %>% 
       # Identify which games were won
       mutate(winning = if_else(points_a > points_b, "A", "B"),
-             won_game = (team == winning))
+             won_game = if_else(team == winning, "Won", "Lost"))
   })
   
   
@@ -1207,7 +1207,7 @@ server <- function(input, output, session) {
     #                 if_else(input$sample_select == "All", 
     #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
     #                 paste("Last", input$sample_select, "games")))
-    
+    # browser()
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
       # Bars
@@ -1218,7 +1218,7 @@ server <- function(input, output, session) {
                    lty = "dashed", size = .75)+
       # X axis
       scale_x_continuous(limits = pluck(player_form_data(), "x_lims"), expand = expansion())+
-      scale_fill_manual(values = snappa_pal[c(2, 5)], labels = c("Lost", "Won"), 
+      scale_fill_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
                         guide = guide_legend(title = NULL, reverse = T))
     
     if(input$stat_select == "toss_efficiency"){
