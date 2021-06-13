@@ -2017,7 +2017,8 @@ observeEvent(input$game_summary, {
       updateSelectizeInput(session, inputId = id, selected = name)
     })
 
-    delay(10, shinyjs::click("start_game"))
+    delay(5, shinyjs::click("start_game"))
+    
 }, ignoreNULL = T,
    ignoreInit = T
 )

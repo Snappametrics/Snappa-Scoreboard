@@ -2,7 +2,7 @@
 #' 
 #' @param team_A_points How many points team A had when the scoreboard was halted.
 #' @param team_B_points How many points team B had when the scoreboard was halted.
-#' @return The UI elements which display the resart game modal
+#' @return The UI elements which display the restart game modal
 
 
 
