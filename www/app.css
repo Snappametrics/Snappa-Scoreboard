@@ -344,9 +344,10 @@ label.control-label[for='score'] {
   /* Reduce the table width */
   font-family: var(--font-sans-serif), "Helvetica Neue", Helvetica, Arial, sans-serif;
   display: flex;
+  text-align: left;
   flex-direction: column;
   align-items: flex-start;
-  padding: 2vh 2vw;
+  padding: 0vh 2vw;
   overflow: auto;
 }
 

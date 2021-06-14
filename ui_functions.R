@@ -1363,12 +1363,12 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   
   career_stats_data %>% 
     reactable(
-      defaultPageSize = 20, 
+      defaultPageSize = 10, pagination = T, 
       defaultSorted = "rank",
       showSortable = T,
-      defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0), 
+      defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0, separators = T), 
                              align = "left", defaultSortOrder = "desc"),
-      highlight = T,
+      highlight = T, 
       # compact = T, 
       width = "100%",
       rowStyle = function(index) {
@@ -2065,21 +2065,36 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     #   filter(type != "total") %>% 
     #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"), 
     #                        labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
+    # browser()
+    # df %>%
+    #   group_by(player_id) %>%
+    #   group_map(~ggplot(filter(., points != 0), aes(x = reorder(point_type, points), y = points))+
+    #               geom_col(aes(fill = point_type), colour = snappa_pal[1], position = position_dodge(width = 1), width = 1)+
+    #               geom_text(aes(y = points/1.75, label = na_if(points, 0)), colour = snappa_pal[1],
+    #                         family = "Inter Medium", fontface = "bold")+
+    #               scale_x_discrete(drop=T)+
+    #               scale_fill_manual(name = NULL, drop=T,
+    #                                 values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Foot" = "#090C9B"),
+    #                                 guide = guide_none())+#guide_legend(direction = "horizontal", nrow = 2, reverse = T))+#090C9B
+    #               coord_polar(start = pi/2, direction = -1)+
+    #               facet_wrap(~player_name, ncol=1, 
+    #                          strip.position = if_else(reverse_legend, "left", "right"), 
+    #                          as.table = F, drop = T, shrink = T)+
+    #               theme_snappa(md=T, plot_margin = team_margin)+
+    #               theme(axis.title = element_blank(), 
+    #                     axis.line = element_blank(), 
+    #                     axis.text.y.left = element_blank(),
+    #                     axis.text.x = element_blank(),
+    #                     strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
+    #                     strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
+    #                     panel.grid.major = element_blank())) %>%
+    #   reduce(`/`)+
+    #   plot_layout(ncol = 1)+
+    #   plot_annotation(theme = theme_snappa(md=T, plot_margin = team_margin))&
+    #   theme(legend.position = "bottom",
+    #         plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))
     
-    # plot_df %>%
-    #   left_join(ps_players, by = "player_id") %>% 
-    #   ggplot(., aes(x = type, y = points))+
-    #   geom_col(aes(fill = type), colour = snappa_pal[1], position = position_dodge(width = 1))+
-    #   geom_text(aes(y = points/2, label = na_if(points, 0)), colour = snappa_pal[1])+
-    #   scale_fill_manual(name = NULL, drop=F,
-    #                     values = c("Normal" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Foot" = "#090C9B"),
-    #                     guide = guide_legend(direction = "horizontal", nrow = 1, reverse = T))+#090C9B
-    #   coord_polar()+
-    #   facet_wrap(~player_name, ncol=1, strip.position = "left", as.table = F)+
-    #   theme_snappa(md=T)+
-    #   theme(axis.title = element_blank(), axis.line = element_blank(), axis.text.y.left = element_blank(),
-    #         legend.position = "bottom",
-    #         axis.text.x = element_blank(), strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)), panel.grid.major = element_blank())
+    
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
     # plot+

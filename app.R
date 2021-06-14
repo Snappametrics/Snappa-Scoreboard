@@ -213,7 +213,7 @@ ui <- dashboardPage(
                     style = str_c("background:", snappa_pal[1]), align = "center",
                     div(class = "top-snappaneers",
                         div(class = "snappaneers-header",
-                            div(class = "snappaneers-title", "Top Snappaneers"),
+                            # div(class = "snappaneers-title", "Top Snappaneers"),
                             "The deadliest die-throwers in all the land."
                         ),
                         reactableOutput("leaderboard_rt", width = "100%"),
@@ -862,21 +862,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # output$summary_plot = renderPlot({
-  #   if(input$start_game == 0){
-  #     game_summary_plot(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
-  #                       players = vals$db_tbls()[["players"]],
-  #                       scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
-  #                       game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
-  #   } else {
-  #     game_summary_plot(player_stats = vals$player_stats_db,
-  #                       players = vals$db_tbls()[["players"]],
-  #                       scores = vals$scores_db,
-  #                       game = vals$game_id)
-  #   }
-  #   
-  # })
-  
+
   
   
   
@@ -977,7 +963,7 @@ server <- function(input, output, session) {
                  by = "game_id") %>% 
       # Identify which games were won
       mutate(winning = if_else(points_a > points_b, "A", "B"),
-             won_game = (team == winning))
+             won_game = if_else(team == winning, "Won", "Lost"))
   })
   
   
@@ -994,7 +980,8 @@ server <- function(input, output, session) {
            ~ (.)) %>% 
       arrange(game_id) %>% 
       mutate(game_num = row_number()) %>% 
-      inner_join(select(player_game_stats(), player_id, game_id, won_game))
+      inner_join(select(player_game_stats(), player_id, game_id, won_game),
+                 by = c("player_id", "game_id"))
     
     career_high = unique(recent_games$max_points)
 
@@ -1223,7 +1210,7 @@ server <- function(input, output, session) {
     #                 if_else(input$sample_select == "All", 
     #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
     #                 paste("Last", input$sample_select, "games")))
-    
+    # browser()
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
       # Bars
@@ -1234,7 +1221,7 @@ server <- function(input, output, session) {
                    lty = "dashed", size = .75)+
       # X axis
       scale_x_continuous(limits = pluck(player_form_data(), "x_lims"), expand = expansion())+
-      scale_fill_manual(values = snappa_pal[c(2, 5)], labels = c("Lost", "Won"), 
+      scale_fill_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
                         guide = guide_legend(title = NULL, reverse = T))
     
     if(input$stat_select == "toss_efficiency"){
@@ -1265,15 +1252,18 @@ server <- function(input, output, session) {
   })
   
   
-  
+  overall_player_stats = reactive({
+    dbGetQuery(con,
+    sql("SELECT *
+              FROM basic_career_stats ")
+    )
+  })
   
   
   output$player_stats_headers = renderUI({
-    player_stats = dbGetQuery(con, 
-                              sql(str_c("SELECT games_played, win_pct, paddle_points, sinks, paddle_sinks, foot_paddles, foot_sinks
-                                        FROM basic_career_stats ", 
-                                        "WHERE player_id = ", input$player_select))
-                              )
+    
+    player_stats = filter(overall_player_stats(), player_id == input$player_select)
+
     div(
       box(width = 6, status = "success", title = "General Stats", collapsible = T, 
           # Games Played
