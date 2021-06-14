@@ -12,9 +12,10 @@ restart_game_UI = function(id, team_A_points, team_B_points) {
     title = "Hol' up, did you want to continue the previous game?",
     style = str_c("background-color:", snappa_pal[1], ";"),
     fluidRow(
-      column(1),
-      column(4,
+      style = 'display:flex;',
+      column(3,
              align = 'center',
+             class = 'col-sm-offset-2',
               h3(class = 'modal_team_title', id = 'modal_team_title_A',
                 'Team A'),
               h3(class = 'modal_team_points', id = 'modal_team_points_A',
@@ -22,50 +23,58 @@ restart_game_UI = function(id, team_A_points, team_B_points) {
       ),
       column(2,
              align = 'center',
-             uiOutput(ns('round_num')),
+             style = 'align-self: center',
+             withSpinner(uiOutput(ns('round_num')), type = 1),
              br()
       ),
-      column(4,
+      column(3,
              align = 'center',
                 h3(class = 'modal_team_title', id = 'modal_team_title_B',
                 'Team B'),
                 h3(class = 'modal_team_points', id = 'modal_team_points_B',
                 team_B_points)
       ),
-      column(1)
+      column(2)
     ),
     fluidRow(
-    column(6, 
-           withSpinner(reactableOutput(ns('summary_table_A')),
-                type = 1)
-    ),
-    column(6, withSpinner(reactableOutput(ns('summary_table_B')),
-                type = 1)
-    )
+      column(6, align = 'center',
+             withSpinner(reactableOutput(ns('summary_table_A')),
+                  type = 1)
+      ),
+      column(6, align = 'center', 
+             withSpinner(reactableOutput(ns('summary_table_B')),
+                  type = 1)
+      )
     ),
     footer = tagList(
       fluidRow(
-        column(8, align = "left",
-               helpText(
-                 h4('Would you like to continue the previous game?',
-                    style = "color: black; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;"),
-                 span("This will delete the game from our database", 
-                      style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
+        div(class = 'restart_game_footer',
+          column(8, align = "left",
+                 helpText(
+                   h4('Would you like to continue the previous game?',
+                      style = "color: black; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;"),
+                   span("This will delete the game from our database", 
+                        style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
                )
         ),
         column(2,
-               actionBttn(ns("restart_incomplete_game"),
-                          label = "Restart Game",
-                          style = "material-flat", 
-                          color = "default",
-                          size = "md")
+               div(class = 'restart_game_control',
+                 actionBttn(ns("restart_incomplete_game"),
+                            label = "Continue Game",
+                            style = "material-flat", 
+                            color = "default",
+                            size = "md")
+               )
         ),
         column(2,
-               actionBttn(ns("delete_incomplete_game"),
-                          label = "Delete Game",
-                          style = "material-flat",
-                          color = "danger",
-                          size = "md")
+               div(class = 'restart_game_control', 
+                 actionBttn(ns("delete_incomplete_game"),
+                            label = "Delete Game",
+                            style = "material-flat",
+                            color = "danger",
+                            size = "md")
+               )
+        )
         )
       )
     ),

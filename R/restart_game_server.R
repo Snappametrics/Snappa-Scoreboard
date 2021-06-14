@@ -113,7 +113,8 @@ restart_game_server = function(id) {
                     filter(team == 'A') %>%
                     left_join(base_table, by = c('team' = 'team', 'player_name' = 'player')) %>%
                     replace_na(list(points = 0, paddle_points = 0, clink_points = 0)) %>%
-                    arrange(team, desc(points)) 
+                    select(-team) %>%
+                    arrange(desc(points)) 
                   return(
                     reactable(presentation_table,
                               highlight = T,
@@ -130,7 +131,7 @@ restart_game_server = function(id) {
                                   no_dash = gsub('_', ' ', value, fixed = T )
                                   return(str_to_title(no_dash))
                                 },
-                                width = 75,
+                                width = 100,
                                 align = 'center'
                               )
                           )
@@ -168,7 +169,8 @@ restart_game_server = function(id) {
                     filter(team == 'B') %>%
                     left_join(base_table, by = c('team' = 'team', 'player_name' = 'player')) %>%
                     replace_na(list(points = 0, paddle_points = 0, clink_points = 0)) %>%
-                    arrange(team, desc(points)) 
+                    select(-team) %>%
+                    arrange(desc(points)) 
                   return(
                     reactable(presentation_table,
                               highlight = T,
@@ -185,7 +187,7 @@ restart_game_server = function(id) {
                                   no_dash = gsub('_', ' ', value, fixed = T )
                                   return(str_to_title(no_dash))
                                 },
-                                width = 75,
+                                width = 100,
                                 align = 'center'
                               )
                     )
