@@ -2597,6 +2597,7 @@ observeEvent(input$game_summary, {
                             ), 
                        duration = 20, closeButton = F
                       )
+      db_update_round(round = round_num(), game = vals$game_id)
     }
     
 
@@ -2689,7 +2690,7 @@ observeEvent(input$game_summary, {
       vals$error_msg <- "You did not input anything."
     }
     
-    
+    db_update_round(round = round_num(), game = vals$game_id)
     # If the game is still in rebuttal in rebuttal, remind players
     # of the points needed to bring it back
     vals$rebuttal = rebuttal_check(vals$current_scores$team_A, 
