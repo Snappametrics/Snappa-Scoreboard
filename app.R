@@ -1985,11 +1985,12 @@ observeEvent(input$game_summary, {
 
     # Check to see if you should be signaling to the app to care about extra
     # players
+    
      if (restart_game_outputs()$size_A == 3){
       shinyjs::click("extra_player_A3")
     } else if (restart_game_outputs()$size_A == 4){
       shinyjs::click("extra_player_A3")
-      shinyjs::click("extra_player_A4")
+      delay(100, shinyjs::click("extra_player_A4"))
     } else {
       invisible()
     }
@@ -1998,16 +1999,18 @@ observeEvent(input$game_summary, {
       shinyjs::click("extra_player_B3")
     } else if (restart_game_outputs()$size_B == 4){
       shinyjs::click("extra_player_B3")
-      shinyjs::click("extra_player_B4")
+      delay(100, shinyjs::click("extra_player_B4"))
     } else {
       invisible()
     }
     
-    iwalk(restart_game_outputs()$inputs, function(name, id){
+    delay(1000, iwalk(restart_game_outputs()$inputs, function(name, id){
       updateSelectizeInput(session, inputId = id, selected = name)
     })
+  )
 
-    delay(5, shinyjs::click("start_game"))
+
+    delay(2000, shinyjs::click("start_game"))
     
 }, ignoreNULL = T,
    ignoreInit = T
