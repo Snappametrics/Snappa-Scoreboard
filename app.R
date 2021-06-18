@@ -161,7 +161,8 @@ ui <- dashboardPage(
                            showTick = T
                          )
                        ),
-                       disabled(actionBttn("start_game", 
+                       disabled(
+                         actionBttn("start_game", 
                                            label = "Throw dice?", style = "pill", color = "primary", 
                                            icon = icon("dice"), size = "sm")),
                        uiOutput("validate_start"),
@@ -414,6 +415,7 @@ server <- function(input, output, session) {
     
     
     if(input$start_game) {
+      browser()
       sidebarMenu(
         menuItem("Scoreboard", 
                  tabName = "scoreboard", 
@@ -574,8 +576,8 @@ server <- function(input, output, session) {
   # Active input buttons
   #   - List of player inputs which are not null
   active_player_inputs = reactive({
-    list("A1" = input$name_A1, "A2" = input$name_A2, "A3" = input$name_A3, "A4" = input$name_A4, 
-         "B1" = input$name_B1, "B2" = input$name_B2, "B3" = input$name_B3, "B4" = input$name_B4) %>% 
+    list("A1" = player_A1(), "A2" = player_A2(), "A3" = player_A3(), "A4" = player_A4(), 
+         "B1" = player_B1(), "B2" = player_B2(), "B3" = player_B3(), "B4" = player_B4()) %>% 
       discard(is_null)
   })
   
@@ -607,11 +609,38 @@ server <- function(input, output, session) {
   })
   
   
-  
 
-# Restart Game Reactive ---------------------------------------------------
+# Module Reactive Elements ------------------------------------------------
+### Restart Game Reactive ---------------------------------------------------
   restart_game_outputs <- reactive({restart_game_server('restart')})  
 
+
+## Player Input Reactives --------------------------------------------------
+  player_A1 <- reactive({player_selectize_server('A1', 
+                                                 reactive({restart_game_outputs()$restart_game() }),
+                                                 reactive({restart_game_outputs()$inputs['name_A1']}))})
+  player_A2 <- reactive({player_selectize_server('A2', 
+                                                 reactive({ restart_game_outputs()$restart_game() }),
+                                                 reactive({ restart_game_outputs()$inputs['name_A2']}))})
+  player_A3 <- reactive({player_selectize_server('A3', 
+                                                 reactive({ restart_game_outputs()$restart_game() }),
+                                                 reactive({ restart_game_outputs()$inputs['name_A3']}))})
+  player_A4 <- reactive({player_selectize_server('A4', 
+                                                 reactive({ restart_game_outputs()$restart_game() }),
+                                                 reactive({ restart_game_outputs()$inputs['name_A4']}))})
+  player_B1 <- reactive({player_selectize_server('B1', 
+                                                 reactive({ restartt_game_outputs()$restart_game() }),
+                                                 reactive({ restart_game_outputs()$inputs['name_B1']}))})
+  player_B2 <- reactive({player_selectize_server('B2', 
+                                                 reactive({ restart_game_outputs()$restart_game() }),
+                                                 reactive({ restart_game_outputs()$inputs['name_B2']}))})
+  player_B3 <- reactive({player_selectize_server('B3', 
+                                                 reactive({ restart_game_outputs()$restart_game() }),
+                                                 reactive({ restart_game_outputs()$inputs['name_B3']}))})
+  player_B4 <- reactive({player_selectize_server('B4', 
+                                                 reactive({ restart_game_outputs()$restart_game() }),
+                                                 reactive({ restart_game_outputs()$inputs['name_B4']}))})
+  
 # Outputs -----------------------------------------------------------------
   
 
@@ -1616,7 +1645,7 @@ observe({
   )
   # There's no way this is faster than just selecting max. Is there a reason to do this?
   lost_game_id = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% pull()
-
+  
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
   db_scores = dbGetQuery(con,
                          sql(
@@ -1678,18 +1707,18 @@ observe({
     # check is failed, or else the logic isn't
     # going to pass through
     
-    if(any(input$name_A1 == "",
-           input$name_A2 == "",
-           input$name_B1 == "",
-           input$name_B2 == "")){
+    if(any(player_A1() == "",
+           player_A2() == "",
+           player_B1() == "",
+           player_B2() == "")){
       shinyjs::disable("start_game")
     }
     
     validate(
-      need(input$name_A1 != "", label = "Player A1"),
-      need(input$name_A2 != "", label = "Player A2"), 
-      need(input$name_B1 != "", label = "Player B1"), 
-      need(input$name_B2 != "", label = "Player B2")
+      need(player_A1() != "", label = "Player A1"),
+      need(player_A2() != "", label = "Player A2"), 
+      need(player_B1() != "", label = "Player B1"), 
+      need(player_B2() != "", label = "Player B2")
       )
     
     #Record the players that you need to be looking for
@@ -1980,12 +2009,13 @@ observeEvent(input$game_summary, {
 # Restart a game after indicating you would like to do so
   observeEvent(restart_game_outputs()$restart_game(), {
     req(restart_game_outputs()$restart_game() == T)
+    browser()
     #Look at the number of lost players on each team to be certain of the values
     # that you wan
 
     # Check to see if you should be signaling to the app to care about extra
     # players
-    
+
      if (restart_game_outputs()$size_A == 3){
       shinyjs::click("extra_player_A3")
     } else if (restart_game_outputs()$size_A == 4){
@@ -2003,7 +2033,7 @@ observeEvent(input$game_summary, {
     } else {
       invisible()
     }
-    
+
     delay(1000, iwalk(restart_game_outputs()$inputs, function(name, id){
       updateSelectizeInput(session, inputId = id, selected = name)
     })
@@ -2011,7 +2041,7 @@ observeEvent(input$game_summary, {
 
 
     delay(2000, shinyjs::click("start_game"))
-    
+
 }, ignoreNULL = T,
    ignoreInit = T
 )
@@ -2255,10 +2285,22 @@ observeEvent(input$game_summary, {
   observeEvent(input$extra_player_A3, {
     # Set input want to true
     vals$want_A3 = T
+    choices = dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
+      anti_join(., snappaneers(), by = "player_name") %>% 
+      pull(player_name)
     
     # Get add player button inputs
-    val <- paste0("#",getInputs("extra_player_A3"))
-    add_player_input("start", val, "A", 3, current_choices(), session)
+     val <- paste0("#",getInputs("extra_player_A3"))
+    # add_player_input("start", val, "A", 3, current_choices(), session)
+    
+    insertUI(selector = val,
+             where = "afterEnd",
+             ui = tagList(player_selectize_UI('A3', 'Player 3', choices),
+                          actionBttn('extra_player_A4', 
+                                     label = "+ Add Player", style = "unite", color = "danger")
+                          )
+    )
+    removeUI(val)
     
   })
   
