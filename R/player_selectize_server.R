@@ -26,7 +26,10 @@ player_selectize_server = function(id, restart_game, restart_input) {
                                         inputId = 'player_name',
                                         selected = restart_input)
                    
-                 })
+                 },
+                 ignoreInit = T,
+                 ignoreNULL = T)
                  
+                 return(player_name())
                })
 }
