@@ -1,5 +1,5 @@
 
-
+source('R/player_selectize_UI.R')
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
@@ -262,7 +262,7 @@ team_input_ui = function(team, player_choices){
   well_selector = if_else(team == 'A', 'input_well_A', 'input_well_B')
   div_selector = if_else(team == 'A', 'input_forms_A','input_forms_B')
   class_selector = paste0('input_well ', if_else(team == 'A', 'well_A', 'well_B'))
-  
+  player_namespaces = str_c(team, 1:2)
   column(4, align = "center",
          
          wellPanel(
@@ -274,11 +274,9 @@ team_input_ui = function(team, player_choices){
            tags$div( id = div_selector,
                 class = 'player_input_forms',
                 # Player 1
-                selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
-                          options = list(create = TRUE, hideSelected=T), width = "125%"),
+                player_selectize_UI(player_namespaces[1], 'Player 1', player_choices),
                  # Player 2
-                selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
-                               options = list(create = TRUE, hideSelected=T), width = "125%"),
+                player_selectize_UI(player_namespaces[2], 'Player 2', player_choices),
                 # Add Player 3 button
                 actionBttn(paste0("extra_player_", team, "3"), 
                            label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
