@@ -18,13 +18,12 @@ player_selectize_server = function(id, restart_game, restart_input) {
                  player_name <- reactive({
                    input$player_name
                  })
-                 
                  observeEvent(restart_game, {
                    # Is there a reason to do this over just writing 'restart_game'?
-                   req(isTRUE(restart_game))
+                   req(isTRUE(restart_game()))
                    updateSelectizeInput(session = getDefaultReactiveDomain(),
                                         inputId = 'player_name',
-                                        selected = restart_input)
+                                        selected = restart_input())
                    
                  },
                  ignoreInit = T,
