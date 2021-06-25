@@ -1420,7 +1420,13 @@ server <- function(input, output, session) {
                  fill = snappa_pal[1], colour = "gray20", label.padding = unit(.4, "lines"), label.r = unit(.4, "lines"), 
                  size = 6, 
                  family = "Inter Medium", fontface = "bold")+
-      scale_fill_manual(values = snappa_pal[3:8], guide = guide_none())+
+      scale_fill_manual(values = c("Sunk" = snappa_pal[3], 
+                                   "Self sink" = snappa_pal[4], 
+                                   "Team sink" = snappa_pal[2], 
+                                   "12-7" = snappa_pal[5], 
+                                   "War of 1812" = snappa_pal[6], 
+                                   "2003" = snappa_pal[7]), 
+                        guide = guide_none())+
       scale_x_continuous(limits = c(.5, waffle_cols+1))+
       scale_y_continuous(limits = c(.5, waffle_rows+1.25), 
                          expand = expansion(add = c(0,1)))+
