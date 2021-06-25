@@ -1382,18 +1382,13 @@ server <- function(input, output, session) {
       uncount(weights = casualties) %>% 
       group_split(casualty_type) %>% 
       map(waffle_iron, rows = 6, aes_d(group = casualty_type))
-    waffle_list = flatten(list(waffle_data, no_casualties))
+    waffle_list = bind_rows(flatten(list(waffle_data, no_casualties)))
     browser()
-    ggplot(waffle_list[[1]], aes(x,y, fill = group))+
-      geom_waffle(data = waffle_list[[1]])+
-      geom_waffle(data = waffle_list[[2]])+
-      geom_waffle(data = waffle_list[[3]])+
-      geom_waffle(data = waffle_list[[4]])+
-      geom_waffle(data = waffle_list[[5]])+
-      scale_fill_manual(values = snappa_pal[4:8], guide = guide_none())+
-      scale_y_continuous(limits = c(0, NA))+
+    ggplot(waffle_list, aes(x,y, fill = group))+
+      geom_waffle(data = filter(waffle_list, x > 0))+
+      scale_fill_manual(values = snappa_pal[3:8], guide = guide_none())+
       facet_wrap(~group, nrow = 1, strip.position = "bottom")+
-      theme_snappa()+
+      theme_snappa(md=T, base_size = 15)+
       theme(axis.text = element_blank(), axis.text.y.left = element_blank(),
             axis.title = element_blank())
       
