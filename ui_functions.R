@@ -2029,22 +2029,22 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
       )
     
     # Option 1:
-    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>% 
+    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
     #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
     #   mutate(total = total_points) %>%
     #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
     #   arrange(team, desc(total), player_id, desc(points)) %>%
     #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal", "total"), ordered = T),
     #          bar_width = if_else(type == "total", .1, 10))
-    #   
+    # 
     # filter(plot_df, type !="total") %>%
-    #   left_join(ps_players, by = "player_id") %>% 
+    #   left_join(ps_players, by = "player_id") %>%
     #   ggplot(., aes(x = type, y = points))+
-    #   geom_col(aes(fill = type), 
+    #   geom_col(aes(fill = type),
     #            colour = snappa_pal[1])+
     #   geom_text(aes(y = points + .5, label = na_if(points, 0)),
     #             family = "Inter Medium", colour = "black")+
-    #   geom_col(data = filter(plot_df, type =="total"), 
+    #   geom_col(data = filter(plot_df, type =="total"),
     #            aes(fill = type), width = .25, position = position_dodge(width = 1), colour = snappa_pal[1])+
     #   scale_fill_manual(name = NULL, drop=F,
     #                     values = c("normal" = "#67A283", "paddle" = "#793E8E", "clink" = "#54B6F2", "sink" = "#FFA630", "foot" = "#011936", "total" = "gray20"),
@@ -2053,47 +2053,59 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     #   coord_flip()+
     #   facet_wrap(~player_name, ncol = 1, strip.position = "left", as.table = F)+
     #   theme_snappa(md=T, text_family = "Inter Medium")+
-    #   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), 
+    #   theme(axis.text.y = element_blank(), axis.title.y = element_blank(),
     #         strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)))
     
-    # Option 2:
-    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
-    #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
-    #   mutate(total = total_points) %>%
-    #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
-    #   arrange(team, desc(total), player_id, desc(points)) %>%
-    #   filter(type != "total") %>% 
-    #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"), 
-    #                        labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
-    # browser()
-    # df %>%
-    #   group_by(player_id) %>%
-    #   group_map(~ggplot(filter(., points != 0), aes(x = reorder(point_type, points), y = points))+
-    #               geom_col(aes(fill = point_type), colour = snappa_pal[1], position = position_dodge(width = 1), width = 1)+
-    #               geom_text(aes(y = points/1.75, label = na_if(points, 0)), colour = snappa_pal[1],
-    #                         family = "Inter Medium", fontface = "bold")+
-    #               scale_x_discrete(drop=T)+
-    #               scale_fill_manual(name = NULL, drop=T,
-    #                                 values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Foot" = "#090C9B"),
-    #                                 guide = guide_none())+#guide_legend(direction = "horizontal", nrow = 2, reverse = T))+#090C9B
-    #               coord_polar(start = pi/2, direction = -1)+
-    #               facet_wrap(~player_name, ncol=1, 
-    #                          strip.position = if_else(reverse_legend, "left", "right"), 
-    #                          as.table = F, drop = T, shrink = T)+
-    #               theme_snappa(md=T, plot_margin = team_margin)+
-    #               theme(axis.title = element_blank(), 
-    #                     axis.line = element_blank(), 
-    #                     axis.text.y.left = element_blank(),
-    #                     axis.text.x = element_blank(),
-    #                     strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
-    #                     strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
-    #                     panel.grid.major = element_blank())) %>%
-    #   reduce(`/`)+
-    #   plot_layout(ncol = 1)+
-    #   plot_annotation(theme = theme_snappa(md=T, plot_margin = team_margin))&
-    #   theme(legend.position = "bottom",
-    #         plot.background = element_rect(fill = snappa_pal[1], colour = snappa_pal[1]))
+    # Option 2: Nightingale/Radar plot
+    plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
+      inner_join(ps_players, by = "player_id") %>% 
+      select(player_name, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+      # Add total as persistent var
+      mutate(total = total_points) %>%
+      # Pivot separate variables into an input for fill
+      pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+      arrange(team, desc(total), player_name, desc(points)) %>%
+      # Remove total from our fill var
+      filter(type != "total") %>%
+      mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"),
+                           labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
     
+    # browser()
+    plot_df %>% 
+      # Show point type by the number of pts (because factoring above didn't work?)
+      ggplot(., aes(x = reorder(type, points), y = points))+
+      # Columns
+      geom_col(aes(fill = type, y = points + 2),
+               colour = snappa_pal[1],
+               position = position_dodge(width = 1), width = 1)+
+      # Pt labels
+      geom_text(aes(y = (points+3)/2, label = na_if(points, 0)),
+                colour = snappa_pal[1],
+                family = "Inter Medium", fontface = "bold", size = 5.5)+
+      # Axes
+      scale_x_discrete(drop=T)+
+      # Colours
+      scale_fill_manual(name = NULL, drop=T,
+                        values = c("Normal" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Foot" = "#090C9B"),
+                        guide = guide_legend(direction = "horizontal", ncol = 2, reverse = T))+#090C9B
+      # Make it polar
+      coord_polar(start = pi/2, direction = -1)+
+      # Facet on player
+      facet_wrap(~player_name, ncol=1,
+                 strip.position = if_else(reverse_legend, "left", "right"),
+                 as.table = F, drop = T, shrink = T)+
+      # Theme elements
+      theme_snappa(md=T, plot_margin = team_margin)+
+      theme(axis.title = element_blank(), # no title
+            legend.position = "bottom", # legend on bottom
+            axis.line = element_blank(), # No axis line
+            axis.text.y.left = element_blank(), # No axis text
+            axis.text.x = element_blank(),
+            # Facet labels
+            strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
+            strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
+            # No gridlines
+            panel.grid.major = element_blank())
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
