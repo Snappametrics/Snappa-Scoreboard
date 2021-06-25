@@ -28,6 +28,7 @@ library(patchwork)
 library(waiter)
 library(htmltools)
 library(ggwaffle)
+library(plotly)
 
 
 source("database/dbconnect.R")
@@ -1406,20 +1407,20 @@ server <- function(input, output, session) {
     
     labels = list(
       x = mean(c(1, waffle_cols)),
-      y = waffle_rows+1.25
+      y = waffle_rows+1.3
     )
     
-    
-    browser()
+
     ggplot(waffle_data, aes(x,y, fill = group))+
       geom_tile(data = filter(waffle_data, x > 0), colour = snappa_pal[1], size = 2)+
       #geom_waffle(data = filter(waffle_data, x > 0))+
-      geom_label(data = distinct(waffle_data, group, casualties),
+      geom_text(data = distinct(waffle_data, group, casualties),
                  aes(label = casualties, 
                      x = labels$x, y = labels$y),
-                 fill = snappa_pal[1], colour = "gray20", label.padding = unit(.4, "lines"), label.r = unit(.4, "lines"), 
-                 size = 6, 
-                 family = "Inter Medium", fontface = "bold")+
+                colour = "gray20", #fill = snappa_pal[1], 
+                # label.padding = unit(.4, "lines"), label.r = unit(.4, "lines"), 
+                 size = 6, hjust = 0.5,
+                 family = "Inter Medium")+
       scale_fill_manual(values = c("Sunk" = snappa_pal[3], 
                                    "Self sink" = snappa_pal[4], 
                                    "Team sink" = snappa_pal[2], 
@@ -1428,14 +1429,19 @@ server <- function(input, output, session) {
                                    "2003" = snappa_pal[7]), 
                         guide = guide_none())+
       scale_x_continuous(limits = c(.5, waffle_cols+1))+
-      scale_y_continuous(limits = c(.5, waffle_rows+1.25), 
-                         expand = expansion(add = c(0,1)))+
-      facet_wrap(~group, nrow = 1, strip.position = "bottom")+
-      theme_snappa(md=T, base_size = 15, plot_margin = margin(0, 10, 0, 10))+
+      scale_y_continuous(limits = c(.5, waffle_rows+1.3), 
+                         expand = expansion(add = c(0,.6)))+
+      facet_wrap(~str_wrap(group, 10), nrow = 1, strip.position = "top")+
+      theme_snappa(md=T, base_size = 18, plot_margin = margin(0, 10, 0, 10))+
       theme(axis.text = element_blank(), axis.text.y.left = element_blank(),
             axis.title = element_blank(), axis.line = element_blank(),
-            panel.grid = element_blank())
-      
+            panel.grid.major.y = element_blank(),
+            panel.grid.minor.y = element_blank(),
+            panel.grid.major.x = element_blank(), 
+            strip.text = element_text(face = "bold", hjust = .4, margin = margin(b = 0)))
+    
+    # For when we want to plotly dis beez
+    #ggplotly() %>% hide_legend() %>% layout(plot_bgcolor = snappa_pal[1])
   })
   
   output$casualty_stats = renderUI({
