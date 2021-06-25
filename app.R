@@ -27,6 +27,7 @@ library(ggtext)
 library(patchwork)
 library(waiter)
 library(htmltools)
+library(ggwaffle)
 
 
 source("database/dbconnect.R")
@@ -251,6 +252,10 @@ ui <- dashboardPage(
               fluidRow(
                 # General and Paddle Stat boxes
                 uiOutput("player_stats_headers")
+              ),
+              fluidRow(
+                # uiOutput("casualty_stats")
+                plotOutput("casualty_stats_plot")
               )
               ,
               fluidRow(
@@ -1338,6 +1343,93 @@ server <- function(input, output, session) {
     )
 
 
+  })
+  
+  casualty_stats = reactive({
+    req(input$player_select)
+    # browser()
+    filter(dbGetQuery(con,
+               sql("SELECT *
+              FROM casualty_stats ")
+    ), player_id == input$player_select) %>% 
+      # Remove from here down to get the 
+      # simple casualty stats headers to work
+      right_join(
+        tibble(
+          player_id = as.integer(input$player_select),
+          casualty_type = c("Sunk", "Self sink", "12-7", "War of 1812", "2003")
+        ),
+        by = c("player_id", "casualty_type")
+      ) %>% 
+      replace_na(list(casualties = 0))
+  })
+  
+  output$casualty_stats_plot = renderPlot({
+    req(input$player_select)
+    no_casualties = tibble(
+      x = 0, 
+      y = 0,
+      group = pull(filter(casualty_stats(), casualties == 0), casualty_type)
+    ) %>% 
+      group_split(group)
+    
+    waffle_data = casualty_stats() %>% 
+      uncount(weights = casualties) %>% 
+      group_split(casualty_type) %>% 
+      map(waffle_iron, rows = 6, aes_d(group = casualty_type))
+    waffle_list = flatten(list(waffle_data, no_casualties))
+    browser()
+    ggplot(waffle_list[[1]], aes(x,y, fill = group))+
+      geom_waffle(data = waffle_list[[1]])+
+      geom_waffle(data = waffle_list[[2]])+
+      geom_waffle(data = waffle_list[[3]])+
+      geom_waffle(data = waffle_list[[4]])+
+      geom_waffle(data = waffle_list[[5]])+
+      scale_fill_manual(values = snappa_pal[4:8], guide = guide_none())+
+      scale_y_continuous(limits = c(0, NA))+
+      facet_wrap(~group, nrow = 1, strip.position = "bottom")+
+      theme_snappa()+
+      theme(axis.text = element_blank(), axis.text.y.left = element_blank(),
+            axis.title = element_blank())
+      
+  })
+  
+  output$casualty_stats = renderUI({
+    box(width = 6, status = "success", title = "Casualty Stats", collapsible = T,
+        # Paddle points
+        column(
+          width = 3,
+          descriptionBlock(
+            header = coalesce((filter(casualty_stats(), casualty_type == "Sunk"))$casualties), 0,
+            text = "TIMES SUNK"
+          )
+        ),
+        # Paddle Sinks
+        column(
+          width = 3,
+          descriptionBlock(
+            header = (filter(casualty_stats(), casualty_type == "12-7"))$casualties,
+            text = "12-7 LOSSES"
+          )
+        ),
+        # 18-12 Losses
+        column(
+          width = 3,
+          descriptionBlock(
+            header = (filter(casualty_stats(), casualty_type == "War of 1812"))$casualties,
+            text = "18-12 LOSSES"
+          )
+        ),
+        # Self Sinks
+        column(
+          width = 3,
+          descriptionBlock(
+            header = (filter(casualty_stats(), casualty_type == "Self sink"))$casualties,
+            text = "SELF SINKS"
+          )
+        )
+        
+    )
   })
   
   
