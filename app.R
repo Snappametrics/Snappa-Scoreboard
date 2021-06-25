@@ -1362,7 +1362,7 @@ server <- function(input, output, session) {
       right_join(
         tibble(
           player_id = as.integer(input$player_select),
-          casualty_type = c("Sunk", "Self sink", "12-7", "War of 1812", "2003")
+          casualty_type = c("Sunk", "Self sink", "Team sink", "12-7", "War of 1812", "2003")
         ),
         by = c("player_id", "casualty_type")
       ) %>% 
