@@ -1383,10 +1383,11 @@ server <- function(input, output, session) {
       group_split(casualty_type) %>% 
       map(waffle_iron, rows = 6, aes_d(group = casualty_type))
     waffle_list = bind_rows(flatten(list(waffle_data, no_casualties)))
-    browser()
+    # browser()
     ggplot(waffle_list, aes(x,y, fill = group))+
       geom_waffle(data = filter(waffle_list, x > 0))+
       scale_fill_manual(values = snappa_pal[3:8], guide = guide_none())+
+      scale_y_continuous(limits = c(NA, 6.5))+
       facet_wrap(~group, nrow = 1, strip.position = "bottom")+
       theme_snappa(md=T, base_size = 15)+
       theme(axis.text = element_blank(), axis.text.y.left = element_blank(),
