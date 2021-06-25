@@ -1371,6 +1371,8 @@ server <- function(input, output, session) {
   
   output$casualty_stats_plot = renderPlot({
     req(input$player_select)
+    
+    # Create rows for casualties not yet experienced by a player
     no_casualties = tibble(
       x = 0, 
       y = 0,
@@ -1378,20 +1380,55 @@ server <- function(input, output, session) {
     ) %>% 
       group_split(group)
     
-    waffle_data = casualty_stats() %>% 
+    # Set the number of rows we want in the waffle chart
+    waffle_rows = 6
+    
+    # To keep the number of columns consistent across players
+    # Calculate the number of columns for the max casualties
+    waffle_cols = filter(dbGetQuery(con,
+                             sql("SELECT *
+              FROM casualty_stats ")
+    ), casualties == max(casualties)) %>% 
+      # Min
+      transmute(columns = ceiling(casualties/waffle_rows)) %>% 
+      deframe()
+    
+    waffle_list = casualty_stats() %>% 
       uncount(weights = casualties) %>% 
       group_split(casualty_type) %>% 
-      map(waffle_iron, rows = 6, aes_d(group = casualty_type))
-    waffle_list = bind_rows(flatten(list(waffle_data, no_casualties)))
-    # browser()
-    ggplot(waffle_list, aes(x,y, fill = group))+
-      geom_waffle(data = filter(waffle_list, x > 0))+
+      map(waffle_iron, rows = waffle_rows, aes_d(group = casualty_type))
+    
+    
+    waffle_data = bind_rows(waffle_list, no_casualties) %>% 
+      group_by(group) %>% 
+      mutate(casualties = if_else(x == 0, 0L, n())) %>% 
+      ungroup()
+    
+    labels = list(
+      x = mean(c(1, waffle_cols)),
+      y = waffle_rows+1.25
+    )
+    
+    
+    browser()
+    ggplot(waffle_data, aes(x,y, fill = group))+
+      geom_tile(data = filter(waffle_data, x > 0), colour = snappa_pal[1], size = 2)+
+      #geom_waffle(data = filter(waffle_data, x > 0))+
+      geom_label(data = distinct(waffle_data, group, casualties),
+                 aes(label = casualties, 
+                     x = labels$x, y = labels$y),
+                 fill = snappa_pal[1], colour = "gray20", label.padding = unit(.4, "lines"), label.r = unit(.4, "lines"), 
+                 size = 6, 
+                 family = "Inter Medium", fontface = "bold")+
       scale_fill_manual(values = snappa_pal[3:8], guide = guide_none())+
-      scale_y_continuous(limits = c(NA, 6.5))+
+      scale_x_continuous(limits = c(.5, waffle_cols+1))+
+      scale_y_continuous(limits = c(.5, waffle_rows+1.25), 
+                         expand = expansion(add = c(0,1)))+
       facet_wrap(~group, nrow = 1, strip.position = "bottom")+
-      theme_snappa(md=T, base_size = 15)+
+      theme_snappa(md=T, base_size = 15, plot_margin = margin(0, 10, 0, 10))+
       theme(axis.text = element_blank(), axis.text.y.left = element_blank(),
-            axis.title = element_blank())
+            axis.title = element_blank(), axis.line = element_blank(),
+            panel.grid = element_blank())
       
   })
   
