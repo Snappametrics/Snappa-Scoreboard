@@ -255,7 +255,12 @@ ui <- dashboardPage(
               ),
               fluidRow(
                 # uiOutput("casualty_stats")
-                plotOutput("casualty_stats_plot")
+                box(title = "Casualty Stats",
+                    collapsible = T,
+                    closable = F,
+                    status = "primary",
+                    plotOutput("casualty_stats_plot", height = "25vh")
+                       )
               )
               ,
               fluidRow(
