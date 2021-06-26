@@ -313,7 +313,7 @@ ui <- dashboardPage(
                                  column(width = 3,
                                         # Sample size selection
                                         selectInput("sample_select", label = NULL, selectize = F,
-                                                    choices = c(5, 10, 20, "All"),
+                                                    choices = c(5, 10, 20, 50, 100, 200, "All"),
                                                     selected = 5)),
                                  column(width = 1, style = "padding-left:0;",
                                         tags$span(" games", style = "font-weight:600;")
