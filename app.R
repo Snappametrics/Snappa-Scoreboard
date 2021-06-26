@@ -1265,92 +1265,72 @@ server <- function(input, output, session) {
     dbGetQuery(con,
     sql("SELECT *
               FROM basic_career_stats ")
-    )
-  })
-  
-  
-  output$player_stats_headers = renderUI({
+    ) %>% 
+      filter(player_id == !!input$player_select)
     
-    player_stats = filter(overall_player_stats(), player_id == input$player_select)
-
-    div(
-      box(width = 6, status = "success", title = "General Stats", collapsible = T, 
-          # Games Played
-          column(
-            width = 3,
-            descriptionBlock(
-              header = player_stats$games_played,
-              text = "GAMES"
-            )
-          ),
-          # Win %
-          column(
-            width = 2,
-            descriptionBlock(
-              header = scales::percent(player_stats$win_pct),
-              text = "WIN %"
-            )
-          ),
-          # Sinks
-          column(
-            width = 2,
-            descriptionBlock(
-              header = player_stats$sinks,
-              text = "SINK(S)"
-            )
-          ),
-          column(
-            width = 5,
-            descriptionBlock(
-              header = HTML(if_else(player_stats$sinks > 0, 
-                                    str_c("<span style='font-weight: 500;'>Every </span>", 
-                                          round(1/(player_stats$sinks/player_stats$games_played), 1), 
-                                          "<span style='font-weight: 500;'> games</span>"),
-                                    "TBD")),
-              text = "SINK FREQUENCY"
-            )
-          )
-      ),
-      box(width = 6, status = "success", title = "Paddle Stats", collapsible = T,
-          # Paddle points
-          column(
-            width = 3,
-            descriptionBlock(
-              header = player_stats$paddle_points,
-              text = "PADDLE POINTS"
-            )
-          ),
-          # Paddle Sinks
-          column(
-            width = 3,
-            descriptionBlock(
-              header = player_stats$paddle_sinks,
-              text = "PADDLE SINK(S)"
-            )
-          ),
-          # Foot Paddles
-          column(
-            width = 3,
-            descriptionBlock(
-              header = player_stats$foot_paddles,
-              text = "FOOT PADDLES"
-            )
-          ),
-          # Foot Sinks
-          column(
-            width = 3,
-            descriptionBlock(
-              header = player_stats$foot_sinks,
-              text = "FOOT SINK(S)"
-            )
-          )
-          
-      )
-    )
-
-
   })
   
+  
+  output$general_stats = renderReactable({
+    overall_player_stats() %>% 
+      mutate(sink_freq = HTML(if_else(sinks > 0, 
+                                      str_c("<span style='font-weight: 500;'>Every </span>", 
+                                            round(1/(sinks/games_played), 1), 
+                                            "<span style='font-weight: 500;'> games</span>"),
+                                      "TBD"))) %>% 
+      select(`GAMES` = games_played, 
+             `WIN %` = win_pct, 
+             `SINKS` = sinks, 
+             `SINK FREQUENCY` = sink_freq) %>% 
+      reactable(fullWidth = T, 
+                rowStyle = list(alignItems = "center"),
+                # Default style, set up footer
+                defaultColDef = colDef(footer = JS("function(cellInfo) {
+                                                    return cellInfo.column.id
+                                                   }"), 
+                                       footerStyle = list(
+                                         fontSize = "13px",
+                                          borderTop = "none",
+                                          fontWeight = 600
+                                        ), 
+                                       style = list(padding = "3px 4px"), 
+                                       headerStyle = list(display = "none"), 
+                                       align = "center"),
+                # Columns
+                columns = list(
+                  games_played = colDef(name = "GAMES"),
+                  `WIN %` = colDef(format = colFormat(percent = T, digits = 1)),
+                  `SINK FREQUENCY` = colDef(html = T, style = list(fontSize = "14px"))
+                )
+      )
+  })
+  
+  output$paddle_stats = renderReactable({
+    overall_player_stats() %>% 
+      select(`PADDLE POINTS` = paddle_points, 
+             `PADDLE SINKS` = paddle_sinks, 
+             `FOOT PADDLES` = foot_paddles, 
+             `FOOT SINKS` = foot_sinks) %>% 
+      reactable(fullWidth = T, 
+                rowStyle = list(alignItems = "center"),
+                # Default style, set up footer
+                defaultColDef = colDef(footer = JS("function(cellInfo) {
+                                                    return cellInfo.column.id
+                                                   }"), 
+                                       footerStyle = list(
+                                         fontSize = "13px",
+                                         borderTop = "none",
+                                         fontWeight = 600
+                                       ), 
+                                       format = colFormat(digits = 0, separators = T),
+                                       style = list(padding = "3px 4px"), 
+                                       headerStyle = list(display = "none"), 
+                                       align = "center")
+                
+      )
+  })
+  
+
   casualty_stats = reactive({
     req(input$player_select)
     # browser()
