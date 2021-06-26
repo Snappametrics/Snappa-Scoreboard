@@ -1408,7 +1408,10 @@ server <- function(input, output, session) {
     
     waffle_data = bind_rows(waffle_list, no_casualties) %>% 
       group_by(group) %>% 
-      mutate(casualties = if_else(x == 0, 0L, n())) %>% 
+      mutate(casualties = if_else(x == 0, 0L, n()),
+             group_lab = factor(group, 
+                            levels = c("Sunk", "Self sink", "Team sink", "12-7", "War of 1812", "2003"), 
+                            labels = str_wrap(c("Sunk", "Self sink", "Team sink", "Pearl Harbour", "War of 1812", "2003"), 8))) %>% 
       ungroup()
     
     labels = list(
@@ -1416,11 +1419,13 @@ server <- function(input, output, session) {
       y = waffle_rows+1.3
     )
     
-
-    ggplot(waffle_data, aes(x,y, fill = group))+
-      geom_tile(data = filter(waffle_data, x > 0), colour = snappa_pal[1], size = 2)+
+# browser()
+    ggplot(waffle_data, aes(x,y))+
+      geom_tile(data = filter(waffle_data, x > 0), 
+                aes(fill = group), 
+                colour = snappa_pal[1], size = 2)+
       #geom_waffle(data = filter(waffle_data, x > 0))+
-      geom_text(data = distinct(waffle_data, group, casualties),
+      geom_text(data = distinct(waffle_data, group_lab, casualties),
                  aes(label = casualties, 
                      x = labels$x, y = labels$y),
                 colour = "gray20", #fill = snappa_pal[1], 
@@ -1437,8 +1442,8 @@ server <- function(input, output, session) {
       scale_x_continuous(limits = c(.5, waffle_cols+1))+
       scale_y_continuous(limits = c(.5, waffle_rows+1.3), 
                          expand = expansion(add = c(0,.6)))+
-      facet_wrap(~str_wrap(group, 10), nrow = 1, strip.position = "top")+
-      theme_snappa(md=T, base_size = 18, plot_margin = margin(0, 10, 0, 10))+
+      facet_wrap(~group_lab, nrow = 2, strip.position = "top")+
+      theme_snappa(md=T, base_size = 20, plot_margin = margin(10, 10, 10, 10))+
       theme(axis.text = element_blank(), axis.text.y.left = element_blank(),
             axis.title = element_blank(), axis.line = element_blank(),
             panel.grid.major.y = element_blank(),
