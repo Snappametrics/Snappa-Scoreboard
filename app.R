@@ -1455,43 +1455,7 @@ server <- function(input, output, session) {
     #ggplotly() %>% hide_legend() %>% layout(plot_bgcolor = snappa_pal[1])
   })
   
-  output$casualty_stats = renderUI({
-    box(width = 6, status = "success", title = "Casualty Stats", collapsible = T,
-        # Paddle points
-        column(
-          width = 3,
-          descriptionBlock(
-            header = coalesce((filter(casualty_stats(), casualty_type == "Sunk"))$casualties), 0,
-            text = "TIMES SUNK"
-          )
-        ),
-        # Paddle Sinks
-        column(
-          width = 3,
-          descriptionBlock(
-            header = (filter(casualty_stats(), casualty_type == "12-7"))$casualties,
-            text = "12-7 LOSSES"
-          )
-        ),
-        # 18-12 Losses
-        column(
-          width = 3,
-          descriptionBlock(
-            header = (filter(casualty_stats(), casualty_type == "War of 1812"))$casualties,
-            text = "18-12 LOSSES"
-          )
-        ),
-        # Self Sinks
-        column(
-          width = 3,
-          descriptionBlock(
-            header = (filter(casualty_stats(), casualty_type == "Self sink"))$casualties,
-            text = "SELF SINKS"
-          )
-        )
-        
-    )
-  })
+  
   
   
 
