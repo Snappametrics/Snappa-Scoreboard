@@ -276,12 +276,23 @@ ui <- dashboardPage(
                     closable = F,
                     status = "danger",
                     icon = icon("user-injured"),
-                    plotOutput("casualty_stats_plot", height = "25vh")
-                       )
+                    plotOutput("casualty_stats_plot", height = "30vh")
+                       ),
+                # Top Teammates
+                box(title = "Top Teammates",
+                    collapsible = T,
+                    closable = F,
+                    status = "primary",
+                    icon = icon("user-friends"),
+                    # gt_output("teammate_tab")
+                    reactableOutput("teammate_tab_rt",
+                                    width = "100%")
+                )
               )
               ,
               fluidRow(
                 box(title = "Player Form",
+                    width = 12,
                         collapsible = T,
                         closable = F,
                         status = "primary",
@@ -308,16 +319,6 @@ ui <- dashboardPage(
 
                         ),
                         plotOutput("player_form")
-              ),
-              # Top Teammates
-              box(title = "Top Teammates",
-                      collapsible = T,
-                      closable = F,
-                      status = "primary",
-                  icon = icon("user-friends"),
-                      # gt_output("teammate_tab")
-                      reactableOutput("teammate_tab_rt",
-                                      width = "100%")
               )
               # Form plot
 
@@ -1073,7 +1074,7 @@ server <- function(input, output, session) {
             format = colFormat(digits = 2)
           )
         ),
-        compact = T
+        compact = T, defaultPageSize = 5
       )
       
   })
