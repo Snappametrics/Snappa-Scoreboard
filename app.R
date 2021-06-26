@@ -274,14 +274,16 @@ ui <- dashboardPage(
                 box(title = "Casualty Stats",
                     collapsible = T,
                     closable = F,
+                    width = 5,
                     status = "danger",
                     icon = icon("user-injured"),
-                    plotOutput("casualty_stats_plot", height = "30vh")
+                    plotOutput("casualty_stats_plot")
                        ),
                 # Top Teammates
                 box(title = "Top Teammates",
                     collapsible = T,
                     closable = F,
+                    width = 7,
                     status = "primary",
                     icon = icon("user-friends"),
                     # gt_output("teammate_tab")
@@ -1074,7 +1076,7 @@ server <- function(input, output, session) {
             format = colFormat(digits = 2)
           )
         ),
-        compact = T, defaultPageSize = 5
+        compact = T, defaultPageSize = 10
       )
       
   })
