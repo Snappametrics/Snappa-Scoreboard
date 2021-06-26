@@ -239,27 +239,43 @@ ui <- dashboardPage(
       tabItem(tabName = "player_stats",
               fluidRow(
                 # Filters
-                box(width = 12,
+                box(width = 12, headerBorder = F,
                         # Player Select
-                        selectInput("player_select", label = "Player", selectize = F,
-                                    choices = dbGetQuery(con, sql("SELECT DISTINCT player_name, p.player_id
+                    selectInput("player_select", label = "Player", selectize = F,
+                                    choices = dbGetQuery(con, sql("SELECT player_name, p.player_id
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
-                                                            ON p.player_id = ps.player_id")) %>%
-                                      deframe() %>% sample())
+                                                            ON p.player_id = ps.player_id
+                                                            GROUP BY player_name, p.player_id
+                                                            ORDER BY COUNT(ps.*) DESC")) %>%
+                                      deframe())
+                
                 )
               )
               ,
               fluidRow(
+                box(status = "success", 
+                    title = "General Stats", 
+                    collapsible = T,
+                    icon = icon("list"),
+                    reactableOutput("general_stats", width = "100%")
+                ),
+                box(status = "success", 
+                    title = "Paddle Stats",
+                    collapsible = T,
+                    icon = icon("table-tennis"),
+                    reactableOutput("paddle_stats", width = "100%")
+                )
                 # General and Paddle Stat boxes
-                uiOutput("player_stats_headers")
+                # uiOutput("player_stats_headers")
               ),
               fluidRow(
                 # uiOutput("casualty_stats")
                 box(title = "Casualty Stats",
                     collapsible = T,
                     closable = F,
-                    status = "primary",
+                    status = "danger",
+                    icon = icon("user-injured"),
                     plotOutput("casualty_stats_plot", height = "25vh")
                        )
               )
@@ -269,6 +285,7 @@ ui <- dashboardPage(
                         collapsible = T,
                         closable = F,
                         status = "primary",
+                    icon = icon("chart-bar"),
                         fluidRow(class = "last-n-games",
                                  column(width = 5,
                                         # Stat selection
@@ -297,6 +314,7 @@ ui <- dashboardPage(
                       collapsible = T,
                       closable = F,
                       status = "primary",
+                  icon = icon("user-friends"),
                       # gt_output("teammate_tab")
                       reactableOutput("teammate_tab_rt",
                                       width = "100%")
@@ -310,6 +328,7 @@ ui <- dashboardPage(
                         closable = F,
                         collapsed = T,
                         status = "primary",
+                    icon = icon("history"),
                         reactableOutput("player_game_stats"))
               )
 
