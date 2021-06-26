@@ -239,7 +239,7 @@ ui <- dashboardPage(
       tabItem(tabName = "player_stats",
               fluidRow(
                 # Filters
-                box(width = 12, headerBorder = F,
+                box(width = 12, headerBorder = F, title = "Player Stats",
                         # Player Select
                     selectInput("player_select", label = "Player", selectize = F,
                                     choices = dbGetQuery(con, sql("SELECT player_name, p.player_id
