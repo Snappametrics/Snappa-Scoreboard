@@ -1246,8 +1246,8 @@ server <- function(input, output, session) {
       # Bars
       # geom_col(aes(fill = won_game), width = .5)+
       # Testing out line and circle
-      geom_line(colour = "gray20", alpha = .9)+
-      geom_point(aes(colour = won_game), size = 2, alpha = .8)+
+      geom_line(colour = "gray20", alpha = .3)+
+      geom_point(aes(colour = won_game), size = 3, alpha = .8)+
       # Career avg. line
       geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
                        xend = max(game_num)+.45, yend = avg_points), 
