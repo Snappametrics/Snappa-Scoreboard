@@ -1239,19 +1239,23 @@ server <- function(input, output, session) {
     #                 if_else(input$sample_select == "All", 
     #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
     #                 paste("Last", input$sample_select, "games")))
-    # browser()
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
       # Bars
-      geom_col(aes(fill = won_game), width = .5)+
+      # geom_col(aes(fill = won_game), width = .5)+
+      # Testing out line and circle
+      geom_line(colour = "gray20", alpha = .9)+
+      geom_point(aes(colour = won_game), size = 2, alpha = .8)+
       # Career avg. line
       geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
                        xend = max(game_num)+.45, yend = avg_points), 
                    lty = "dashed", size = .75)+
       # X axis
       scale_x_continuous(limits = pluck(player_form_data(), "x_lims"), expand = expansion())+
-      scale_fill_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
+      scale_colour_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
                         guide = guide_legend(title = NULL, reverse = T))
+      # scale_fill_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
+      #                   guide = guide_legend(title = NULL, reverse = T))
     
     if(input$stat_select == "toss_efficiency"){
       plot = plot +
