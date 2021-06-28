@@ -1973,9 +1973,9 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
   # The issue being that each score type is NOT mutually exclusive
 
   if(ps_team == "A"){
-    team_margin = margin(0,-10,0,0)
+    team_margin = margin(0,5,0,0)
   } else {
-    team_margin = margin(0,0,0,-10)
+    team_margin = margin(0,0,0,5)
   }
   reverse_legend = (!!ps_team == "A")
   
