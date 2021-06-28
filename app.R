@@ -1237,55 +1237,8 @@ server <- function(input, output, session) {
   # Player form plot
   output$player_form = renderPlot({
     
-    stat_name = str_to_title(str_replace(input$stat_select, "_", " "))
-
-    # X axis title conditional on number of games chosen
-    # plot_title = str_c(stat_name, ": ", 
-    #                 if_else(input$sample_select == "All", 
-    #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
-    #                 paste("Last", input$sample_select, "games")))
-    plot = pluck(player_form_data(), "data") %>% 
-      ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
-      # Bars
-      # geom_col(aes(fill = won_game), width = .5)+
-      # Testing out line and circle
-      geom_line(colour = "gray20", alpha = .3)+
-      geom_point(aes(colour = won_game), size = 3, alpha = .8)+
-      # Career avg. line
-      geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
-                       xend = max(game_num)+.45, yend = avg_points), 
-                   lty = "dashed", size = .75)+
-      # X axis
-      scale_x_continuous(limits = pluck(player_form_data(), "x_lims"), expand = expansion())+
-      scale_colour_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
-                        guide = guide_legend(title = NULL, reverse = T))
-      # scale_fill_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
-      #                   guide = guide_legend(title = NULL, reverse = T))
+    player_form_plot(input$stat_select, player_form_data())
     
-    if(input$stat_select == "toss_efficiency"){
-      plot = plot +
-        labs(x = expression(More ~ Recent ~ Games %->% ""), y = "Toss Efficiency", 
-             caption = str_c("- - - -  Career Avg. (", 
-                             scales::percent(unique(pluck(player_form_data(), "data")[["avg_points"]])), ")"))+
-        scale_y_continuous(breaks = scales::pretty_breaks(), 
-                           labels = scales::percent,
-                           expand = expansion(),
-                           limits = c(0, 1))
-      
-    } else {
-      plot = plot +
-        labs(x = expression(More ~ Recent ~ Games %->% ""), y = stat_name, 
-             # title = plot_title,
-             caption = str_c("- - - -  Career Avg. (", 
-                             scales::comma(unique(pluck(player_form_data(), "data")[["avg_points"]]), accuracy = 1), " points)"))+
-        scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
-                           limits = c(0, pluck(player_form_data(), "career_high")*1.25))
-    }
-    plot+
-      theme_snappa()+
-      theme(axis.text.x = element_blank(),
-            legend.position = "bottom",
-            legend.key.height = unit(.25, "cm"))
     
   })
   
