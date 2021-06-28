@@ -1728,7 +1728,7 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
       # Summary plot
       fluidRow(align = "center",
                column(3, style = "padding-right:0; top:60px;",
-                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "30vh"), color = snappa_pal[2], 
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "45vh"), color = snappa_pal[2], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                ),
                column(6,style = "padding:0",
@@ -1741,7 +1741,7 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
                                   color = snappa_pal[4])
                ),
                column(3, style = "padding-left:0; top:60px;",
-                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "30vh"), color = snappa_pal[3], 
+                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "45vh"), color = snappa_pal[3], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                )
       ),
