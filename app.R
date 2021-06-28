@@ -169,11 +169,6 @@ ui <- dashboardPage(
                        uiOutput("validate_start"),
                        
                        helpText("Note: All players must enter their name before the game can begin")
-                       # 
-                       # awesomeRadio(inputId = "play_to", 
-                       #              label = "What score are you playing to?", 
-                       #              choices = list("21" = 1, "32" = 2), 
-                       #              selected = 1, inline = T)
                        ),
                        
                 
@@ -268,10 +263,8 @@ ui <- dashboardPage(
                     reactableOutput("paddle_stats", width = "100%")
                 )
                 # General and Paddle Stat boxes
-                # uiOutput("player_stats_headers")
               ),
               fluidRow(
-                # uiOutput("casualty_stats")
                 box(title = "Casualty Stats",
                     collapsible = T,
                     closable = F,
@@ -287,7 +280,6 @@ ui <- dashboardPage(
                     width = 7,
                     status = "primary",
                     icon = icon("user-friends"),
-                    # gt_output("teammate_tab")
                     reactableOutput("teammate_tab_rt",
                                     width = "100%")
                 )
@@ -1332,9 +1324,11 @@ server <- function(input, output, session) {
       replace_na(list(casualties = 0))
   })
   
+  # Casualty stats plot
   output$casualty_stats_plot = renderPlot({
     req(input$player_select)
     
+    # In order to include all casualties on the page
     # Create rows for casualties not yet experienced by a player
     no_casualties = tibble(
       x = 0, 
@@ -1352,10 +1346,14 @@ server <- function(input, output, session) {
                              sql("SELECT *
               FROM casualty_stats ")
     ), casualties == max(casualties)) %>% 
-      # Min
+      # Divide the max casualties by the number of rows
+      # take the ceiling to know the max value needed
       transmute(columns = ceiling(casualties/waffle_rows)) %>% 
       deframe()
     
+    # Uncount is the dopest dope around for this particular task
+    # Could this be done by rewriting the waffle_iron function for 
+    # the original data format? Definitely...but this probably won't be too slow
     waffle_list = casualty_stats() %>% 
       uncount(weights = casualties) %>% 
       group_split(casualty_type) %>% 
@@ -1370,12 +1368,13 @@ server <- function(input, output, session) {
                             labels = str_wrap(c("Sunk", "Self sink", "Team sink", "Pearl Harbour", "War of 1812", "2003"), 8))) %>% 
       ungroup()
     
+    # Make label positions
     labels = list(
       x = mean(c(1, waffle_cols)),
       y = waffle_rows+1.3
     )
     
-# browser()
+    # Casualty
     ggplot(waffle_data, aes(x,y))+
       geom_tile(data = filter(waffle_data, x > 0), 
                 aes(fill = group), 
@@ -1707,11 +1706,7 @@ observe({
         h3("Summary of the Previous Game", 
            align = 'center')
       ),
-      
-      # br(),
-      
-      # br(),
-      
+
       br(),
       renderUI({glance_ui_game(lost_game_id)}),
       
