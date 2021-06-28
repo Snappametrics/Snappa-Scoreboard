@@ -863,7 +863,7 @@ server <- function(input, output, session) {
                              ps_team = "A")
       
     }
-  })
+  }, bg = snappa_pal[1])
   output$b_breakdown = renderPlot({
     
     if(input$start_game == 0){
@@ -879,7 +879,7 @@ server <- function(input, output, session) {
                              ps_team = "B")
       
     }
-  })
+  }, bg = snappa_pal[1])
   
   output$game_flow = renderPlot({
     if(input$start_game == 0){
