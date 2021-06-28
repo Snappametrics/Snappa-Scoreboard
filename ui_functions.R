@@ -1973,60 +1973,60 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
   # The issue being that each score type is NOT mutually exclusive
 
   if(ps_team == "A"){
-    team_margin = margin(0,0,0,0)
+    team_margin = margin(0,-10,0,0)
   } else {
-    team_margin = margin(0,0,0,0)
+    team_margin = margin(0,0,0,-10)
   }
   reverse_legend = (!!ps_team == "A")
   
   
   
-  df = aggregate_player_stats_and_sinks(scores, snappaneers) %>% 
-    select(player_id, team, total_points, normal_points, sink_points,  paddle_points, clink_points) %>%
-    mutate(total = total_points) %>% 
-    # Pivot to get point type
-    pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>% 
-    filter(type != "total") %>% 
-    # Convert point type to factor
-    mutate(point_type = factor(type, 
-                               labels = c("Sink", "Clink", "Paddle", "Normal toss"), 
-                               levels = c("sink", "clink", "paddle", "normal"), ordered = T)) %>% 
-    group_by(player_id) %>%
-    mutate(point_pct = points/total) %>% 
-    replace_na(list(point_pct = 0)) %>% 
-    left_join(ps_players, by = "player_id") 
-  
-  
-  
-    df %>%
-      ggplot(., aes(y = player_name, x = points, fill = point_type))+
-      # Bars
-      geom_col(position = "fill", colour = snappa_pal[1], size = 1.5)+
-      # Labels
-      geom_text(data = filter(df, point_pct > .15), 
-                aes(label = scales::percent(point_pct, accuracy = 1)), 
-                position = position_fill(vjust = .5), colour = "white", show.legend = F) +
-      # Y Axis
-      scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
-      # X Axis
-      scale_x_continuous(name = NULL, labels = scales::percent)+
-      # Colour scale
-      scale_fill_manual(name = NULL, drop=F,
-                        values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
-                        guide = guide_legend(reverse = T, label.hjust = 0.5, nrow = 2, byrow = T))+
-      # Theme elements
-      theme_snappa(md=T, plot_margin = team_margin, base_size = 11)+
-      theme(
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_blank(),
-        legend.position = "bottom",
-        legend.margin = margin(0,-30,0,-30),
-        legend.text.align = .5,
-        axis.text.x = element_blank(),
-        axis.text.y.left = element_text(margin = margin(l = 0, r = -5), hjust = 1),
-        axis.text.y.right = element_text(margin = margin(l = -5, r = 0), hjust = 0)
-      )
+  # df = aggregate_player_stats_and_sinks(scores, snappaneers) %>% 
+  #   select(player_id, team, total_points, normal_points, sink_points,  paddle_points, clink_points) %>%
+  #   mutate(total = total_points) %>% 
+  #   # Pivot to get point type
+  #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>% 
+  #   filter(type != "total") %>% 
+  #   # Convert point type to factor
+  #   mutate(point_type = factor(type, 
+  #                              labels = c("Sink", "Clink", "Paddle", "Normal toss"), 
+  #                              levels = c("sink", "clink", "paddle", "normal"), ordered = T)) %>% 
+  #   group_by(player_id) %>%
+  #   mutate(point_pct = points/total) %>% 
+  #   replace_na(list(point_pct = 0)) %>% 
+  #   left_join(ps_players, by = "player_id") 
+  # 
+  # 
+  # 
+  #   df %>%
+  #     ggplot(., aes(y = player_name, x = points, fill = point_type))+
+  #     # Bars
+  #     geom_col(position = "fill", colour = snappa_pal[1], size = 1.5)+
+  #     # Labels
+  #     geom_text(data = filter(df, point_pct > .15), 
+  #               aes(label = scales::percent(point_pct, accuracy = 1)), 
+  #               position = position_fill(vjust = .5), colour = "white", show.legend = F) +
+  #     # Y Axis
+  #     scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
+  #     # X Axis
+  #     scale_x_continuous(name = NULL, labels = scales::percent)+
+  #     # Colour scale
+  #     scale_fill_manual(name = NULL, drop=F,
+  #                       values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
+  #                       guide = guide_legend(reverse = T, label.hjust = 0.5, nrow = 2, byrow = T))+
+  #     # Theme elements
+  #     theme_snappa(md=T, plot_margin = team_margin, base_size = 11)+
+  #     theme(
+  #       panel.grid.major = element_blank(),
+  #       panel.grid.minor = element_blank(),
+  #       axis.line = element_blank(),
+  #       legend.position = "bottom",
+  #       legend.margin = margin(0,-30,0,-30),
+  #       legend.text.align = .5,
+  #       axis.text.x = element_blank(),
+  #       axis.text.y.left = element_text(margin = margin(l = 0, r = -5), hjust = 1),
+  #       axis.text.y.right = element_text(margin = margin(l = -5, r = 0), hjust = 0)
+  #     )
     
     # Option 1:
     # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
