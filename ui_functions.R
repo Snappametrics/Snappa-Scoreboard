@@ -2350,7 +2350,8 @@ theme_snappa = function(title_family = "Inter SemiBold",
         axis.line = element_line(color = line_colour),
         
         legend.title = element_text(size = base_size * 1.3),
-        legend.text = element_text(size = base_size * 1.1)
+        legend.text = element_text(size = base_size * 1), 
+        legend.key.size = unit(5, "mm")
       )
   } else if (plots_pane == FALSE & md == TRUE) {
     ggplot2::theme_minimal() +
@@ -2385,7 +2386,8 @@ theme_snappa = function(title_family = "Inter SemiBold",
         axis.line = element_line(color = line_colour),
         
         legend.title = ggtext::element_markdown(size = base_size * 1.3),
-        legend.text = element_text(size = base_size * 1.1)
+        legend.text = element_text(size = base_size * 1), 
+        legend.key.size = unit(5, "mm")
       )
   } else if (plots_pane == TRUE && md == TRUE) {
     ggplot2::theme_minimal(base_size = base_size) +
@@ -2410,7 +2412,8 @@ theme_snappa = function(title_family = "Inter SemiBold",
                                        color = bg_color),
         axis.text.y.left = element_text(hjust = 0),
         axis.title = ggtext::element_markdown(hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_colour)
+        axis.line = element_line(color = line_colour), 
+        legend.key.size = unit(5, "mm")
       )
   } else {
     ggplot2::theme_minimal(base_size = base_size) +
@@ -2435,7 +2438,8 @@ theme_snappa = function(title_family = "Inter SemiBold",
                                        color = bg_color),
         axis.text.y.left = element_text(hjust = 0),
         axis.title = element_text(hjust = 1, face = "italic"),
-        axis.line = element_line(color = line_colour)
+        axis.line = element_line(color = line_colour), 
+        legend.key.size = unit(5, "mm")
       )
   }
 }
