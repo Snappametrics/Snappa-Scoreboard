@@ -2101,11 +2101,12 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
             axis.line = element_blank(), # No axis line
             axis.text.y.left = element_blank(), # No axis text
             axis.text.x = element_blank(),
+            legend.margin = margin(0,5,0,5),
             # Facet labels
             strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
             strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
             # No gridlines
-            panel.grid.major = element_blank())
+            panel.grid.major = element_blank(), panel.spacing = unit(-12/length(unique(plot_df$player_name)), "lines"))
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
