@@ -623,7 +623,7 @@ server <- function(input, output, session) {
     ) %>% 
       # Remove empty player inputs
       filter(player_name != "") %>% 
-      left_join(vals$db_tbls()[["players"]], by = "player_name") %>% 
+      left_join(vals$players, by = "player_name") %>% 
       # Add shot count
       add_shot_count(shot_num = vals$shot_num)
   })
@@ -852,12 +852,12 @@ server <- function(input, output, session) {
     if(input$start_game == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
-                             ps_players = vals$db_tbls()[["players"]],
+                             ps_players = vals$players,
                              ps_team = "A")
     } else {
       player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "A"), player_id, team, shots),
                              scores = vals$scores_db, 
-                             ps_players = vals$db_tbls()[["players"]],
+                             ps_players = vals$players,
                              ps_game = vals$game_id, 
                              ps_team = "A")
       
@@ -868,12 +868,12 @@ server <- function(input, output, session) {
     if(input$start_game == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
-                             ps_players = vals$db_tbls()[["players"]],
+                             ps_players = vals$players,
                              ps_team = "B")
     } else {
       player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "B"), player_id, team, shots),
                              scores = vals$scores_db, 
-                             ps_players = vals$db_tbls()[["players"]],
+                             ps_players = vals$players,
                              ps_game = vals$game_id, 
                              ps_team = "B")
       
@@ -883,12 +883,12 @@ server <- function(input, output, session) {
   output$game_flow = renderPlot({
     if(input$start_game == 0){
       game_flow(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
-                players = vals$db_tbls()[["players"]], 
+                players = vals$players, 
                 scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
                 game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
     } else {
       game_flow(player_stats = vals$player_stats_db,
-                players = vals$db_tbls()[["players"]], 
+                players = vals$players, 
                 scores = vals$scores_db,
                 game = vals$game_id)
       
@@ -908,7 +908,7 @@ server <- function(input, output, session) {
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]], by = "player_id"), 
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
                          team_name = "A", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
         team_summary_tab_rt(.)
@@ -931,7 +931,7 @@ server <- function(input, output, session) {
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$db_tbls()[["players"]], by = "player_id"), 
+                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
                          team_name = "B", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
         team_summary_tab_rt(.)
@@ -989,7 +989,7 @@ server <- function(input, output, session) {
   
   
   player_game_stats = reactive({
-    inner_join(vals$db_tbls()[["players"]], 
+    inner_join(vals$players, 
                vals$db_tbls()[["player_stats"]], 
                by = "player_id") %>%
       inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
@@ -1685,7 +1685,7 @@ output$simulation_overlap =
   # For debugging
   
   # output$db_output_players = renderTable({
-  #   vals$db_tbls()[["players"]]
+  #   vals$players
   # })
   # output$db_output_scores = renderTable({
   #   vals$db_tbls()[["scores"]]
@@ -1703,11 +1703,11 @@ output$simulation_overlap =
   
 # # Generates outputs for the edit teams page
 output$edit_team_A <- renderUI({
-  tagList(team_edit_ui("A", pull(vals$db_tbls()[["players"]], player_name), active_player_inputs()))
+  tagList(team_edit_ui("A", pull(vals$players, player_name), active_player_inputs()))
 })
 
 output$edit_team_B <- renderUI({
-  tagList(team_edit_ui("B", pull(vals$db_tbls()[["players"]], player_name), active_player_inputs()))
+  tagList(team_edit_ui("B", pull(vals$players, player_name), active_player_inputs()))
 })
     
 
@@ -1990,7 +1990,9 @@ observe({
       )
       
       # Initialize the current game's player_stats table
-      vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      vals$player_stats_db = aggregate_player_stats(vals$scores_db, 
+                                                    snappaneers(), 
+                                                    game = vals$game_id)
       
       dbWriteTable(
         conn = con, 
@@ -2102,7 +2104,7 @@ observeEvent(input$game_summary, {
 #   if(input$start_game == 0){
 #     scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)) %>% 
 #       arrange(-score_id) %>% 
-#       inner_join(vals$db_tbls()[["players"]], by = "player_id") %>% 
+#       inner_join(vals$players, by = "player_id") %>% 
 #       select(score_id, player_name, round_num, Points = points_scored,
 #              Paddle = paddle, Clink = clink, Foot = foot)
 #   } else {
@@ -2682,7 +2684,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$players, player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
       shooting_team_lgl = all(str_detect(round_num(), "A"), scorers_team == "A") # Are they on team A & did they score for team A?
@@ -2799,7 +2801,7 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$db_tbls()[["players"]], player_name == input$scorer), player_id)
+      scorer_pid = pull(filter(vals$players, player_name == input$scorer), player_id)
       # Were they shooting?
       scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
@@ -3341,7 +3343,7 @@ observeEvent(input$resume_no, {
   #   
   #   # 2. Reset player inputs
   #   walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
-  #        function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$db_tbls()[["players"]]$player_name), 
+  #        function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$players$player_name), 
   #                                               options = list(create = TRUE)))
   #   
   #   # 3. Reset reactive values
