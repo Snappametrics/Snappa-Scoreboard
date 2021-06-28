@@ -2079,34 +2079,37 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
                colour = snappa_pal[1],
                position = position_dodge(width = 1), width = 1)+
       # Pt labels
-      geom_text(aes(y = (points+3)/2, label = na_if(points, 0)),
+      geom_text(aes(y = (points+3)/2, label = na_if(points, 0), 
+                    size = 4+sqrt(points)),
                 colour = snappa_pal[1],
-                family = "Inter Medium", fontface = "bold", size = 5.5)+
+                family = "Inter Medium", fontface = "bold")+
       # Axes
       scale_x_discrete(drop=T)+
       # Colours
       scale_fill_manual(name = NULL, drop=T,
-                        values = c("Normal" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Foot" = "#090C9B"),
-                        guide = guide_legend(direction = "horizontal", ncol = 2, reverse = T))+#090C9B
+                        values = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B"),
+                        guide = guide_legend(direction = "horizontal", byrow = T,
+                                             ncol = 2, reverse = T))+#090C9B
+      scale_size(guide = guide_none())+
       # Make it polar
       coord_polar(start = pi/2, direction = -1)+
       # Facet on player
       facet_wrap(~player_name, ncol=1,
                  strip.position = if_else(reverse_legend, "left", "right"),
-                 as.table = F, drop = T, shrink = T)+
+                 as.table = F, drop = T)+
       # Theme elements
       theme_snappa(md=T, plot_margin = team_margin)+
       theme(axis.title = element_blank(), # no title
-            legend.position = "bottom", # legend on bottom
+            legend.position = "bottom",# legend on bottom 
             axis.line = element_blank(), # No axis line
             axis.text.y.left = element_blank(), # No axis text
             axis.text.x = element_blank(),
-            legend.margin = margin(0,5,0,5),
             # Facet labels
-            strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
-            strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
+            strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,0,0,5)),
+            strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,5,0,0)),
             # No gridlines
-            panel.grid.major = element_blank(), panel.spacing = unit(-12/length(unique(plot_df$player_name)), "lines"))
+            panel.grid.major = element_blank(), 
+            panel.spacing = unit(-12/(length(unique(plot_df$player_name))*1.5), "lines"))
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
