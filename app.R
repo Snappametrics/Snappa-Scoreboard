@@ -505,6 +505,8 @@ server <- function(input, output, session) {
     player_stats_db = tbl_templates$player_stats,
     scores_db = tbl_templates$scores,
     
+    players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players")),
+    
     # Live data
     # Updates when a game is completed
     db_tbls = reactivePoll(
