@@ -13,18 +13,27 @@
 
 restart_game_server = function(id) {
   moduleServer(id,
+               
                function(input, output, session) {
+                 
                  missing_game_id = reactive({
+                   # MARK: may be able to leave out the alias and avoid the need to pull
+                   #      but it might just change the colname to max or something
                    pull_game_id = sql('SELECT MAX(game_id) AS game_id FROM game_stats')
+                   # MARK: don't need collect after dbGetQuery
                    game_id = dbGetQuery(con, pull_game_id) %>% collect() %>%
                      pull(game_id)
+                   
                    return(game_id)
                    
                  })
+                 
                  restart_game <- reactiveVal({F})
+                 # browser()
                  missing_players = reactive({
-                   players = dbGetQuery(con,
-                                             sql('SELECT
+                   # MARK: again no need for collect or return
+                   dbGetQuery(con,
+                              sql('SELECT
                                                     players.player_name,
                                                     ps.team
                                                  FROM player_stats AS ps
@@ -33,10 +42,21 @@ restart_game_server = function(id) {
                                                  WHERE ps.game_id = (
                                                     SELECT MAX(game_id) 
                                                     FROM player_stats
-                                                 )')) %>% collect()
-                   return(players)
+                                                 )'))
+                   # players = dbGetQuery(con,
+                   #                           sql('SELECT
+                   #                                  players.player_name,
+                   #                                  ps.team
+                   #                               FROM player_stats AS ps
+                   #                               INNER JOIN players
+                   #                                ON players.player_id = ps.player_id
+                   #                               WHERE ps.game_id = (
+                   #                                  SELECT MAX(game_id) 
+                   #                                  FROM player_stats
+                   #                               )')) %>% collect()
+                   # return(players)
                  })
-                 
+                 # MARK: Are we sure last_round is working?
                  last_round <- reactive({
                    query = dbGetQuery(con, 
                               sql('SELECT last_round 
@@ -46,11 +66,15 @@ restart_game_server = function(id) {
                      pull(last_round)
                    return(query)
                  })
+                 
                  input_list <- reactive({
+                   # MARK: Is it faster to just do this in a single pipe? 
                    player_inputs = missing_players() %>%
                      group_by(team) %>%
                      mutate(player_input = str_c("name_", team, row_number())) %>%
                      ungroup()
+                   
+                   # unless you're planning on some intermediary action here
                    
                    input_list = player_inputs %>%
                      select(player_input, player_name) %>%
@@ -58,7 +82,8 @@ restart_game_server = function(id) {
                    return(input_list)
                  })
                  
-                 
+                 # MARK: This seems like it may (in some weird scenario)
+                 #      pull different last games than the one in game_stats
                  missing_player_stats <- reactive({
                    dbGetQuery(con, 
                               sql('SELECT * FROM player_stats
@@ -70,6 +95,10 @@ restart_game_server = function(id) {
                  })
                 
                  team_sizes = reactive({
+                   # MARK: these might be faster
+                   # length(missing_players()[missing_players()$team == 'A', ])
+                   # or
+                   # sum(missing_players()$team == 'A')
                      size_A = missing_players() %>% 
                        filter(team == 'A') %>%
                        summarize(sum = n()) %>%
@@ -109,12 +138,16 @@ restart_game_server = function(id) {
                   # Yeah. It's fast. This should probably just be a query to player_stats, 
                   # particularly considering that we need to know the total number 
                   # of players on each team, which has traditionally been stored there
+                  
+                  # MARK: why scores then? was it easier for some reason?
                   presentation_table = missing_players() %>%
                     filter(team == 'A') %>%
                     left_join(base_table, by = c('team' = 'team', 'player_name' = 'player')) %>%
                     replace_na(list(points = 0, paddle_points = 0, clink_points = 0)) %>%
                     select(-team) %>%
                     arrange(desc(points)) 
+                  # MARK: No need for return here, you can just pipe the 
+                  # presentation_table into reactable()
                   return(
                     reactable(presentation_table,
                               highlight = T,
@@ -194,6 +227,7 @@ restart_game_server = function(id) {
                   )
                 }
                 )
+                
                 output$round_num <- renderUI({
                   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
                   HTML(str_c('<h1 style = "font-size: 5rem">', 
@@ -206,6 +240,7 @@ restart_game_server = function(id) {
                    removeModal()
                    restart_game(T)
                  })
+                 
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
                    delete_query = paste0("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";")

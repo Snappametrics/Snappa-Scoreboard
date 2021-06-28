@@ -1641,6 +1641,8 @@ observe({
     dbExecute(con, delete_query)
   } else {
   showModal(restart_game_UI('restart',
+                            # MARK: can you just index points?
+                            # e.g. scores[scores$team == 'A', 'points']
                   scores[scores$team == 'A',] %>% pull(points), 
                   scores[scores$team == 'B',] %>% pull(points))
   )
