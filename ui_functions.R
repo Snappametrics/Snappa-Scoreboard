@@ -656,13 +656,184 @@ glance_ui_game = function(game.id){
 # Stats Output ------------------------------------------------------------
 
 
+make_single_summary_table = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
+  # Produce a team's performance summary and comparison to historical performance in equivalent games
+  # 1. Get a list of games the player has played in
+  # 2. Get a list of scores from historical games at the equivalent point in the game
+  # 3. Calculate current game player stats
+  # 4. Calculate historical player stats from 1 & 2
+
+  # Store current game id and the given team's current player stats
+  current_game = unique(current_player_stats$game_id)
+  current_shots = unique(current_player_stats[current_player_stats$team == team_name, "shots", drop=T])
+  
+  # Store players, their current team and opponent sizes
+  current_team_sizes = neers %>% 
+    mutate(team_size = case_when(team == "A" ~ sum(team == "A"),
+                                 team == "B" ~ sum(team == "B")),
+           opp_size = case_when(team == "A" ~ sum(team == "B"),
+                                team == "B" ~ sum(team == "A"))) %>% 
+    distinct(player_id, team_size, opp_size)
+  
+  # Keep player stats observations for each player where the team and opponent sizes match the current sizes
+  equivalent_player_stats = player_stats %>% 
+    arrange(game_id) %>% 
+    # Calculate the team size for each game
+    group_by(game_id) %>% 
+    mutate(team_size = case_when(team == "A" ~ sum(team == "A"),
+                                 team == "B" ~ sum(team == "B")),
+           opp_size = case_when(team == "A" ~ sum(team == "B"),
+                                team == "B" ~ sum(team == "A"))) %>% 
+    ungroup() %>% 
+    # Keep the stats which match on player ID, team size and opponent size in this game
+    inner_join(current_team_sizes, by = c("player_id", "team_size", "opp_size"))
+  
+  
+  
+  
+  # Make a historical stats table that is only comparing games which are similar
+  # to the current one.
+  # First, obtain a list of games in which the players on this team were on
+  # an equally sized team. This is player specific, so map() is used
+  
+  
+  
+  # A not particularly elegant but probably working solution to making sure that games
+  # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
+  # and opponent_team_size and merge it to player_stats to be used as a 
+  
+  
+  
+  
+  
+  
+  # make a unique subsection of the scores table which only considers the given player in the
+  # given games. round_comparison should only be applied when a game is in progress. 
+  # While we're here, also tell the display not to care about winners maybe? I could also set
+  # a value here so that I don't have to execute a query later, but the issue becomes 
+  
+  ##
+  ## Scenario 1: Game is in progress
+  ##
+  in_progress = isFALSE(pull(dbGetQuery(con, sql(str_c("SELECT game_complete FROM game_stats WHERE game_id =", current_game, ";"))), 
+                             game_complete))
+  if (in_progress){
+    
+    # Filter to scores which are:
+    #   - only scored by players on this team
+    #   - less than or equal to the current round
+    scores_comparison = past_scores %>% 
+      filter(player_id %in% neers$player_id, # Only include players on this team
+             parse_round_num(round_num) <= parse_round_num(current_round))
+    
+    ##
+    ## Scenario 2: Game is complete
+    ##
+  } else {
+    
+    scores_comparison = past_scores
+  }
+  # List scores which occurred at or before the current game's round
+  historical_scores = left_join(equivalent_player_stats, 
+                                                    scores_comparison, 
+                                                    by = c("game_id", "player_id")) %>% 
+    filter(!(game_id %in% 38:48))
+  
+  # When in progress, keep the shot counter generated from current_shots
+  if(in_progress){
+    historical_scores = mutate(historical_scores, shots = current_shots)
+  }
+  
+  # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
+  # That means I have to recreate player_stats using this table 
+  
+  # Calculate game performance in equivalent games
+  comparison_player_stats = historical_scores %>% 
+    replace_na(list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
+              .groups = "drop")
+  
+  player_info = player_stats %>% 
+    # Filter player stats
+    select(game_id, player_id, team) %>% 
+    inner_join(neers, by = c("player_id", "team")) 
+  
+  # Calculate current game performance
+  #   - Team score
+  #   - Which team is winning
+  # Then join on player info
+  player_summary = current_player_stats %>% 
+    group_by(team) %>% 
+    mutate(team_score = sum(total_points)) %>% 
+    ungroup() %>% 
+    mutate(winning = (team_score == max(team_score))) %>% 
+    select(team, winning, player_id,  
+           total_points, paddle_points, clink_points, threes, 
+           points_per_round:toss_efficiency)
+  
+  historical_stats = comparison_player_stats %>% 
+    select(game_id, player_id, 
+           shots, total_points, paddle_points, clink_points, sinks = threes, 
+           points_per_round:toss_efficiency) %>%
+    arrange(player_id, game_id) %>% 
+    group_by(player_id) %>% 
+    summarise(
+      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
+      across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
+      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
+             .fns = ~weighted.mean(., w = shots), 
+             .names = "{col}_wavg"),
+      .groups = "drop"
+    )
+  
+  player_summary_historical = full_join(player_summary, historical_stats, by = "player_id") %>% 
+    # Calculate the difference between current game and historical performance
+    mutate(total_points_diff = total_points - total_points_avg,
+           paddle_points_diff = paddle_points - paddle_points_avg,
+           clink_points_diff = clink_points - clink_points_avg,
+           points_per_round_diff = points_per_round - points_per_round_wavg,
+           off_ppr_diff = off_ppr - off_ppr_wavg,
+           def_ppr_diff = def_ppr - def_ppr_wavg,
+           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
+           # Format each difference for the table
+           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 2))),
+           toss_efficiency_diff = map_chr(toss_efficiency_diff, 
+                                          ~case_when(. >= 0 ~ toss_percent_plus(.), 
+                                                     . < 0 ~ toss_percent_minus(.)))) %>% 
+    # Remove historical stats
+    select(-ends_with("_avg"), -ends_with("wavg")) %>% 
+    # Order columns
+    select(starts_with("player"), team, winning, 
+           contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
+           contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
+  
+  inner_join(select(neers, player_id, player_name),
+             select(player_summary_historical,
+                    -contains("points_per")), by = "player_id")
+  
+}
+
 make_summary_table = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
   # Produce a team's performance summary and comparison to historical performance in equivalent games
   # 1. Get a list of games the player has played in
   # 2. Get a list of scores from historical games at the equivalent point in the game
   # 3. Calculate current game player stats
   # 4. Calculate historical player stats from 1 & 2
-  
+  # browser()
   # List players on the given team
   team_players = neers[neers$team == team_name, ]
   # Store current team and opponent sizes
@@ -697,12 +868,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
                 values_from = team_size, 
                 names_glue = "size_{team}")
 
-  equivalent_games = team_players$player_id %>%
+  equivalent_games_player_stats = team_players$player_id %>%
     map(function(player){
       # Subset each player's stats  to each player's stats and identify equivalent games
       player_stats[player_stats$player_id == player & player_stats$game_id != current_game, ] %>% 
         # Join team sizes to player stats
-        inner_join(team_sizes) %>%
+        inner_join(team_sizes, by = "game_id") %>%
         # Keep cases where the team sizes are equivalent
         filter(if_else(team == "A", size_A, size_B) == team_size,
                if_else(team == "B", size_A, size_B) == opponent_size)
@@ -718,7 +889,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   ##
   ## Scenario 1: Game is in progress
   ##
-  in_progress = isFALSE(pull(dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"), 
+  in_progress = isFALSE(pull(dbGetQuery(con, sql(str_c("SELECT game_complete FROM game_stats WHERE game_id =", current_game, ";"))), 
                              game_complete))
   if (in_progress){
     
@@ -733,31 +904,31 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     ## Scenario 2: Game is complete
     ##
   } else {
-    round_comparison = 999
-    
+
     scores_comparison = past_scores
   }
 
   # List scores which occurred at or before the current game's round
-  equivalent_games_scores = team_players$player_id %>%
-    imap(function(player, index){
+  historical_scores = team_players$player_id %>%
+    imap_dfr(function(player, index){
       # Join each player's equivalent games to their scores from those games
-      inner_join(equivalent_games[[index]], 
+      left_join(equivalent_games_player_stats[[index]], 
                 scores_comparison, 
-                by = c("game_id", "player_id"))
+                by = c("game_id", "player_id")) %>% 
+        filter(!(game_id %in% 38:48))
     })
   
-  # Bind that list together to make historical scores
-  historical_scores = bind_rows(equivalent_games_scores) %>% 
-    # When in progress, keep the shot counter generated from current_shots
-    when(in_progress ~ (.) %>% mutate(shots = current_shots),
-         ~ (.))
+  # When in progress, keep the shot counter generated from current_shots
+  if(in_progress){
+    historical_scores = mutate(historical_scores, shots = current_shots)
+  }
   
   # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
   # That means I have to recreate player_stats using this table 
   
   # Calculate game performance in equivalent games
   comparison_player_stats = historical_scores %>% 
+    replace_na(list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
     # Group by game and player, (team and shots are held consistent)
     group_by(game_id, player_id, shots) %>% 
     # Calculate summary stats
@@ -771,8 +942,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
               points_per_round = total_points / last(shots),
               off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
               def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum(!(paddle | foot ))/last(shots)) %>% 
-    ungroup()
+              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
+              .groups = "drop")
   
   player_info = team_player_stats %>% 
     # Filter player stats
@@ -788,15 +959,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     mutate(team_score = sum(total_points)) %>% 
     ungroup() %>% 
     mutate(winning = (team_score == max(team_score))) %>% 
-    # Merge in player info
-    inner_join(player_info) %>% 
-    select(team, winning, player_id, player_name, 
+    filter(team == team_name) %>% 
+    select(team, winning, player_id,  
            total_points, paddle_points, clink_points, threes, 
            points_per_round:toss_efficiency)
   
   historical_stats = comparison_player_stats %>% 
-    # Join in player name
-    inner_join(select(player_summary, player_id, team)) %>% 
     select(game_id, player_id, 
            shots, total_points, paddle_points, clink_points, sinks = threes, 
            points_per_round:toss_efficiency) %>%
@@ -807,7 +975,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
       across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
       across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
              .fns = ~weighted.mean(., w = shots), 
-             .names = "{col}_wavg")
+             .names = "{col}_wavg"),
+      .groups = "drop"
     )
   
   player_summary_historical = full_join(player_summary, historical_stats, by = "player_id") %>% 
@@ -820,8 +989,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            def_ppr_diff = def_ppr - def_ppr_wavg,
            toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
            # Format each difference for the table
-           across(matches("points_diff"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 1), ")")),
-           across(matches("(per_round|ppr)_diff$"), ~str_c("(", if_else(.x >= 0, "+", ""), round(.x, 2), ")")),
+           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 2))),
            toss_efficiency_diff = map_chr(toss_efficiency_diff, 
                                           ~case_when(. >= 0 ~ toss_percent_plus(.), 
                                                      . < 0 ~ toss_percent_minus(.)))) %>% 
@@ -832,10 +1001,10 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
            contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
   
-  df = select(player_summary_historical,
-              -contains("clink"), -contains("sink"), -contains("points_per"))
+  inner_join(select(team_players, player_id, player_name),
+             select(player_summary_historical,
+                    -contains("clink"), -contains("sink"), -contains("points_per")), by = "player_id")
   
-  return(df)
 }
 
 
@@ -1045,18 +1214,161 @@ team_summary_tab = function(df, game_over, score_difference, team){
     tab_theme_snappa()
 }
 
+game_summary_tab_rt = function(df){
+  browser()
+  df %>% 
+    reactable(defaultSorted = c("winning", "total_points"),
+              sortable = F,
+              resizable = T,
+              style = list(
+                fontSize = "12px"
+              ),
+              defaultColDef = colDef(format = colFormat(digits = 0), 
+                                     align = "right", headerStyle = list(textAlign = "right"),
+                                     style = JS("function(rowInfo, cellInfo) {
+                                            if (rowInfo.row.team == 'A' & rowInfo.level < 1) {
+                                                var color =  '#e26a6a80'
+                                            } else if (rowInfo.row.team == 'B'& rowInfo.level < 1) {
+                                                var color = '#2574a980'
+                                            } else {
+                                                var color = '#fafaf9'
+                                            }
+                                            return { backgroundColor: color, padding: '4px 2px'}
+                                        }"
+                                     )), 
+              highlight = F,
+              compact = T,
+              groupBy = "team", 
+              width = "80%", 
+              class = "snappaneers-tbl",
+              # Column Groups
+              columnGroups = list(
+                colGroup(name = "Total Points", columns = c("total_points", "total_points_diff")),
+                colGroup(name = "Clink Points", columns = c("clink_points", "clink_points_diff")),
+                colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
+                colGroup(name = "Sinks", columns = c("sinks")),
+                colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                colGroup(name = "Def. PPR", columns = c("def_ppr", "def_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                colGroup(name = "Toss Efficiency", columns = c("toss_efficiency", "toss_efficiency_diff"))
+              ),
+              # Columns
+              columns = list(
+                team = colDef(grouped = JS("function(cellInfo) {
+                              // Display just the cell value
+                              return 'Team '+ cellInfo.value
+                            }"), name = "", maxWidth = 80,
+                              headerStyle = list(border = "none"),
+                              style = rt_team_highlight),
+                player_id = colDef(show = F),
+                player_name = colDef(name = "Player", 
+                                     minWidth = 65, align = "left", 
+                                     headerStyle = list(textAlign = "left"),
+                                     aggregate = JS("function(values, rows) {
+                                                      return [...new Set(rows.team)].join(', ')
+                                     }"),
+                                     style = rt_team_highlight),
+                winning = colDef(show = F),
+                total_points = colDef(name = "", 
+                                      minWidth = 25, 
+                                      defaultSortOrder = "desc"),
+                total_points_diff = colDef(name = "Diff", 
+                                           minWidth = 30, 
+                                           style = JS(game_summary_diff_style("total_points_diff"))),
+                paddle_points = colDef(name = "", 
+                                       minWidth = 25),
+                paddle_points_diff = colDef(name = "Diff", 
+                                            minWidth = 30, 
+                                            style = JS(game_summary_diff_style("paddle_points_diff"))),
+                clink_points = colDef(name = "", 
+                                       minWidth = 19),
+                clink_points_diff = colDef(name = "Diff", 
+                                            minWidth = 30, 
+                                            style = JS(game_summary_diff_style("clink_points_diff"))),
+                sinks = colDef(name = "", 
+                                      minWidth = 30),
+                off_ppr = colDef(name = "", 
+                                 minWidth = 30, 
+                                 format = colFormat(digits = 2)),
+                off_ppr_diff = colDef(name = "Diff", 
+                                      minWidth = 36, 
+                                      style = JS(game_summary_diff_style("off_ppr_diff"))),
+                def_ppr = colDef(name = "", 
+                                 minWidth = 30, format = colFormat(digits = 2)),
+                def_ppr_diff = colDef(name = "Diff", 
+                                      minWidth = 36, 
+                                      style = JS(game_summary_diff_style("def_ppr_diff"))),
+                toss_efficiency = colDef(name = "", 
+                                         minWidth = 29, format = colFormat(percent = T, digits = 0)),
+                toss_efficiency_diff = colDef(name = "Diff", 
+                                              minWidth = 32, 
+                                              style = JS(game_summary_diff_style("toss_efficiency_diff")))
+              ),
+              defaultExpanded = TRUE
+    )
+}
+
+team_summary_tab_rt = function(df){
+
+  df %>% 
+    reactable(defaultSorted = "total_points",
+              sortable = F,
+              resizable = F,
+              style = list(
+                fontSize = "12px"
+              ),
+              defaultColDef = colDef(format = colFormat(digits = 0), 
+                                     align = "right", defaultSortOrder = "desc",
+                                     style = list(padding = "4px 2px"), headerStyle = list(textAlign = "right")), 
+              highlight = F,
+              compact = T,
+              width = "400px",
+              class = "snappaneers-tbl",
+              # Column Groups
+              columnGroups = list(
+                colGroup(name = "Total Points", columns = c("total_points", "total_points_diff")),
+                colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
+                colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                colGroup(name = "Def. PPR", columns = c("def_ppr", "def_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                colGroup(name = "Toss Efficiency", columns = c("toss_efficiency", "toss_efficiency_diff"))
+              ),
+              # Columns
+              columns = list(
+                player_id = colDef(show = F),
+                player_name = colDef(name = "Player", maxWidth = 60, align = "left", headerStyle = list(textAlign = "left")),
+                team = colDef(show = F),
+                winning = colDef(show = F),
+                total_points = colDef(name = "", minWidth = 19, maxWidth = 30),
+                total_points_diff = colDef(name = "Diff", minWidth = 30, maxWidth = 40, 
+                                           style = JS(game_summary_diff_style("total_points_diff"))),
+                paddle_points = colDef(name = "", minWidth = 19, maxWidth = 40),
+                paddle_points_diff = colDef(name = "Diff", minWidth = 30, maxWidth = 40, 
+                                            style = JS(game_summary_diff_style("paddle_points_diff"))),
+                off_ppr = colDef(name = "", minWidth = 30, maxWidth = 50, format = colFormat(digits = 2)),
+                off_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
+                                      style = JS(game_summary_diff_style("off_ppr_diff"))),
+                def_ppr = colDef(name = "", minWidth = 30, format = colFormat(digits = 2)),
+                def_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
+                                      style = JS(game_summary_diff_style("def_ppr_diff"))),
+                toss_efficiency = colDef(name = "", minWidth = 29, format = colFormat(percent = T, digits = 0)),
+                toss_efficiency_diff = colDef(name = "Diff", minWidth = 32, maxWidth = 40, 
+                                              style = JS(game_summary_diff_style("toss_efficiency_diff")))
+              )
+    )
+}
+
+
 leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
   stats_eligible = career_stats_data %>% 
     filter(rank < dividing_line)
   
   career_stats_data %>% 
     reactable(
-      defaultPageSize = 20, 
+      defaultPageSize = 10, pagination = T, 
       defaultSorted = "rank",
       showSortable = T,
-      defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0), 
+      defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0, separators = T), 
                              align = "left", defaultSortOrder = "desc"),
-      highlight = T,
+      highlight = T, 
       # compact = T, 
       width = "100%",
       rowStyle = function(index) {
@@ -1387,6 +1699,62 @@ score_heatmap = function(df){
   
 }
 
+game_summary_dialog = function(df, current_round, a_sub, b_sub){
+  showModal(
+    modalDialog(
+      title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", 
+                         coalesce(rounds[df$rounds], current_round))),  
+      style = str_c("background-color: ", snappa_pal[1], ";"),
+      
+      
+      
+      
+      # Tables
+      fluidRow(align = "center",
+               # reactableOutput("team_a_summary")
+               column(6, align = "center",
+                      h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+                      h4(a_sub, align = "left"),
+                      withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
+                                  proxy.height = "145px", color.background = snappa_pal[1])
+               ),
+               column(6,align = "center",# offset = 2,
+                      h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+                      h4(b_sub, align = "left"),
+                      withSpinner(reactableOutput("team_b_summary"), color = snappa_pal[3], 
+                                  proxy.height = "145px", color.background = snappa_pal[1])
+               )
+      ),
+      # Summary plot
+      fluidRow(align = "center",
+               column(3, style = "padding-right:0; top:60px;",
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "45vh"), color = snappa_pal[2], 
+                                  proxy.height = "200px", color.background = snappa_pal[1])
+               ),
+               column(6,style = "padding:0",
+                      div(style = "margin:0px 5px; padding:5px;",
+                          h4("How the die flies", align = "left"),
+                          h5("Point progression throughout the game", align = "left")
+                      )
+                      ,
+                      withSpinner(plotOutput("game_flow"), color.background = snappa_pal[1],
+                                  color = snappa_pal[4])
+               ),
+               column(3, style = "padding-left:0; top:60px;",
+                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "45vh"), color = snappa_pal[3], 
+                                  proxy.height = "200px", color.background = snappa_pal[1])
+               )
+      ),
+      # plotOutput("summary_plot", height = "50vh"),
+      # reactableOutput("scores_tbl"),
+      
+      footer = NULL, 
+      easyClose = TRUE,
+      size = "l"
+    )
+  )
+}
+
 
 
 markov_summary_data = function(simulations){
@@ -1598,66 +1966,147 @@ markov_visualizations = function(summary){
 
 
 
-player_score_breakdown = function(ps_player_stats, ps_players, ps_game, ps_team){
+player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_team){
+  
+  # Break down a player's points into their different score types
+  # View each score type as a proportion of the total points
+  # The issue being that each score type is NOT mutually exclusive
 
   if(ps_team == "A"){
-    team_margin = margin(0,-20,0,0)
+    team_margin = margin(0,-10,0,0)
   } else {
-    team_margin = margin(0,0,0, -20)
+    team_margin = margin(0,0,0,-10)
   }
   reverse_legend = (!!ps_team == "A")
-
-  df = ps_player_stats %>% 
-    filter(game_id == !!ps_game) %>% 
-    inner_join(ps_players) %>% 
-    filter(team == !!ps_team) %>% 
-    select(player_name, team, total_points:clink_points) %>% 
-    arrange(-total_points) %>%
-    # Calculate sink points and "normal" points
-    # NOTE: this is not correct. it currently double counts any paddle clinks/clink sinks/paddle sinks
-    mutate(sink = threes*3,
-           normal_toss = total_points-(paddle_points+clink_points+sink),
-           normal_toss = if_else(normal_toss < 0, 0, normal_toss)) %>% 
-    select(player_name, team, `Normal toss` = normal_toss, Paddle = paddle_points, Clink = clink_points, Sink = sink) %>% 
-    # Pivot to get point type
-    pivot_longer(cols = `Normal toss`:Sink, names_to = "point_type", values_to = "points") %>% 
-    # Convert point type to factor
-    mutate(point_type = factor(point_type, levels = c("Sink", "Clink", "Paddle", "Normal toss"), ordered = T)) %>% 
-    group_by(player_name) %>%
-    mutate(point_pct = points/sum(points)) %>% 
-    replace_na(list(point_pct = 0))
   
   
   
-    df %>%
-      ggplot(., aes(y = player_name, x = points, fill = point_type))+
-      # Bars
-      geom_col(position = "fill", colour = snappa_pal[1], size = 1.5)+
-      # Labels
-      geom_text(data = filter(df, point_pct > .15), 
-                aes(label = scales::percent(point_pct, accuracy = 1)), 
-                position = position_fill(vjust = .5), colour = "white", show.legend = F) +
-      # Y Axis
-      scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
-      # X Axis
-      scale_x_continuous(name = NULL, labels = scales::percent)+
-      # Colour scale
-      scale_fill_manual(name = NULL, drop=F,
-                        values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
-                        guide = guide_legend(reverse = T, label.hjust = 0.5, nrow = 2, byrow = T))+
+  # df = aggregate_player_stats_and_sinks(scores, snappaneers) %>% 
+  #   select(player_id, team, total_points, normal_points, sink_points,  paddle_points, clink_points) %>%
+  #   mutate(total = total_points) %>% 
+  #   # Pivot to get point type
+  #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>% 
+  #   filter(type != "total") %>% 
+  #   # Convert point type to factor
+  #   mutate(point_type = factor(type, 
+  #                              labels = c("Sink", "Clink", "Paddle", "Normal toss"), 
+  #                              levels = c("sink", "clink", "paddle", "normal"), ordered = T)) %>% 
+  #   group_by(player_id) %>%
+  #   mutate(point_pct = points/total) %>% 
+  #   replace_na(list(point_pct = 0)) %>% 
+  #   left_join(ps_players, by = "player_id") 
+  # 
+  # 
+  # 
+  #   df %>%
+  #     ggplot(., aes(y = player_name, x = points, fill = point_type))+
+  #     # Bars
+  #     geom_col(position = "fill", colour = snappa_pal[1], size = 1.5)+
+  #     # Labels
+  #     geom_text(data = filter(df, point_pct > .15), 
+  #               aes(label = scales::percent(point_pct, accuracy = 1)), 
+  #               position = position_fill(vjust = .5), colour = "white", show.legend = F) +
+  #     # Y Axis
+  #     scale_y_discrete(name = NULL, position = if_else(reverse_legend, "left", "right"))+
+  #     # X Axis
+  #     scale_x_continuous(name = NULL, labels = scales::percent)+
+  #     # Colour scale
+  #     scale_fill_manual(name = NULL, drop=F,
+  #                       values = c("Normal toss" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630" ),
+  #                       guide = guide_legend(reverse = T, label.hjust = 0.5, nrow = 2, byrow = T))+
+  #     # Theme elements
+  #     theme_snappa(md=T, plot_margin = team_margin, base_size = 11)+
+  #     theme(
+  #       panel.grid.major = element_blank(),
+  #       panel.grid.minor = element_blank(),
+  #       axis.line = element_blank(),
+  #       legend.position = "bottom",
+  #       legend.margin = margin(0,-30,0,-30),
+  #       legend.text.align = .5,
+  #       axis.text.x = element_blank(),
+  #       axis.text.y.left = element_text(margin = margin(l = 0, r = -5), hjust = 1),
+  #       axis.text.y.right = element_text(margin = margin(l = -5, r = 0), hjust = 0)
+  #     )
+    
+    # Option 1:
+    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
+    #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+    #   mutate(total = total_points) %>%
+    #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+    #   arrange(team, desc(total), player_id, desc(points)) %>%
+    #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal", "total"), ordered = T),
+    #          bar_width = if_else(type == "total", .1, 10))
+    # 
+    # filter(plot_df, type !="total") %>%
+    #   left_join(ps_players, by = "player_id") %>%
+    #   ggplot(., aes(x = type, y = points))+
+    #   geom_col(aes(fill = type),
+    #            colour = snappa_pal[1])+
+    #   geom_text(aes(y = points + .5, label = na_if(points, 0)),
+    #             family = "Inter Medium", colour = "black")+
+    #   geom_col(data = filter(plot_df, type =="total"),
+    #            aes(fill = type), width = .25, position = position_dodge(width = 1), colour = snappa_pal[1])+
+    #   scale_fill_manual(name = NULL, drop=F,
+    #                     values = c("normal" = "#67A283", "paddle" = "#793E8E", "clink" = "#54B6F2", "sink" = "#FFA630", "foot" = "#011936", "total" = "gray20"),
+    #                     guide = guide_legend(direction = "vertical", ncol = 1, reverse = T))+#090C9B
+    #   scale_x_discrete(drop=F, position = "top")+
+    #   coord_flip()+
+    #   facet_wrap(~player_name, ncol = 1, strip.position = "left", as.table = F)+
+    #   theme_snappa(md=T, text_family = "Inter Medium")+
+    #   theme(axis.text.y = element_blank(), axis.title.y = element_blank(),
+    #         strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)))
+    
+    # Option 2: Nightingale/Radar plot
+    plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
+      inner_join(ps_players, by = "player_id") %>% 
+      select(player_name, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+      # Add total as persistent var
+      mutate(total = total_points) %>%
+      # Pivot separate variables into an input for fill
+      pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+      arrange(team, desc(total), player_name, desc(points)) %>%
+      # Remove total from our fill var
+      filter(type != "total") %>%
+      mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"),
+                           labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
+    
+    # browser()
+    plot_df %>% 
+      # Show point type by the number of pts (because factoring above didn't work?)
+      ggplot(., aes(x = reorder(type, points), y = points))+
+      # Columns
+      geom_col(aes(fill = type, y = points + 2),
+               colour = snappa_pal[1],
+               position = position_dodge(width = 1), width = 1)+
+      # Pt labels
+      geom_text(aes(y = (points+3)/2, label = na_if(points, 0)),
+                colour = snappa_pal[1],
+                family = "Inter Medium", fontface = "bold", size = 5.5)+
+      # Axes
+      scale_x_discrete(drop=T)+
+      # Colours
+      scale_fill_manual(name = NULL, drop=T,
+                        values = c("Normal" = "#67A283", "Paddle" = "#793E8E", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Foot" = "#090C9B"),
+                        guide = guide_legend(direction = "horizontal", ncol = 2, reverse = T))+#090C9B
+      # Make it polar
+      coord_polar(start = pi/2, direction = -1)+
+      # Facet on player
+      facet_wrap(~player_name, ncol=1,
+                 strip.position = if_else(reverse_legend, "left", "right"),
+                 as.table = F, drop = T, shrink = T)+
       # Theme elements
-      theme_snappa(md=T, plot_margin = team_margin, base_size = 11)+
-      theme(
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        axis.line = element_blank(),
-        legend.position = "bottom",
-        legend.margin = margin(0,-30,0,-30),
-        legend.text.align = .5,
-        axis.text.x = element_blank(),
-        axis.text.y.left = element_text(margin = margin(l = -5, r = -5), hjust = 1),
-        axis.text.y.right = element_text(margin = margin(l = -5, r = -5), hjust = 0)
-      )
+      theme_snappa(md=T, plot_margin = team_margin)+
+      theme(axis.title = element_blank(), # no title
+            legend.position = "bottom", # legend on bottom
+            axis.line = element_blank(), # No axis line
+            axis.text.y.left = element_blank(), # No axis text
+            axis.text.x = element_blank(),
+            legend.margin = margin(0,5,0,5),
+            # Facet labels
+            strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
+            strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)),
+            # No gridlines
+            panel.grid.major = element_blank(), panel.spacing = unit(-12/length(unique(plot_df$player_name)), "lines"))
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
@@ -1672,7 +2121,7 @@ game_flow = function(player_stats, players, scores, game){
     # Filter player stats
     filter(game_id == !!game) %>% 
     select(game_id, player_id, team) %>% 
-    inner_join(players)
+    inner_join(players, by = "player_id")
   
   # player_scores = vals$scores_db %>% 
   # inner_join(snappaneers(), by = c("player_id")) %>%
@@ -1696,7 +2145,8 @@ game_flow = function(player_stats, players, scores, game){
     group_by(game_id, player_id, player_name, team) %>% 
     summarise(round = min(round)-1, 
               points_scored = 0, 
-              cum_score = 0)
+              cum_score = 0,
+              .groups = "drop")
   
   player_label_df = player_scores %>% 
     filter(game_id == !!game) %>% 
@@ -1721,13 +2171,23 @@ game_flow = function(player_stats, players, scores, game){
                        limits = c(0, max_score+5-(max_score%%5)),
                        expand = expansion())+
     scale_x_continuous(name = "Round", 
-                       breaks = scales::breaks_pretty(n =10), 
+                       breaks = breaks_rounds(n =7), 
                        limits = c(0, max_round+5),
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
-    labs(title = "How the die flies",
-         subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
+    # labs(title = "How the die flies",
+    #      subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
     theme_snappa(md=T)
+}
+
+breaks_rounds = function (n = 5, ...) {
+  scales:::force_all(n, ...)
+  n_default <- n
+  function(x, n = n_default) {
+    breaks <- pretty(x, n, ...)
+    names(breaks) <- c("0", rounds)[breaks+1]
+    breaks
+  }
 }
 
 game_summary_plot = function(player_stats, players, scores, game){
@@ -1779,10 +2239,14 @@ game_summary_plot = function(player_stats, players, scores, game){
 snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
 options(reactable.theme = reactableTheme(
   color = "gray20",
-  backgroundColor = snappa_pal[1],
+  backgroundColor = snappa_pal[1], 
+  tableBodyStyle = list(
+    padding = "4px 2px"
+  ),
   borderColor = "#DEDDDD",
   headerStyle = list(
     alignSelf = "flex-end",
+    fontSize = "13px",
     borderBottom = "3px solid #7c7c7c"
   ))
 )
@@ -1795,8 +2259,54 @@ bar_chart <- function(label, width = "100%", height = "14px", fill = "#00bfc4", 
   div(style = list(display = "flex", alignItems = "center"), label, chart)
 }
 
+game_summary_diff_style = function(column){
+  str_c("
+                    function(rowInfo) {
+                        var value = rowInfo.row.", column,"
+                      // input:
+                      //  - rowInfo, an object containing row info
+                      //  - colInfo, an object containing column info (optional)
+                      //  - state, an object containing the table state (optional)
+                      var neg = /\\-/
+                      var pos = /\\+/
+                      if (neg.test(value)) {
+                        var colour = '#e26a6a'
+                        var bg_col = '#fafaf9'
+                        
+                      } 
+                      else if (pos.test(value)) {
+                        var colour = '#67a283'
+                        var bg_col = '#fafaf9'
+                        
+                      } else if (value == '0') {
+                        var colour = 'gray20'
+                        var bg_col = '#fafaf9'
+                        
+                      } else {
+                        if (rowInfo.row.team == 'A' & rowInfo.level < 1) {
+                          var bgcol =  '#e26a6a80'
+                        } else if (rowInfo.row.team == 'B' & rowInfo.level < 1) {
+                          var bgcol = '#2574a980'
+                        } 
+                                     
+                      }
+                      
+                      return { backgroundColor: bgcol, color: colour, padding: '4px 2px'}
+                    }
+                  ")
+}
+
+rt_team_highlight = JS("function(rowInfo) {
+                                            if (rowInfo.row.team == 'A' ) {
+                                                var color =  '#e26a6a80'
+                                            } else if (rowInfo.row.team == 'B') {
+                                                var color = '#2574a980'
+                                            } 
+                                            return { backgroundColor: color, color: '#fafaf9', fontWeight: 600 }
+                                        }")
+
 theme_snappa = function(title_family = "Inter SemiBold",
-                        text_family = "Inter",
+                        text_family = "Inter Medium",
                         base_size = 12, 
                         text_color = "gray20",
                         bg_color = snappa_pal[1], line_colour = "#DEDDDD",
@@ -1969,6 +2479,7 @@ tab_theme_snappa = function(data,
                             row_group.border.left.style = NULL, row_group.border.left.width = NULL, 
                             row_group.border.left.color = NULL, row_group.border.right.style = NULL, 
                             row_group.border.right.width = NULL, row_group.border.right.color = NULL, 
+                            row_group.default_label = NULL, 
                             # Table body
                             table_body.hlines.style = NULL, table_body.hlines.width = NULL, 
                             table_body.hlines.color = NULL, 
