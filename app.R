@@ -1886,7 +1886,7 @@ observe({
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
-      if(!(die_thrower %in% vals$db_tbls()[["players"]]$player_name)){
+      if(!(die_thrower %in% vals$players$player_name)){
         
         # Update the players database right here with the player name
         
@@ -1896,6 +1896,8 @@ observe({
             player_name = die_thrower
           )
         )
+        
+        vals$players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players"))
         
         # Increment the ID for the next new player
         vals$new_player_id = vals$new_player_id+1
