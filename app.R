@@ -559,9 +559,18 @@ server <- function(input, output, session) {
     markov_vals = list("iterations" = 1,
                        "A_score" = 0,
                        "B_score" = 0)
+    
   )
   
   
+  the_train = reactive({
+    # Check current scores is at least 1
+    req(sum(vals$current_scores) > 1)
+    # Check that scores are equal 
+    # AND the score is equal to the round number
+    all(vals$current_scores$team_A == vals$current_scores$team_B,
+        vals$current_scores$team_A == as.numeric(str_extract(round_num(), "[0-9]+")))
+  })
   
 
 # Player Inputs, Snappaneers, Other Reactives --------------------------------------
