@@ -1210,7 +1210,7 @@ server <- function(input, output, session) {
     #                 if_else(input$sample_select == "All", 
     #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
     #                 paste("Last", input$sample_select, "games")))
-    # browser()
+    # 
     plot = pluck(player_form_data(), "data") %>% 
       ggplot(., aes(x = game_num, y = !!sym(input$stat_select)))+
       # Bars
@@ -1640,6 +1640,7 @@ observe({
     delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
     dbExecute(con, delete_query)
   } else {
+    
   showModal(restart_game_UI('restart',
                             # MARK: can you just index points?
                             # e.g. scores[scores$team == 'A', 'points']

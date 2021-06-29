@@ -285,7 +285,7 @@ db_update_player_stats = function(player_stats, specific_player, round_button = 
 
 db_update_round = function(round, game){
   # Update round number in game_stats
-  dbSendStatement(con,  round_update_statement = sql(
+  dbSendStatement(con, sql(
     str_c("UPDATE game_stats 
          SET last_round = '", round, "'",
           "WHERE game_id = ", game, ";")
