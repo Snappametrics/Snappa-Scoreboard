@@ -136,6 +136,14 @@
     margin-bottom: 2rem;
 }
 
+.the-train {
+  display: flex;
+  align-items: flex-end;
+  align-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
 .bootstrap-select .dropdown-toggle .filter-option {
     text-align: center!important;
 }
