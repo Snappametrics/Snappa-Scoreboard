@@ -19,44 +19,26 @@ restart_game_server = function(id) {
                  missing_game_id = reactive({
                    # MARK: may be able to leave out the alias and avoid the need to pull
                    #      but it might just change the colname to max or something
-                   pull_game_id = sql('SELECT MAX(game_id) AS game_id FROM game_stats')
                    # MARK: don't need collect after dbGetQuery
-                   game_id = dbGetQuery(con, pull_game_id) %>% collect() %>%
-                     pull(game_id)
-                   
-                   return(game_id)
-                   
+                    dbGetQuery(con, sql('SELECT MAX(game_id) FROM player_stats'))  %>%
+                     pull(max)
                  })
                  
                  restart_game <- reactiveVal({F})
                  # browser()
                  missing_players = reactive({
-                   # MARK: again no need for collect or return
                    dbGetQuery(con,
                               sql('SELECT
-                                                    players.player_name,
-                                                    ps.team
-                                                 FROM player_stats AS ps
-                                                 INNER JOIN players
-                                                  ON players.player_id = ps.player_id
-                                                 WHERE ps.game_id = (
-                                                    SELECT MAX(game_id) 
-                                                    FROM player_stats
-                                                 )'))
-                   # players = dbGetQuery(con,
-                   #                           sql('SELECT
-                   #                                  players.player_name,
-                   #                                  ps.team
-                   #                               FROM player_stats AS ps
-                   #                               INNER JOIN players
-                   #                                ON players.player_id = ps.player_id
-                   #                               WHERE ps.game_id = (
-                   #                                  SELECT MAX(game_id) 
-                   #                                  FROM player_stats
-                   #                               )')) %>% collect()
-                   # return(players)
+                                      players.player_name,
+                                      ps.team
+                                   FROM player_stats AS ps
+                                   INNER JOIN players
+                                    ON players.player_id = ps.player_id
+                                   WHERE ps.game_id = (
+                                      SELECT MAX(game_id) 
+                                      FROM player_stats
+                                   )'))
                  })
-                 # MARK: Are we sure last_round is working?
                  last_round <- reactive({
                    query = dbGetQuery(con, 
                               sql('SELECT last_round 
@@ -68,29 +50,22 @@ restart_game_server = function(id) {
                  })
                  
                  input_list <- reactive({
-                   # MARK: Is it faster to just do this in a single pipe? 
                    player_inputs = missing_players() %>%
                      group_by(team) %>%
                      mutate(player_input = str_c("name_", team, row_number())) %>%
-                     ungroup()
-                   
-                   # unless you're planning on some intermediary action here
-                   
-                   input_list = player_inputs %>%
+                     ungroup() %>%
                      select(player_input, player_name) %>%
                      deframe()
                    return(input_list)
                  })
                  
-                 # MARK: This seems like it may (in some weird scenario)
-                 #      pull different last games than the one in game_stats
                  missing_player_stats <- reactive({
                    dbGetQuery(con, 
                               sql('SELECT * FROM player_stats
                                   WHERE game_id = (
                                     SELECT MAX(game_id)
                                     FROM player_stats
-                                  )')) %>% collect()
+                                  )')) 
         
                  })
                 
@@ -99,52 +74,19 @@ restart_game_server = function(id) {
                    # length(missing_players()[missing_players()$team == 'A', ])
                    # or
                    # sum(missing_players()$team == 'A')
-                     size_A = length(missing_players()[missing_players()$team == 'A'])
-                     size_B = length(missing_players()[missing_players()$team == 'B'])
-                     
+                     size_A = sum(missing_players()$team == 'A')
+                     size_B = sum(missing_players()$team == 'B')
                      return(list('size_A' = size_A,
                                  'size_B' = size_B))
                  })
                  
                 output$summary_table_A <- renderReactable({
                   # Maybe this is fast?
-                  base_table = dbGetQuery(con, 
-                                            sql('SELECT 
-                                                  players.player_name AS player,
-                                                  scoring_team AS team,
-                                                  SUM(points_scored) AS points,
-                                                  SUM(CASE 
-                                                        WHEN paddle = TRUE THEN 1 
-                                                        ELSE 0 
-                                                      END) AS paddle_points,
-                                                  SUM(CASE 
-                                                        WHEN clink = TRUE THEN 1
-                                                        ELSE 0 
-                                                      END) AS clink_points
-                                                FROM (SELECT * 
-                                                      FROM scores 
-                                                      WHERE game_id = (SELECT MAX(game_id)
-                                                                       FROM scores)
-                                                ) AS scores
-                                                LEFT JOIN players ON 
-                                                players.player_id = scores.player_id
-                                                GROUP BY players.player_name, scoring_team')
-                                            ) %>% collect()
-                  # Yeah. It's fast. This should probably just be a query to player_stats, 
-                  # particularly considering that we need to know the total number 
-                  # of players on each team, which has traditionally been stored there
-                  
-                  # MARK: why scores then? was it easier for some reason?
-                  presentation_table = missing_players() %>%
+                  missing_player_stats()
                     filter(team == 'A') %>%
-                    left_join(base_table, by = c('team' = 'team', 'player_name' = 'player')) %>%
-                    replace_na(list(points = 0, paddle_points = 0, clink_points = 0)) %>%
                     select(-team) %>%
-                    arrange(desc(points)) 
-                  # MARK: No need for return here, you can just pipe the 
-                  # presentation_table into reactable()
-                  return(
-                    reactable(presentation_table,
+                    arrange(desc(points)) %>%
+                    reactable(
                               highlight = T,
                               columns = list(
                                 player_name = 
@@ -163,44 +105,17 @@ restart_game_server = function(id) {
                                 align = 'center'
                               )
                           )
-                    )
                 })
                   
                 output$summary_table_B <- renderReactable({
                   # Maybe this is fast?
-                  base_table = dbGetQuery(con, 
-                                          sql('SELECT 
-                                                  players.player_name AS player,
-                                                  scoring_team AS team,
-                                                  SUM(points_scored) AS points,
-                                                  SUM(CASE 
-                                                        WHEN paddle = TRUE THEN 1 
-                                                        ELSE 0 
-                                                      END) AS paddle_points,
-                                                  SUM(CASE 
-                                                        WHEN clink = TRUE THEN 1
-                                                        ELSE 0 
-                                                      END) AS clink_points
-                                                FROM (SELECT * 
-                                                      FROM scores 
-                                                      WHERE game_id = (SELECT MAX(game_id)
-                                                                       FROM scores)
-                                                ) AS scores
-                                                LEFT JOIN players ON 
-                                                players.player_id = scores.player_id
-                                                GROUP BY players.player_name, scoring_team')
-                  ) %>% collect()
-                  # Yeah. It's fast. This should probably just be a query to player_stats, 
-                  # particularly considering that we need to know the total number 
-                  # of players on each team, which has traditionally been stored there
-                  presentation_table = missing_players() %>%
+                 missing_player_stats() %>%
                     filter(team == 'B') %>%
                     left_join(base_table, by = c('team' = 'team', 'player_name' = 'player')) %>%
                     replace_na(list(points = 0, paddle_points = 0, clink_points = 0)) %>%
                     select(-team) %>%
-                    arrange(desc(points)) 
-                  return(
-                    reactable(presentation_table,
+                    arrange(desc(points)) %>%
+                    reactable(
                               highlight = T,
                               columns = list(
                                 player_name = 
@@ -219,7 +134,7 @@ restart_game_server = function(id) {
                                 align = 'center'
                               )
                     )
-                  )
+      
                 }
                 )
                 
