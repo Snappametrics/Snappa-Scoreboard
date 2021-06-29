@@ -99,14 +99,9 @@ restart_game_server = function(id) {
                    # length(missing_players()[missing_players()$team == 'A', ])
                    # or
                    # sum(missing_players()$team == 'A')
-                     size_A = missing_players() %>% 
-                       filter(team == 'A') %>%
-                       summarize(sum = n()) %>%
-                       deframe()
-                     size_B = missing_players() %>% 
-                       filter(team == 'B') %>%
-                       summarize(sum = n()) %>%
-                       deframe()
+                     size_A = length(missing_players()[missing_players()$team == 'A'])
+                     size_B = length(missing_players()[missing_players()$team == 'B'])
+                     
                      return(list('size_A' = size_A,
                                  'size_B' = size_B))
                  })
