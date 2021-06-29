@@ -1,4 +1,15 @@
-
+library(reactable)
+library(gt)
+library(ggrepel)
+library(ggtext)
+library(patchwork)
+library(ggwaffle)
+library(plotly)
+library(shinyWidgets)
+library(shinydashboard)
+library(shinydashboardPlus)
+library(shinycssloaders)
+library(htmltools)
 
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))

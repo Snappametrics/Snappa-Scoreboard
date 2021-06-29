@@ -9,31 +9,9 @@
 
 
 
-library(extrafont)
-library(DBI)
-library(RPostgres)
-library(tidyverse)
-library(lubridate)
-library(shiny)
-library(shinyjs)
-library(shinyWidgets)
-library(shinydashboard)
-library(shinydashboardPlus)
-library(shinycssloaders)
-library(gt)
-library(reactable)
-library(ggrepel)
-library(ggtext)
-library(patchwork)
 library(waiter)
-library(htmltools)
-library(ggwaffle)
-library(plotly)
 
 
-source("database/dbconnect.R")
-source("ui_functions.R")
-source("server_functions.R")
 source("markov/Markov_model_functions.R")
 
 
