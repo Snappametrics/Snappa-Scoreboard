@@ -2027,6 +2027,18 @@ game_summary = reactive({
 })
 
 
+# Observe the train
+observeEvent(req(the_train()), {
+  
+  # Show them the train
+  showNotification(ui = div(class = "the-train",
+                      img(width = "180px", src = "chuggachugga.png"),
+                      h4("Choo choo!")
+                    ),
+                    duration = 3,
+                    type = "message",
+                    closeButton = F)
+}, ignoreNULL = T)
 
 
 observeEvent(input$game_summary, {
