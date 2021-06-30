@@ -255,13 +255,12 @@ tifu_casualty_popup <- function(players) {
 
 
 team_input_ui = function(team, player_choices){
-  
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-  well_selector = if_else(team == 'A', 'input_well_A', 'input_well_B')
-  div_selector = if_else(team == 'A', 'input_forms_A','input_forms_B')
-  class_selector = paste0('input_well ', if_else(team == 'A', 'well_A', 'well_B'))
+  well_selector = str_c('input_well_', team)
+  div_selector = str_c('input_forms_', team)
+  class_selector = paste0('input_well well_', team)
   player_namespaces = str_c(team, 1:2)
   column(4, align = "center",
          
