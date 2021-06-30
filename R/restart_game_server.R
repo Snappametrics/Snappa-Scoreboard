@@ -41,7 +41,7 @@ restart_game_server = function(id) {
                                     LEFT JOIN players 
                                       ON players.player_id = ps.player_id
                                     LEFT JOIN game_stats
-                                      ON game_stats.game_id = ps.player_id
+                                      ON game_stats.game_id = ps.game_id
                                     WHERE ps.game_id = (
                                       SELECT MAX(game_id) 
                                       FROM player_stats)
@@ -61,7 +61,7 @@ restart_game_server = function(id) {
                    
                     missing_player_summary() %>%
                      select(player_name, team, row) %>%
-                     complete(row = 1:4, team = c('A', 'B'), fill = list(player_name = '')) %>%
+                     complete(row = 1:4, team = c('A', 'B'), fill = list(player_name = "")) %>%
                      group_by(team) %>%
                      mutate(player_input = str_c("name_", team, row)) %>%
                      ungroup() %>%
