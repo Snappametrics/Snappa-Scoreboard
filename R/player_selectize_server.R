@@ -26,19 +26,6 @@ player_selectize_server = function(id, restart_game, restart_input) {
                                    input$player_name),
                            restart_input())
                  })
-                
-                 observeEvent(restart_game(), {
-                   # Is there a reason to do this over just writing 'restart_game'?
-                   req(isTRUE(restart_game()))
-                   delay(100, updateSelectizeInput(session = session,
-                                        inputId = 'player_name',
-                                        selected = player_name())
-                   )
-                   
-                 },
-                 ignoreInit = T,
-                 ignoreNULL = T)
-                 
-                 return(player_name())
+                return(player_name())
                })
 }
