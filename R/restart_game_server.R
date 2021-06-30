@@ -25,7 +25,6 @@ restart_game_server = function(id) {
                  })
                  
                  restart_game <- reactiveVal({F})
-                 
                  missing_player_summary = reactive({
                    dbGetQuery(con,
                               sql('SELECT
@@ -41,15 +40,19 @@ restart_game_server = function(id) {
                                     FROM player_stats AS ps
                                     LEFT JOIN players 
                                       ON players.player_id = ps.player_id
+                                    LEFT JOIN game_stats
+                                      ON game_stats.game_id = ps.player_id
                                     WHERE ps.game_id = (
                                       SELECT MAX(game_id) 
-                                      FROM player_stats)'))
+                                      FROM player_stats)
+                                    AND game_stats.game_complete IS FALSE'))
                  })
                  last_round <- reactive({
                   dbGetQuery(con, 
                               sql('SELECT last_round 
                                   FROM game_stats 
-                                  WHERE game_id = (SELECT MAX(game_id) FROM game_stats);')
+                                  WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
+                                  AND game_complete IS FALSE;')
                               ) %>% collect() %>%
                      pull(last_round)
                  })
