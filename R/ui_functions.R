@@ -17,25 +17,65 @@ rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 # UI functions ------------------------------------------------------------
 
 # Score pop-up dialog box
-score_check <- function(team, players, round) {
+score_check <- function(team, snappaneers, round) {
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
   team_colour = if_else(team_scored == "ok_A", "#e26a6a", "#2574a9")
+  opponent_colour = if_else(team_scored == "ok_B", "#e26a6a", "#2574a9")
   score_val = paste(team, "score_val", sep = "_")
   
+  shooting_team_players = filter(snappaneers, team == !!team) %>% 
+    pull(player_name) %>% 
+    sample()
+  
+  opponents = filter(snappaneers, team != !!team) %>% 
+    pull(player_name) %>% 
+    sample()
+  
+  # browser()
   # Ask how many points were scored and by whom
-  modalDialog(align = "center", easyClose = T, size = "l",
+  modalDialog(align = "center", easyClose = T, size = "l", 
               # Header
               h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>")),
                  style = "margin-bottom: 2vh;"),
 
-              fluidRow(
-                column(8,
+              fluidRow(style = "display:flex;",
+                # Assist col
+                column(3, align = "left", class = "assist-col",
+                       h3("Assist(s)"),
+                       dropdownButton(label = shooting_team_players[1], circle = F, 
+                                      icon = icon("fa-fa-hand-paper"),
+                         checkboxGroupButtons(
+                                              inputId = "shooters_assist1",
+                                              # label = "Assist(s)",
+                                              choices = c("Paddle", "Foot", "Head"),
+                                              checkIcon = list(
+                                                yes = tags$i(class = "fa fa-check-square", 
+                                                             style = paste("color:", team_colour)),
+                                                no = tags$i(class = "fa fa-square-o")
+                                              )
+                         )
+                       ),
+                       dropdownButton(label = shooting_team_players[2], circle = F, 
+                                      icon = icon("fa-fa-plus"),
+                                      checkboxGroupButtons(
+                                                           inputId = "shooters_assist2",
+                                                           # label = "Assist(s)",
+                                                           choices = c("Paddle", "Foot", "Head"),
+                                                           checkIcon = list(
+                                                             yes = tags$i(class = "fa fa-check-square", 
+                                                                          style = paste("color:", team_colour)),
+                                                             no = tags$i(class = "fa fa-square-o")
+                                                           )
+                                      )
+                       )
+                       ),
+                column(6,
                        # Who Scored?
                        radioGroupButtons(
                          inputId = "scorer",
                          label = "Who scored?",
-                         choices = players,
+                         choices = shooting_team_players,
                          direction = "horizontal",
                          individual = T,
                          size = "lg",
