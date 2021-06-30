@@ -14,7 +14,6 @@
 player_selectize_server = function(id, restart_game, restart_input) {
   moduleServer(id,
                function(input, output, session) {
-                 ns <- session$ns
                  player_name <- reactive({
                    if_else(input$player_name != '', 
                            # If you were to instead pass this as a requirement for 
