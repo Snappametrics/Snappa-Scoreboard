@@ -16,7 +16,15 @@ player_selectize_server = function(id, restart_game, restart_input) {
                function(input, output, session) {
                  ns <- session$ns
                  player_name <- reactive({
-                   if_else(input$player_name != '', input$player_name, restart_input())
+                   if_else(input$player_name != '', 
+                           # If you were to instead pass this as a requirement for 
+                           # the overall reactive with req(), then you would need
+                           # to make sure that the UI is generated before updating the 
+                           # input. I want to avoid that with this if_else
+                           if_else(is.null(input$player_name),
+                                   '',
+                                   input$player_name),
+                           restart_input())
                  })
                 
                  observeEvent(restart_game(), {
