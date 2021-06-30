@@ -629,26 +629,12 @@ server <- function(input, output, session) {
   player_A3 <- reactive({
     player_selectize_server('A3', 
       reactive({ restart_game_outputs()$restart_game() }),
-      reactive({ 
-        if_else(
-          'name_A3' %in% names(restart_game_outputs()$inputs),
-          restart_game_outputs()$inputs[['name_A3']],
-          ''
-        )
-        
-      })
-    )
+      reactive({ restart_game_outputs()$inputs[['name_A3']]}))
     })
   player_A4 <- reactive({
     player_selectize_server('A4', 
       reactive({ restart_game_outputs()$restart_game() }),
-      reactive({
-        if_else(
-          'name_A4' %in% names(restart_game_outputs()$inputs),
-          restart_game_outputs()$inputs[['name_A4']],
-          ''
-        )
-      })
+      reactive({restart_game_outputs()$inputs[['name_A4']]})
     )
     })
   player_B1 <- reactive({
@@ -658,34 +644,18 @@ server <- function(input, output, session) {
     })
   player_B2 <- reactive({
     player_selectize_server('B2', 
-      reactive({ 
-        restart_game_outputs()$restart_game() }),
+      reactive({ restart_game_outputs()$restart_game() }),
       reactive({ restart_game_outputs()$inputs[['name_B2']]}))
     })
   player_B3 <- reactive({
     player_selectize_server('B3', 
       reactive({ restart_game_outputs()$restart_game() }),
-      reactive({ 
-        if_else(
-          'name_B3' %in% names(restart_game_outputs()$inputs),
-          restart_game_outputs()$inputs[['name_B3']],
-          ''
-        )
-        })
-    )
-    })
+      reactive({
+          restart_game_outputs()$inputs[['name_B3']]}))})
   player_B4 <- reactive({
     player_selectize_server('B4', 
       reactive({ restart_game_outputs()$restart_game() }),
-      reactive({ 
-        if_else(
-          'name_B4' %in% names(restart_game_outputs()$inputs),
-          restart_game_outputs()$inputs[['name_B4']],
-          ''
-        )  
-      })
-      )
-    })
+      reactive({ restart_game_outputs()$inputs[['name_B4']]}))})
   
 # Outputs -----------------------------------------------------------------
   
