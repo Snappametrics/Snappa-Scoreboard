@@ -616,30 +616,78 @@ server <- function(input, output, session) {
 
 
 ## Player Input Reactives --------------------------------------------------
-  player_A1 <- reactive({player_selectize_server('A1', 
-                                                 reactive({restart_game_outputs()$restart_game() }),
-                                                 reactive({restart_game_outputs()$inputs['name_A1']}))})
-  player_A2 <- reactive({player_selectize_server('A2', 
-                                                 reactive({ restart_game_outputs()$restart_game() }),
-                                                 reactive({ restart_game_outputs()$inputs['name_A2']}))})
-  player_A3 <- reactive({player_selectize_server('A3', 
-                                                 reactive({ restart_game_outputs()$restart_game() }),
-                                                 reactive({ restart_game_outputs()$inputs['name_A3']}))})
-  player_A4 <- reactive({player_selectize_server('A4', 
-                                                 reactive({ restart_game_outputs()$restart_game() }),
-                                                 reactive({ restart_game_outputs()$inputs['name_A4']}))})
-  player_B1 <- reactive({player_selectize_server('B1', 
-                                                 reactive({ restartt_game_outputs()$restart_game() }),
-                                                 reactive({ restart_game_outputs()$inputs['name_B1']}))})
-  player_B2 <- reactive({player_selectize_server('B2', 
-                                                 reactive({ restart_game_outputs()$restart_game() }),
-                                                 reactive({ restart_game_outputs()$inputs['name_B2']}))})
-  player_B3 <- reactive({player_selectize_server('B3', 
-                                                 reactive({ restart_game_outputs()$restart_game() }),
-                                                 reactive({ restart_game_outputs()$inputs['name_B3']}))})
-  player_B4 <- reactive({player_selectize_server('B4', 
-                                                 reactive({ restart_game_outputs()$restart_game() }),
-                                                 reactive({ restart_game_outputs()$inputs['name_B4']}))})
+  player_A1 <- reactive({
+    player_selectize_server('A1', 
+      reactive({restart_game_outputs()$restart_game() }),
+      reactive({restart_game_outputs()$inputs[['name_A1']]}))
+    })
+  player_A2 <- reactive({
+    player_selectize_server('A2', 
+      reactive({ restart_game_outputs()$restart_game() }),
+      reactive({ restart_game_outputs()$inputs[['name_A2']]}))
+    })
+  player_A3 <- reactive({
+    player_selectize_server('A3', 
+      reactive({ restart_game_outputs()$restart_game() }),
+      reactive({ 
+        if_else(
+          'name_A3' %in% names(restart_game_outputs()$inputs),
+          restart_game_outputs()$inputs[['name_A3']],
+          ''
+        )
+        
+      })
+    )
+    })
+  player_A4 <- reactive({
+    player_selectize_server('A4', 
+      reactive({ restart_game_outputs()$restart_game() }),
+      reactive({
+        if_else(
+          'name_A4' %in% names(restart_game_outputs()$inputs),
+          restart_game_outputs()$inputs[['name_A4']],
+          ''
+        )
+      })
+    )
+    })
+  player_B1 <- reactive({
+    player_selectize_server('B1', 
+      reactive({ restart_game_outputs()$restart_game() }),
+      reactive({ restart_game_outputs()$inputs[['name_B1']]}))
+    })
+  player_B2 <- reactive({
+    player_selectize_server('B2', 
+      reactive({ 
+        if (restart_game_outputs()$restart_game()){
+        }
+        restart_game_outputs()$restart_game() }),
+      reactive({ restart_game_outputs()$inputs[['name_B2']]}))
+    })
+  player_B3 <- reactive({
+    player_selectize_server('B3', 
+      reactive({ restart_game_outputs()$restart_game() }),
+      reactive({ 
+        if_else(
+          'name_B3' %in% names(restart_game_outputs()$inputs),
+          restart_game_outputs()$inputs[['name_B3']],
+          ''
+        )
+        })
+    )
+    })
+  player_B4 <- reactive({
+    player_selectize_server('B4', 
+      reactive({ restart_game_outputs()$restart_game() }),
+      reactive({ 
+        if_else(
+          'name_B4' %in% names(restart_game_outputs()$inputs),
+          restart_game_outputs()$inputs[['name_B4']],
+          ''
+        )  
+      })
+      )
+    })
   
 # Outputs -----------------------------------------------------------------
   
@@ -2009,7 +2057,6 @@ observeEvent(input$game_summary, {
 # Restart a game after indicating you would like to do so
   observeEvent(restart_game_outputs()$restart_game(), {
     req(restart_game_outputs()$restart_game() == T)
-    browser()
     #Look at the number of lost players on each team to be certain of the values
     # that you wan
 
@@ -2034,19 +2081,17 @@ observeEvent(input$game_summary, {
       invisible()
     }
 
-    delay(1000, iwalk(restart_game_outputs()$inputs, function(name, id){
-      updateSelectizeInput(session, inputId = id, selected = name)
-    })
-  )
+  #   delay(1000, iwalk(restart_game_outputs()$inputs, function(name, id){
+  #     updateSelectizeInput(session, inputId = id, selected = name)
+  #   })
+  # )
 
 
-    delay(2000, shinyjs::click("start_game"))
+    #delay(2000, shinyjs::click("start_game"))
 
 }, ignoreNULL = T,
    ignoreInit = T
 )
-  
-  
 # Close the modal dialog if you say no and remove
 # the old game from the DB
   
@@ -2283,6 +2328,7 @@ observeEvent(input$game_summary, {
   #   - Add A3 text input
   #   - Remove the add new player action button
   observeEvent(input$extra_player_A3, {
+    browser()
     # Set input want to true
     vals$want_A3 = T
     choices = dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
