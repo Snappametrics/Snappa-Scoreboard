@@ -11,18 +11,16 @@
 #'      \item{player_name} {a reactive value containing the string in the selectize box}
 #' }
 
-player_selectize_server = function(id, restart_game, restart_input) {
+player_selectize_server = function(id, restart_input) {
   moduleServer(id,
                function(input, output, session) {
                  player_name <- reactive({
-                   if_else(input$player_name != '', 
+                   if_else(coalesce(input$player_name) != '', 
                            # If you were to instead pass this as a requirement for 
                            # the overall reactive with req(), then you would need
                            # to make sure that the UI is generated before updating the 
                            # input. I want to avoid that with this if_else
-                           if_else(is.null(input$player_name),
-                                   '',
-                                   input$player_name),
+                           coalesce(input$player_name),
                            restart_input())
                  })
                 return(player_name())
