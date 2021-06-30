@@ -25,7 +25,7 @@ restart_game_server = function(id) {
                  })
                  
                  restart_game <- reactiveVal({F})
-                 # browser()
+                 
                  missing_player_summary = reactive({
                    dbGetQuery(con,
                               sql('SELECT
@@ -33,14 +33,17 @@ restart_game_server = function(id) {
                                       ps.team,
                                       ps.total_points AS points,
                                       ps.paddle_points,
-                                      ps.clink_points
+                                      ps.clink_points,
+                                      ROW_NUMBER() OVER(
+                                        PARTITION BY ps.team
+                                      )
+                                      AS row
                                     FROM player_stats AS ps
                                     LEFT JOIN players 
                                       ON players.player_id = ps.player_id
                                     WHERE ps.game_id = (
                                       SELECT MAX(game_id) 
-                                      FROM player_stats
-                                   )'))
+                                      FROM player_stats)'))
                  })
                  last_round <- reactive({
                   dbGetQuery(con, 
@@ -52,10 +55,12 @@ restart_game_server = function(id) {
                  })
                  
                  input_list <- reactive({
-                  missing_player_summary() %>%
-                     select(player_name, team) %>%
+                   
+                    missing_player_summary() %>%
+                     select(player_name, team, row) %>%
+                     complete(row = 1:4, team = c('A', 'B'), fill = list(player_name = '')) %>%
                      group_by(team) %>%
-                     mutate(player_input = str_c("name_", team, row_number())) %>%
+                     mutate(player_input = str_c("name_", team, row)) %>%
                      ungroup() %>%
                      select(player_input, player_name) %>%
                      deframe()
