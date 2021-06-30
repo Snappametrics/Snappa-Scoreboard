@@ -415,7 +415,6 @@ server <- function(input, output, session) {
     
     
     if(input$start_game) {
-      browser()
       sidebarMenu(
         menuItem("Scoreboard", 
                  tabName = "scoreboard", 
@@ -578,7 +577,7 @@ server <- function(input, output, session) {
   active_player_inputs = reactive({
     list("A1" = player_A1(), "A2" = player_A2(), "A3" = player_A3(), "A4" = player_A4(), 
          "B1" = player_B1(), "B2" = player_B2(), "B3" = player_B3(), "B4" = player_B4()) %>% 
-      discard(is_null)
+      discard(identical, character(0))
   })
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
@@ -2028,37 +2027,7 @@ observeEvent(input$game_summary, {
 # Restart a game after indicating you would like to do so
   observeEvent(restart_game_outputs()$restart_game(), {
     req(restart_game_outputs()$restart_game() == T)
-    #Look at the number of lost players on each team to be certain of the values
-    # that you wan
-
-    # Check to see if you should be signaling to the app to care about extra
-    # players
-
-     if (restart_game_outputs()$size_A == 3){
-      shinyjs::click("extra_player_A3")
-    } else if (restart_game_outputs()$size_A == 4){
-      shinyjs::click("extra_player_A3")
-      delay(100, shinyjs::click("extra_player_A4"))
-    } else {
-      invisible()
-    }
-
-    if (restart_game_outputs()$size_B == 3){
-      shinyjs::click("extra_player_B3")
-    } else if (restart_game_outputs()$size_B == 4){
-      shinyjs::click("extra_player_B3")
-      delay(100, shinyjs::click("extra_player_B4"))
-    } else {
-      invisible()
-    }
-
-  #   delay(1000, iwalk(restart_game_outputs()$inputs, function(name, id){
-  #     updateSelectizeInput(session, inputId = id, selected = name)
-  #   })
-  # )
-
-
-    #delay(2000, shinyjs::click("start_game"))
+  shinyjs::click("start_game")
 
 }, ignoreNULL = T,
    ignoreInit = T
@@ -2299,8 +2268,7 @@ observeEvent(input$game_summary, {
   #   - Add A3 text input
   #   - Remove the add new player action button
   observeEvent(input$extra_player_A3, {
-    browser()
-    # Set input want to true
+  # Set input want to true
     vals$want_A3 = T
     choices = dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
       anti_join(., snappaneers(), by = "player_name") %>% 
@@ -2343,12 +2311,18 @@ observeEvent(input$game_summary, {
   observeEvent(input$extra_player_A4, {
     # Set input want to true
     vals$want_A4 = T
-    
+    choices = dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
+      anti_join(., snappaneers(), by = "player_name") %>% 
+      pull(player_name)
     # Get UI inputs for extra player button
-    vals <- paste0("#",getInputs("extra_player_A4"))
+    val <- paste0("#",getInputs("extra_player_A4"))
     
-    add_player_input("start", vals, "A", 4, current_choices(), session)
-    
+    insertUI(selector = val,
+             where = "afterEnd",
+             ui = tagList(player_selectize_UI('A4', 'Player 4', choices),
+             )
+    )
+    removeUI(val)
   })
   
   # Remove A4
@@ -2356,7 +2330,6 @@ observeEvent(input$game_summary, {
   #   - Remove A4 player name input
   observeEvent(input$remove_A4, {
     remove_p4_input("start", "A", session)
-    
     vals$want_A4 = F
     
   })  
@@ -2366,14 +2339,23 @@ observeEvent(input$game_summary, {
   #   - Add B3 text input
   #   - Remove the add new player action button
   observeEvent(input$extra_player_B3, {
-    
     # Set want check to true
     vals$want_B3 = T
-    
     # Get inputs for add player button
-    vals <- paste0("#",getInputs("extra_player_B3"))
+    choices = dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
+      anti_join(., snappaneers(), by = "player_name") %>% 
+      pull(player_name)
+    val <- paste0("#",getInputs("extra_player_B3"))
     
-    add_player_input("start", vals, "B", 3, current_choices(), session)
+    
+    insertUI(selector = val,
+             where = "afterEnd",
+             ui = tagList(player_selectize_UI('B3', 'Player 3', choices),
+                          actionBttn('extra_player_B4', 
+                                     label = "+ Add Player", style = "unite", color = "danger")
+             )
+    )
+    removeUI(val)
   })
 
   # Remove B3
@@ -2397,11 +2379,19 @@ observeEvent(input$game_summary, {
   observeEvent(input$extra_player_B4, {
     # Set want check to true
     vals$want_B4 = T
-    
+    choices = dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
+      anti_join(., snappaneers(), by = "player_name") %>% 
+      pull(player_name)
     # Get add player button inputs
-    vals <- paste0("#",getInputs("extra_player_B4"))
+    val <- paste0("#",getInputs("extra_player_B4"))
     
-    add_player_input("start", vals, "B", 4, current_choices(), session)
+    
+    insertUI(selector = val,
+             where = "afterEnd",
+             ui = tagList(player_selectize_UI('B4', 'Player 4', choices),
+             )
+    )
+    removeUI(val)
   })
   
 
