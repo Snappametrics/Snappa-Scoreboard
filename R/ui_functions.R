@@ -91,31 +91,70 @@ score_check <- function(team, snappaneers, round) {
                          size = "lg"
                        )
                        ),
-                column(4, 
-                       wellPanel(
-                         align = "center",
-                         h3("Anything cool happen?", style = "font-weight:700; font-size: 2rem;"),
-                         # Was it a paddle?
-                         awesomeCheckbox(
-                           inputId = "paddle", 
-                           label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
-                           status = "warning"
-                         ),
-                         # Was it a clink?
-                         awesomeCheckbox(
-                           inputId = "clink", 
-                           label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
-                           status = "warning"
-                         ),
-                         # feet?
-                         awesomeCheckbox(
-                           inputId = "foot", 
-                           label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
-                           status = "warning"
-                         )
+                # Assist col
+                column(3, align = "right", class = "assist-col-right",
+                       h3("Assist(s)"),
+                       dropdownButton(label = opponents[1], circle = F, 
+                                      icon = icon("fa-hand-paper"),
+                                      checkboxGroupButtons(
+                                        inputId = "opponents_assist1",
+                                        # label = "Assist(s)",
+                                        choices = c("Paddle", "Foot", "Head"),
+                                        checkIcon = list(
+                                          yes = tags$i(class = "fa fa-check-square", 
+                                                       style = paste("color:", opponent_colour)),
+                                          no = tags$i(class = "fa fa-square-o")
+                                        )
+                                      )
+                       ),
+                       dropdownButton(label = opponents[2], circle = F, 
+                                      icon = icon("fa-plus"),
+                                      checkboxGroupButtons(
+                                        inputId = "opponents_assist2",
+                                        # label = "Assist(s)",
+                                        choices = c("Paddle", "Foot", "Head"),
+                                        checkIcon = list(
+                                          yes = tags$i(class = "fa fa-check-square", 
+                                                       style = paste("color:", opponent_colour)),
+                                          no = tags$i(class = "fa fa-square-o")
+                                        )
+                                      ) %>% tagAppendAttributes(class = "assist-btn")
                        )
-                       
-                       )
+                ),
+                # Anything cool happen?
+                
+              ),
+              fluidRow(
+                wellPanel(
+                  align = "center", class = "cool-well",
+                  fluidRow(class = "cool-row",
+                    h3("Anything cool happen?", class = "cool-header", style = "font-weight:700; font-size: 2rem;"), 
+                    # Was it a paddle?
+                    awesomeCheckbox(
+                      inputId = "paddle", 
+                      label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
+                      status = "warning"
+                    ),
+                    # Was it a clink?
+                    awesomeCheckbox(
+                      inputId = "clink", 
+                      label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
+                      status = "warning"
+                    ),
+                    # feet?
+                    awesomeCheckbox(
+                      inputId = "foot", 
+                      label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
+                      status = "warning"
+                    ),
+                    # feet?
+                    awesomeCheckbox(
+                      inputId = "head", 
+                      label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-user" style = "color:', team_colour, ';"></i>  Header?'))),#"Was it a clink?",
+                      status = "warning"
+                    )
+                  )
+                )
               )
               ,
               
