@@ -659,8 +659,6 @@ server <- function(input, output, session) {
   player_B2 <- reactive({
     player_selectize_server('B2', 
       reactive({ 
-        if (restart_game_outputs()$restart_game()){
-        }
         restart_game_outputs()$restart_game() }),
       reactive({ restart_game_outputs()$inputs[['name_B2']]}))
     })
