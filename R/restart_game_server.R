@@ -90,7 +90,7 @@ restart_game_server = function(id) {
                 output$summary_table_A <- renderReactable({
                   missing_player_summary() %>%
                     filter(team == 'A') %>%
-                    select(-team) %>%
+                    select(-team, row) %>%
                     arrange(desc(points)) %>%
                     reactable(
                               highlight = T,
@@ -115,7 +115,7 @@ restart_game_server = function(id) {
                 output$summary_table_B <- renderReactable({
                    missing_player_summary() %>%
                     filter(team == 'B') %>%
-                    select(-team) %>%
+                    select(-team, row) %>%
                     arrange(desc(points)) %>%
                     reactable(
                               highlight = T,
