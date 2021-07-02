@@ -19,7 +19,7 @@ player_selectize_server = function(id, restart_input) {
                    # the overall reactive with req(), then you would need
                    # to make sure that the UI is generated before updating the 
                    # input. I want to avoid that with this if_else
-                   if_else(coalesce(c(input$player_name, ""))[1] != '',
+                   if_else(coalesce(input$player_name, "") != "",
                            # It's not going to seem like you need to repeat the coalesce
                            # due to the fact that we check for it above. However, if the 
                            # type of this input is null, then it expects restart_input()
@@ -27,7 +27,7 @@ player_selectize_server = function(id, restart_input) {
                            
                            # This subscript is necessary because BOTH elements are returned 
                            # if the input is not null
-                           coalesce(c(input$player_name, ""))[1],
+                           coalesce(input$player_name, ""),
                            restart_input())
                  })
                 return(player_name())
