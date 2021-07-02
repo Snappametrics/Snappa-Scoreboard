@@ -1660,7 +1660,7 @@ observe({
                               FROM scores
                               WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
                               GROUP BY game_id, scoring_team")
-  ) %>% collect()
+  )
   scores = tibble(team = c('A', 'B'))
   scores = scores %>% 
     left_join(db_scores, by = "team") %>%

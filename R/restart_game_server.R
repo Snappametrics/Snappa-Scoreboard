@@ -53,7 +53,7 @@ restart_game_server = function(id) {
                                   FROM game_stats 
                                   WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
                                   AND game_complete IS FALSE;')
-                              ) %>% collect() %>%
+                              ) %>% 
                      pull(last_round)
                  })
                  
