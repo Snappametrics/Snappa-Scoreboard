@@ -583,7 +583,7 @@ players 3 and 4 */
 .cool-well {
   padding: 0vh 2vh;
   margin: 1vh 0vh;
-  width: 95% !important;
+  width: 50% !important;
 }
 
 .cool-row {
@@ -592,12 +592,19 @@ players 3 and 4 */
 }
 
 .cool-header {
+  width: 100%;
   white-space: nowrap;
   margin-left: 15px;
+  padding: 1vh;
+  text-align: center;
 }
 
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
-  margin-left: 8px;
+  margin-left: 15px;
+}
+
+.check-btn-icon-yes, .check-btn-icon-no {
+  margin-right: 5px;
 }
 
 /* Controls for text shading on wells */
