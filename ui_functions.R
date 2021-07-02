@@ -275,12 +275,14 @@ team_input_ui = function(team, player_choices){
            tags$div( id = div_selector,
                 class = 'player_input_forms',
                 # Player 1
-                player_selectize_UI(player_ids[1], 'Player 1', player_choices),
+                # player_selectize_UI(player_ids[1], 'Player 1', player_choices),
                  # Player 2
-                player_selectize_UI(player_ids[2], 'Player 2', player_choices),
-                # Add Player 3 button
-                actionBttn(paste0("extra_player_", team, "3"), 
-                           label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
+                # player_selectize_UI(player_ids[2], 'Player 2', player_choices),
+                radioGroupButtons(str_c("team_", team, "_size"),
+                                  label = "How many players?",
+                                  choices = 2:4,
+                                  size = "lg"),
+                uiOutput(str_c("team_", team, "_input")), 
                 
                 # CSS: Increase font size, change color to white, add top and bottom margins
                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
