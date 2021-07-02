@@ -262,7 +262,7 @@ team_input_ui = function(team, player_choices){
   well_selector = str_c('input_well_', team)
   div_selector = str_c('input_forms_', team)
   class_selector = paste0('input_well well_', team)
-  player_namespaces = str_c(team, 1:2)
+  player_ids = str_c(team, 1:2)
 
   column(4, align = "center",
          
