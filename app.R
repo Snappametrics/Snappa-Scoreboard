@@ -1669,8 +1669,7 @@ observe({
   
   # Discard that game if it's 0-0 and continue on with business as usual, else
   # allow players to restart
-  if (pull(scores[scores$team == 'A',], points) == 0 & 
-      pull(scores[scores$team == 'B',], points) == 0){
+  if (sum(scores$points) < 1){
     delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
     dbExecute(con, delete_query)
   } else {
