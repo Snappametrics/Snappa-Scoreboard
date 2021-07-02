@@ -282,7 +282,7 @@ team_input_ui = function(team, player_choices){
                                   label = "How many players?",
                                   choices = 2:4,
                                   size = "lg"),
-                uiOutput(str_c("team_", team, "_input")), 
+                uiOutput(str_c("team_", team, "_input"), class = "player-inputs"), 
                 
                 # CSS: Increase font size, change color to white, add top and bottom margins
                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
