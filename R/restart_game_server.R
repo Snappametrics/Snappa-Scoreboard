@@ -20,11 +20,12 @@ restart_game_server = function(id) {
                    # MARK: may be able to leave out the alias and avoid the need to pull
                    #      but it might just change the colname to max or something
                    # MARK: don't need collect after dbGetQuery
-                    dbGetQuery(con, sql('SELECT MAX(game_id) FROM player_stats'))  %>%
-                     pull(max)
+                    pull(dbGetQuery(con, sql('SELECT MAX(ps.game_id) FROM player_stats ps JOIN game_stats gs USING (game_id) WHERE game_complete IS FALSE')))
+                     
                  })
                  
                  restart_game <- reactiveVal({F})
+                 
                  missing_player_summary = reactive({
                    dbGetQuery(con,
                               sql('SELECT
@@ -47,14 +48,14 @@ restart_game_server = function(id) {
                                       FROM player_stats)
                                     AND game_stats.game_complete IS FALSE'))
                  })
+                 
                  last_round <- reactive({
-                  dbGetQuery(con, 
+                  pull(dbGetQuery(con, 
                               sql('SELECT last_round 
                                   FROM game_stats 
                                   WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
                                   AND game_complete IS FALSE;')
-                              ) %>% 
-                     pull(last_round)
+                              ))
                  })
                  
                  input_list <- reactive({
