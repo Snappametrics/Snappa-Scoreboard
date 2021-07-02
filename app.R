@@ -1685,7 +1685,7 @@ observe({
 
   
   observeEvent(input$switch_sides, {
-    
+    # browser()
     vals$switch_counter = vals$switch_counter+1
     
     switch_is_even = (vals$switch_counter %% 2 == 0)
@@ -1773,7 +1773,6 @@ observe({
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
-    browser()
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
@@ -1928,6 +1927,7 @@ observe({
                    type = "info",
                    text = HTML(str_c("Change places!")), html = T)
 
+ 
     shinyjs::click("switch_sides")
     
     # In the event that there was a sink which caused this, also popup the sink menu
@@ -1982,7 +1982,6 @@ game_summary = reactive({
 
 
 observeEvent(input$game_summary, {
-  browser()
   game_summary_dialog(game_summary()$df, round_num(), 
                  game_summary()$subtitle_a, game_summary()$subtitle_b)
   
@@ -3135,6 +3134,7 @@ observeEvent(input$game_summary, {
                 impossibles = sum(impossibles),
                 paddle_points = sum(paddle_points),
                 clink_points = sum(clink_points),
+                last_round = round_num(),
                 game_complete = T)
     } else {
       game_stats = vals$player_stats_db %>% 
@@ -3148,6 +3148,7 @@ observeEvent(input$game_summary, {
                   impossibles = sum(impossibles),
                   paddle_points = sum(paddle_points),
                   clink_points = sum(clink_points),
+                  last_round = round_num(),
                   game_complete = F)
     }
     # This uses select because the column names were no longer matching the DB ones after joining

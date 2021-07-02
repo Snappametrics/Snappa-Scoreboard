@@ -351,7 +351,7 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   well_panel_style = "margin-top: 2vh; padding-top: 2vh; padding-bottom: 2vh; min-height: 70vh; opacity: 0.92; background:"
   h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
   
-
+  
   div(id = "ScoreboardUI", 
            
            fluidRow(
