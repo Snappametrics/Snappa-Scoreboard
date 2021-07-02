@@ -546,17 +546,23 @@ players 3 and 4 */
 }
 
 .assist-col, .assist-col-right {
-  display: flex;
-  text-overflow: ellipsis;
-  flex-direction: column;
-  min-height: 30vh;
-  justify-content: space-around;
-  align-items: flex-end;
-  align-self: flex-end;
+    display: flex;
+    text-overflow: ellipsis;
+    flex-direction: column;
+    min-height: 35vh;
+    justify-content: space-around;
+    align-items: flex-end;
+    align-self: flex-start;
+    background-color: #e26a6a;
+    margin: 1vh 5vh;
+    padding: 2vh 3vh;
+    border-radius: 8px;
+  color: #fafaf9;
 }
 
 .assist-col-right { 
   align-items: flex-start;
+  background-color: #2574a9;
 }
 
 .assist-col-right > .dropdown > .dropdown-menu {
