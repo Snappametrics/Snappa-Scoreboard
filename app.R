@@ -1660,26 +1660,23 @@ observe({
                               FROM scores
                               WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
                               GROUP BY game_id, scoring_team")
-  ) %>% collect()
+  )
   scores = tibble(team = c('A', 'B'))
   scores = scores %>% 
-    left_join(db_scores) %>%
+    left_join(db_scores, by = "team") %>%
     replace_na(list(points = 0)) %>%
     mutate(points = as.integer(points))
   
   # Discard that game if it's 0-0 and continue on with business as usual, else
   # allow players to restart
-  if (pull(scores[scores$team == 'A',], points) == 0 & 
-      pull(scores[scores$team == 'B',], points) == 0){
+  if (sum(scores$points) < 1){
     delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
     dbExecute(con, delete_query)
   } else {
     
   showModal(restart_game_UI('restart',
-                            # MARK: can you just index points?
-                            # e.g. scores[scores$team == 'A', 'points']
-                  scores[scores$team == 'A',] %>% pull(points), 
-                  scores[scores$team == 'B',] %>% pull(points))
+                  scores[scores$team == 'A', "points"], 
+                  scores[scores$team == 'B', "points"])
   )
   }
 })
@@ -1688,7 +1685,7 @@ observe({
 
   
   observeEvent(input$switch_sides, {
-    
+    # browser()
     vals$switch_counter = vals$switch_counter+1
     
     switch_is_even = (vals$switch_counter %% 2 == 0)
@@ -1776,7 +1773,6 @@ observe({
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
-    browser()
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
@@ -1931,6 +1927,7 @@ observe({
                    type = "info",
                    text = HTML(str_c("Change places!")), html = T)
 
+ 
     shinyjs::click("switch_sides")
     
     # In the event that there was a sink which caused this, also popup the sink menu
@@ -3137,6 +3134,7 @@ observeEvent(input$game_summary, {
                 impossibles = sum(impossibles),
                 paddle_points = sum(paddle_points),
                 clink_points = sum(clink_points),
+                last_round = round_num(),
                 game_complete = T)
     } else {
       game_stats = vals$player_stats_db %>% 
@@ -3150,6 +3148,7 @@ observeEvent(input$game_summary, {
                   impossibles = sum(impossibles),
                   paddle_points = sum(paddle_points),
                   clink_points = sum(clink_points),
+                  last_round = round_num(),
                   game_complete = F)
     }
     # This uses select because the column names were no longer matching the DB ones after joining
