@@ -1663,7 +1663,7 @@ observe({
   ) %>% collect()
   scores = tibble(team = c('A', 'B'))
   scores = scores %>% 
-    left_join(db_scores) %>%
+    left_join(db_scores, by = "team") %>%
     replace_na(list(points = 0)) %>%
     mutate(points = as.integer(points))
   
