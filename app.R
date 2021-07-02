@@ -582,7 +582,6 @@ server <- function(input, output, session) {
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
   snappaneers = reactive({
-    
     tibble(
       # Team pulls the first letter from their input name
       team = str_extract(names(active_player_inputs()), ".{1}"),
@@ -616,44 +615,35 @@ server <- function(input, output, session) {
 
 ## Player Input Reactives --------------------------------------------------
   player_A1 <- reactive({
-    player_selectize_server('A1', 
-      reactive({restart_game_outputs()$restart_game() }),
+    player_selectize_server('A1',       
       reactive({restart_game_outputs()$inputs[['name_A1']]}))
     })
   player_A2 <- reactive({
     player_selectize_server('A2', 
-      reactive({ restart_game_outputs()$restart_game() }),
       reactive({ restart_game_outputs()$inputs[['name_A2']]}))
     })
   player_A3 <- reactive({
     player_selectize_server('A3', 
-      reactive({ restart_game_outputs()$restart_game() }),
       reactive({ restart_game_outputs()$inputs[['name_A3']]}))
     })
   player_A4 <- reactive({
     player_selectize_server('A4', 
-      reactive({ restart_game_outputs()$restart_game() }),
       reactive({restart_game_outputs()$inputs[['name_A4']]})
     )
     })
   player_B1 <- reactive({
     player_selectize_server('B1', 
-      reactive({ restart_game_outputs()$restart_game() }),
       reactive({ restart_game_outputs()$inputs[['name_B1']]}))
     })
   player_B2 <- reactive({
     player_selectize_server('B2', 
-      reactive({ restart_game_outputs()$restart_game() }),
       reactive({ restart_game_outputs()$inputs[['name_B2']]}))
     })
   player_B3 <- reactive({
     player_selectize_server('B3', 
-      reactive({ restart_game_outputs()$restart_game() }),
-      reactive({
-          restart_game_outputs()$inputs[['name_B3']]}))})
+      reactive({ restart_game_outputs()$inputs[['name_B3']]}))})
   player_B4 <- reactive({
     player_selectize_server('B4', 
-      reactive({ restart_game_outputs()$restart_game() }),
       reactive({ restart_game_outputs()$inputs[['name_B4']]}))})
   
 # Outputs -----------------------------------------------------------------
@@ -2268,6 +2258,7 @@ observeEvent(input$game_summary, {
   #   - Add A3 text input
   #   - Remove the add new player action button
   observeEvent(input$extra_player_A3, {
+    #browser()
   # Set input want to true
     vals$want_A3 = T
     choices = dbGetQuery(con, "SELECT player_id, player_name FROM thirstiest_players") %>% 
