@@ -36,7 +36,7 @@ player_selectize_server = function(id, restart_input) {
                            
                            # This subscript is necessary because BOTH elements are returned 
                            # if the input is not null
-                           ccoalesce(c(input$player_name, ""))[1],
+                           coalesce(c(input$player_name, ""))[1],
                            restart_input())
                  })
                 return(player_name())
