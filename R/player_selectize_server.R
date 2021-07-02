@@ -15,12 +15,19 @@ player_selectize_server = function(id, restart_input) {
   moduleServer(id,
                function(input, output, session) {
                  player_name <- reactive({
-                   if_else(coalesce(input$player_name) != '', 
-                           # If you were to instead pass this as a requirement for 
-                           # the overall reactive with req(), then you would need
-                           # to make sure that the UI is generated before updating the 
-                           # input. I want to avoid that with this if_else
-                           coalesce(input$player_name),
+                   # If you were to instead pass this as a requirement for 
+                   # the overall reactive with req(), then you would need
+                   # to make sure that the UI is generated before updating the 
+                   # input. I want to avoid that with this if_else
+                   if_else(coalesce(c(input$player_name, ""))[1] != '',
+                           # It's not going to seem like you need to repeat the coalesce
+                           # due to the fact that we check for it above. However, if the 
+                           # type of this input is null, then it expects restart_input()
+                           # to be null as well. Which it never is.
+                           
+                           # This subscript is necessary because BOTH elements are returned 
+                           # if the input is not null
+                           coalesce(c(input$player_name, ""))[1],
                            restart_input())
                  })
                 return(player_name())
