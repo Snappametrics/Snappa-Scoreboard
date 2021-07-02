@@ -261,6 +261,7 @@ label.control-label[for='score'] {
 
 .selectize-dropdown-content {
     font-size: 3rem;
+    line-height: 1.25;
 }
 
 .selectize-dropdown {
@@ -526,6 +527,10 @@ players 3 and 4 */
 
 .selectize-input {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
+}
+
+.player_selectize_input {
+  width: 100%;
 }
 
 .input_close_and_name {
