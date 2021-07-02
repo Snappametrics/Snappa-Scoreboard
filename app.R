@@ -1724,9 +1724,13 @@ observe({
     
     validate(
       need(player_A1() != "", label = "Player A1"),
-      need(player_A2() != "", label = "Player A2"), 
+      need(player_A2() != "", label = "Player A2"),
+      need((player_A3() != "" | !vals$want_A3), label = 'Player A3'),
+      need((player_A4() != "" | !vals$want_A4), label = 'Player A4'),
       need(player_B1() != "", label = "Player B1"), 
-      need(player_B2() != "", label = "Player B2")
+      need(player_B2() != "", label = "Player B2"),
+      need((player_B3() != "" | !vals$want_B3), label = 'Player B3'),
+      need((player_B4() != "" | !vals$want_B4), label = 'Player B4')
       )
     
     #Record the players that you need to be looking for
@@ -1772,7 +1776,7 @@ observe({
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
-    
+    browser()
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
@@ -1981,7 +1985,7 @@ game_summary = reactive({
 
 
 observeEvent(input$game_summary, {
-
+  browser()
   game_summary_dialog(game_summary()$df, round_num(), 
                  game_summary()$subtitle_a, game_summary()$subtitle_b)
   
