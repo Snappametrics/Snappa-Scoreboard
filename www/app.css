@@ -816,7 +816,7 @@ input[type=radio]{
     border-radius: 10px;
     cursor: pointer;
     transition: all 200ms ease-in-out;
-    background: var(--gray-2);
+    background: #fafaf9;
     border: 1px solid var(--gray-4);
     display: flex;
     align-items: center;
