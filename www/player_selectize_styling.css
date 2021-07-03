@@ -15,3 +15,22 @@
 .player-selectize-input > .form-group > div > .selectize-control > .selectize-input { 
    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
+
+.team-size-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* This should be moved to the module that handles the entire start game screen when we make it */
+ .team-size-selector-title {
+  font-size: 2rem;
+  color: white;
+  text-align: center;
+ }
+ 
+ .player_input_forms > .shiny-input-radiogroup {
+   position: relative;
+   margin: -2rem 0 0 0;
+ }
+   
