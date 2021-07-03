@@ -1,0 +1,12 @@
+.player-selectize-input {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.player-selectize-title {
+  font-size: 5rem;
+  color: white;
+  text-align: center;
+}
