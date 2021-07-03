@@ -271,18 +271,19 @@ team_input_ui = function(team, player_choices){
            id = well_selector,
            style = paste("background:", team_colour),
            # Header
-           h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
+           h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center; margin-bottom:10%;"),
            tags$div( id = div_selector,
                 class = 'player_input_forms',
                 # Player 1
                 # player_selectize_UI(player_ids[1], 'Player 1', player_choices),
                  # Player 2
                 # player_selectize_UI(player_ids[2], 'Player 2', player_choices),
+                uiOutput(str_c("team_", team, "_input"), class = "player-inputs"),
+                h3(class = 'team-size-selector-title', 'How many players?'),
                 radioGroupButtons(str_c("team_", team, "_size"),
-                                  label = "How many players?",
+                                  label = "",
                                   choices = 2:4,
                                   size = "lg"),
-                uiOutput(str_c("team_", team, "_input"), class = "player-inputs"), 
                 
                 # CSS: Increase font size, change color to white, add top and bottom margins
                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
