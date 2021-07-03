@@ -33,4 +33,23 @@
    position: relative;
    margin: -2rem 0 0 0;
  }
+ 
+ 
+ #team_A_size > div > div > .radiobtn.active {
+   color: white;
+   background-color: red;
+ }
    
+  #team_A_size  >div > div >  .radiobtn {
+    color: red;
+    background-color:white;
+  }
+  
+  #team_B_size  >div > div >  .radiobtn.active{
+    color:white;
+    background-color: blue;
+  }
+  #team_B_size  >div > div >  .radiobtn {
+    color: blue;
+    background-color: white;
+  }
