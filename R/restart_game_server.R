@@ -26,8 +26,14 @@ restart_game_server = function(id) {
                  
                  restart_game <- reactiveVal({F})
                  
-                 missing_player_summary = reactive({
-                   dbGetQuery(con,
+                 missing_player_summary = reactivePoll(1000, session,
+                    checkFunc = function() {dbGetQuery(con,
+                                                       sql('SELECT MAX(game_id) 
+                                                           FROM game_stats 
+                                                           WHERE game_complete IS FALSE'))
+                      },
+                    valueFunc = function() {
+                      dbGetQuery(con,
                               sql('SELECT
                                       players.player_name,
                                       ps.team,
@@ -155,6 +161,7 @@ restart_game_server = function(id) {
                  
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
+                   req(!is.na(missing_game_id()))
                    dbExecute(con, paste0("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";"))
                  })
                  
