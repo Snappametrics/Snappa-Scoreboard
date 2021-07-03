@@ -4,9 +4,14 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  
 }
 .player-selectize-title {
   font-size: 5rem;
   color: white;
   text-align: center;
+}
+
+.player-selectize-input > .form-group > div > .selectize-control > .selectize-input { 
+   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
