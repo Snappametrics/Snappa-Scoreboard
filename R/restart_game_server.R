@@ -25,6 +25,8 @@ restart_game_server = function(id) {
                  
                  restart_game <- reactiveVal({F})
                  
+                 # This is a reactivePoll because, for some reason, deleting a game does not cause this
+                 # to update even though it really, really should. 
                  missing_player_summary = reactivePoll(1000, session,
                     checkFunc = function() {dbGetQuery(con,
                                                        sql('SELECT MAX(game_id) 
@@ -160,6 +162,11 @@ restart_game_server = function(id) {
                  
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
+                   # This is not my preferred solution, but it covers off some annoying behavior where the 
+                   # deletion of the game -> cascade -> updating missing_game_id() to NA, which causes
+                   # the app to crash because, for some reason, the observer runs again. Why the deletion of
+                   # the game causes missing_game_id() to update, but NOT input_list() for some reason, I'm
+                   # sure that I don't know. If it did, then input_list() would not need to be a reactivePoll
                    req(!is.na(missing_game_id()))
                    dbExecute(con, paste0("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";"))
                  })
