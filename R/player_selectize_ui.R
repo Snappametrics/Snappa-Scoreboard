@@ -6,9 +6,10 @@
 
 player_selectize_UI = function(id, header, player_choices) {
   ns <- NS(id)
-  tags$div(class = 'player_selectize_input',
-  selectizeInput(ns('player_name'), header, c(`Player Name`='', player_choices),  
+  tags$div(class = 'player-selectize-input',
+           h2(class = 'player-selectize-title', header),
+  selectizeInput(ns('player_name'), '', c(`Player Name`='', player_choices),  
                options = list(create = TRUE, hideSelected=T), width = "125%"),
-  tags$style(paste0('.player_selectize_input', " {margin-left:auto; margin-right:auto; position: relative;}"))
+  tags$link(rel = 'stylesheet', type = 'text/css', href = 'player_selectize_styling.css')
   )
 }

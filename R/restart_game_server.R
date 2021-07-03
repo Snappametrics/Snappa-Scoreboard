@@ -24,15 +24,12 @@ restart_game_server = function(id) {
                  })
                  
                  restart_game <- reactiveVal({F})
+                 check_function_return <- reactiveVal({F})
                  
                  # This is a reactivePoll because, for some reason, deleting a game does not cause this
                  # to update even though it really, really should. 
                  missing_player_summary = reactivePoll(1000, session,
-                    checkFunc = function() {dbGetQuery(con,
-                                                       sql('SELECT MAX(game_id) 
-                                                           FROM game_stats 
-                                                           WHERE game_complete IS FALSE'))
-                      },
+                    checkFunc = function() {check_function_return()},
                     valueFunc = function() {
                       dbGetQuery(con,
                               sql('SELECT
@@ -168,6 +165,9 @@ restart_game_server = function(id) {
                    # the game causes missing_game_id() to update, but NOT input_list() for some reason, I'm
                    # sure that I don't know. If it did, then input_list() would not need to be a reactivePoll
                    req(!is.na(missing_game_id()))
+                   # This will tell the reactivePoll to trigger, which is much cheaper than querying the server
+                   # for the max game id from game stats, both computationally and economically. 
+                   check_function_return(T)
                    dbExecute(con, paste0("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";"))
                  })
                  
