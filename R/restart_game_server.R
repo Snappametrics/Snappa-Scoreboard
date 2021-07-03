@@ -7,7 +7,6 @@
 #'  \describe{
 #'       \item{ restart_game } {Passes a boolean to tell the app to restart using past game info}
 #'       \item{inputs} {A tibble with the name of the player and the inputID that will contain their name}
-#'       \item{size_A, size_B} {Sizes of each team to figure out whether or not to click the buttons to expand team sizes}
 #'  }
 
 
@@ -166,9 +165,7 @@ restart_game_server = function(id) {
                  })
                  
                  return(list('restart_game' = restart_game,
-                             'inputs' = input_list(),
-                             'size_A' = team_sizes()[['size_A']],
-                             'size_B' = team_sizes()[['size_B']]))
+                             'inputs' = input_list()))
                })
                  
 }
