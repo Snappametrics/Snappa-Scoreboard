@@ -1751,16 +1751,27 @@ observe({
            player_B2() == "")){
       shinyjs::disable("start_game")
     }
-    
     validate(
       need(player_A1() != "", label = "Player A1"),
       need(player_A2() != "", label = "Player A2"),
-      need((player_A3() != "" | !vals$want_A3), label = 'Player A3'),
-      need((player_A4() != "" | !vals$want_A4), label = 'Player A4'),
+      need({if (as.integer(input$team_A_size) > 2) {
+          player_A3() != ""
+        } else player_A3() == ""}, label = 'Player A3'
+      ),
+      need({if (as.integer(input$team_A_size) > 3) {
+          player_A4() != ""
+        } else player_A4() == ""}, label = 'Player A4'
+      ),
       need(player_B1() != "", label = "Player B1"), 
       need(player_B2() != "", label = "Player B2"),
-      need((player_B3() != "" | !vals$want_B3), label = 'Player B3'),
-      need((player_B4() != "" | !vals$want_B4), label = 'Player B4')
+      need({if (as.integer(input$team_B_size) > 2) {
+        player_B3() != ""
+      } else player_B3() == ""}, label = 'Player B3'
+      ),
+      need({if (as.integer(input$team_B_size) > 3) {
+        player_B4() != ""
+      } else player_B4() == ""}, label = 'Player B4'
+      )   
       )
     
     #Record the players that you need to be looking for
@@ -2015,6 +2026,7 @@ game_summary = reactive({
 
 
 observeEvent(input$game_summary, {
+  browser()
   game_summary_dialog(game_summary()$df, round_num(), 
                  game_summary()$subtitle_a, game_summary()$subtitle_b)
   
