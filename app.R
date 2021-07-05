@@ -1734,8 +1734,6 @@ observe({
     
 
   })
-  
-  
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
     # If one of the first two players on each team
