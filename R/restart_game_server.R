@@ -148,11 +148,13 @@ restart_game_server = function(id) {
                              "</h1>"))
                 })
                  
+                # If player presses restart_game, remove modal and set restart_game to TRUE
                  observeEvent(input$restart_incomplete_game, {
                    removeModal()
                    restart_game(T)
                  })
                  
+                 # If player presses delete, remove modal and delete game
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
                    dbExecute(con, paste0("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";"))
