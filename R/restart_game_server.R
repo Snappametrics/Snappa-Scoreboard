@@ -7,7 +7,6 @@
 #'  \describe{
 #'       \item{ restart_game } {Passes a boolean to tell the app to restart using past game info}
 #'       \item{inputs} {A tibble with the name of the player and the inputID that will contain their name}
-#'       \item{size_A, size_B} {Sizes of each team to figure out whether or not to click the buttons to expand team sizes}
 #'  }
 
 
@@ -25,9 +24,14 @@ restart_game_server = function(id) {
                  })
                  
                  restart_game <- reactiveVal({F})
+                 check_function_return <- reactiveVal({F})
                  
-                 missing_player_summary = reactive({
-                   dbGetQuery(con,
+                 # This is a reactivePoll because, for some reason, deleting a game does not cause this
+                 # to update even though it really, really should. 
+                 missing_player_summary = reactivePoll(1000, session,
+                    checkFunc = function() {check_function_return()},
+                    valueFunc = function() {
+                      dbGetQuery(con,
                               sql('SELECT
                                       players.player_name,
                                       ps.team,
@@ -157,13 +161,20 @@ restart_game_server = function(id) {
                  # If player presses delete, remove modal and delete game
                  observeEvent(input$delete_incomplete_game, {
                    removeModal()
+                   # This is not my preferred solution, but it covers off some annoying behavior where the 
+                   # deletion of the game -> cascade -> updating missing_game_id() to NA, which causes
+                   # the app to crash because, for some reason, the observer runs again. Why the deletion of
+                   # the game causes missing_game_id() to update, but NOT input_list() for some reason, I'm
+                   # sure that I don't know. If it did, then input_list() would not need to be a reactivePoll
+                   req(!is.na(missing_game_id()))
+                   # This will tell the reactivePoll to trigger, which is much cheaper than querying the server
+                   # for the max game id from game stats, both computationally and economically. 
+                   check_function_return(T)
                    dbExecute(con, paste0("DELETE FROM game_stats WHERE game_id = ", missing_game_id(), ";"))
                  })
                  
                  return(list('restart_game' = restart_game,
-                             'inputs' = input_list(),
-                             'size_A' = team_sizes()[['size_A']],
-                             'size_B' = team_sizes()[['size_B']]))
+                             'inputs' = input_list()))
                })
                  
 }
