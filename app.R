@@ -2707,8 +2707,8 @@ observeEvent(input$resume_no, {
     
     showModal(
       score_check(
-        team = "B",, 
-        snappaneers = snappaneers() 
+        team = "B",
+        snappaneers = snappaneers(),
         # players = eligible_shooters,
         round = round_num()))
     
