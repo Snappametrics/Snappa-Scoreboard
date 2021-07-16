@@ -2582,13 +2582,10 @@ observeEvent(input$resume_no, {
   observeEvent(input$A_score_button, {
     vals$error_msg <- NULL
     
-    eligible_shooters = filter(snappaneers(), team == "A") %>% 
-      pull(player_name) %>% 
-      sample()
-    
+
     showModal(
       score_check(team = "A", 
-                  players = eligible_shooters,
+                  snappaneers = snappaneers(),
                   round = round_num()))
   })
   
@@ -2700,20 +2697,11 @@ observeEvent(input$resume_no, {
   observeEvent(input$B_score_button, {
     vals$error_msg <- NULL
     
-    eligible_shooters = filter(snappaneers(), team == "B") %>% 
-      pull(player_name) %>% 
-      sample()
-    
+
     showModal(
       score_check(
-<<<<<<< HEAD
-        team = "B",, 
+        team = "B",
         snappaneers = snappaneers(),
-        # players = eligible_shooters,
-=======
-        team = "B", 
-        players = eligible_shooters,
->>>>>>> master
         round = round_num()))
     
   })
