@@ -181,13 +181,31 @@ label.control-label[for='scorer'] {
     
 }
 
-label[for='paddle'], label[for='clink'], label[for='foot'] {
+label[for='paddle'], label[for='clink'], label[for='foot'], label[for='head'] {
     font-size: 2.25rem; 
     font-weight:inherit;
     
 }
 
+.awesome-checkbox label[for='paddle']::after, 
+  .awesome-checkbox label[for='clink']::after, 
+  .awesome-checkbox label[for='foot']::after, 
+  .awesome-checkbox label[for='head']::after {
+    font-size: 16px;
+    padding-top: 4px;
+    padding-left: 5px;
+  }
 
+.awesome-checkbox label[for='paddle']::before, 
+  .awesome-checkbox label[for='clink']::before, 
+  .awesome-checkbox label[for='foot']::before, 
+  .awesome-checkbox label[for='head']::before {
+    border: 1px solid #333;
+  }
+
+.assist-col-right > .dropdown > .dropdown-menu  {
+  left: -180px;
+}
 #ok_A, #ok_B {
     font-size: x-large;
 }
