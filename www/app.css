@@ -598,6 +598,7 @@ players 3 and 4 */
 .cool-row{
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .cool-well {
@@ -609,6 +610,10 @@ players 3 and 4 */
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
   margin-left: 15px;
   font-size: 3rem;
+}
+
+.shiny-input-radiogroup > #score {
+  width: max-content;
 }
 
 .check-btn-icon-yes, .check-btn-icon-no {
