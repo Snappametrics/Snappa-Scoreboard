@@ -321,3 +321,21 @@ cooldown_check = function(casualties, scores, current_round, casualty_to_check, 
 
   
 }
+
+format_assists = function(snappaneers, scoring_team, assist_inputs){
+  select(snappaneers, -shots) %>% 
+    arrange(team, player_id) %>% 
+    # Join in the assist inputs by recreating the input id
+    group_by(team) %>% 
+    mutate(side = if_else(team == scoring_team, "shooter", "opponent"),
+           input_num = row_number(),
+           input_name = str_c(side, "_assist", input_num)) %>% 
+    ungroup() %>% 
+    # Keep only the ids that exist and join in assist info
+    filter(input_name %in% names(assist_inputs)) %>% 
+    mutate(assist = map(assist_inputs[input_name], tolower)) %>% 
+    unnest(assist) %>% 
+    # Pivot wider to make a separate column for each type of assist
+    mutate(assist_val = T) %>% 
+    pivot_wider(id_cols = player_id, names_from = "assist", values_from = "assist_val", values_fill = F)
+}
