@@ -525,6 +525,7 @@ players 3 and 4 */
   display: flex;
   flex-direction: column;
   text-align: center;
+  margin-top: 2.5vh;
 }
 
 #round_value > h3 {
@@ -945,7 +946,7 @@ input[type=radio]{
     #round_num {
         font-size: 15rem;
         margin-top:0;
-        margin-bottom:0;
+        margin-bottom:2vh;
         line-height: 15rem;
     }
     
@@ -969,10 +970,10 @@ input[type=radio]{
     }
     
     #round_control_buttons {
-      height: 20vh;
+      height: 32vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
+      justify-content: space-between;
       align-items: center;
       
     }
