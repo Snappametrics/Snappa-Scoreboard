@@ -38,128 +38,128 @@ score_check <- function(team, snappaneers, round) {
               # Header
               h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>")),
                  style = "margin-bottom: 2vh;"),
-
+              
               fluidRow(style = "display:flex;",
-                # wellPanel(
-                  # Assist col
-                  column(3, align = "left", class = "assist-col",
-                         h3("Assist(s)"),
-                         dropdownButton(label = shooting_team_players[1], circle = F, size = "lg",
-                                        icon = icon("fa-fa-hand-paper"),
-                                        checkboxGroupButtons(
-                                          inputId = "shooters_assist1",
-                                          # label = "Assist(s)",
-                                          choices = c("Paddle", "Foot", "Head"),
-                                          checkIcon = list(
-                                            yes = tags$i(class = "fa fa-check-square", 
-                                                         style = paste("color:", team_colour)),
-                                            no = tags$i(class = "fa fa-square-o")
-                                          )
-                                        )
-                         ),
-                         dropdownButton(label = shooting_team_players[2], circle = F, size = "lg",
-                                        icon = icon("fa-fa-plus"),
-                                        checkboxGroupButtons(
-                                          inputId = "shooters_assist2",
-                                          # label = "Assist(s)",
-                                          choices = c("Paddle", "Foot", "Head"),
-                                          checkIcon = list(
-                                            yes = tags$i(class = "fa fa-check-square", 
-                                                         style = paste("color:", team_colour)),
-                                            no = tags$i(class = "fa fa-square-o")
-                                          )
-                                        )
-                         # )
-                  )
-                ),
-                column(6,
-                       # Who Scored?
-                       radioGroupButtons(
-                         inputId = "scorer",
-                         label = "Who scored?",
-                         choices = shooting_team_players,
-                         direction = "horizontal",
-                         individual = T,
-                         size = "lg",
-                         checkIcon = list(
-                           yes = tags$i(class = "fa fa-dice", 
-                                        style = paste("color:", team_colour)))
+                       # wellPanel(
+                       # Assist col
+                       column(3, align = "left", class = "assist-col",
+                              h3("Assist(s)"),
+                              dropdownButton(label = shooting_team_players[1], circle = F, size = "lg",
+                                             icon = icon("fa-fa-hand-paper"),
+                                             checkboxGroupButtons(
+                                               inputId = "shooters_assist1",
+                                               # label = "Assist(s)",
+                                               choices = c("Paddle", "Foot", "Head"),
+                                               checkIcon = list(
+                                                 yes = tags$i(class = "fa fa-check-square", 
+                                                              style = paste("color:", team_colour)),
+                                                 no = tags$i(class = "fa fa-square-o")
+                                               )
+                                             )
+                              ),
+                              dropdownButton(label = shooting_team_players[2], circle = F, size = "lg",
+                                             icon = icon("fa-fa-plus"),
+                                             checkboxGroupButtons(
+                                               inputId = "shooters_assist2",
+                                               # label = "Assist(s)",
+                                               choices = c("Paddle", "Foot", "Head"),
+                                               checkIcon = list(
+                                                 yes = tags$i(class = "fa fa-check-square", 
+                                                              style = paste("color:", team_colour)),
+                                                 no = tags$i(class = "fa fa-square-o")
+                                               )
+                                             )
+                                             # )
+                              )
                        ),
-                       # Number of points
-                       radioGroupButtons(
-                         inputId = "score",
-                         label = "Points",
-                         choices = c(1, 2, 3, 4, 5, 6, 7),
-                         size = "lg"
+                       column(6,
+                              # Who Scored?
+                              radioGroupButtons(
+                                inputId = "scorer",
+                                label = "Who scored?",
+                                choices = shooting_team_players,
+                                direction = "horizontal",
+                                individual = T,
+                                size = "lg",
+                                checkIcon = list(
+                                  yes = tags$i(class = "fa fa-dice", 
+                                               style = paste("color:", team_colour)))
+                              ),
+                              # Number of points
+                              radioGroupButtons(
+                                inputId = "score",
+                                label = "Points",
+                                choices = c(1, 2, 3, 4, 5, 6, 7),
+                                size = "lg"
+                              )
+                       ),
+                       # Assist col
+                       # wellPanel(
+                       column(3, align = "right", class = "assist-col-right",
+                              h3("Assist(s)"),
+                              dropdownButton(label = opponents[1], circle = F, 
+                                             icon = icon("fa-hand-paper"),
+                                             checkboxGroupButtons(
+                                               inputId = "opponents_assist1",
+                                               # label = "Assist(s)",
+                                               choices = c("Paddle", "Foot", "Head"),
+                                               checkIcon = list(
+                                                 yes = tags$i(class = "fa fa-check-square", 
+                                                              style = paste("color:", opponent_colour)),
+                                                 no = tags$i(class = "fa fa-square-o")
+                                               )
+                                             )
+                              ),
+                              dropdownButton(label = opponents[2], circle = F, 
+                                             icon = icon("fa-plus"),
+                                             checkboxGroupButtons(
+                                               inputId = "opponents_assist2",
+                                               # label = "Assist(s)",
+                                               choices = c("Paddle", "Foot", "Head"),
+                                               checkIcon = list(
+                                                 yes = tags$i(class = "fa fa-check-square", 
+                                                              style = paste("color:", opponent_colour)),
+                                                 no = tags$i(class = "fa fa-square-o")
+                                               )
+                                             ) %>% tagAppendAttributes(class = "assist-btn")
+                              )
+                              # )
                        )
-                       ),
-                # Assist col
-                # wellPanel(
-                  column(3, align = "right", class = "assist-col-right",
-                         h3("Assist(s)"),
-                         dropdownButton(label = opponents[1], circle = F, 
-                                        icon = icon("fa-hand-paper"),
-                                        checkboxGroupButtons(
-                                          inputId = "opponents_assist1",
-                                          # label = "Assist(s)",
-                                          choices = c("Paddle", "Foot", "Head"),
-                                          checkIcon = list(
-                                            yes = tags$i(class = "fa fa-check-square", 
-                                                         style = paste("color:", opponent_colour)),
-                                            no = tags$i(class = "fa fa-square-o")
-                                          )
-                                        )
-                         ),
-                         dropdownButton(label = opponents[2], circle = F, 
-                                        icon = icon("fa-plus"),
-                                        checkboxGroupButtons(
-                                          inputId = "opponents_assist2",
-                                          # label = "Assist(s)",
-                                          choices = c("Paddle", "Foot", "Head"),
-                                          checkIcon = list(
-                                            yes = tags$i(class = "fa fa-check-square", 
-                                                         style = paste("color:", opponent_colour)),
-                                            no = tags$i(class = "fa fa-square-o")
-                                          )
-                                        ) %>% tagAppendAttributes(class = "assist-btn")
-                         )
-                  # )
-                )
-                ,
-                # Anything cool happen?
-                
+                       ,
+                       # Anything cool happen?
+                       
               ),
               fluidRow(
                 wellPanel(
                   align = "center", class = "cool-well",
                   fluidRow(class = "cool-row",
-                    h3("Anything cool happen?", class = "cool-header", style = "font-weight:700; font-size: 2rem;"), 
+                           h3("Anything cool happen?", class = "cool-header", style = "font-weight:700; font-size: 2rem;"), 
                   ),
-                    fluidRow(class = "cool-row",
-                    # Was it a paddle?
-                    awesomeCheckbox(
-                      inputId = "paddle", 
-                      label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>'))),#"Was it a paddle?",
-                      status = "warning"
-                    ),
-                    # Was it a clink?
-                    awesomeCheckbox(
-                      inputId = "clink", 
-                      label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                      status = "warning"
-                    ),
-                    # feet?
-                    awesomeCheckbox(
-                      inputId = "foot", 
-                      label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                      status = "warning"
-                    ),
-                    # feet?
-                    awesomeCheckbox(
-                      inputId = "head", 
-                      label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-user" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                      status = "warning"
-                    )
+                  fluidRow(class = "cool-row",
+                           # Was it a paddle?
+                           awesomeCheckbox(
+                             inputId = "paddle", 
+                             label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>'))),#"Was it a paddle?",
+                             status = "warning"
+                           ),
+                           # Was it a clink?
+                           awesomeCheckbox(
+                             inputId = "clink", 
+                             label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
+                             status = "warning"
+                           ),
+                           # feet?
+                           awesomeCheckbox(
+                             inputId = "foot", 
+                             label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
+                             status = "warning"
+                           ),
+                           # feet?
+                           awesomeCheckbox(
+                             inputId = "head", 
+                             label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-user" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
+                             status = "warning"
+                           )
                   )
                 )
               )
@@ -193,8 +193,8 @@ dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "da
                                                                class = "dropdown-toggle", `data-toggle` = "dropdown", 
                                                                shiny::icon(icon), title, badge), 
                  shiny::tags$div(class = "dropdown-menu", 
-                                style = "left: 0; right: auto;", 
-                                items))
+                                 style = "left: 0; right: auto;", 
+                                 items))
 }
 
 
@@ -265,7 +265,7 @@ sink_casualty_popup = function(session, score_row, players = snappaneers()$playe
     invisible()
   }
   
-
+  
   
   
 }
@@ -279,19 +279,19 @@ tifu_casualty_popup <- function(players) {
               
               
               fluidRow(style="display: flex;",
-                column(8,
-                       style="display: flex; flex-flow: column; align-self: center; align-items: flex-start;",
-                       h2("Friendly Fire!", class = "h1"),
-                       # Header
-                       h2(HTML("You <del>love</del> hate to see that!"),
-                          style = "margin-bottom: 2vh;")
+                       column(8,
+                              style="display: flex; flex-flow: column; align-self: center; align-items: flex-start;",
+                              h2("Friendly Fire!", class = "h1"),
+                              # Header
+                              h2(HTML("You <del>love</del> hate to see that!"),
+                                 style = "margin-bottom: 2vh;")
                        ),
-                column(4,
-                       tags$img(src = str_c("gifs/", sample(list.files("www/gifs"), 1)), class = "casualty-gif")
+                       column(4,
+                              tags$img(src = str_c("gifs/", sample(list.files("www/gifs"), 1)), class = "casualty-gif")
                        )
               ),
               fluidRow(
-              
+                
                 column(8, style = "text-align: left;",
                        # Casualty
                        radioGroupButtons(
@@ -369,21 +369,21 @@ team_input_ui = function(team, player_choices){
            # Header
            h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
            tags$div( id = div_selector,
-                class = 'player_input_forms',
-                # Player 1
-                selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
-                          options = list(create = TRUE, hideSelected=T), width = "125%"),
-                 # Player 2
-                selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
-                               options = list(create = TRUE, hideSelected=T), width = "125%"),
-                # Add Player 3 button
-                actionBttn(paste0("extra_player_", team, "3"), 
-                           label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
-                
-                # CSS: Increase font size, change color to white, add top and bottom margins
-                tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+                     class = 'player_input_forms',
+                     # Player 1
+                     selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
+                                    options = list(create = TRUE, hideSelected=T), width = "125%"),
+                     # Player 2
+                     selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
+                                    options = list(create = TRUE, hideSelected=T), width = "125%"),
+                     # Add Player 3 button
+                     actionBttn(paste0("extra_player_", team, "3"), 
+                                label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
+                     
+                     # CSS: Increase font size, change color to white, add top and bottom margins
+                     tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
            )
-        )
+         )
   )
 }
 
@@ -393,18 +393,18 @@ team_edit_column = function(team){
   
   # Because the ui elements here need to be dynamically generated, I generate them
   # first and then pass it on to the ui nested in the column
-
+  
   column(4, align = "center",
-                wellPanel(
-                  style = paste("opacity: 0.92; background:", team_colour),
-                  # Header
-                  h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
-                  uiOutput(
-                    outputId = paste0("edit_team_", team)
-                  )
-                  
-                )
-        )
+         wellPanel(
+           style = paste("opacity: 0.92; background:", team_colour),
+           # Header
+           h1(paste("Team", toupper(team)), style = "align: center; color: white; font-size: 7rem;"),
+           uiOutput(
+             outputId = paste0("edit_team_", team)
+           )
+           
+         )
+  )
 }
 
 
@@ -449,71 +449,71 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   well_panel_style = "margin-top: 2vh; padding-top: 2vh; padding-bottom: 2vh; min-height: 70vh; opacity: 0.92; background:"
   h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
   
-
+  
   div(id = "ScoreboardUI", 
-           
-           fluidRow(
-             # Left Team
-             column(width = 4, align = "center",
-                     
-                     wellPanel(
-                       class = paste0('scoreboard_well ', 'well_', left_team), 
-                       style = paste(well_panel_style, team_colours[[left_team]]),
-                       # uiOutput("active_die_a"),
-                       # Header
-                       h1(class = 'team_name',
-                          paste("Team", toupper(left_team)), style = h1_style),
-                       # Score
-                       h2(class = 'team_score numbers', 
-                          textOutput(paste0("score_", left_team))),
-                       # Score button
-                       div(id = paste0(left_team, '_score_and_undo'),
-                        actionBttn(paste0(left_team, "_score_button"), 
-                                   label = "We scored!", color = "danger",
-                                   size = "lg"),
-                        actionBttn(
-                          inputId = paste0("undo_score_", left_team),
-                          label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                        )#,
-                       # h3(textOutput(paste0("player_names_", left_team)))
-                      )
-                     )
-              ), 
-              # Round
-              column(width = 4, align = "center", style = 'padding: 0;',
-                     div(id = 'scoreboard_center_controls',
-                         h1("Round", style = "font-size: 5rem; font-weight: 600;"),
-                         uiOutput("round_num"),
-                         uiOutput("round_control_buttons")
-                     )
-
-              ),
-              # Team B
-             column(width = 4, align = "center",
-                    
-                    wellPanel(
-                      class = paste0('scoreboard_well ', 'well_', right_team),
-                      style = paste(well_panel_style, team_colours[[right_team]]),
-                      # Header
-                      h1(class = 'team_name',
-                         paste("Team", toupper(right_team)), style = h1_style),
-                      # Score
-                      h2(class = 'team_score numbers',
-                         textOutput(paste0("score_", right_team))),
-                      # Score button
-                      div(id = paste0(right_team, "_score_and_undo"),
-                          actionBttn(paste0(right_team, "_score_button"), 
-                                 label = "We scored!", color = "danger",
-                                 size = "lg"),
-                          actionBttn(
-                            inputId = paste0("undo_score_", right_team),
-                            label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
-                          )#,
-                      # h3(textOutput(paste0("player_names_", right_team)))
-                      )
-                    )
-             )
-              )
+      
+      fluidRow(
+        # Left Team
+        column(width = 4, align = "center",
+               
+               wellPanel(
+                 class = paste0('scoreboard_well ', 'well_', left_team), 
+                 style = paste(well_panel_style, team_colours[[left_team]]),
+                 # uiOutput("active_die_a"),
+                 # Header
+                 h1(class = 'team_name',
+                    paste("Team", toupper(left_team)), style = h1_style),
+                 # Score
+                 h2(class = 'team_score numbers', 
+                    textOutput(paste0("score_", left_team))),
+                 # Score button
+                 div(id = paste0(left_team, '_score_and_undo'),
+                     actionBttn(paste0(left_team, "_score_button"), 
+                                label = "We scored!", color = "danger",
+                                size = "lg"),
+                     actionBttn(
+                       inputId = paste0("undo_score_", left_team),
+                       label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                     )#,
+                     # h3(textOutput(paste0("player_names_", left_team)))
+                 )
+               )
+        ), 
+        # Round
+        column(width = 4, align = "center", style = 'padding: 0;',
+               div(id = 'scoreboard_center_controls',
+                   h1("Round", style = "font-size: 5rem; font-weight: 600;"),
+                   uiOutput("round_num"),
+                   uiOutput("round_control_buttons")
+               )
+               
+        ),
+        # Team B
+        column(width = 4, align = "center",
+               
+               wellPanel(
+                 class = paste0('scoreboard_well ', 'well_', right_team),
+                 style = paste(well_panel_style, team_colours[[right_team]]),
+                 # Header
+                 h1(class = 'team_name',
+                    paste("Team", toupper(right_team)), style = h1_style),
+                 # Score
+                 h2(class = 'team_score numbers',
+                    textOutput(paste0("score_", right_team))),
+                 # Score button
+                 div(id = paste0(right_team, "_score_and_undo"),
+                     actionBttn(paste0(right_team, "_score_button"), 
+                                label = "We scored!", color = "danger",
+                                size = "lg"),
+                     actionBttn(
+                       inputId = paste0("undo_score_", right_team),
+                       label = "Undo", style = "unite", color = "danger", icon = icon("undo"), size = "md"
+                     )#,
+                     # h3(textOutput(paste0("player_names_", right_team)))
+                 )
+               )
+        )
+      )
   )
 }
 
@@ -542,23 +542,23 @@ extra_player_ui = function(current_tab, player, player_choices){
   # Create a div
   tags$div(id = div_id, 
            # Fluid row
-            class = 'additional_players_form',
-              div(class = 'input_close_and_name',
-                actionBttn(inputId = remove_type,  label = "X", style = "jelly",
-                               color = "danger", size = "sm"),
-                h1(id = paste0("name_", player_team, player_num),
-                   paste0('Player ', player_num)
-                )
-               ),
-               # Add extra player text input 
-               selectizeInput(inputId = input_type, 
-                              label = NULL, c(`Player Name`='', player_choices), options = list(create = TRUE)),
-
-             # Add remove player button outside fluid row
-             
-             # CSS
-             tags$style(paste0(div_id, " {margin-left:auto; margin-right:auto; position: relative;}")),
-
+           class = 'additional_players_form',
+           div(class = 'input_close_and_name',
+               actionBttn(inputId = remove_type,  label = "X", style = "jelly",
+                          color = "danger", size = "sm"),
+               h1(id = paste0("name_", player_team, player_num),
+                  paste0('Player ', player_num)
+               )
+           ),
+           # Add extra player text input 
+           selectizeInput(inputId = input_type, 
+                          label = NULL, c(`Player Name`='', player_choices), options = list(create = TRUE)),
+           
+           # Add remove player button outside fluid row
+           
+           # CSS
+           tags$style(paste0(div_id, " {margin-left:auto; margin-right:auto; position: relative;}")),
+           
            # If the extra player is not the fourth on a team yet, add another add player button
            if(player_num < 4){
              actionBttn(extra_type, 
@@ -590,9 +590,9 @@ add_player_input = function(current_tab, inputs, team, player, player_choices, s
 
 
 remove_p3_input = function(current_tab, team, session){
- 
-   if (current_tab == "start") {
-     
+  
+  if (current_tab == "start") {
+    
     add_p3_button = paste0("#add_remove_", team, "3")
     ui_name = paste0("extra_player_", team,"3")
     selectize_name_3 =  paste0("name_", team, "3")
@@ -605,18 +605,18 @@ remove_p3_input = function(current_tab, team, session){
     selectize_name_3 =  paste0("edit_name_", team, "3")
     selectize_name_4 = paste0("edit_name_", team, "4")
   }
-    
   
-    insertUI(selector = add_p3_button,
-             where = "afterEnd",
-             ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
-    )
-    
-    
-    removeUI(selector = add_p3_button)
-    
-    updateSelectizeInput(session, selectize_name_3, selected = character(0))
-    updateSelectizeInput(session, selectize_name_4, selected = character(0))
+  
+  insertUI(selector = add_p3_button,
+           where = "afterEnd",
+           ui = actionBttn(ui_name, label = "+ Add Player", style = "unite", color = "danger")
+  )
+  
+  
+  removeUI(selector = add_p3_button)
+  
+  updateSelectizeInput(session, selectize_name_3, selected = character(0))
+  updateSelectizeInput(session, selectize_name_4, selected = character(0))
   
 }
 
@@ -632,7 +632,7 @@ remove_p4_input = function(current_tab, team, session){
     ui_name = paste0("edit_add_", team, "4")
     selectize_name = paste0("edit_name_", team, "4")
   }
-      
+  
   # Insert add player button
   insertUI(selector = add_p4_button,
            where = "afterEnd",
@@ -701,15 +701,15 @@ glance_ui_team = function(df, team){
   # gt time
   output_table = new_df %>% 
     gt() %>%
-      tab_header(title = str_c("Team ", 
-                              str_to_upper(team)
-                              )) %>%
-      cols_label(
-        player_name = "Player",
-        total_points = "Total Points",
-        paddle_points = "Paddle Points",
-        shots = "Shots",
-        toss_efficiency = "Toss Efficiency") %>% 
+    tab_header(title = str_c("Team ", 
+                             str_to_upper(team)
+    )) %>%
+    cols_label(
+      player_name = "Player",
+      total_points = "Total Points",
+      paddle_points = "Paddle Points",
+      shots = "Shots",
+      toss_efficiency = "Toss Efficiency") %>% 
     fmt_percent(
       columns = vars(toss_efficiency),
       decimals = 0
@@ -743,8 +743,8 @@ glance_ui_game = function(game.id){
            h2(str_c(score_a, " - ", score_b), align = 'center')),
     column(5, 
            render_gt(glance_ui_team(df_b, team = "B")))
-    )
- return(ui_output)
+  )
+  return(ui_output)
 }
 
 
@@ -759,7 +759,7 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
   # 2. Get a list of scores from historical games at the equivalent point in the game
   # 3. Calculate current game player stats
   # 4. Calculate historical player stats from 1 & 2
-
+  
   # Store current game id and the given team's current player stats
   current_game = unique(current_player_stats$game_id)
   current_shots = unique(current_player_stats[current_player_stats$team == team_name, "shots", drop=T])
@@ -832,8 +832,8 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
   }
   # List scores which occurred at or before the current game's round
   historical_scores = left_join(equivalent_player_stats, 
-                                                    scores_comparison, 
-                                                    by = c("game_id", "player_id")) %>% 
+                                scores_comparison, 
+                                by = c("game_id", "player_id")) %>% 
     filter(!(game_id %in% 38:48))
   
   # When in progress, keep the shot counter generated from current_shots
@@ -948,14 +948,14 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # to the current one.
   # First, obtain a list of games in which the players on this team were on
   # an equally sized team. This is player specific, so map() is used
-
+  
   
   
   # A not particularly elegant but probably working solution to making sure that games
   # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
   # and opponent_team_size and merge it to player_stats to be used as a 
   
-
+  
   # Make a dataframe of team sizes in past games
   team_sizes = player_stats %>% 
     # Count team size for each game
@@ -964,7 +964,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     pivot_wider(names_from = team, 
                 values_from = team_size, 
                 names_glue = "size_{team}")
-
+  
   equivalent_games_player_stats = team_players$player_id %>%
     map(function(player){
       # Subset each player's stats  to each player's stats and identify equivalent games
@@ -974,7 +974,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
         # Keep cases where the team sizes are equivalent
         filter(if_else(team == "A", size_A, size_B) == team_size,
                if_else(team == "B", size_A, size_B) == opponent_size)
-
+      
     })
   
   
@@ -996,15 +996,15 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     scores_comparison = past_scores %>% 
       filter(player_id %in% team_players$player_id, # Only include players on this team
              parse_round_num(round_num) <= parse_round_num(current_round))
-
+    
     ##
     ## Scenario 2: Game is complete
     ##
   } else {
-
+    
     scores_comparison = past_scores
   }
-
+  
   # List scores which occurred at or before the current game's round
   historical_scores = team_players$player_id %>%
     imap_dfr(function(player, index){
@@ -1117,13 +1117,13 @@ team_summary_tab = function(df, game_over, score_difference, team){
                             str_c("chasing ", 
                                   score_difference,
                                   ".")
-                            )
+    )
   }
   
   
   title_colour = if_else(unique(df$team) == "A", snappa_pal[2], snappa_pal[3])
   
-
+  
   hide_diff_cols = head(df, 1) %>% # Take the first row of a column
     mutate_all(as.character) %>% # prevents errors in pivot_longer
     # convert to column-value pair dataframe
@@ -1377,12 +1377,12 @@ game_summary_tab_rt = function(df){
                                             minWidth = 30, 
                                             style = JS(game_summary_diff_style("paddle_points_diff"))),
                 clink_points = colDef(name = "", 
-                                       minWidth = 19),
+                                      minWidth = 19),
                 clink_points_diff = colDef(name = "Diff", 
-                                            minWidth = 30, 
-                                            style = JS(game_summary_diff_style("clink_points_diff"))),
+                                           minWidth = 30, 
+                                           style = JS(game_summary_diff_style("clink_points_diff"))),
                 sinks = colDef(name = "", 
-                                      minWidth = 30),
+                               minWidth = 30),
                 off_ppr = colDef(name = "", 
                                  minWidth = 30, 
                                  format = colFormat(digits = 2)),
@@ -1405,7 +1405,7 @@ game_summary_tab_rt = function(df){
 }
 
 team_summary_tab_rt = function(df){
-
+  
   df %>% 
     reactable(defaultSorted = "total_points",
               sortable = F,
@@ -1499,12 +1499,12 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                         }
                       },
                       class = function(value){
-                          if(value > max(stats_eligible$rank)){
-                            "unranked"
-                          } else {
+                        if(value > max(stats_eligible$rank)){
+                          "unranked"
+                        } else {
                           "ranked"
                         }
-                        }), 
+                      }), 
         player_name = colDef("Player", 
                              sortable = F,
                              minWidth = 100,
@@ -1521,7 +1521,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                                if(!(value %in% unique(stats_eligible$player_name))){
                                  "unranked"
                                } else {
-                               "ranked"
+                                 "ranked"
                                }
                              }),
         games_played = colDef("Games Played", 
@@ -1541,32 +1541,32 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                               minWidth = 82,
                               maxWidth = 150),
         offensive_points = colDef("Off. Points", 
-                              minWidth = 82,
-                              maxWidth = 150),
+                                  minWidth = 82,
+                                  maxWidth = 150),
         defensive_points = colDef("Def. Points", 
-                              minWidth = 82,
-                              maxWidth = 150),
+                                  minWidth = 82,
+                                  maxWidth = 150),
         paddle_points = colDef("Paddle Points", 
-                              minWidth = 82,
-                              maxWidth = 150,
-                              style = function(value) {
-                                if(max(stats_eligible[, "paddle_points"], na.rm=T) == value){
-                                  list(color = snappa_pal[5],
-                                       fontWeight = 600)
-                                }
-                              }),
-        foot_paddle_points = colDef("Foot Paddle Points", 
-                               minWidth = 115,
+                               minWidth = 82,
                                maxWidth = 150,
                                style = function(value) {
-                                 if(max(stats_eligible[, "foot_paddle_points"], na.rm=T) == value){
+                                 if(max(stats_eligible[, "paddle_points"], na.rm=T) == value){
                                    list(color = snappa_pal[5],
                                         fontWeight = 600)
                                  }
                                }),
+        foot_paddle_points = colDef("Foot Paddle Points", 
+                                    minWidth = 115,
+                                    maxWidth = 150,
+                                    style = function(value) {
+                                      if(max(stats_eligible[, "foot_paddle_points"], na.rm=T) == value){
+                                        list(color = snappa_pal[5],
+                                             fontWeight = 600)
+                                      }
+                                    }),
         clink_points = colDef("Clink Points", 
-                               minWidth = 82,
-                               maxWidth = 150,
+                              minWidth = 82,
+                              maxWidth = 150,
                               style = function(value) {
                                 if(max(stats_eligible[, "clink_points"], na.rm=T) == value){
                                   list(color = snappa_pal[5],
@@ -1574,8 +1574,8 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                                 }
                               }),
         sinks = colDef("Sinks", 
-                               minWidth = 82,
-                               maxWidth = 150,
+                       minWidth = 82,
+                       maxWidth = 150,
                        style = function(value) {
                          if(max(stats_eligible[, "sinks"], na.rm=T) == value){
                            list(color = snappa_pal[5],
@@ -1583,8 +1583,8 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                          }
                        }),
         paddle_sinks = colDef("Paddle Sinks", 
-                               minWidth = 82,
-                               maxWidth = 150,
+                              minWidth = 82,
+                              maxWidth = 150,
                               style = function(value) {
                                 if(max(stats_eligible[, "paddle_sinks"], na.rm=T) == value){
                                   list(color = snappa_pal[5],
@@ -1637,7 +1637,7 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   
 }
 leaderboard_table = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
-
+  
   stats_eligible = career_stats_data %>% 
     filter(rank < dividing_line)
   
@@ -1862,7 +1862,7 @@ markov_summary_data = function(simulations){
   })
   A_winrate = length(wins[wins == "A"])/length(wins)
   B_winrate = 1 - A_winrate
-
+  
   # In the games where the winningest team won, what was the modal score?
   winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
                     "A",
@@ -1870,21 +1870,21 @@ markov_summary_data = function(simulations){
   if (length(winners) == 2){
     tie = TRUE
     per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
-        team_A_score = simulations[[game_number]]$team_A %>% last()
-        team_B_score = simulations[[game_number]]$team_B %>% last()
-        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-        matrix = matrix(0, nrow = 51, ncol = 51)
-        matrix[team_A_score + 1, team_B_score + 1] = 1
-        
-        return(list("scores" = matrix,
-                    "final" = final_scores))
-      })
+      team_A_score = simulations[[game_number]]$team_A %>% last()
+      team_B_score = simulations[[game_number]]$team_B %>% last()
+      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+      matrix = matrix(0, nrow = 51, ncol = 51)
+      matrix[team_A_score + 1, team_B_score + 1] = 1
+      
+      return(list("scores" = matrix,
+                  "final" = final_scores))
+    })
     winrate = 0.50
   } else {
-  # Using a matrix here so that I can treat each pairing of points as a unique
-  # value, rather than each team's individual total (meaning that I am truly
-  # looking for the pair of scores which are modal in the set of games that
-  # the winning team won)
+    # Using a matrix here so that I can treat each pairing of points as a unique
+    # value, rather than each team's individual total (meaning that I am truly
+    # looking for the pair of scores which are modal in the set of games that
+    # the winning team won)
     tie = F
     per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
       if (simulations[[game_number]]$won != winners){
@@ -1900,7 +1900,7 @@ markov_summary_data = function(simulations){
         matrix[team_A_score + 1, team_B_score + 1] = 1
       }
       
-  
+      
       return(list("scores" = matrix,
                   "final" = final_scores))
     })
@@ -1912,7 +1912,7 @@ markov_summary_data = function(simulations){
   for (i in 1:length(simulations)){
     scores_matrix = scores_matrix + per_game_data[[i]]$scores 
   }
-        
+  
   modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
   
   # As one may expect, this sometimes comes up with more than one 
@@ -1921,8 +1921,8 @@ markov_summary_data = function(simulations){
   # out which games look the best for everyone. What I'll do is look at the 
   # score total that's the closest
   if (length(modal_score_position) < 3){
-  modal_A_score = modal_score_position[1] - 1
-  modal_B_score = modal_score_position[2] - 1
+    modal_A_score = modal_score_position[1] - 1
+    modal_B_score = modal_score_position[2] - 1
   } else{
     modal_score_position = cbind(modal_score_position, 
                                  abs(modal_score_position[, 1] - modal_score_position[, 2])) 
@@ -1957,7 +1957,7 @@ markov_summary_data = function(simulations){
   modal_frequency = final_scores_table %>%
     filter(A == modal_A_score, B == modal_B_score) %>%
     nrow()
-   
+  
   return(list("final_scores" = final_scores_table,
               "wins" = wins,
               "winner" = winners,
@@ -1972,13 +1972,13 @@ markov_visualizations = function(summary){
   
   # Create a histogram of each team's final score on a common x-axis
   # This should be one of the interactive graphs that allows us to roll our cursor over
- scores_overlap = ggplot(data = summary$final_scores) +
+  scores_overlap = ggplot(data = summary$final_scores) +
     # Team A
     geom_histogram(aes(x = `A`), fill = snappa_pal[2], alpha = 0.9) +
     geom_histogram(aes(x = `B`), fill = snappa_pal[3], alpha = 0.7) +
-   theme_snappa() + 
-   xlab("Total Points") + 
-   ylab("Number of Games")
+    theme_snappa() + 
+    xlab("Total Points") + 
+    ylab("Number of Games")
   
   # Idea, use the final score summary data to make stacked geom_bars for each
   # game, kind of like what I had in my thesis. Here, I'll separate according 
@@ -1999,9 +1999,9 @@ markov_visualizations = function(summary){
   
   
   score_shares = ggplot(data = score_counts) + 
-      geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
-      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", size = 1) + 
-      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", size = 1) +
+    geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
+    geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", size = 1) + 
+    geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", size = 1) +
     ylab("Share of Total Points") + 
     xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
@@ -2016,7 +2016,7 @@ markov_visualizations = function(summary){
                          expand(winners_tbl, game_id, team),
                          fill = list(won = "C")) %>%
     mutate(won = case_when(won == team ~ 1,
-                    won != team ~ 0)
+                           won != team ~ 0)
     )
   
   
@@ -2068,7 +2068,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
   # Break down a player's points into their different score types
   # View each score type as a proportion of the total points
   # The issue being that each score type is NOT mutually exclusive
-
+  
   if(ps_team == "A"){
     team_margin = margin(0,5,0,0)
   } else {
@@ -2124,95 +2124,95 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
   #       axis.text.y.left = element_text(margin = margin(l = 0, r = -5), hjust = 1),
   #       axis.text.y.right = element_text(margin = margin(l = -5, r = 0), hjust = 0)
   #     )
-    
-    # Option 1:
-    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
-    #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
-    #   mutate(total = total_points) %>%
-    #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
-    #   arrange(team, desc(total), player_id, desc(points)) %>%
-    #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal", "total"), ordered = T),
-    #          bar_width = if_else(type == "total", .1, 10))
-    # 
-    # filter(plot_df, type !="total") %>%
-    #   left_join(ps_players, by = "player_id") %>%
-    #   ggplot(., aes(x = type, y = points))+
-    #   geom_col(aes(fill = type),
-    #            colour = snappa_pal[1])+
-    #   geom_text(aes(y = points + .5, label = na_if(points, 0)),
-    #             family = "Inter Medium", colour = "black")+
-    #   geom_col(data = filter(plot_df, type =="total"),
-    #            aes(fill = type), width = .25, position = position_dodge(width = 1), colour = snappa_pal[1])+
-    #   scale_fill_manual(name = NULL, drop=F,
-    #                     values = c("normal" = "#67A283", "paddle" = "#793E8E", "clink" = "#54B6F2", "sink" = "#FFA630", "foot" = "#011936", "total" = "gray20"),
-    #                     guide = guide_legend(direction = "vertical", ncol = 1, reverse = T))+#090C9B
-    #   scale_x_discrete(drop=F, position = "top")+
-    #   coord_flip()+
-    #   facet_wrap(~player_name, ncol = 1, strip.position = "left", as.table = F)+
-    #   theme_snappa(md=T, text_family = "Inter Medium")+
-    #   theme(axis.text.y = element_blank(), axis.title.y = element_blank(),
-    #         strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)))
-    
-    # Option 2: Nightingale/Radar plot
-    plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
-      inner_join(ps_players, by = "player_id") %>% 
-      select(player_name, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
-      # Add total as persistent var
-      mutate(total = total_points) %>%
-      # Pivot separate variables into an input for fill
-      pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
-      arrange(team, desc(total), player_name, desc(points)) %>%
-      # Remove total from our fill var
-      filter(type != "total") %>%
-      mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"),
-                           labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
-    
-    # browser()
-    plot_df %>% 
-      # Show point type by the number of pts (because factoring above didn't work?)
-      ggplot(., aes(x = reorder(type, points), y = points))+
-      # Columns
-      geom_col(aes(fill = type, y = points + 2),
-               colour = snappa_pal[1],
-               position = position_dodge(width = 1), width = 1)+
-      # Pt labels
-      geom_text(aes(y = (points+3)/2, label = na_if(points, 0), 
-                    size = 4+sqrt(points)),
-                colour = snappa_pal[1],
-                family = "Inter Medium", fontface = "bold")+
-      # Axes
-      scale_x_discrete(drop=T)+
-      # Colours
-      scale_fill_manual(name = NULL, drop=T,
-                        values = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B"),
-                        guide = guide_legend(direction = "horizontal", byrow = T,
-                                             ncol = 2, reverse = T))+#090C9B
-      scale_size(guide = guide_none())+
-      # Make it polar
-      coord_polar(start = pi/2, direction = -1)+
-      # Facet on player
-      facet_wrap(~player_name, ncol=1,
-                 strip.position = if_else(reverse_legend, "left", "right"),
-                 as.table = F, drop = T)+
-      # Theme elements
-      theme_snappa(md=T, plot_margin = team_margin)+
-      theme(axis.title = element_blank(), # no title
-            legend.position = "bottom",# legend on bottom 
-            axis.line = element_blank(), # No axis line
-            axis.text.y.left = element_blank(), # No axis text
-            axis.text.x = element_blank(),
-            # Facet labels
-            strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,0,0,5)),
-            strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,5,0,0)),
-            # No gridlines
-            panel.grid.major = element_blank(), 
-            panel.spacing = unit(-12/(length(unique(plot_df$player_name))*1.5), "lines"))
-    
-    # TODO: Add troll image for the trolls
-    # Potentially an if statement and detect if any player trolls
-    # plot+
-    #   geom_image(data = df %>% distinct(player_name, points, .keep_all = T) %>% mutate(image = 'www/troll_toll.jpg'),
-    #              aes(y = player_name, x = points, image = image), size = .35)
+  
+  # Option 1:
+  # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
+  #   select(player_id, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+  #   mutate(total = total_points) %>%
+  #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+  #   arrange(team, desc(total), player_id, desc(points)) %>%
+  #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal", "total"), ordered = T),
+  #          bar_width = if_else(type == "total", .1, 10))
+  # 
+  # filter(plot_df, type !="total") %>%
+  #   left_join(ps_players, by = "player_id") %>%
+  #   ggplot(., aes(x = type, y = points))+
+  #   geom_col(aes(fill = type),
+  #            colour = snappa_pal[1])+
+  #   geom_text(aes(y = points + .5, label = na_if(points, 0)),
+  #             family = "Inter Medium", colour = "black")+
+  #   geom_col(data = filter(plot_df, type =="total"),
+  #            aes(fill = type), width = .25, position = position_dodge(width = 1), colour = snappa_pal[1])+
+  #   scale_fill_manual(name = NULL, drop=F,
+  #                     values = c("normal" = "#67A283", "paddle" = "#793E8E", "clink" = "#54B6F2", "sink" = "#FFA630", "foot" = "#011936", "total" = "gray20"),
+  #                     guide = guide_legend(direction = "vertical", ncol = 1, reverse = T))+#090C9B
+  #   scale_x_discrete(drop=F, position = "top")+
+  #   coord_flip()+
+  #   facet_wrap(~player_name, ncol = 1, strip.position = "left", as.table = F)+
+  #   theme_snappa(md=T, text_family = "Inter Medium")+
+  #   theme(axis.text.y = element_blank(), axis.title.y = element_blank(),
+  #         strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)))
+  
+  # Option 2: Nightingale/Radar plot
+  plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
+    inner_join(ps_players, by = "player_id") %>% 
+    select(player_name, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+    # Add total as persistent var
+    mutate(total = total_points) %>%
+    # Pivot separate variables into an input for fill
+    pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+    arrange(team, desc(total), player_name, desc(points)) %>%
+    # Remove total from our fill var
+    filter(type != "total") %>%
+    mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"),
+                         labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
+  
+  # browser()
+  plot_df %>% 
+    # Show point type by the number of pts (because factoring above didn't work?)
+    ggplot(., aes(x = reorder(type, points), y = points))+
+    # Columns
+    geom_col(aes(fill = type, y = points + 2),
+             colour = snappa_pal[1],
+             position = position_dodge(width = 1), width = 1)+
+    # Pt labels
+    geom_text(aes(y = (points+3)/2, label = na_if(points, 0), 
+                  size = 4+sqrt(points)),
+              colour = snappa_pal[1],
+              family = "Inter Medium", fontface = "bold")+
+    # Axes
+    scale_x_discrete(drop=T)+
+    # Colours
+    scale_fill_manual(name = NULL, drop=T,
+                      values = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B"),
+                      guide = guide_legend(direction = "horizontal", byrow = T,
+                                           ncol = 2, reverse = T))+#090C9B
+    scale_size(guide = guide_none())+
+    # Make it polar
+    coord_polar(start = pi/2, direction = -1)+
+    # Facet on player
+    facet_wrap(~player_name, ncol=1,
+               strip.position = if_else(reverse_legend, "left", "right"),
+               as.table = F, drop = T)+
+    # Theme elements
+    theme_snappa(md=T, plot_margin = team_margin)+
+    theme(axis.title = element_blank(), # no title
+          legend.position = "bottom",# legend on bottom 
+          axis.line = element_blank(), # No axis line
+          axis.text.y.left = element_blank(), # No axis text
+          axis.text.x = element_blank(),
+          # Facet labels
+          strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,0,0,5)),
+          strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,5,0,0)),
+          # No gridlines
+          panel.grid.major = element_blank(), 
+          panel.spacing = unit(-12/(length(unique(plot_df$player_name))*1.5), "lines"))
+  
+  # TODO: Add troll image for the trolls
+  # Potentially an if statement and detect if any player trolls
+  # plot+
+  #   geom_image(data = df %>% distinct(player_name, points, .keep_all = T) %>% mutate(image = 'www/troll_toll.jpg'),
+  #              aes(y = player_name, x = points, image = image), size = .35)
 }
 
 game_flow = function(player_stats, players, scores, game){
@@ -2237,7 +2237,7 @@ game_flow = function(player_stats, players, scores, game){
     group_by(player_id) %>%
     # Calculate players' cumulative score throughout the game
     mutate(cum_score = cumsum(points_scored))
-
+  
   # Add zeroes
   player_score_base = player_scores %>% 
     # Filter player stats
@@ -2256,7 +2256,7 @@ game_flow = function(player_stats, players, scores, game){
   # Calculate max values for scales
   max_score = max(player_label_df$cum_score)
   max_round = max(player_label_df$round)
-
+  
   player_scores %>% 
     bind_rows(player_score_base) %>% 
     ggplot(., aes(x = round, y = cum_score))+
@@ -2350,7 +2350,7 @@ game_summary_plot = function(player_stats, players, scores, game){
   # Function which creates the game summary plots and puts them together
   #   - Create a player_score_breakdown for both teams
   #   - Create a game_flow plot
-
+  
   # Player breakdowns
   a_breakdown = player_score_breakdown(ps_player_stats = player_stats, 
                                        ps_game = game, 
@@ -2361,12 +2361,12 @@ game_summary_plot = function(player_stats, players, scores, game){
                                        ps_game = game, 
                                        ps_players = players,
                                        ps_team = "B")
-    
+  
   game_flow_plot = game_flow(player_stats = player_stats,
-                              players = players, 
-                              scores = scores,
-                              game = game)
-
+                             players = players, 
+                             scores = scores,
+                             game = game)
+  
   ## Combining plots
   # Team A's breakdown
   (wrap_elements(full = a_breakdown /

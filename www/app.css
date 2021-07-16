@@ -5,6 +5,12 @@
     --red-outline: #FEAD9A;
     --light-red: #FBEAE5;
     --bg-col: #fafaf9;
+    --team-a-red: #e26a6a;
+    --team-b-blue: #2574a9;
+    --sink-yellow: #ffaf47;
+    --norman-green: #67a283;
+    --paddle-purple: #793e8e;
+    --glass-blue: #54b6f2;
 
     --deep-blue: #084E8A;
     --blue: #006FBB;
@@ -143,7 +149,7 @@
 /* Scoreboard */
 
 #previous_round {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     margin-bottom: 2rem;
     border-radius: 15px;
     height: 9vh;
@@ -151,7 +157,7 @@
 }
 
 #next_round {
-    font-size: 2.5rem;
+    font-size: 3rem;
     margin-bottom: 2rem;
     border-radius: 15px;
     height: 10vh;
@@ -175,12 +181,23 @@ label.control-label[for='scorer'] {
     
 }
 
-label[for='paddle'], label[for='foot'], label[for='clink'] {
+label[for='paddle'] {
+    font-size: 2.25rem; 
     font-weight:inherit;
     
 }
 
+label[for='clink'] {
+    font-size: 2.25rem;
+    font-weight:inherit;
+    
+}
 
+label[for='foot'] {
+    font-size: 2.25rem;
+    font-weight:inherit;
+    
+}
 
 #ok_A, #ok_B {
     font-size: x-large;
@@ -194,7 +211,7 @@ label[for='paddle'], label[for='foot'], label[for='clink'] {
 }
 
 
-#start_game, #scorer, #score {
+#start_game, #scorer, #paddle, #score, #clink, #foot {
     font-size: 2rem; 
     margin-bottom: 1.5vh;
 }
@@ -413,7 +430,7 @@ label.control-label[for='score'] {
   border-bottom: 1px solid #adc4c2;
 }
 
-.input_well, .scoreboard_well, #start_game, #next_round, #previous_round, #switch_sides, #A_score_button, #undo_score_A, #B_score_button, #undo_score_B {
+.input-well, .scoreboard-well, #start_game, #next_round, #previous_round, #switch_sides, #A_score_button, #undo_score_A, #B_score_button, #undo_score_B {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -442,7 +459,7 @@ label.control-label[for='score'] {
 
 /* Styling for the landing page: size of input wells, flex on player forms, and additional styling due to the close button on 
 players 3 and 4 */
-.input_well {
+.input-well {
   min-height: 85vh;
   display: flex;
   flex-direction: column;
@@ -450,7 +467,7 @@ players 3 and 4 */
   align-items: stretch;
 }
 
-.player_input_forms {
+.player-input-forms {
   flex-grow: 4;
   display: flex;
   flex-direction: column;
@@ -525,13 +542,14 @@ players 3 and 4 */
   display: flex;
   flex-direction: column;
   text-align: center;
+  margin-top: 2.5vh;
 }
 
 #round_value > h3 {
   text-align: center;
 }
 
-.scoreboard_well {
+.scoreboard-well {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -563,32 +581,9 @@ players 3 and 4 */
 .assist-col-right { 
   align-items: flex-start;
   background-color: #2574a9;
-}
 
-.assist-col-right > .dropdown > .dropdown-menu {
-  right: 50%;
-  min-width: fit-content;
-  min-height: 8vh;
-}
-
-.assist-btn {
-  margin: 2vh 1vh;
-}
-
-.assist-col > .dropdown > .dropdown-menu {
-  min-width: fit-content;
-  min-height: 8vh;
-}
-
-.cool-well {
-  padding: 0vh 2vh;
-  margin: 1vh 0vh;
-  width: 50% !important;
-}
-
-.cool-row {
-  display: flex;
-  align-items: center;
+#paddle-icon, #foot-icon, #clink-icon, #head-icon {
+  margin-left: 8px;
 }
 
 .cool-header {
@@ -599,6 +594,12 @@ players 3 and 4 */
   text-align: center;
 }
 
+.cool-well {
+  padding: 0vh 2vh;
+  margin: 1vh 0vh;
+  width: 50% !important;
+}
+
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
   margin-left: 15px;
 }
@@ -606,6 +607,35 @@ players 3 and 4 */
 .check-btn-icon-yes, .check-btn-icon-no {
   margin-right: 5px;
 }
+
+.control-sidebar>.tab-content {
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.control-sidebar>.tab-content>.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+
+.control-sidebar>.tab-content>.active>.shiny-input-container {
+  margin: 2vh 0;
+}
+
+.control-sidebar>.tab-content>.active>.action-button {
+  margin: 2vh 1vh;
+}
+
+
+.irs--shiny .irs-grid-text, .irs-min, .irs--shiny .irs-max, .control-sidebar-dark {
+  color: var(--bg-col) !important;
+}
+
+
 
 /* Controls for text shading on wells */
 
@@ -938,7 +968,6 @@ input[type=radio]{
     }
  */   
     #previous_round{
-        font-size: 1.5rem;
         padding: 0vh 1vw 0vh 1vw;
         margin-bottom: 2vh;
         margin-top: 1vh;
@@ -948,7 +977,6 @@ input[type=radio]{
     }
     
     #next_round {
-        font-size: 2rem;
         padding: 0vh 1vw 0vh 1vw;
         margin-bottom: 0vh;
         margin-top: 1vh;
@@ -960,7 +988,7 @@ input[type=radio]{
     #round_num {
         font-size: 15rem;
         margin-top:0;
-        margin-bottom:0;
+        margin-bottom:2vh;
         line-height: 15rem;
     }
     
@@ -984,10 +1012,10 @@ input[type=radio]{
     }
     
     #round_control_buttons {
-      height: 20vh;
+      height: 32vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
+      justify-content: space-between;
       align-items: center;
       
     }

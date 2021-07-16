@@ -2107,14 +2107,14 @@ observeEvent(input$game_summary, {
       invisible()
     }
     
-    delay(10, iwalk(input_list, function(name, id){
+    iwalk(input_list, function(name, id){
       
       updateSelectizeInput(session, inputId = id, selected = name)
       
     })
-    )
     
-    shinyjs::click("start_game")
+    
+    delay(500, shinyjs::click("start_game"))
 })
   
 # Close the modal dialog if you say no and remove
@@ -2588,8 +2588,7 @@ observeEvent(input$resume_no, {
     
     showModal(
       score_check(team = "A", 
-                  snappaneers = snappaneers(),
-                  # players = eligible_shooters,
+                  players = eligible_shooters,
                   round = round_num()))
   })
   
@@ -2707,9 +2706,14 @@ observeEvent(input$resume_no, {
     
     showModal(
       score_check(
+<<<<<<< HEAD
         team = "B",, 
         snappaneers = snappaneers(),
         # players = eligible_shooters,
+=======
+        team = "B", 
+        players = eligible_shooters,
+>>>>>>> master
         round = round_num()))
     
   })
