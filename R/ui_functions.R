@@ -350,7 +350,7 @@ team_input_ui = function(team, player_choices){
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   well_selector = if_else(team == 'A', 'input-well-A', 'input-well-B')
-  div_selector = if_else(team == 'A', 'input_forms_A','input_forms_B')
+  div_selector = if_else(team == 'A', 'input-forms-A','input-forms-B')
   class_selector = paste0('input-well ', if_else(team == 'A', 'well-A', 'well-B'))
   
   column(4, align = "center",
@@ -362,7 +362,7 @@ team_input_ui = function(team, player_choices){
            # Header
            h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
            tags$div( id = div_selector,
-                class = 'player_input_forms',
+                class = 'player-input-forms',
                 # Player 1
                 selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
                           options = list(create = TRUE, hideSelected=T), width = "125%"),
