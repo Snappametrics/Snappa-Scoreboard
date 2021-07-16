@@ -16,6 +16,22 @@ rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
 # UI functions ------------------------------------------------------------
 
+player_assist_button = function(player, player_number, team, shooter = T){
+  dropdownButton(label = player, circle = F, size = "lg",
+                 icon = icon("fa-fa-hand-paper"),
+                 checkboxGroupButtons(
+                   inputId = str_c(if_else(shooter, "shooter", "opponent"), "_assist", player_number),
+                   size = "lg",
+                   # label = "Assist(s)",
+                   choices = c("Paddle", "Foot", "Head"), 
+                   checkIcon = list(
+                     yes = tags$i(class = str_c("fa fa-check-square team-", tolower(team))),
+                     no = tags$i(class = "fa fa-square-o")
+                   )
+                 )
+  )
+}
+
 # Score pop-up dialog box
 score_check <- function(team, snappaneers, round) {
   # Identify which team scored
@@ -44,33 +60,36 @@ score_check <- function(team, snappaneers, round) {
                        # Assist col
                        column(3, align = "left", class = "assist-col",
                               h3("Assist(s)"),
-                              dropdownButton(label = shooting_team_players[1], circle = F, size = "lg",
-                                             icon = icon("fa-fa-hand-paper"),
-                                             checkboxGroupButtons(
-                                               inputId = "shooters_assist1",
-                                               # label = "Assist(s)",
-                                               choices = c("Paddle", "Foot", "Head"),
-                                               checkIcon = list(
-                                                 yes = tags$i(class = "fa fa-check-square", 
-                                                              style = paste("color:", team_colour)),
-                                                 no = tags$i(class = "fa fa-square-o")
-                                               )
-                                             )
-                              ),
-                              dropdownButton(label = shooting_team_players[2], circle = F, size = "lg",
-                                             icon = icon("fa-fa-plus"),
-                                             checkboxGroupButtons(
-                                               inputId = "shooters_assist2",
-                                               # label = "Assist(s)",
-                                               choices = c("Paddle", "Foot", "Head"),
-                                               checkIcon = list(
-                                                 yes = tags$i(class = "fa fa-check-square", 
-                                                              style = paste("color:", team_colour)),
-                                                 no = tags$i(class = "fa fa-square-o")
-                                               )
-                                             )
-                                             # )
-                              )
+                              imap(shooting_team_players, ~player_assist_button(player = .x,
+                                                                                player_number = .y,
+                                                                                team = team))
+                              # dropdownButton(label = shooting_team_players[1], circle = F, size = "lg",
+                              #                icon = icon("fa-fa-hand-paper"),
+                              #                checkboxGroupButtons(
+                              #                  inputId = "shooters_assist1",
+                              #                  # label = "Assist(s)",
+                              #                  choices = c("Paddle", "Foot", "Head"),
+                              #                  checkIcon = list(
+                              #                    yes = tags$i(class = "fa fa-check-square", 
+                              #                                 style = paste("color:", team_colour)),
+                              #                    no = tags$i(class = "fa fa-square-o")
+                              #                  )
+                              #                )
+                              # ),
+                              # dropdownButton(label = shooting_team_players[2], circle = F, size = "lg",
+                              #                icon = icon("fa-fa-plus"),
+                              #                checkboxGroupButtons(
+                              #                  inputId = "shooters_assist2",
+                              #                  # label = "Assist(s)",
+                              #                  choices = c("Paddle", "Foot", "Head"),
+                              #                  checkIcon = list(
+                              #                    yes = tags$i(class = "fa fa-check-square", 
+                              #                                 style = paste("color:", team_colour)),
+                              #                    no = tags$i(class = "fa fa-square-o")
+                              #                  )
+                              #                )
+                              #                # )
+                              # )
                        ),
                        column(6,
                               # Who Scored?
@@ -97,32 +116,10 @@ score_check <- function(team, snappaneers, round) {
                        # wellPanel(
                        column(3, align = "right", class = "assist-col-right",
                               h3("Assist(s)"),
-                              dropdownButton(label = opponents[1], circle = F, 
-                                             icon = icon("fa-hand-paper"),
-                                             checkboxGroupButtons(
-                                               inputId = "opponents_assist1",
-                                               # label = "Assist(s)",
-                                               choices = c("Paddle", "Foot", "Head"),
-                                               checkIcon = list(
-                                                 yes = tags$i(class = "fa fa-check-square", 
-                                                              style = paste("color:", opponent_colour)),
-                                                 no = tags$i(class = "fa fa-square-o")
-                                               )
-                                             )
-                              ),
-                              dropdownButton(label = opponents[2], circle = F, 
-                                             icon = icon("fa-plus"),
-                                             checkboxGroupButtons(
-                                               inputId = "opponents_assist2",
-                                               # label = "Assist(s)",
-                                               choices = c("Paddle", "Foot", "Head"),
-                                               checkIcon = list(
-                                                 yes = tags$i(class = "fa fa-check-square", 
-                                                              style = paste("color:", opponent_colour)),
-                                                 no = tags$i(class = "fa fa-square-o")
-                                               )
-                                             ) %>% tagAppendAttributes(class = "assist-btn")
-                              )
+                              imap(opponents, ~player_assist_button(player = .x,
+                                                                    player_number = .y,
+                                                                    team = if_else(team == "A", "B", "A"),
+                                                                    shooter = F))
                               # )
                        )
                        ,
