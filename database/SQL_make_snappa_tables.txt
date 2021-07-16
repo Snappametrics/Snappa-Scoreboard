@@ -59,3 +59,15 @@ CREATE TABLE game_stats (
 	threes int,
 	impossibles int
 );	
+
+CREATE TABLE assists (
+  game_id int,
+  score_id int,
+  assist_id serial,
+  player_id int REFERENCES players (player_id) NOT NULL,
+  paddle boolean,
+  foot boolean,
+  head boolean,
+  CONSTRAINT assist_key PRIMARY KEY (game_id, score_id, assist_id),
+	FOREIGN KEY (game_id, score_id) REFERENCES scores(game_id, score_id) ON DELETE CASCADE
+)
