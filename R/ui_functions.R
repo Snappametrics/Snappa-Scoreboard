@@ -136,7 +136,7 @@ score_check <- function(team, snappaneers, round) {
                            # Was it a paddle?
                            awesomeCheckbox(
                              inputId = "paddle", 
-                             label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>'))),#"Was it a paddle?",
+                             label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-sparkles" style = "color:', team_colour, ';"></i>'))),#"Was it a paddle?",
                              status = "warning"
                            ),
                            # Was it a clink?
@@ -154,7 +154,7 @@ score_check <- function(team, snappaneers, round) {
                            # feet?
                            awesomeCheckbox(
                              inputId = "head", 
-                             label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-user" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
+                             label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-skull" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
                              status = "warning"
                            )
                   )
