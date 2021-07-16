@@ -181,12 +181,23 @@ label.control-label[for='scorer'] {
     
 }
 
-label[for='paddle'], label[for='foot'], label[for='clink'] {
+label[for='paddle'] {
+    font-size: 2.25rem; 
     font-weight:inherit;
     
 }
 
+label[for='clink'] {
+    font-size: 2.25rem;
+    font-weight:inherit;
+    
+}
 
+label[for='foot'] {
+    font-size: 2.25rem;
+    font-weight:inherit;
+    
+}
 
 #ok_A, #ok_B {
     font-size: x-large;
@@ -200,7 +211,7 @@ label[for='paddle'], label[for='foot'], label[for='clink'] {
 }
 
 
-#start_game, #scorer, #score {
+#start_game, #scorer, #paddle, #score, #clink, #foot {
     font-size: 2rem; 
     margin-bottom: 1.5vh;
 }
@@ -552,50 +563,6 @@ players 3 and 4 */
   flex: 1 1 auto;
 }
 
-.assist-col, .assist-col-right {
-  display: flex;
-  text-overflow: ellipsis;
-  flex-direction: column;
-  min-height: 30vh;
-  justify-content: space-around;
-  align-items: flex-end;
-  align-self: flex-end;
-}
-
-.assist-col-right { 
-  align-items: flex-start;
-}
-
-.assist-col-right > .dropdown > .dropdown-menu {
-  right: 50%;
-  min-width: fit-content;
-  min-height: 8vh;
-}
-
-.assist-btn {
-  margin: 2vh 1vh;
-}
-
-.assist-col > .dropdown > .dropdown-menu {
-  min-width: fit-content;
-  min-height: 8vh;
-}
-
-.cool-well {
-  padding: 0vh 2vh;
-  margin: 1vh 0vh;
-  width: 95% !important;
-}
-
-.cool-row {
-  display: flex;
-  align-items: center;
-}
-
-.cool-header {
-  white-space: nowrap;
-  margin-left: 15px;
-}
 
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
   margin-left: 8px;
