@@ -61,9 +61,9 @@ CREATE TABLE game_stats (
 );	
 
 CREATE TABLE assists (
-  game_id int,
-  score_id int,
-  assist_id serial,
+  game_id int NOT NULL,
+  score_id int NOT NULL,
+  assist_id int NOT NULL,
   player_id int REFERENCES players (player_id) NOT NULL,
   paddle boolean,
   foot boolean,

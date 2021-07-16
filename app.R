@@ -470,6 +470,7 @@ server <- function(input, output, session) {
     new_player_id = sum(dbGetQuery(con, "SELECT MAX(player_id) FROM players"),1),
     score_id = as.integer(0),
     shot_num = as.integer(1),
+    assist_id = as.integer(0),
     
     # Current game Tables
     game_stats_db = tbl_templates$game_stats %>% select(1:5),
@@ -2643,17 +2644,22 @@ observeEvent(input$resume_no, {
                              by = "score_id"), 
                    append = T)
       
-      browser()
-      
+
       
       # Identify assists
       input_list = reactiveValuesToList(session$input)
       
       assists = compact(input_list[str_subset(names(input_list), "assist")])
       
+      
       # Order snappaneers by player_id to align with assist inputs
       new_assists = format_assists(snappaneers(), "A", assists) %>% 
-        mutate(game_id = vals$game_id, score_id = vals$score_id, .before = "player_id")
+        mutate(game_id = vals$game_id, 
+               score_id = vals$score_id, 
+               assist_id = as.integer(row_number()+vals$assist_id), 
+               .before = "player_id")
+      
+      vals$assist_id = as.integer(vals$assist_id+length(assists))
       
       dbWriteTable(
         con, "assists", 
@@ -2780,7 +2786,12 @@ observeEvent(input$resume_no, {
       
       # Order snappaneers by player_id to align with assist inputs
       new_assists = format_assists(snappaneers(), "B", assists) %>% 
-        mutate(game_id = vals$game_id, score_id = vals$score_id, .before = "player_id")
+        mutate(game_id = vals$game_id, 
+               score_id = vals$score_id, 
+               assist_id = as.integer(row_number()+vals$assist_id), 
+               .before = "player_id")
+      
+      vals$assist_id = as.integer(vals$assist_id+length(assists))
       
       dbWriteTable(
         con, "assists", 
