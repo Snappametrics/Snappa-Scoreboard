@@ -2627,6 +2627,8 @@ observeEvent(input$resume_no, {
         clink = input$clink,
         foot = input$foot
       )
+      
+      
       # Sink notification
       sink_casualty_popup(session, score_row = new_score, players = snappaneers()[snappaneers()$team == "B", "player_name", drop=T])
       
@@ -2641,6 +2643,22 @@ observeEvent(input$resume_no, {
                              by = "score_id"), 
                    append = T)
       
+      browser()
+      
+      
+      # Identify assists
+      input_list = reactiveValuesToList(session$input)
+      
+      assists = compact(input_list[str_subset(names(input_list), "assist")])
+      
+      # Order snappaneers by player_id to align with assist inputs
+      new_assists = format_assists(snappaneers(), "A", assists) %>% 
+        mutate(game_id = vals$game_id, score_id = vals$score_id, .before = "player_id")
+      
+      dbWriteTable(
+        con, "assists", 
+        new_assists, 
+        append = T)
       
       # Update player stats table
       vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
