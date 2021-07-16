@@ -41,12 +41,12 @@ score_check <- function(team, snappaneers, round) {
   score_val = paste(team, "score_val", sep = "_")
   
   shooting_team_players = filter(snappaneers, team == !!team) %>% 
-    pull(player_name) %>% 
-    sample()
+    arrange(player_id) %>% 
+    pull(player_name)
   
   opponents = filter(snappaneers, team != !!team) %>% 
-    pull(player_name) %>% 
-    sample()
+    arrange(player_id) %>% 
+    pull(player_name)
   
   # browser()
   # Ask how many points were scored and by whom
