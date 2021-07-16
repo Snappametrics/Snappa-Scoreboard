@@ -595,6 +595,34 @@ players 3 and 4 */
   margin-left: 8px;
 }
 
+
+.control-sidebar>.tab-content {
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.control-sidebar>.tab-content>.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.control-sidebar>.tab-content>.active>.shiny-input-container {
+  margin: 2vh 0;
+}
+
+.control-sidebar>.tab-content>.active>.action-button {
+  margin: 2vh 1vh;
+}
+
+.irs--shiny .irs-grid-text, .irs-min, .irs--shiny .irs-max, .control-sidebar-dark {
+  color: var(--bg-col) !important;
+}
+
+
+
 /* Controls for text shading on wells */
 
 
