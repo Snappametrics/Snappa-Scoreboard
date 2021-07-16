@@ -2773,6 +2773,20 @@ observeEvent(input$resume_no, {
                              by = "score_id"), 
                    append = T)
       
+      # Identify assists
+      input_list = reactiveValuesToList(session$input)
+      
+      assists = compact(input_list[str_subset(names(input_list), "assist")])
+      
+      # Order snappaneers by player_id to align with assist inputs
+      new_assists = format_assists(snappaneers(), "B", assists) %>% 
+        mutate(game_id = vals$game_id, score_id = vals$score_id, .before = "player_id")
+      
+      dbWriteTable(
+        con, "assists", 
+        new_assists, 
+        append = T)
+      
       
       # Update player stats in the app
       vals$player_stats_db = aggregate_player_stats(vals$scores_db, 
