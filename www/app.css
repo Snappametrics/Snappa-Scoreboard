@@ -300,8 +300,6 @@ label.control-label[for='score'] {
 
 .btn {
     padding: .25vh 1.5vh;
-    background: var(--blue);
-    border: none;
 }
 
 
@@ -570,10 +568,8 @@ players 3 and 4 */
 .assist-col-right { 
   align-items: flex-start;
   background-color: #2574a9;
-
-#paddle-icon, #foot-icon, #clink-icon, #head-icon {
-  margin-left: 8px;
 }
+
 
 .cool-header {
   width: 100%;
@@ -581,6 +577,11 @@ players 3 and 4 */
   margin-left: 15px;
   padding: 1vh;
   text-align: center;
+}
+
+.cool-row{
+  display: flex;
+  align-items: center;
 }
 
 .cool-well {
@@ -591,6 +592,7 @@ players 3 and 4 */
 
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
   margin-left: 15px;
+  font-size: 3rem;
 }
 
 .check-btn-icon-yes, .check-btn-icon-no {
