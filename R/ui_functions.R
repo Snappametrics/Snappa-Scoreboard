@@ -38,6 +38,7 @@ score_check <- function(team, snappaneers, round) {
   team_scored = paste("ok", team, sep = "_")
   team_colour = if_else(team_scored == "ok_A", "#e26a6a", "#2574a9")
   opponent_colour = if_else(team_scored == "ok_B", "#e26a6a", "#2574a9")
+  opponent_team = if_else(team == "A", "B", "A")
   score_val = paste(team, "score_val", sep = "_")
   
   shooting_team_players = filter(snappaneers, team == !!team) %>% 
@@ -58,38 +59,11 @@ score_check <- function(team, snappaneers, round) {
               fluidRow(style = "display:flex;",
                        # wellPanel(
                        # Assist col
-                       column(3, align = "left", class = "assist-col",
+                       column(3, align = "left", class = str_c("assist-col team-", team), 
                               h3("Assist(s)"),
                               imap(shooting_team_players, ~player_assist_button(player = .x,
                                                                                 player_number = .y,
                                                                                 team = team))
-                              # dropdownButton(label = shooting_team_players[1], circle = F, size = "lg",
-                              #                icon = icon("fa-fa-hand-paper"),
-                              #                checkboxGroupButtons(
-                              #                  inputId = "shooters_assist1",
-                              #                  # label = "Assist(s)",
-                              #                  choices = c("Paddle", "Foot", "Head"),
-                              #                  checkIcon = list(
-                              #                    yes = tags$i(class = "fa fa-check-square", 
-                              #                                 style = paste("color:", team_colour)),
-                              #                    no = tags$i(class = "fa fa-square-o")
-                              #                  )
-                              #                )
-                              # ),
-                              # dropdownButton(label = shooting_team_players[2], circle = F, size = "lg",
-                              #                icon = icon("fa-fa-plus"),
-                              #                checkboxGroupButtons(
-                              #                  inputId = "shooters_assist2",
-                              #                  # label = "Assist(s)",
-                              #                  choices = c("Paddle", "Foot", "Head"),
-                              #                  checkIcon = list(
-                              #                    yes = tags$i(class = "fa fa-check-square", 
-                              #                                 style = paste("color:", team_colour)),
-                              #                    no = tags$i(class = "fa fa-square-o")
-                              #                  )
-                              #                )
-                              #                # )
-                              # )
                        ),
                        column(6,
                               # Who Scored?
@@ -114,11 +88,11 @@ score_check <- function(team, snappaneers, round) {
                        ),
                        # Assist col
                        # wellPanel(
-                       column(3, align = "right", class = "assist-col-right",
+                       column(3, align = "right", class = str_c("assist-col-right team-", opponent_team),
                               h3("Assist(s)"),
                               imap(opponents, ~player_assist_button(player = .x,
                                                                     player_number = .y,
-                                                                    team = if_else(team == "A", "B", "A"),
+                                                                    team = opponent_team,
                                                                     shooter = F))
                               # )
                        )
