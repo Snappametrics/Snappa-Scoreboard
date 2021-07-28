@@ -1548,12 +1548,9 @@ server <- function(input, output, session) {
       player_name = colDef(name = "Player", maxWidth = 100),
       round_num = colDef(name = "Round", maxWidth = 70),
       points_scored = colDef(name = "Pts", maxWidth = 50),
-      paddle = colDef(name = "", width = 30, 
-                      cell = emoji_coldef("paddle")),
-      clink = colDef(name = "", width = 30, 
-                     cell = emoji_coldef("clink")),
-      foot = colDef(name = "", width = 30, 
-                    cell = emoji_coldef("foot"))
+      paddle = emoji_coldef("paddle"),
+      clink = emoji_coldef("clink"),
+      foot = emoji_coldef("foot")
     )
     
     # map over event columns and keep those which are true
@@ -1600,12 +1597,9 @@ server <- function(input, output, session) {
       player_name = colDef(name = "Player", maxWidth = 100),
       round_num = colDef(name = "Round", maxWidth = 70),
       points_scored = colDef(name = "Pts", maxWidth = 50),
-      paddle = colDef(name = "", width = 30, 
-                      cell = emoji_coldef("paddle")),
-      clink = colDef(name = "", width = 30, 
-                     cell = emoji_coldef("clink")),
-      foot = colDef(name = "", width = 30, 
-                    cell = emoji_coldef("foot"))
+      paddle = emoji_coldef("paddle"),
+      clink = emoji_coldef("clink"),
+      foot = emoji_coldef("foot")
     )
     
     # map over event columns and keep those which are true

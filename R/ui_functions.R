@@ -2379,6 +2379,7 @@ emoji_coldef = function(type){
   )
 
   reactable::colDef(
+    name = "", width = 30, 
     cell = function(value, index, name) {
       # input:
       #   - value, the cell value
