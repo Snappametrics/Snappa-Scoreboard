@@ -23,11 +23,12 @@ player_assist_button = function(player, player_number, team, shooter = T){
                    inputId = str_c(if_else(shooter, "shooter", "opponent"), "_assist", player_number),
                    size = "lg",
                    # label = "Assist(s)",
-                   choices = c("Paddle", "Foot", "Head"), 
-                   checkIcon = list(
-                     yes = tags$i(class = str_c("fa fa-check-square team-", tolower(team))),
-                     no = tags$i(class = "fa fa-square-o")
-                   )
+                   choices = c(`<i class='fas fa-hand-sparkles'></i>` = "paddle", 
+                               `<i class='fas fa-shoe-prints'></i>` = "foot", 
+                               `<i class='fas fa-skull'></i>` = "head"),
+                   direction = "horizontal",
+                   selected = NULL,
+                   status = str_c("team-", team)
                  )
   )
 }
