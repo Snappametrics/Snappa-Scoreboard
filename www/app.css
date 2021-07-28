@@ -578,6 +578,12 @@ players 3 and 4 */
     margin: 1vh;
     padding: 2vh 3vh;
     border-radius: 8px;
+}
+
+.assist-col > h3, 
+.assist-col > h4, 
+.assist-col-right > h3, 
+.assist-col-right > h4{
   color: #fafaf9;
 }
 
