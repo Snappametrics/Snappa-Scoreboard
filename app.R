@@ -426,9 +426,9 @@ server <- function(input, output, session) {
                  icon = icon("bar-chart")),
         menuItem("Player Stats", tabName = "player_stats",
                  icon = icon("chart-line")),
-        menuItem("Edit Teams", 
-                 tabName = "edit_teams",
-                 icon = icon("edit")),
+        # menuItem("Edit Teams", 
+        #          tabName = "edit_teams",
+        #          icon = icon("edit")),
         menuItem("Win Probabilities", tabName = "markov_model_summary",
                  icon = icon("flask"))
       )
