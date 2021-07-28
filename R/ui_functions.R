@@ -56,14 +56,20 @@ score_check <- function(team, snappaneers, round) {
               h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>")),
                  style = "margin-bottom: 2vh;"),
               
-              fluidRow(style = "display:flex;",
+              fluidRow(#style = "display:flex;justify-content:space-between;align-items:flex-start",
                        # wellPanel(
                        # Assist col
-                       column(3, align = "left", class = str_c("assist-col team-", team), 
-                              h3("Assist(s)"),
-                              imap(shooting_team_players, ~player_assist_button(player = .x,
-                                                                                player_number = .y,
-                                                                                team = team))
+                       column(3, align = "left", 
+                              div(class = str_c("assist-col team-", team), 
+                                  h3("Assists"),
+                                  h4(str_c("Team ", team)),
+                                  br(),
+                                  div(class = "assist-dropdowns-left",
+                                      imap(shooting_team_players, ~player_assist_button(player = .x,
+                                                                                        player_number = .y,
+                                                                                        team = team))
+                                  )
+                              )
                        ),
                        column(6,
                               # Who Scored?
@@ -84,57 +90,85 @@ score_check <- function(team, snappaneers, round) {
                                 label = "Points",
                                 choices = c(1, 2, 3, 4, 5, 6, 7),
                                 size = "lg"
-                              )
+                              ),
+                              # wellPanel(
+                              #   align = "center", class = "cool-well",
+                                # fluidRow(#class = "cool-row",
+                                #          h3("Anything cool happen?", class = "cool-header", style = "font-weight:700; font-size: 2rem;"), 
+                                # ),
+                                fluidRow(#class = "cool-row",
+                                  checkboxGroupButtons(
+                                    inputId = "qualifiers",
+                                    label = "Anything cool happen?",
+                                    choices = c(`<i class='fas fa-hand-sparkles'></i>` = "paddle", 
+                                                `<i class='fas fa-assistive-listening-systems'></i>` = "clink", 
+                                                `<i class='fas fa-shoe-prints'></i>` = "foot", 
+                                                `<i class='fas fa-skull'></i>` = "head"),
+                                    direction = "horizontal",
+                                    selected = NULL,
+                                    status = str_c("team-", team), 
+                                    individual = T,
+                                    size = "lg"
+                                  )
+                                         # column(3,
+                                         # # Was it a paddle?
+                                         # awesomeCheckbox(
+                                         #   inputId = "paddle", 
+                                         #   label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-sparkles" style = "color:', team_colour, ';"></i>'))),#"Was it a paddle?",
+                                         #   status = "warning"
+                                         # )
+                                         # ),
+                                         # column(3,
+                                         # # Was it a clink?
+                                         # awesomeCheckbox(
+                                         #   inputId = "clink", 
+                                         #   label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
+                                         #   status = "warning"
+                                         # )
+                                         # ),
+                                         # column(3,
+                                         # # feet?
+                                         # awesomeCheckbox(
+                                         #   inputId = "foot", 
+                                         #   label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
+                                         #   status = "warning"
+                                         # )
+                                         # ),
+                                         # column(3,
+                                         # # feet?
+                                         # awesomeCheckbox(
+                                         #   inputId = "head", 
+                                         #   label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-skull" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
+                                         #   status = "warning"
+                                         # )
+                                         # )
+                                )
+                              # )
                        ),
                        # Assist col
                        # wellPanel(
-                       column(3, align = "right", class = str_c("assist-col-right team-", opponent_team),
-                              h3("Assist(s)"),
-                              imap(opponents, ~player_assist_button(player = .x,
-                                                                    player_number = .y,
-                                                                    team = opponent_team,
-                                                                    shooter = F))
+                       column(3, align = "right", 
+                              div(class = str_c("assist-col-right team-", opponent_team),
+                                  h3("Assists"),
+                                  h4(str_c("Team ", opponent_team)),
+                                  br(),
+                                  div(class = "assist-dropdowns-right",
+                                      imap(opponents, ~player_assist_button(player = .x,
+                                                                        player_number = .y,
+                                                                        team = opponent_team,
+                                                                        shooter = F))
+                                  )
+                                  )
                               # )
                        )
                        ,
                        # Anything cool happen?
                        
               ),
-              fluidRow(
-                wellPanel(
-                  align = "center", class = "cool-well",
-                  fluidRow(class = "cool-row",
-                           h3("Anything cool happen?", class = "cool-header", style = "font-weight:700; font-size: 2rem;"), 
-                  ),
-                  fluidRow(class = "cool-row",
-                           # Was it a paddle?
-                           awesomeCheckbox(
-                             inputId = "paddle", 
-                             label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-sparkles" style = "color:', team_colour, ';"></i>'))),#"Was it a paddle?",
-                             status = "warning"
-                           ),
-                           # Was it a clink?
-                           awesomeCheckbox(
-                             inputId = "clink", 
-                             label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                             status = "warning"
-                           ),
-                           # feet?
-                           awesomeCheckbox(
-                             inputId = "foot", 
-                             label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                             status = "warning"
-                           ),
-                           # feet?
-                           awesomeCheckbox(
-                             inputId = "head", 
-                             label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-skull" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                             status = "warning"
-                           )
-                  )
-                )
-              )
-              ,
+              # fluidRow(
+              #   
+              # )
+              # ,
               
               textOutput("skip_error_msg"),
               # Use score_val output to only show score button on valid scoring combinations
