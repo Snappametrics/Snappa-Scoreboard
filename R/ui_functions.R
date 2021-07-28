@@ -1318,7 +1318,6 @@ team_summary_tab = function(df, game_over, score_difference, team){
 }
 
 game_summary_tab_rt = function(df){
-  browser()
   df %>% 
     reactable(defaultSorted = c("winning", "total_points"),
               sortable = F,
