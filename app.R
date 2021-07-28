@@ -1008,6 +1008,9 @@ server <- function(input, output, session) {
       vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game)) %>%
         pull() %>% as.numeric()
       
+      vals$assist_id = dbGetQuery(con, str_c("SELECT MAX(assist_id) FROM assists WHERE game_id = ", lost_game)) %>%
+        pull() %>% as.numeric()
+      
       
       vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
       vals$game_id = lost_game
@@ -1258,7 +1261,7 @@ server <- function(input, output, session) {
                score_id = vals$score_id, 
                assist_id = as.integer(row_number()+vals$assist_id), 
                .before = "player_id")
-      
+      # Increment assist ID
       vals$assist_id = as.integer(vals$assist_id+length(assists))
       
       dbWriteTable(
