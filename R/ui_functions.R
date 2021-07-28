@@ -50,7 +50,6 @@ score_check <- function(team, snappaneers, round) {
     arrange(player_id) %>% 
     pull(player_name)
   
-  # browser()
   # Ask how many points were scored and by whom
   modalDialog(align = "center", easyClose = T, size = "l", 
               # Header
@@ -92,11 +91,6 @@ score_check <- function(team, snappaneers, round) {
                                 choices = c(1, 2, 3, 4, 5, 6, 7),
                                 size = "lg"
                               ),
-                              # wellPanel(
-                              #   align = "center", class = "cool-well",
-                                # fluidRow(#class = "cool-row",
-                                #          h3("Anything cool happen?", class = "cool-header", style = "font-weight:700; font-size: 2rem;"), 
-                                # ),
                                 fluidRow(#class = "cool-row",
                                   checkboxGroupButtons(
                                     inputId = "qualifiers",
@@ -111,43 +105,9 @@ score_check <- function(team, snappaneers, round) {
                                     individual = T,
                                     size = "lg"
                                   )
-                                         # column(3,
-                                         # # Was it a paddle?
-                                         # awesomeCheckbox(
-                                         #   inputId = "paddle", 
-                                         #   label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-sparkles" style = "color:', team_colour, ';"></i>'))),#"Was it a paddle?",
-                                         #   status = "warning"
-                                         # )
-                                         # ),
-                                         # column(3,
-                                         # # Was it a clink?
-                                         # awesomeCheckbox(
-                                         #   inputId = "clink", 
-                                         #   label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                                         #   status = "warning"
-                                         # )
-                                         # ),
-                                         # column(3,
-                                         # # feet?
-                                         # awesomeCheckbox(
-                                         #   inputId = "foot", 
-                                         #   label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                                         #   status = "warning"
-                                         # )
-                                         # ),
-                                         # column(3,
-                                         # # feet?
-                                         # awesomeCheckbox(
-                                         #   inputId = "head", 
-                                         #   label =tags$div(HTML(str_c('<i id="head-icon" class="fas fa-skull" style = "color:', team_colour, ';"></i>'))),#"Was it a clink?",
-                                         #   status = "warning"
-                                         # )
-                                         # )
                                 )
-                              # )
                        ),
                        # Assist col
-                       # wellPanel(
                        column(3, align = "right", 
                               div(class = str_c("assist-col-right team-", opponent_team),
                                   h3("Assists"),
@@ -160,16 +120,9 @@ score_check <- function(team, snappaneers, round) {
                                                                         shooter = F))
                                   )
                                   )
-                              # )
-                       )
-                       ,
-                       # Anything cool happen?
-                       
+                       ),
+
               ),
-              # fluidRow(
-              #   
-              # )
-              # ,
               
               textOutput("skip_error_msg"),
               # Use score_val output to only show score button on valid scoring combinations
