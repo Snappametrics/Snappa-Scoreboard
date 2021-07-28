@@ -2413,6 +2413,33 @@ options(reactable.theme = reactableTheme(
 )
 
 
+# Table customization functions -------------------------------------------
+
+emoji_coldef = function(type){
+  if(missing(type)){
+    stop("Need to provide a point type: 'paddle', 'clink', or 'foot'")
+  }
+  type_list = list(
+    "paddle" = emo::ji("waving_hand"),
+    "clink" = emo::ji("ear"),
+    "foot" = emo::ji("foot")
+  )
+
+  reactable::colDef(
+    cell = function(value, index, name) {
+      # input:
+      #   - value, the cell value
+      #   - index, the row index (optional)
+      #   - name, the column name (optional)
+      #
+      # output:
+      #   - content to render (e.g. an HTML tag or widget)
+      if (value) type_list[[type]] else ""
+    }
+  )
+}
+
+
 # Render a bar chart with a label on the left
 bar_chart <- function(label, width = "100%", height = "14px", fill = "#00bfc4", background = NULL) {
   bar <- div(style = list(background = fill, width = width, height = height))
