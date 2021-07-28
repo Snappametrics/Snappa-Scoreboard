@@ -652,12 +652,16 @@ players 3 and 4 */
 }
 
 
-.team-A {
-  background-color: var(--team-a-red);
+.team-A, .btn-team-A.active {
+  background-color: var(--team-a-red) !important;
 }
 
-.team-B {
-  background-color: var(--team-b-blue);
+.team-B, .btn-team-B.active {
+  background-color: var(--team-b-blue) !important;
+}
+
+.btn-team-A.active, .btn-team-B.active {
+  color: var(--bg-col);
 }
 
 /* Controls for text shading on wells */
