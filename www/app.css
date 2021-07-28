@@ -294,9 +294,6 @@ label.control-label[for='score'] {
     font-size:5rem;
 }
 
-.btn-group {
-    padding: 0 0.1rem;
-}
 
 .form-group {
     display: block;
@@ -317,12 +314,15 @@ label.control-label[for='score'] {
 }
 
 .awesome-checkbox {
-    margin-top: 2.5vh;
-    margin-bottom: 2.5vh;
+    margin: 2.5vh 0 !important;
 }
 
 .btn {
     padding: .25vh 1.5vh;
+}
+
+.score-inputs > .checkboxGroupButtons > .btn-group-lg > .checkbtn {
+  color: var(--bg-col);
 }
 
 
@@ -335,12 +335,8 @@ label.control-label[for='score'] {
   font-size: 13px;
 }
 
-.awesome-checkbox {
-    padding-left: 25px;
-}
 .awesome-checkbox label::before {
     transform: translateY(3px);
-    left: -10px;
     padding: 12px;
 }
 
