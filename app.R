@@ -1801,34 +1801,50 @@ server <- function(input, output, session) {
   ### NEXT ROUND
   observeEvent(input$next_round, {
     
+    # Increase shot number
+    vals$shot_num = vals$shot_num+1
+    # Update round in game stats
+    db_update_round(round = round_num(), game = vals$game_id)
+    vals$game_stats_db$last_round = round_num()
+    
+    
+    # If already in rebuttal
     if (vals$rebuttal_tag == T){
+      # And they should still be in rebuttal
       if (vals$rebuttal == T){
-        click("finish_game")
+        
         vals$shot_num = vals$shot_num - 1
+        vals$game_stats_db$last_round = round_num()
+        
+        click("finish_game")
+        
       } else {
+        # If they are no longer in rebuttal
         vals$rebuttal_tag = F
       }
-    } else{
     }
     
-    vals$shot_num = vals$shot_num+1
+    
+    
+    # If the game is nil all
     if (vals$current_scores$team_A == 0 &
         vals$current_scores$team_B == 0){
       invisible()
     } else {
+      # Otherwise update player stats
       
-      # Update player stats in the app
+      # in the app
       vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)    
-      #Update the DB with the new player_stats (adds to shots)
+      # in the DB
       db_update_player_stats(vals$player_stats_db, round_button = T)
     }
     
+    # Then check for rebuttal
     vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
                                    round = round_num(), points_to_win = score_to())
     
-    # Update round in game stats
-    db_update_round(round = round_num(), game = vals$game_id)
     
+    # If they are in rebuttal at the end of the round, tag it
     if (vals$rebuttal == T) {
       vals$rebuttal_tag = T
       
@@ -1836,8 +1852,7 @@ server <- function(input, output, session) {
                         round = round_num(),
                         current_scores = vals$current_scores)
       
-    } else {
-    }
+    } 
     
   })
   
@@ -1857,6 +1872,7 @@ server <- function(input, output, session) {
     
     # Update round in game stats
     db_update_round(round = round_num(), game = vals$game_id)
+    vals$game_stats_db$last_round = round_num()
     
   })
   
