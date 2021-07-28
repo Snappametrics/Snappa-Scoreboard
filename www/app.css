@@ -11,6 +11,7 @@
     --norman-green: #67a283;
     --paddle-purple: #793e8e;
     --glass-blue: #54b6f2;
+    --font-colour: #333;
 
     --deep-blue: #084E8A;
     --blue: #006FBB;
@@ -205,7 +206,7 @@ label[for='paddle'], label[for='clink'], label[for='foot'], label[for='head'] {
   .awesome-checkbox label[for='clink']::before, 
   .awesome-checkbox label[for='foot']::before, 
   .awesome-checkbox label[for='head']::before {
-    border: 1px solid #333;
+    border: 1px solid var(--font-colour);
   }
 
 .assist-dropdowns-right > .dropdown > .dropdown-menu  {
