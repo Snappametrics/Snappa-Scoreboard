@@ -1119,7 +1119,7 @@ server <- function(input, output, session) {
         validate_scores(player = input$scorer,
                         shot = vals$shot_num, 
                         snappaneers = snappaneers(), 
-                        paddle = any(input$paddle, input$foot), 
+                        paddle = any((c("paddle", "foot", "head") %in% input$qualifiers)), 
                         scores_table = vals$scores_db,
                         rebuttal = vals$rebuttal_tag) == "valid",
         message = "That entry doesn't make sense for this round/shooter combination"),
@@ -1129,7 +1129,7 @@ server <- function(input, output, session) {
           validate_scores(player = input$scorer,
                           shot = vals$shot_num, 
                           snappaneers = snappaneers(), 
-                          paddle = any(input$paddle, input$foot), 
+                          paddle = any((c("paddle", "foot", "head") %in% input$qualifiers)), 
                           scores_table = vals$scores_db,
                           rebuttal = vals$rebuttal_tag) == "valid",
           message = "That person has already scored a non paddle point this round")
@@ -1147,7 +1147,7 @@ server <- function(input, output, session) {
         validate_scores(player = input$scorer,
                         shot = vals$shot_num, 
                         snappaneers = snappaneers(), 
-                        paddle = any(input$paddle, input$foot), 
+                        paddle = any((c("paddle", "foot", "head") %in% input$qualifiers)), 
                         scores_table = vals$scores_db,
                         rebuttal = vals$rebuttal_tag) == "valid",
         message = "That entry doesn't make sense for this round/shooter combination"
@@ -1159,7 +1159,7 @@ server <- function(input, output, session) {
           validate_scores(player = input$scorer,
                           shot = vals$shot_num, 
                           snappaneers = snappaneers(), 
-                          paddle = any(input$paddle, input$foot), 
+                          paddle = any((c("paddle", "foot", "head") %in% input$qualifiers)), 
                           scores_table = vals$scores_db,
                           rebuttal = vals$rebuttal_tag) == "valid",
           message = "That person has already scored a non paddle point this round")
@@ -1223,9 +1223,10 @@ server <- function(input, output, session) {
         round_num = round_num(),
         points_scored = score,
         shooting = shooting_team_lgl,
-        paddle = any(input$foot, input$paddle),
-        clink = input$clink,
-        foot = input$foot
+        paddle = any((c("paddle", "foot", "head") %in% input$qualifiers)),
+        clink = ("clink" %in% input$qualifiers),
+        foot = ("foot" %in% input$qualifiers),
+        head = ("head" %in% input$qualifiers)
       )
       
       
@@ -1270,10 +1271,10 @@ server <- function(input, output, session) {
       db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
       
       # Congratulate paddlers
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
+      if(any((c("paddle", "foot", "head") %in% input$qualifiers)) & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
         game_notification()
       }
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
+      if(any((c("paddle", "foot") %in% input$qualifiers)) & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
@@ -1360,9 +1361,10 @@ server <- function(input, output, session) {
         round_num = round_num(),
         points_scored = score,
         shooting = shooting_team_lgl,
-        paddle = any(input$paddle, input$foot),
-        clink = input$clink,
-        foot = input$foot
+        paddle = any((c("paddle", "foot", "head") %in% input$qualifiers)),
+        clink = ("clink" %in% input$qualifiers),
+        foot = ("foot" %in% input$qualifiers),
+        head = ("head" %in% input$qualifiers)
       )
       
       # Sink notification
@@ -1407,10 +1409,10 @@ server <- function(input, output, session) {
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
+      if(any((c("paddle", "foot", "head") %in% input$qualifiers)) & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
         game_notification()
       }
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
+      if(any((c("paddle", "foot", "head") %in% input$qualifiers)) & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
