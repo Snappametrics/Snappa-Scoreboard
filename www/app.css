@@ -208,7 +208,7 @@ label[for='paddle'], label[for='clink'], label[for='foot'], label[for='head'] {
     border: 1px solid #333;
   }
 
-.assist-col-right > .dropdown > .dropdown-menu  {
+.assist-dropdowns-right > .dropdown > .dropdown-menu  {
   left: -180px;
 }
 #ok_A, #ok_B {
@@ -577,11 +577,10 @@ players 3 and 4 */
     display: flex;
     text-overflow: ellipsis;
     flex-direction: column;
-    min-height: 35vh;
-    justify-content: space-around;
+    text-align:center;
     align-items: flex-end;
-    align-self: flex-start;
-    margin: 1vh 5vh;
+    min-height: 28vh;
+    margin: 1vh;
     padding: 2vh 3vh;
     border-radius: 8px;
   color: #fafaf9;
@@ -591,12 +590,19 @@ players 3 and 4 */
   align-items: flex-start;
 }
 
+.assist-dropdowns-right, .assist-dropdowns-left {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: space-around;
+}
+
+.assist-dropdowns-right {
+  align-self: flex-start;
+}
 
 .cool-header {
-  width: 100%;
-  white-space: nowrap;
-  margin-left: 15px;
-  padding: 1vh;
+  padding-top: 1vh;
   text-align: center;
 }
 
@@ -607,9 +613,8 @@ players 3 and 4 */
 }
 
 .cool-well {
-  padding: 0vh 2vh;
-  margin: 1vh 0vh;
-  width: 50% !important;
+  padding: 0vh 20px;
+  margin: 1vh -20px;
 }
 
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
@@ -617,9 +622,7 @@ players 3 and 4 */
   font-size: 3rem;
 }
 
-.shiny-input-radiogroup > #score {
-  width: max-content;
-}
+
 
 .check-btn-icon-yes, .check-btn-icon-no {
   margin-right: 5px;
