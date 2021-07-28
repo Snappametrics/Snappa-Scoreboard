@@ -41,6 +41,11 @@
     background-color: #fafaf9 !important;
 }
 
+.modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
 .modal-footer{
   display: flex;
   justify-content: flex-end;
