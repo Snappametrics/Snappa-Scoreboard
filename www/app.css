@@ -587,6 +587,10 @@ players 3 and 4 */
   color: #fafaf9;
 }
 
+.btn-dropdown-input {
+  margin: 1vh 0;
+}
+
 .assist-col-right { 
   align-items: flex-start;
 }
