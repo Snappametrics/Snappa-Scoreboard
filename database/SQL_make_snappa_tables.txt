@@ -60,6 +60,16 @@ CREATE TABLE game_stats (
 	impossibles int
 );	
 
+CREATE TABLE teams (
+  game_id int REFERENCES game_stats (game_id) ON DELETE CASCADE NOT NULL,
+  player_id int REFERENCES players (player_id) NOT NULL,
+  team varchar(1) NOT NULL,
+  team_size int NOT NULL,
+  extra_shots boolean NOT NULL,
+  CONSTRAINT player_game PRIMARY KEY (game_id, player_id)
+);
+
+
 CREATE TABLE assists (
   game_id int NOT NULL,
   assist_id int NOT NULL,
@@ -70,4 +80,4 @@ CREATE TABLE assists (
   head boolean,
   CONSTRAINT assist_key PRIMARY KEY (game_id, assist_id),
 	FOREIGN KEY (game_id, score_id) REFERENCES scores(game_id, score_id) ON DELETE CASCADE
-)
+);
