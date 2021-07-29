@@ -1063,6 +1063,19 @@ server <- function(input, output, session) {
         value = vals$game_stats_db,
         append = T
       )
+      browser()
+      teams = snappaneers() %>% 
+        add_count(team, name = "team_size") %>% 
+        mutate(game_id = vals$game_id,
+               extra_shots = (n_distinct(team_size) > 1 & team_size == min(team_size))) %>% 
+        select(game_id, player_id, team, team_size, extra_shots)
+      
+      dbWriteTable(
+        conn = con, 
+        name = "teams",
+        value = teams,
+        append = T
+      )
       
       # Initialize the current game's player_stats table
       vals$player_stats_db = aggregate_player_stats(vals$scores_db, 
