@@ -17,12 +17,9 @@ rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 # UI functions ------------------------------------------------------------
 
 player_assist_button = function(player, player_number, team, shooter = T){
-  dropdownButton(label = player, circle = F, size = "lg",
-                 icon = icon("fa-fa-hand-paper"),
                  checkboxGroupButtons(
                    inputId = str_c(if_else(shooter, "shooter", "opponent"), "_assist", player_number),
-                   size = "lg",
-                   label = "Assist type",
+                   label = player,#"Assist type",
                    choices = c(`<i class='fas fa-hand-sparkles'></i>` = "paddle", 
                                `<i class='fas fa-shoe-prints'></i>` = "foot", 
                                `<i class='fas fa-skull'></i>` = "head"),
@@ -30,7 +27,6 @@ player_assist_button = function(player, player_number, team, shooter = T){
                    selected = NULL,
                    status = str_c("team-", team)
                  )
-  )
 }
 
 # Score pop-up dialog box

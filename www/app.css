@@ -573,27 +573,20 @@ players 3 and 4 */
     text-overflow: ellipsis;
     flex-direction: column;
     text-align:center;
-    align-items: flex-end;
-    min-height: 28vh;
+    align-items: center;
+    min-height: 40vh;
     margin: 1vh;
     padding: 2vh 3vh;
     border-radius: 8px;
+    color: #fafaf9;
 }
 
-.assist-col > h3, 
-.assist-col > h4, 
-.assist-col-right > h3, 
-.assist-col-right > h4{
-  color: #fafaf9;
-}
 
 .btn-dropdown-input {
   margin: 1vh 0;
 }
 
-.assist-col-right { 
-  align-items: flex-start;
-}
+
 
 .assist-dropdowns-right, .assist-dropdowns-left {
     display: flex;
@@ -602,8 +595,10 @@ players 3 and 4 */
     justify-content: space-around;
 }
 
-.assist-dropdowns-right {
-  align-self: flex-start;
+
+.btn-group.btn-group-lg.btn-group-container-sw {
+  display: flex;
+  justify-content: center;
 }
 
 .cool-header {
