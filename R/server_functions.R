@@ -324,20 +324,49 @@ cooldown_check = function(casualties, scores, current_round, casualty_to_check, 
   
 }
 
-format_assists = function(snappaneers, scoring_team, assist_inputs){
+
+format_assists = function(snappaneers, scoring_team, assist_inputs, assist_types = c("paddle", "foot", "head")){
+  #' Prepare assist inputs for database
+  #'
+  #' Join the assist inputs to their appropriate players 
+  #' and prepare them to be added to the assists table
+  #'
+  #'
+  #' @param snappaneers the current players
+  #' 
+  #' @param scoring_team A character identifying the scoring team.
+  #'     this is used to match the players to their corresponding ui input
+  #' 
+  #' @param assist_inputs A list of input names each containing vectors of assist types
+  #' 
+  #' @param assist_types A vector of assist types to track 
+  #'
+
+  # Create a dataframe of the assist input (the player) and the assist type
+  assists_df = enframe(assist_inputs, name = "input_id", value = "assist_type") %>% 
+    unnest(assist_type) %>% 
+    mutate(assist_val = T)
+  
+  # Use snappaneers to align the inputs with the players
+  #### IMPORTANT: This hinges on the inputs being assigned in the order of ascending player_id
   select(snappaneers, -shots) %>% 
     arrange(team, player_id) %>% 
     # Join in the assist inputs by recreating the input id
     group_by(team) %>% 
     mutate(side = if_else(team == scoring_team, "shooter", "opponent"),
            input_num = row_number(),
-           input_name = str_c(side, "_assist", input_num)) %>% 
+           input_id = str_c(side, "_assist", input_num)) %>% 
     ungroup() %>% 
-    # Keep only the ids that exist and join in assist info
-    filter(input_name %in% names(assist_inputs)) %>% 
-    mutate(assist = map(assist_inputs[input_name], tolower)) %>% 
-    unnest(assist) %>% 
+    # Filter to just players who earned assists
+    filter(input_id %in% names(assist_inputs)) %>% 
+    # Match inputs to their assists data
+    left_join(assists_df, by = "input_id") %>% 
+    # Fill assist types that did not occur with FALSE
+    #   We do this by converting assist_type to a factor and using complete
+    mutate(assist_type = factor(assist_type, levels = c("paddle", "foot", "head"))) %>% 
+    complete(assist_type, nesting(player_id), fill = list(assist_val = F)) %>% 
     # Pivot wider to make a separate column for each type of assist
-    mutate(assist_val = T) %>% 
-    pivot_wider(id_cols = player_id, names_from = "assist", values_from = "assist_val", values_fill = F)
+    pivot_wider(id_cols = player_id, names_from = "assist_type", values_from = "assist_val", values_fill = F)
+  
+
 }
