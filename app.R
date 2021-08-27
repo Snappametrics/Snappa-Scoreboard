@@ -1064,6 +1064,7 @@ server <- function(input, output, session) {
         append = T
       )
       browser()
+      # Use snappaneers to count team size and identify where players have extra shots
       teams = snappaneers() %>% 
         add_count(team, name = "team_size") %>% 
         mutate(game_id = vals$game_id,
@@ -1125,7 +1126,7 @@ server <- function(input, output, session) {
   
   #TODO: Fix score_id, game_id, and num_points_scored in scores_db in vals: change from dbl to int
   
-  # Score Validation --------------------------------------------------------
+  ## Score Validation --------------------------------------------------------
   
   
   output$A_score_val = renderUI({
@@ -1192,7 +1193,7 @@ server <- function(input, output, session) {
   
   
   
-  # Team A ------------------------------------------------------------------
+  ## Team A ------------------------------------------------------------------
   
   
   observeEvent(input$A_score_button, {
@@ -1262,9 +1263,12 @@ server <- function(input, output, session) {
       
       
       
-      # Identify assists
+      # Identify assists by subsetting the reactiveValues to those which contain assist in their name
+      # Get the list of inputs
       input_list = reactiveValuesToList(session$input)
       
+      # Subset the input list 
+      #   then remove empty elements with compact
       assists = compact(input_list[str_subset(names(input_list), "assist")])
       
       
@@ -1274,6 +1278,7 @@ server <- function(input, output, session) {
                score_id = vals$score_id, 
                assist_id = as.integer(row_number()+vals$assist_id), 
                .before = "player_id")
+      
       # Increment assist ID
       vals$assist_id = as.integer(vals$assist_id+length(assists))
       
@@ -1282,8 +1287,10 @@ server <- function(input, output, session) {
         new_assists, 
         append = T)
       
-      # Update player stats table
+      # Update player stats 
+      # - in reactive vals
       vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+      # - in db
       db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
       
       # Congratulate paddlers
@@ -1331,7 +1338,7 @@ server <- function(input, output, session) {
     
   })
   
-  # Team B ---------------------------------------------------------
+  ## Team B ---------------------------------------------------------
   
   
   observeEvent(input$B_score_button, {
@@ -1396,9 +1403,12 @@ server <- function(input, output, session) {
                              by = "score_id"), 
                    append = T)
       
-      # Identify assists
+      # Identify assists by subsetting the reactiveValues to those which contain assist in their name
+      # Get the list of inputs
       input_list = reactiveValuesToList(session$input)
       
+      # Subset the input list 
+      #   then remove empty elements with compact
       assists = compact(input_list[str_subset(names(input_list), "assist")])
       
       # Order snappaneers by player_id to align with assist inputs
