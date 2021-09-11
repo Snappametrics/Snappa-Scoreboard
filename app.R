@@ -559,7 +559,9 @@ server <- function(input, output, session) {
     
     markov_vals = list("iterations" = 1,
                        "A_score" = 0,
-                       "B_score" = 0)
+                       "B_score" = 0),
+    
+    score_input_value = 1
   )
   
   # A reactive for the current score that we're playing to
@@ -1124,6 +1126,23 @@ server <- function(input, output, session) {
   
   
   # Score Tracking -----------------------------------------------------------------
+  
+  observeEvent(input$score_counter_minus,{
+    if(vals$score_input_value > 1){
+      vals$score_input_value = vals$score_input_value - 1
+    }
+  })
+  
+  observeEvent(input$score_counter_plus,{
+    if(vals$score_input_value < 8){
+      vals$score_input_value = vals$score_input_value + 1
+    }
+  })
+  
+  
+  output$score_counter = renderText({
+    vals$score_input_value
+  })
   
   #TODO: Fix score_id, game_id, and num_points_scored in scores_db in vals: change from dbl to int
   
