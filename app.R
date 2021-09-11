@@ -1009,6 +1009,7 @@ server <- function(input, output, session) {
         pull() %>% as.numeric()
       
       vals$assist_id = dbGetQuery(con, str_c("SELECT MAX(assist_id) FROM assists WHERE game_id = ", lost_game)) %>%
+        replace_na(list(max = 0)) %>% 
         pull() %>% as.numeric()
       
       
