@@ -1066,7 +1066,7 @@ server <- function(input, output, session) {
         value = vals$game_stats_db,
         append = T
       )
-      browser()
+      
       # Use snappaneers to count team size and identify where players have extra shots
       teams = snappaneers() %>% 
         add_count(team, name = "team_size") %>% 
