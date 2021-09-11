@@ -1235,10 +1235,27 @@ server <- function(input, output, session) {
   })
   
   # Team A presses score button
-  observeEvent(input$ok_A, {
+  observeEvent(input$add_plays_A, {
+    # Assist popup
+    showModal(
+      die_play_check(switch_sides = (vals$switch_counter %% 2 == 0), 
+                     scoring_team = "A",
+                     snappaneers = snappaneers(),
+                     round = round_num()))
+  })
+  
+  
+  
+  # Team A presses score button
+  observeEvent({
+    input$ok_A 
+    input$confirm_dp_A
+    }, {
+      
+      
     
     # set score
-    score = as.integer(input$score)
+    score = as.integer(vals$score_input_value)
     vals$score <- score
     
     
@@ -1363,6 +1380,8 @@ server <- function(input, output, session) {
       )
     }
     
+    vals$score_input_value = 1
+    
     
   })
   
@@ -1381,10 +1400,21 @@ server <- function(input, output, session) {
     
   })
   
+  # Team A presses score button
+  observeEvent(input$add_plays_B, {
+    # Assist popup
+    showModal(
+      die_play_check(switch_sides = (vals$switch_counter %% 2 == 0), 
+                     scoring_team = "B",
+                     snappaneers = snappaneers(),
+                     round = round_num()))
+  })
+  
   # Score validation
-  observeEvent(input$ok_B, {
+  observeEvent({input$ok_B
+    input$confirm_dp_A}, {
     #Set Score
-    score = as.integer(input$score)
+    score = as.integer(vals$score_input_value)
     vals$score <- score
     
     if (!is.null(vals$score)) {
@@ -1500,6 +1530,8 @@ server <- function(input, output, session) {
       duration = 20, closeButton = F
       )
     }
+    
+    vals$score_input_value = 1
     
     
   })
