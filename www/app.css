@@ -661,6 +661,58 @@ players 3 and 4 */
   color: var(--bg-col);
 }
 
+.btn-team-A {
+  color: var(--team-a-red);
+}
+
+.btn-team-B {
+  color: var(--team-b-blue);
+}
+
+.btn-team-A, .btn-team-B {
+  width: 57px;
+  justify-content: center;
+}
+
+.checkboxGroupButtons > .btn-group-lg.btn-group-container-sw {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.qualifier-labs {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    color: #414141;
+    font-size: 1.5rem;
+}
+
+.qual-lab {
+  width: 57px;
+}
+
+
+#A_score_val, #B_score_val {
+    display: flex;
+    flex-direction: row;  
+}
+
+.point-counter {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin: 5% 30%;
+    align-items: center;
+}
+
+.btn.score-add {
+  color: var(--bg-col);
+  background-color: var(--norman-green);
+  display: block;
+}
+
+
 /* Controls for text shading on wells */
 
 
