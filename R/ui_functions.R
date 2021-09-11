@@ -12,6 +12,8 @@ library(shinycssloaders)
 library(htmltools)
 
 
+
+
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
 # UI functions ------------------------------------------------------------
@@ -20,12 +22,18 @@ player_assist_button = function(player, player_number, team, shooter = T){
                  checkboxGroupButtons(
                    inputId = str_c(if_else(shooter, "shooter", "opponent"), "_assist", player_number),
                    label = player,#"Assist type",
-                   choices = c(`<i class='fas fa-hand-sparkles'></i>` = "paddle", 
-                               `<i class='fas fa-shoe-prints'></i>` = "foot", 
-                               `<i class='fas fa-skull'></i>` = "head"),
-                   direction = "horizontal",
+                   choices = c(`<i class='fas fa-hand-sparkles'></i><span>Paddle</span>` = "paddle", 
+                               `<i class='fas fa-shoe-prints'></i><span>Foot</span>` = "foot", 
+                               `<i class='fas fa-skull'></i><span>Head</span>` = "head"),
+                   direction = "vertical",
                    selected = NULL,
-                   status = str_c("team-", team)
+                   status = str_c("team-", team),
+                   checkIcon = list(
+                     yes = tags$i(class = "fa fa-check-square", 
+                                  style = str_c("color:var(--team-", team, if_else(team=="A", "-red", "-blue"))),
+                     no = tags$i(class = "fa fa-square-o", 
+                                 style = str_c("color:var(--team-", team, if_else(team=="A", "-red", "-blue")))
+                   )
                  )
 }
 
