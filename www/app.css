@@ -559,7 +559,7 @@ players 3 and 4 */
   flex: 1 1 auto;
 }
 
-.assist-col, .assist-col-right {
+.assist-col {
     display: flex;
     text-overflow: ellipsis;
     flex-direction: column;
@@ -579,11 +579,12 @@ players 3 and 4 */
 
 
 
-.assist-dropdowns-right, .assist-dropdowns-left {
+.assist-dropdowns {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
     justify-content: space-around;
+    width: max-content;
 }
 
 
@@ -591,6 +592,7 @@ players 3 and 4 */
   display: flex;
   justify-content: center;
 }
+
 
 .cool-header {
   padding-top: 1vh;
