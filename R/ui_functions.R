@@ -89,11 +89,16 @@ score_check <- function(team, snappaneers, round) {
                                                style = paste("color:", team_colour)))
                               ),
                               # Number of points
-                              radioGroupButtons(
-                                inputId = "score",
-                                label = "Points",
-                                choices = c(1, 2, 3, 4, 5, 6, 7),
-                                size = "lg"
+                              h3("Points"),
+                              div(class="point-counter",
+                                  actionButton("score_counter_minus", 
+                                               icon = icon("minus"),
+                                               label = NULL),
+                                  textOutput("score_counter"),
+                                  actionButton("score_counter_plus", 
+                                               icon = icon("plus"),
+                                               label = NULL)
+                                  
                               ),
                               checkboxGroupButtons(
                                 inputId = "qualifiers",
