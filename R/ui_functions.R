@@ -129,6 +129,77 @@ score_check <- function(team, snappaneers, round) {
   
 }
 
+# Score pop-up dialog box
+die_play_check <- function(switch_sides, scoring_team, snappaneers, round) {
+  # Identify which team scored
+  if(switch_sides){
+    left_team = "B"
+    left_team_colour = "#2574a9"
+    
+    right_team = "A"
+    right_team_colour = "#e26a6a"
+  } else {
+    left_team = "A"
+    left_team_colour = "#e26a6a"
+    
+    right_team = "B"
+    right_team_colour = "#2574a9"
+  }
+
+  left_team_players = filter(snappaneers, team == left_team) %>% 
+    arrange(player_id) %>% 
+    pull(player_name)
+  
+  right_team_players = filter(snappaneers, team == right_team) %>% 
+    arrange(player_id) %>% 
+    pull(player_name)
+  
+  # Ask how many points were scored and by whom
+  modalDialog(align = "center", easyClose = F, size = "l", 
+              # Header
+              h2("Who got a play on it?"),
+
+              fluidRow(class = "score-input",#style = "display:flex;justify-content:space-between;align-items:flex-start",
+                       # wellPanel(
+                       # Assist col
+                       column(5, align = "left", 
+                              div(class = str_c("assist-col team-", left_team), 
+                                  h3("Die Plays"),
+                                  h4(str_c("Team ", left_team)),
+                                  br(),
+                                  div(class = "assist-dropdowns",
+                                      imap(left_team_players, ~player_assist_button(player = .x,
+                                                                                        player_number = .y,
+                                                                                        team = left_team,
+                                                                                        shooter = (left_team == scoring_team)))
+                                  )
+                              )
+                       ),
+                       # Assist col
+                       column(5, align = "right", offset = 2,
+                              div(class = str_c("assist-col team-", right_team),
+                                  h3("Die Plays"),
+                                  h4(str_c("Team ", right_team)),
+                                  br(),
+                                  div(class = "assist-dropdowns",
+                                      imap(right_team_players, ~player_assist_button(player = .x,
+                                                                            player_number = .y,
+                                                                            team = right_team,
+                                                                            shooter = (right_team == scoring_team)))
+                                  )
+                              )
+                       )
+                       
+              ),
+              
+              # Use score_val output to only show score button on valid scoring combinations
+              footer = tagList(
+                actionButton(str_c("confirm_dp_", scoring_team), "OK")
+              )
+  )
+  
+}
+
 dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") 
 {
   if (!is.null(badgeStatus)) 
