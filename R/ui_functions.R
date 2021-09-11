@@ -52,22 +52,22 @@ score_check <- function(team, snappaneers, round) {
               h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>")),
                  style = "margin-bottom: 2vh;"),
               
-              fluidRow(#style = "display:flex;justify-content:space-between;align-items:flex-start",
+              fluidRow(class = "score-input",#style = "display:flex;justify-content:space-between;align-items:flex-start",
                        # wellPanel(
                        # Assist col
-                       column(3, align = "left", 
-                              div(class = str_c("assist-col team-", team), 
-                                  h3("Assists"),
-                                  h4(str_c("Team ", team)),
-                                  br(),
-                                  div(class = "assist-dropdowns-left",
-                                      imap(shooting_team_players, ~player_assist_button(player = .x,
-                                                                                        player_number = .y,
-                                                                                        team = team))
-                                  )
-                              )
-                       ),
-                       column(6,
+                       # column(3, align = "left", 
+                       #        div(class = str_c("assist-col team-", team), 
+                       #            h3("Die Plays"),
+                       #            h4(str_c("Team ", team)),
+                       #            br(),
+                       #            div(class = "assist-dropdowns",
+                       #                imap(shooting_team_players, ~player_assist_button(player = .x,
+                       #                                                                  player_number = .y,
+                       #                                                                  team = team))
+                       #            )
+                       #        )
+                       # ),
+                       column(6, offset = 3,
                               # Who Scored?
                               radioGroupButtons(
                                 inputId = "scorer",
@@ -87,36 +87,40 @@ score_check <- function(team, snappaneers, round) {
                                 choices = c(1, 2, 3, 4, 5, 6, 7),
                                 size = "lg"
                               ),
-                                fluidRow(#class = "cool-row",
-                                  checkboxGroupButtons(
-                                    inputId = "qualifiers",
-                                    label = "Anything cool happen?",
-                                    choices = c(`<i class='fas fa-hand-sparkles'></i>` = "paddle", 
-                                                `<i class='fas fa-assistive-listening-systems'></i>` = "clink", 
-                                                `<i class='fas fa-shoe-prints'></i>` = "foot", 
-                                                `<i class='fas fa-skull'></i>` = "head"),
-                                    direction = "horizontal",
-                                    selected = NULL,
-                                    status = str_c("team-", team), 
-                                    individual = T,
-                                    size = "lg"
-                                  )
-                                )
+                              checkboxGroupButtons(
+                                inputId = "qualifiers",
+                                label = "Anything cool happen?",
+                                choices = c(`<i class='fas fa-hand-sparkles'></i>` = "paddle", 
+                                            `<i class='fas fa-assistive-listening-systems'></i>` = "clink", 
+                                            `<i class='fas fa-shoe-prints'></i>` = "foot", 
+                                            `<i class='fas fa-skull'></i>` = "head"),
+                                direction = "horizontal",
+                                selected = NULL,
+                                status = str_c("team-", team), 
+                                individual = T,
+                                size = "lg"
+                              ),
+                              div(class = "qualifier-labs",
+                                span("Paddle", class = "qual-lab"),
+                                span("Clink", class = "qual-lab"),
+                                span("Foot", class = "qual-lab"),
+                                span("Head", class = "qual-lab")
+                              )
                        ),
                        # Assist col
-                       column(3, align = "right", 
-                              div(class = str_c("assist-col-right team-", opponent_team),
-                                  h3("Assists"),
-                                  h4(str_c("Team ", opponent_team)),
-                                  br(),
-                                  div(class = "assist-dropdowns-right",
-                                      imap(opponents, ~player_assist_button(player = .x,
-                                                                        player_number = .y,
-                                                                        team = opponent_team,
-                                                                        shooter = F))
-                                  )
-                                  )
-                       ),
+                       # column(3, align = "right", 
+                       #        div(class = str_c("assist-col team-", opponent_team),
+                       #            h3("Die Plays"),
+                       #            h4(str_c("Team ", opponent_team)),
+                       #            br(),
+                       #            div(class = "assist-dropdowns",
+                       #                imap(opponents, ~player_assist_button(player = .x,
+                       #                                                  player_number = .y,
+                       #                                                  team = opponent_team,
+                       #                                                  shooter = F))
+                       #            )
+                       #            )
+                       # ),
 
               ),
               
