@@ -1173,8 +1173,11 @@ server <- function(input, output, session) {
         
       }
     )
-    
-    actionButton("ok_A", "OK")
+    tagList(
+      actionButton("add_plays_A", "Add plays", icon = icon("plus"), class = "score-add"),
+      actionButton("ok_A", "OK")
+    )
+        
   })
   
   output$B_score_val = renderUI({
@@ -1203,7 +1206,11 @@ server <- function(input, output, session) {
         
       } 
     )
-    actionButton("ok_B", "OK")
+    
+    tagList(
+      actionButton("add_plays_B", "Add plays", icon = icon("plus"), class = "score-add"),
+      actionButton("ok_B", "OK")
+    )
   })
   
   # Output error message
@@ -1211,6 +1218,7 @@ server <- function(input, output, session) {
     vals$error_msg
   })
   
+
   
   
   ## Team A ------------------------------------------------------------------
