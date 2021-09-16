@@ -19,6 +19,7 @@ rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 # UI functions ------------------------------------------------------------
 
 player_assist_button = function(player, player_number, team, shooter = T){
+  div(class = str_c("assist-col team-", team),
                  checkboxGroupButtons(
                    inputId = str_c(if_else(shooter, "shooter", "opponent"), "_assist", player_number),
                    label = player,#"Assist type",
@@ -27,6 +28,7 @@ player_assist_button = function(player, player_number, team, shooter = T){
                                `<i class='fas fa-skull'></i><span>Head</span>` = "head"),
                    direction = "vertical",
                    selected = NULL,
+                   # individual = T,
                    status = str_c("team-", team),
                    checkIcon = list(
                      yes = tags$i(class = "fa fa-check-square", 
@@ -35,6 +37,7 @@ player_assist_button = function(player, player_number, team, shooter = T){
                                  style = str_c("color:var(--team-", team, if_else(team=="A", "-red", "-blue")))
                    )
                  )
+  )
 }
 
 # Score pop-up dialog box
@@ -175,38 +178,29 @@ die_play_check <- function(switch_sides, scoring_team, snappaneers, round) {
   modalDialog(align = "center", easyClose = F, size = "l", 
               # Header
               h2("Who got a play on it?"),
-
+              # div(class = "dp-headers",
+              #   h3(str_c("Team ", left_team), align = "left", class = str_c("team-", left_team)),
+              #   h3(str_c("Team ", right_team), align = "right", class = str_c("team-", right_team))
+              # ),
               fluidRow(class = "score-input",#style = "display:flex;justify-content:space-between;align-items:flex-start",
-                       # wellPanel(
+                       
                        # Assist col
-                       column(5, align = "left", 
-                              div(class = str_c("assist-col team-", left_team), 
-                                  h3("Die Plays"),
-                                  h4(str_c("Team ", left_team)),
-                                  br(),
-                                  div(class = "assist-dropdowns",
+                       column(4, align = "left", 
+
                                       imap(left_team_players, ~player_assist_button(player = .x,
                                                                                         player_number = .y,
                                                                                         team = left_team,
                                                                                         shooter = (left_team == scoring_team)))
-                                  )
-                              )
                        ),
                        # Assist col
-                       column(5, align = "right", offset = 2,
-                              div(class = str_c("assist-col team-", right_team),
-                                  h3("Die Plays"),
-                                  h4(str_c("Team ", right_team)),
-                                  br(),
-                                  div(class = "assist-dropdowns",
+                       column(4, align = "right", offset = 4,
+
                                       imap(right_team_players, ~player_assist_button(player = .x,
                                                                             player_number = .y,
                                                                             team = right_team,
                                                                             shooter = (right_team == scoring_team)))
-                                  )
-                              )
                        )
-                       
+
               ),
               
               # Use score_val output to only show score button on valid scoring combinations
