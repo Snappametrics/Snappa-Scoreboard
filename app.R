@@ -1411,8 +1411,9 @@ server <- function(input, output, session) {
   })
   
   # Score validation
-  observeEvent({input$ok_B
-    input$confirm_dp_A}, {
+  observeEvent({
+      input$ok_B
+      input$confirm_dp_B}, {
     #Set Score
     score = as.integer(vals$score_input_value)
     vals$score <- score
