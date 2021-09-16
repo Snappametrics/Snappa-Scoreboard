@@ -965,9 +965,9 @@ input[type=radio]{
 }
 
 @media (max-width: 1500px) {
-    .well .shiny-input-container {
+    /*.well .shiny-input-container {
         width: 80%;
-    }
+    }*/
     .additional_players_form > .shiny-input-container {
         width: 100%;
     }
