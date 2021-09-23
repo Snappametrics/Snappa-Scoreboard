@@ -2030,7 +2030,7 @@ observeEvent(input$game_summary, {
     updateRadioGroupButtons(session = getDefaultReactiveDomain(), inputId = "team_A_size", selected = restart_game_outputs()$team_sizes$A)
     updateRadioGroupButtons(session = getDefaultReactiveDomain(), inputId = "team_B_size", selected = restart_game_outputs()$team_sizes$B)
     
-    delay(500, 
+    delay(5,
           iwalk(restart_game_outputs()$inputs[restart_game_outputs()$inputs != ""], 
                 function(player, input_name){
                   updateSelectizeInput(session = getDefaultReactiveDomain(), input_name, selected = player, choices = player)
@@ -2038,7 +2038,8 @@ observeEvent(input$game_summary, {
     )
     
     
-  delay(350, shinyjs::click("start_game"))
+    shinyjs::enable("start_game")
+    shinyjs::click("start_game")
 
 }, ignoreNULL = T,
    ignoreInit = T
