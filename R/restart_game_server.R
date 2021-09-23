@@ -15,85 +15,50 @@ restart_game_server = function(id) {
                
                function(input, output, session) {
                  
-                 missing_game_id = reactive({
+                 missing_game_id = pull(dbGetQuery(con, sql('SELECT MAX(ps.game_id) FROM player_stats ps JOIN game_stats gs USING (game_id) WHERE game_complete IS FALSE')))
+                 # missing_game_id = reactive({
                    # MARK: may be able to leave out the alias and avoid the need to pull
                    #      but it might just change the colname to max or something
                    # MARK: don't need collect after dbGetQuery
-                    pull(dbGetQuery(con, sql('SELECT MAX(ps.game_id) FROM player_stats ps JOIN game_stats gs USING (game_id) WHERE game_complete IS FALSE')))
-                     
-                 })
+                 #    pull(dbGetQuery(con, sql('SELECT MAX(ps.game_id) FROM player_stats ps JOIN game_stats gs USING (game_id) WHERE game_complete IS FALSE')))
+                 #     
+                 # })
                  
                  restart_game <- reactiveVal({F})
                  check_function_return <- reactiveVal({F})
                  
                  # This is a reactivePoll because, for some reason, deleting a game does not cause this
                  # to update even though it really, really should. 
-                 missing_player_summary = reactivePoll(1000, session,
-                    checkFunc = function() {check_function_return()},
-                    valueFunc = function() {
-                      dbGetQuery(con,
-                              sql('SELECT
-                                      players.player_name,
-                                      ps.team,
-                                      ps.total_points AS points,
-                                      ps.paddle_points,
-                                      ps.clink_points,
-                                      ROW_NUMBER() OVER(
-                                        PARTITION BY ps.team
-                                      )
-                                      AS row
-                                    FROM player_stats AS ps
-                                    LEFT JOIN players 
-                                      ON players.player_id = ps.player_id
-                                    LEFT JOIN game_stats
-                                      ON game_stats.game_id = ps.game_id
-                                    WHERE ps.game_id = (
-                                      SELECT MAX(game_id) 
-                                      FROM player_stats)
-                                    AND game_stats.game_complete IS FALSE'))
-                 })
-                 
-                 last_round <- reactive({
-                  pull(dbGetQuery(con, 
-                              sql('SELECT last_round 
+                 missing_player_summary = dbGetQuery(con, "SELECT * FROM ongoing_game_summary")
+
+                 last_round <- pull(dbGetQuery(con, 
+                                               sql('SELECT last_round 
                                   FROM game_stats 
                                   WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
                                   AND game_complete IS FALSE;')
-                              ))
-                 })
+                 ))
                  
-                 input_list <- reactive({
-                   
-                    missing_player_summary() %>%
-                     select(player_name, team, row) %>%
-                     complete(row = 1:4, team = c('A', 'B'), fill = list(player_name = "")) %>%
-                     group_by(team) %>%
-                     mutate(player_input = str_c("name_", team, row)) %>%
-                     ungroup() %>%
-                     select(player_input, player_name) %>%
-                     deframe()
-                 })
+                 input_list <- missing_player_summary %>%
+                   select(player_name, team, row) %>%
+                   complete(row = 1:4, team = c('A', 'B'), fill = list(player_name = "")) %>%
+                   group_by(team) %>%
+                   mutate(player_input = str_c(team, row, "-name")) %>%
+                   ungroup() %>%
+                   select(player_input, player_name) %>%
+                   deframe()
                  
-                 missing_player_stats <- reactive({
-                   dbGetQuery(con, 
-                              sql('SELECT * FROM player_stats
+                 missing_player_stats <- dbGetQuery(con, 
+                                                    sql('SELECT * FROM player_stats
                                   WHERE game_id = (
                                     SELECT MAX(game_id)
                                     FROM player_stats
                                   )')) 
-        
-                 })
-                
-                 team_sizes = reactive({
-
-                     size_A = sum(missing_player_summary()$team == 'A')
-                     size_B = sum(missing_player_summary()$team == 'B')
-                     return(list('size_A' = size_A,
-                                 'size_B' = size_B))
-                 })
+                 
+                 team_sizes = list('A' = sum(missing_player_summary$team == 'A'),
+                                   'B' = sum(missing_player_summary$team == 'B'))
                  
                 output$summary_table_A <- renderReactable({
-                  missing_player_summary() %>%
+                  missing_player_summary %>%
                     filter(team == 'A') %>%
                     select(-team, row) %>%
                     arrange(desc(points)) %>%
