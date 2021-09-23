@@ -643,7 +643,7 @@ server <- function(input, output, session) {
   
   # Length of active player inputs
   num_players = reactive({
-    length(active_player_inputs()[active_player_inputs() != ""])
+    length(active_player_inputs())
   })
   
   
@@ -1758,27 +1758,13 @@ observe({
     # If the number of unique snappaneer names is the same as the number of active player inputs
     #   => enable start button
     
-    if(sum(length(unique(snappaneers()$player_name)), 
-             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
-             isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
-             isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
-             )
-           ) == num_players()){ 
+    if(length(unique(snappaneers()$player_name)) == num_players()){ 
       shinyjs::enable("start_game")
     } 
     
     # If the number of unique snappaneer names is not the same as the number of active player inputs
     #   => disable start button
-    if(sum(length(unique(snappaneers()$player_name)), 
-           sum(
-             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
-                isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
-                isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-                isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
-                ) 
-           )
-    ) != num_players()){ 
+    if(length(unique(snappaneers()$player_name)) != num_players()){ 
       
     shinyjs::disable("start_game")
     }
