@@ -455,26 +455,32 @@ server <- function(input, output, session) {
     player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
     
     input_list = imap(1:input$team_A_size, ~{
-      tagList(
-        player_selectize_UI(str_c("A", .y), str_c("Player ", .y), player_choices),
-      )
+      # tagList(
+        player_selectize_UI(str_c("A", .y), str_c("Player ", .y), player_choices)
+      # )
     })
     
     # Put those inputs in a div, baby you got stew goin'
     tags$div( id = "input_forms_A",
                        class = 'player_input_forms',
-              tagList(input_list)
+              tagList(input_list),
+              actionButton("debug", "I failed.")
              )
   })
+  
+  observeEvent(input$debug,
+               {
+                 browser()
+               })
   
   output$team_B_input <- renderUI({
     req(input$team_B_size)
     player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
     
     input_list = imap(1:input$team_B_size, ~{
-      tagList(
-        player_selectize_UI(str_c("B", .y), str_c("Player ", .y), player_choices),
-      )
+      # tagList(
+        player_selectize_UI(str_c("B", .y), str_c("Player ", .y), player_choices)
+      # )
     })
     
     # Put those inputs in a div, baby you got stew goin'

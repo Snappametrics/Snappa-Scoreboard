@@ -282,7 +282,7 @@ team_input_ui = function(team, player_choices){
                 h3(class = 'team-size-selector-title', 'How many players?'),
                 radioGroupButtons(str_c("team_", team, "_size"),
                                   label = "",
-                                  choices = 2:4,
+                                  choices = 2:4,selected = 2,
                                   size = "lg"),
                 
                 # CSS: Increase font size, change color to white, add top and bottom margins
