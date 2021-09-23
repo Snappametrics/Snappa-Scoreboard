@@ -647,37 +647,6 @@ server <- function(input, output, session) {
 
 
 ## Player Input Reactives --------------------------------------------------
-  player_A1 <- reactive({
-    player_selectize_server('A1',       
-      reactive({restart_game_outputs()$inputs[['name_A1']]}))
-    })
-  player_A2 <- reactive({
-    player_selectize_server('A2', 
-      reactive({ restart_game_outputs()$inputs[['name_A2']]}))
-    })
-  player_A3 <- reactive({
-    player_selectize_server('A3', 
-      reactive({ restart_game_outputs()$inputs[['name_A3']]}))
-    })
-  player_A4 <- reactive({
-    player_selectize_server('A4', 
-      reactive({restart_game_outputs()$inputs[['name_A4']]})
-    )
-    })
-  player_B1 <- reactive({
-    player_selectize_server('B1', 
-      reactive({ restart_game_outputs()$inputs[['name_B1']]}))
-    })
-  player_B2 <- reactive({
-    player_selectize_server('B2', 
-      reactive({ restart_game_outputs()$inputs[['name_B2']]}))
-    })
-  player_B3 <- reactive({
-    player_selectize_server('B3', 
-      reactive({ restart_game_outputs()$inputs[['name_B3']]}))})
-  player_B4 <- reactive({
-    player_selectize_server('B4', 
-      reactive({ restart_game_outputs()$inputs[['name_B4']]}))})
   
 # Outputs -----------------------------------------------------------------
   
@@ -2062,7 +2031,20 @@ observeEvent(input$game_summary, {
 # Restart a game after indicating you would like to do so
   observeEvent(restart_game_outputs()$restart_game(), {
     req(restart_game_outputs()$restart_game() == T)
-  shinyjs::click("start_game")
+    
+    
+    updateRadioGroupButtons(session = getDefaultReactiveDomain(), inputId = "team_A_size", selected = restart_game_outputs()$team_sizes$A)
+    updateRadioGroupButtons(session = getDefaultReactiveDomain(), inputId = "team_B_size", selected = restart_game_outputs()$team_sizes$B)
+    
+    delay(500, 
+          iwalk(restart_game_outputs()$inputs[restart_game_outputs()$inputs != ""], 
+                function(player, input_name){
+                  updateSelectizeInput(session = getDefaultReactiveDomain(), input_name, selected = player, choices = player)
+                })
+    )
+    
+    
+  delay(350, shinyjs::click("start_game"))
 
 }, ignoreNULL = T,
    ignoreInit = T
