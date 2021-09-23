@@ -608,9 +608,10 @@ server <- function(input, output, session) {
   # Active input buttons
   #   - List of player inputs which are not null
   active_player_inputs = reactive({
-    list("A1" = player_A1(), "A2" = player_A2(), "A3" = player_A3(), "A4" = player_A4(), 
-         "B1" = player_B1(), "B2" = player_B2(), "B3" = player_B3(), "B4" = player_B4()) %>% 
-      discard(identical, character(0))
+    list("A1" = input$`A1-name`, "A2" = input$`A2-name`, "A3" = input$`A3-name`, "A4" = input$`A4-name`, 
+         "B1" = input$`B1-name`, "B2" = input$`B2-name`, "B3" = input$`B3-name`, "B4" = input$`B4-name`) %>% 
+      # discard(identical, character(0))
+      compact()
   })
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
@@ -1714,32 +1715,33 @@ observe({
     # check is failed, or else the logic isn't
     # going to pass through
     
-    if(any(player_A1() == "",
-           player_A2() == "",
-           player_B1() == "",
-           player_B2() == "")){
+    if(any(input$`A1-name` == "",
+           input$`A2-name` == "",
+           input$`B1-name` == "",
+           input$`B2-name` == "")){
       shinyjs::disable("start_game")
     }
+    
     validate(
-      need(player_A1() != "", label = "Player A1"),
-      need(player_A2() != "", label = "Player A2"),
+      need(input$`A1-name` != "", label = "Player A1"),
+      need(input$`A2-name` != "", label = "Player A2"),
       need({if (as.integer(input$team_A_size) > 2) {
-          player_A3() != ""
-        } else player_A3() == ""}, label = 'Player A3'
+          input$`A3-name` != ""
+        } else T}, label = 'Player A3'
       ),
       need({if (as.integer(input$team_A_size) > 3) {
-          player_A4() != ""
-        } else player_A4() == ""}, label = 'Player A4'
+          input$`A4-name` != ""
+        } else T}, label = 'Player A4'
       ),
-      need(player_B1() != "", label = "Player B1"), 
-      need(player_B2() != "", label = "Player B2"),
+      need(input$`B1-name` != "", label = "Player B1"), 
+      need(input$`B2-name` != "", label = "Player B2"),
       need({if (as.integer(input$team_B_size) > 2) {
-        player_B3() != ""
-      } else player_B3() == ""}, label = 'Player B3'
+        input$`B3-name` != ""
+      } else T}, label = 'Player B3'
       ),
       need({if (as.integer(input$team_B_size) > 3) {
-        player_B4() != ""
-      } else player_B4() == ""}, label = 'Player B4'
+        input$`B4-name` != ""
+      } else T}, label = 'Player B4'
       )   
       )
     
