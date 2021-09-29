@@ -626,7 +626,7 @@ server <- function(input, output, session) {
   #   - List of player inputs which are not null
   active_player_inputs = reactive({
     player_input_list() %>% 
-      compact()
+      discard(is_input_empty)
   })
   
   # Team sizes
