@@ -2152,8 +2152,8 @@ observeEvent(input$game_summary, {
 
 # Score notifications -----------------------------------------------------
   
-  observe({
-    req(input$start_game)
+  observeEvent(input$start_game, {
+    
     validate(
       need(vctrs::vec_in(vals$current_scores, 
                          haystack = casualty_rules[,1:2]), label = "casualty score"),
