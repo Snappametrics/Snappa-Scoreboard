@@ -639,6 +639,7 @@ server <- function(input, output, session) {
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
   snappaneers = reactive({
+    req(length(active_player_inputs()) > 3)
     
     tibble(
       # Team pulls the first letter from their input name
