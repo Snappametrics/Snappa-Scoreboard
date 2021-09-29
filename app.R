@@ -1771,27 +1771,27 @@ observe({
       } else T}, label = 'Player B4'
       )   
       )
-    
-    #Record the players that you need to be looking for
-    # (i.e., which ui elements are open right now?)
-    
-    
-    # If the number of unique snappaneer names is the same as the number of active player inputs
-    #   => enable start button
-    
-    if(length(unique(snappaneers()$player_name)) == num_players()){ 
-      shinyjs::enable("start_game")
-    } 
-    
-    # If the number of unique snappaneer names is not the same as the number of active player inputs
-    #   => disable start button
-    if(length(unique(snappaneers()$player_name)) != num_players()){ 
-      
-    shinyjs::disable("start_game")
-    }
-    
 
   })
+  
+  #Record the players that you need to be looking for
+  # (i.e., which ui elements are open right now?)
+
+  # If the number of unique snappaneer names is the same as the number of active player inputs
+  #   => enable start button
+  observeEvent(req(length(unique(snappaneers()$player_name)) == num_players()), { 
+    shinyjs::enable("start_game")
+  })
+  
+  # If the number of unique snappaneer names is not the same as the number of active player inputs
+  #   => disable start button
+  observeEvent(req(length(unique(snappaneers()$player_name)) != num_players()),{ 
+    shinyjs::disable("start_game")
+  })
+  
+
+  
+  
   # Game Start --------------------------------------------------------------
   
   # When we click "Start Game", 
