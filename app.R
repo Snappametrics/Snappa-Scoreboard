@@ -1746,27 +1746,23 @@ observe({
            input$`B2-name` == "")){
       shinyjs::disable("start_game")
     }
+    
     validate(
-      need(input$`A1-name` != "", label = "Player A1"),
-      need(input$`A2-name` != "", label = "Player A2"),
-      need({if (as.integer(input$team_A_size) > 2) {
-          input$`A3-name` != ""
-        } else T}, label = 'Player A3'
-      ),
-      need({if (as.integer(input$team_A_size) > 3) {
-          input$`A4-name` != ""
-        } else T}, label = 'Player A4'
-      ),
-      need(input$`B1-name` != "", label = "Player B1"), 
-      need(input$`B2-name` != "", label = "Player B2"),
-      need({if (as.integer(input$team_B_size) > 2) {
-        input$`B3-name` != ""
-      } else T}, label = 'Player B3'
-      ),
-      need({if (as.integer(input$team_B_size) > 3) {
-        input$`B4-name` != ""
-      } else T}, label = 'Player B4'
-      )   
+      # Team A
+      need(input$`A1-name`, label = "Player A1"),
+      need(input$`A2-name`, label = "Player A2"),
+      # Extra players A
+      need_input(input$`A3-name`, 3, input$team_A_size),
+      need_input(input$`A4-name`, 4, input$team_A_size),
+      # Team B
+      need(input$`B1-name`, label = "Player B1"), 
+      need(input$`B2-name`, label = "Player B2"),
+      # Extra players B
+      need_input(input$`B3-name`, 3, input$team_B_size),
+      need_input(input$`B4-name`, 4, input$team_B_size),
+      # Unique players
+      need(length(unique(snappaneers()$player_name)) == num_players(), 
+           message = "Player names need to be unique")
       )
 
   })
