@@ -316,12 +316,34 @@ cooldown_check = function(casualties, scores, current_round, casualty_to_check, 
 }
 
 is_input_empty = function(input, negate=F){
+  # Check if input is empty or an empty string
   logical_test = is_empty(input)||input == ""
   
+  # If negated, negate it
   if(negate){
     logical_test = !logical_test
   }
   return(logical_test)
+}
+
+need_input = function(input, input_number, team_size){
+  # Check if input is empty
+  empty_input = is_input_empty(input)
+  # If the team size is less than the input number, we don't need it
+  # => return NULL
+  if(team_size < input_number){
+    NULL
+    # If the team size is not less than the input number, we do need it
+  } else if(empty_input){
+    # If the input is empty
+    # => specify
+    "Player input is empty"
+  } else {
+    # If it is not empty, the input is valid
+    # => return NULL
+    NULL
+  }
+  
 }
 
 validate_start = function(input_list, team_A_size, team_B_size){
