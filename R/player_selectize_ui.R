@@ -8,7 +8,7 @@ player_selectize_UI = function(id, header, player_choices) {
   ns <- NS(id)
   tags$div(class = 'player-selectize-input',
            h2(class = 'player-selectize-title', header),
-  selectizeInput(ns('name'), label = NULL, c(`Player Name`='', player_choices),  
+  selectizeInput(ns('name'), label = NULL, choices = c(`Player Name`='', player_choices),  
                options = list(create = TRUE, hideSelected=T), width = "125%"),
   tags$link(rel = 'stylesheet', type = 'text/css', href = 'player_selectize_styling.css')
   )

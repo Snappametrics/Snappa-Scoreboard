@@ -1735,12 +1735,9 @@ observe({
   
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
-    # If one of the first two players on each team
-    # is removed, disable the button again.
-    # This goes above the validate check because 
-    # it needs to be updating before the validate
-    # check is failed, or else the logic isn't
-    # going to pass through
+    # If one of the first two players on each team is removed, disable the button again.
+    # This goes above the validate check because it needs to be updating before the validate
+    # check is failed, or else the logic isn't going to pass through
     
     if(any(input$`A1-name` == "",
            input$`A2-name` == "",
@@ -1748,7 +1745,6 @@ observe({
            input$`B2-name` == "")){
       shinyjs::disable("start_game")
     }
-    
     validate(
       need(input$`A1-name` != "", label = "Player A1"),
       need(input$`A2-name` != "", label = "Player A2"),
@@ -2048,13 +2044,20 @@ observeEvent(input$game_summary, {
     req(restart_game_outputs()$restart_game() == T)
     
     
-    updateRadioGroupButtons(session = getDefaultReactiveDomain(), inputId = "team_A_size", selected = restart_game_outputs()$team_sizes$A)
-    updateRadioGroupButtons(session = getDefaultReactiveDomain(), inputId = "team_B_size", selected = restart_game_outputs()$team_sizes$B)
+    updateRadioGroupButtons(session = getDefaultReactiveDomain(), 
+                            inputId = "team_A_size", 
+                            selected = restart_game_outputs()$team_sizes$A)
+    updateRadioGroupButtons(session = getDefaultReactiveDomain(), 
+                            inputId = "team_B_size", 
+                            selected = restart_game_outputs()$team_sizes$B)
     
     delay(5,
           iwalk(restart_game_outputs()$inputs[restart_game_outputs()$inputs != ""], 
                 function(player, input_name){
-                  updateSelectizeInput(session = getDefaultReactiveDomain(), input_name, selected = player, choices = player)
+                  updateSelectizeInput(session = getDefaultReactiveDomain(), 
+                                       input_name, 
+                                       selected = player, 
+                                       choices = player)
                 })
     )
     
