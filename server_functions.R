@@ -121,8 +121,8 @@ add_shot_count = function(df, shot_num){
   add_count(df, team, name = "n_players") %>% # Count the number of rows for each team
     # Calculate the number of shots for each player by diving the team shots by 2
     # Team shots calculated using ceiling/floor because A always goes first
-    mutate(baseline_shots = case_when(str_detect(team, "A") ~ ceiling(shot_num/2),
-                                      str_detect(team, "B") ~ floor(shot_num/2)),
+    mutate(baseline_shots = case_when(team == "A" ~ ceiling(shot_num/2),
+                                      team == "B" ~ floor(shot_num/2)),
            # In cases where teams are uneven, we calculate the average shots a player had
            shots = baseline_shots*max(n_players)/n_players) %>% 
     select(-baseline_shots, -n_players)
