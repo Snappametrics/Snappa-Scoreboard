@@ -126,7 +126,10 @@ ui <- dashboardPage(
         br(),
         actionBttn("finish_game", "Finish",
                    icon = icon("check"), size = "sm",
-                   style = "material-flat", color = "warning")
+                   style = "material-flat", color = "warning"),
+        actionBttn("debug", "I failed.", 
+                   icon = icon("sad-tear"), size = "sm",
+                   style = "float", color = "success")
       )
       
       # icon = "desktop",
@@ -463,8 +466,8 @@ server <- function(input, output, session) {
     # Put those inputs in a div, baby you got stew goin'
     tags$div( id = "input_forms_A",
                        class = 'player_input_forms',
-              tagList(input_list),
-              actionButton("debug", "I failed.")
+              tagList(input_list)
+              
              )
   })
   

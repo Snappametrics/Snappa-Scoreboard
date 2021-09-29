@@ -121,7 +121,12 @@
     line-height: 20rem;
 }
 
+/* Right sidebar */
 
+.control-sidebar>.tab-content>.tab-pane.active {
+  display: flex;
+  flex-direction: column;
+}
 
 
 /* Player Input */
