@@ -314,3 +314,17 @@ cooldown_check = function(casualties, scores, current_round, casualty_to_check, 
 
   
 }
+
+is_input_empty = function(input, negate=F){
+  logical_test = is_empty(input)||input == ""
+  
+  if(negate){
+    logical_test = !logical_test
+  }
+  return(logical_test)
+}
+
+validate_start = function(input_list, team_A_size, team_B_size){
+  # Check that the number of inputs and their content are valid
+  
+}
