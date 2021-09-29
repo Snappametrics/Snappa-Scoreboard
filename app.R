@@ -614,27 +614,45 @@ server <- function(input, output, session) {
     rounds[vals$shot_num]
   })
   
+  # Player input list
+  player_input_list = reactive({
+    list("A1" = input$`A1-name`, "A2" = input$`A2-name`, 
+         "A3" = input$`A3-name`, "A4" = input$`A4-name`, 
+         "B1" = input$`B1-name`, "B2" = input$`B2-name`, 
+         "B3" = input$`B3-name`, "B4" = input$`B4-name`)
+  })
+  
   # Active input buttons
   #   - List of player inputs which are not null
   active_player_inputs = reactive({
-    list("A1" = input$`A1-name`, "A2" = input$`A2-name`, "A3" = input$`A3-name`, "A4" = input$`A4-name`, 
-         "B1" = input$`B1-name`, "B2" = input$`B2-name`, "B3" = input$`B3-name`, "B4" = input$`B4-name`) %>% 
-      # discard(identical, character(0))
+    player_input_list() %>% 
       compact()
+  })
+  
+  # Team sizes
+  team_sizes = reactive({
+    tibble(
+      team = c("A","B"),
+      size = as.integer(c(input$team_A_size, input$team_B_size))
+    )
   })
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
   snappaneers = reactive({
+    
     tibble(
       # Team pulls the first letter from their input name
-      team = str_extract(names(active_player_inputs()), ".{1}"),
-      player_name = active_player_inputs() %>% flatten_chr()
+      team = substr(names(active_player_inputs()), 1, 1),
+      input = substr(names(active_player_inputs()), 2, 2),
+      player_name = flatten_chr(active_player_inputs())
     ) %>% 
+      inner_join(team_sizes(), by = "team") %>% 
       # Remove empty player inputs
-      filter(player_name != "") %>% 
+      filter(input <= size) %>% 
       left_join(vals$db_tbls()[["players"]], by = "player_name") %>% 
       # Add shot count
-      add_shot_count(shot_num = vals$shot_num)
+      add_shot_count(shot_num = vals$shot_num) %>% 
+      select(-input, -size)
   })
   
   # Vector of players, with current players removed
@@ -646,7 +664,7 @@ server <- function(input, output, session) {
   
   # Length of active player inputs
   num_players = reactive({
-    length(active_player_inputs())
+    sum(as.integer(c(input$team_A_size, input$team_B_size)))
   })
   
   
