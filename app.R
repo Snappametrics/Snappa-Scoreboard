@@ -1881,28 +1881,51 @@ output$edit_team_B <- renderUI({
           set_names(unique(casualty_rules$casualty_title))}
     )
     
-    
-    
     shinyjs::enable("tifu")
+    
 
+
+  }, once = T)
+  
+
+  casualty_time = reactive({
+    req(length(active_player_inputs()) > 3)
+    casualty_score = vctrs::vec_in(vals$current_scores,
+                                   haystack = casualty_rules[,1:2])
+    
+    not_in_cooldown = !any(flatten_lgl(vals$cooldowns()))
+    
+    casualty_score && not_in_cooldown
   })
   
+  observeEvent(req(casualty_time()), {
+    casualty_popup(session,
+                   score = vals$current_scores,
+                   rules = casualty_rules,
+                   players = snappaneers()$player_name)
+  })
 
 # Halftime ----------------------------------------------------------------
 
   
   observeEvent(req(sum(vals$scores_db$points_scored) >= score_to()), {
-    sendSweetAlert(session, 
-                   title = "Halftime", 
-                   type = "info",
-                   text = HTML(str_c("Change places!")), html = T)
+    # browser()
+    show_alert(session = session,
+               title = "Halftime", 
+                   # type = "info",
+                   showCloseButton = F, 
+               btn_labels = NA,
+               btn_colors = NA,
+                   timer = 1500,
+               position = "top-end",
+                   text ="Change places!")
 
  
     shinyjs::click("switch_sides")
     
     # In the event that there was a sink which caused this, also popup the sink menu
     last_score = vals$scores_db[ max(vals$scores_db$score_id),]
-    
+    req(is_tibble(snappaneers()))
     sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
 
   }, once = T, ignoreNULL = T)
@@ -2059,18 +2082,7 @@ observeEvent(input$game_summary, {
 
 # Score notifications -----------------------------------------------------
   
-  observeEvent(input$start_game, {
-    validate(
-      need(vctrs::vec_in(vals$current_scores, 
-                         haystack = casualty_rules[,1:2]), label = "casualty score"),
-      need(!any(flatten_lgl(vals$cooldowns())), label = "cooldowns")
-    )
-    casualty_popup(session,
-                   score = vals$current_scores,
-                   rules = casualty_rules,
-                   players = snappaneers()$player_name)
-  }, autoDestroy = F)
-  
+
 
 
   observeEvent(input$casualty, {
