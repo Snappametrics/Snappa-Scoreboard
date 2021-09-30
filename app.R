@@ -1744,7 +1744,32 @@ output$edit_team_B <- renderUI({
   })
   
 
-  
+  # Restart a game after indicating you would like to do so
+  observeEvent(restart_game_outputs()$restart(), {
+    updateRadioGroupButtons(session = getDefaultReactiveDomain(),
+                            inputId = "team_A_size",
+                            selected = restart_game_outputs()$team_sizes$A)
+    updateRadioGroupButtons(session = getDefaultReactiveDomain(),
+                            inputId = "team_B_size",
+                            selected = restart_game_outputs()$team_sizes$B)
+    
+    delay(5,
+          iwalk(restart_game_outputs()$input_list[restart_game_outputs()$input_list != ""],
+                function(player, input_name){
+                  updateSelectizeInput(session = getDefaultReactiveDomain(),
+                                       input_name,
+                                       selected = player,
+                                       choices = player)
+                })
+    )
+    
+    
+    shinyjs::enable("start_game")
+    shinyjs::click("start_game")
+    
+  }, ignoreNULL = T,
+  ignoreInit = T
+  )
   
   # Game Start --------------------------------------------------------------
   
@@ -1995,46 +2020,7 @@ observeEvent(input$game_summary, {
 #               ))
 # })
 
-  
-  
-# Restart a game after indicating you would like to do so
-  observeEvent(restart_game_outputs()$restart_game(), {
-    req(restart_game_outputs()$restart_game() == T)
-    
-    
-    updateRadioGroupButtons(session = getDefaultReactiveDomain(), 
-                            inputId = "team_A_size", 
-                            selected = restart_game_outputs()$team_sizes$A)
-    updateRadioGroupButtons(session = getDefaultReactiveDomain(), 
-                            inputId = "team_B_size", 
-                            selected = restart_game_outputs()$team_sizes$B)
-    
-    delay(5,
-          iwalk(restart_game_outputs()$inputs[restart_game_outputs()$inputs != ""], 
-                function(player, input_name){
-                  updateSelectizeInput(session = getDefaultReactiveDomain(), 
-                                       input_name, 
-                                       selected = player, 
-                                       choices = player)
-                })
-    )
-    
-    
-    shinyjs::enable("start_game")
-    shinyjs::click("start_game")
 
-}, ignoreNULL = T,
-   ignoreInit = T
-)
-# Close the modal dialog if you say no and remove
-# the old game from the DB
-  
-# observeEvent(input$resume_no, {
-#   removeModal()
-#   
-#   delete_query = "DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);"
-#   dbExecute(con, delete_query)
-# })
   
   
 
