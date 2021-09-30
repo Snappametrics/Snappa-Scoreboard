@@ -674,7 +674,7 @@ server <- function(input, output, session) {
 
 # Module Reactive Elements ------------------------------------------------
 ### Restart Game Reactive ---------------------------------------------------
-  restart_game_outputs <- reactive({restart_game_server('restart')})  
+  restart_game_outputs <- restart_game_server('restart')
 
 
 ## Player Input Reactives --------------------------------------------------
