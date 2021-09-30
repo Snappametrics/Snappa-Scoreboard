@@ -1780,80 +1780,23 @@ output$edit_team_B <- renderUI({
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
-    # Add new players to the players table
-    iwalk(snappaneers()$player_name, function(die_thrower, index){
-      # If the player is not in the players table
-      if(!(die_thrower %in% vals$db_tbls()[["players"]]$player_name)){
-        
-        # Update the players database right here with the player name
-        
-        dbAppendTable(con, "players", 
-          tibble(
-            player_id = vals$new_player_id,
-            player_name = die_thrower
-          )
-        )
-        
-        # Increment the ID for the next new player
-        vals$new_player_id = vals$new_player_id+1
-        
-        
-        
-        
-      } else {
-        invisible()
-      }
-    })
-    
+
+    if(restart_game_outputs()$restart()){
+      delay(5,
+            iwalk(restart_game_outputs()$score_inputs, function(value, name){
+              vals[[name]] <- value
+            })
+      )
+      
+      
+     
+    } 
     # Check if the last game was finished
     # Switch to the scoreboard
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
-    if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
-              pull() %>% 
-              isFALSE()) {
-      
-      # LAST GAME WAS NOT FINISHED
-      
-        lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
-          pull()
-      
-        lost_game_stats = dbGetQuery(con, str_c("SELECT * FROM game_stats WHERE game_id = ", lost_game))
-      
-        lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
-
-        
-        # Set the score outputs and shot number to the values from the last game
-        vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game)) %>%
-          pull() %>% as.numeric()
-        
-        
-        vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game)) %>%
-          pull() %>% as.numeric()
-        
-        vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game)) %>%
-          pull() %>% as.numeric()
-        
-
-        vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
-        vals$game_id = lost_game
-        vals$shot_num = parse_round_num(lost_game_stats$last_round)
-
-        vals$game_stats_db = lost_game_stats
-        
-        # Initialize the current game's player_stats table
-        vals$player_stats_db = lost_player_stats
-        
-        # Pull in lost game casualties 
-        vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game)))
-        
-    } else {
-      
+    else if (restart_game_outputs()$restart() == F) {
       # LAST GAME WAS FINISHED
       
-      # Set the score outputs and shot number to 0
-      vals$current_scores$team_A = 0
-      vals$current_scores$team_B = 0
-
       vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
         as.integer()
       
@@ -1886,6 +1829,21 @@ output$edit_team_B <- renderUI({
         append = T
       )
       
+      # Add new players to the players table
+      new_players = discard(active_player_inputs(), ~(. %in% vals$db_tbls()$players$player_name))
+      
+      walk(new_players, function(die_thrower){
+        # Update the players database right here with the player name
+        dbAppendTable(con, "players", 
+                      tibble(
+                        player_id = vals$new_player_id,
+                        player_name = die_thrower
+                      )
+        )
+        # Increment the ID for the next new player
+        vals$new_player_id = vals$new_player_id+1
+      })
+
       # Initialize the current game's player_stats table
       vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
       
