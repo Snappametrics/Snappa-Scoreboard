@@ -1672,47 +1672,6 @@ output$edit_team_B <- renderUI({
 # Very start of game: display a popup message
 # if the previous game is incomplete
   
-observe({
-  validate(
-    need(
-      dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
-        pull() %>% 
-        isFALSE(),
-      message = FALSE
-    )
-  )
-  # There's no way this is faster than just selecting max. Is there a reason to do this?
-  lost_game_id = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% pull()
-  
-  # Pass an additional check to see if the game which is in question is a 0-0 or not. 
-  db_scores = dbGetQuery(con,
-                         sql(
-                           "SELECT 
-                                scoring_team AS team,
-                                SUM(points_scored) AS points
-                              FROM scores
-                              WHERE game_id = (SELECT MAX(game_id) FROM game_stats)
-                              GROUP BY game_id, scoring_team")
-  )
-  scores = tibble(team = c('A', 'B'))
-  scores = scores %>% 
-    left_join(db_scores, by = "team") %>%
-    replace_na(list(points = 0)) %>%
-    mutate(points = as.integer(points))
-  
-  # Discard that game if it's 0-0 and continue on with business as usual, else
-  # allow players to restart
-  if (sum(scores$points) < 1){
-    delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
-    dbExecute(con, delete_query)
-  } else {
-    
-  showModal(restart_game_UI('restart',
-                  scores[scores$team == 'A', "points"], 
-                  scores[scores$team == 'B', "points"])
-  )
-  }
-})
 
 # Game Start Validation ---------------------------------------------------
 
