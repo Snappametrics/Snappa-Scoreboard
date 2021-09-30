@@ -22,6 +22,7 @@ restart_game_server = function(id) {
                  incomplete_game = dbGetQuery(con, sql("SELECT * FROM incomplete_game"))
                  input_list = list()
                  team_sizes = list()
+                 score_inputs = list()
                  
                  
                  # When there is an incomplete game ----
@@ -133,6 +134,21 @@ restart_game_server = function(id) {
                      team_sizes = list('A' = sum(incomplete_player_summary$team == 'A'),
                                        'B' = sum(incomplete_player_summary$team == 'B'))
                      
+                     # Create the inputs for the score inputs
+                     score_inputs = list(
+                       "current_scores" = tibble(
+                         team_A = sum(incomplete_player_summary[incomplete_player_summary$team == "A", "points"]),
+                         team_B = sum(incomplete_player_summary[incomplete_player_summary$team == "B", "points"])
+                       ),
+                       "score_id" = as.numeric(pull(dbGetQuery(con, sql(str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", incomplete_game$game_id))))),
+                       "scores_db" = dbGetQuery(con, sql(str_c("SELECT * FROM scores WHERE game_id = ", incomplete_game$game_id))),
+                       "game_id" = incomplete_game$game_id,
+                       "shot_num" = parse_round_num(incomplete_game$last_round),
+                       "game_stats_db" = incomplete_game,
+                       "player_stats_db" = dbGetQuery(con, sql(str_c("SELECT * FROM player_stats WHERE game_id = ", incomplete_game$game_id))),
+                       "casualties" = dbGetQuery(con, sql(str_c("SELECT * FROM casualties WHERE game_id = ", incomplete_game$game_id)))
+                     )
+                     
                    }
                    
 
@@ -172,7 +188,8 @@ restart_game_server = function(id) {
                  
                  reactive(list("restart" = restart_game,
                                "input_list" = input_list,
-                               "team_sizes" = team_sizes))
+                               "team_sizes" = team_sizes,
+                               "score_inputs" = score_inputs))
                  
                  
                  
