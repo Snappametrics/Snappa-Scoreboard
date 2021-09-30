@@ -1753,22 +1753,26 @@ output$edit_team_B <- renderUI({
                             inputId = "team_B_size",
                             selected = restart_game_outputs()$team_sizes$B)
     
-    delay(5,
+    
           iwalk(restart_game_outputs()$input_list[restart_game_outputs()$input_list != ""],
                 function(player, input_name){
-                  updateSelectizeInput(session = getDefaultReactiveDomain(),
+                  
+                  delay(40, updateSelectizeInput(session = getDefaultReactiveDomain(),
                                        input_name,
                                        selected = player,
-                                       choices = player)
+                                       choices = player))
                 })
-    )
+    # )
     
     
     shinyjs::enable("start_game")
     shinyjs::click("start_game")
     
-  }, ignoreNULL = T,
-  ignoreInit = T
+    
+    
+    
+  }, 
+  ignoreInit = T, once = T
   )
   
   # Game Start --------------------------------------------------------------
