@@ -2150,11 +2150,10 @@ observeEvent(input$game_summary, {
 # Score notifications -----------------------------------------------------
   
   observeEvent(input$start_game, {
-    
     validate(
       need(vctrs::vec_in(vals$current_scores, 
                          haystack = casualty_rules[,1:2]), label = "casualty score"),
-      need(!any(flatten_lgl(vals$cooldowns())), label = "cooldowns")
+      need(!any(flatten_lgl(vals$cooldowns)), label = "cooldowns")
     )
     casualty_popup(session,
                    score = vals$current_scores,
