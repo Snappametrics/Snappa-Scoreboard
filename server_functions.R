@@ -303,9 +303,9 @@ cooldown_check = function(casualties, scores, current_round, casualty_to_check, 
   if(nrow(casualties) < 1){
     invisible()
   } else {
-
-    # Increment the round by 2x the times the casualty has been repeated
-    last_casualty_round = which(rounds == scores[scores$score_id == unique(casualties$score_id), "round_num"]) + (nrow(casualties)-1)*2
+    browser()
+    # Increment the last casualty round by 2
+    last_casualty_round = which(rounds == casualties[which.max(casualties$casualty_id), "round"])
     
     which(rounds == current_round) - last_casualty_round < 2
     

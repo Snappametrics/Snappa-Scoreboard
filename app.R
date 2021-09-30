@@ -549,6 +549,7 @@ server <- function(input, output, session) {
       casualty_id = integer(), 
       game_id  = integer(), 
       score_id = integer(), 
+      round = character(),
       player_id = integer(), 
       casualty_type = character(),
       reported_player = integer()
@@ -2085,6 +2086,7 @@ observeEvent(input$game_summary, {
       casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
       game_id = vals$game_id,
       score_id = vals$score_id,
+      round = round_num(),
       player_id = casualty,
       casualty_type = type,
       reported_player = NA_integer_
