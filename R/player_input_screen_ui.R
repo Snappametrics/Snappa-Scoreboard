@@ -10,6 +10,10 @@ player_input_screen_ui <- function(id) {
   # module, but it will at least take these away from UI functions.
   # Maybe it's better for these to be their own modules if we want to get 
   # crazy with it
+  
+  # It looks like we can assign functions outside the module and then call them
+  # inside the module:
+  # https://mastering-shiny.org/scaling-modules.html#modules-inside-of-modules
   team_input_ui = function(team, player_choices){
     players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
     player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
