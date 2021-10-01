@@ -416,7 +416,6 @@ server <- function(input, output, session) {
    ))
   output$sidebar_menu <- renderUI({
     
-    
     if(input$start_game) {
       sidebarMenu(
         menuItem("Scoreboard", 
@@ -1708,7 +1707,10 @@ output$edit_team_B <- renderUI({
            input$`B2-name` == "")){
       shinyjs::disable("start_game")
     }
-    
+    # If a game is being restarted, then this step can be skipped, since we're assuming
+    # that the game was validated the first time through. When and how this will come
+    # back to bite us, I don't know and I don't want to
+    req(!restart_game_outputs()$restart())
     validate(
       # Team A
       need(input$`A1-name`, label = "Player A1"),
