@@ -383,7 +383,6 @@ server <- function(input, output, session) {
   start_outputs = playerInputServer("player_input", restart = restart_game_outputs()$restart())
   
   output$sidebar_menu <- renderUI({
-    browser()
     if(start_outputs()$start) {
       sidebarMenu(
         menuItem("Scoreboard", 
@@ -419,46 +418,14 @@ server <- function(input, output, session) {
   
   
   
-  # Team A Player inputs
-  output$team_A_input <- renderUI({
-    req(input$team_A_size) # Require the team size
-    player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
-    
-    input_list = imap(1:input$team_A_size, ~{
-      # tagList(
-        player_selectize_UI(str_c("A", .y), str_c("Player ", .y), player_choices)
-      # )
-    })
-    
-    # Put those inputs in a div, baby you got stew goin'
-    tags$div( id = "input_forms_A",
-                       class = 'player_input_forms',
-              tagList(input_list)
-              
-             )
-  })
+  
   
   observeEvent(input$debug,
                {
                  browser()
                })
   
-  output$team_B_input <- renderUI({
-    req(input$team_B_size)
-    player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
-    
-    input_list = imap(1:input$team_B_size, ~{
-      # tagList(
-        player_selectize_UI(str_c("B", .y), str_c("Player ", .y), player_choices)
-      # )
-    })
-    
-    # Put those inputs in a div, baby you got stew goin'
-    tags$div( id = "input_forms_B",
-              class = 'player_input_forms',
-              tagList(input_list)
-    )
-  })
+  
     
 
 # Reactive Values Object ---------------------------------------------------------
