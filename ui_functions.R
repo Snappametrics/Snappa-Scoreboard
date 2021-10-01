@@ -1,6 +1,4 @@
 
-source('R/player_selectize_UI.R')
-
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
 # UI functions ------------------------------------------------------------
