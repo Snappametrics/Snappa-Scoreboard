@@ -1977,7 +1977,6 @@ game_summary = reactive({
 
 
 observeEvent(input$game_summary, {
-  browser()
   game_summary_dialog(game_summary()$df, round_num(), 
                  game_summary()$subtitle_a, game_summary()$subtitle_b)
   
