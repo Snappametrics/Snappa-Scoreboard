@@ -254,43 +254,43 @@ tifu_casualty_popup <- function(players) {
 
 
 
-team_input_ui = function(team, player_choices){
-  players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
-  player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
-  team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-
-  well_selector = str_c('input_well_', team)
-  div_selector = str_c('input_forms_', team)
-  class_selector = paste0('input_well well_', team)
-  player_ids = str_c(team, 1:2)
-
-  column(4, align = "center",
-         
-         wellPanel(
-           class = class_selector,
-           id = well_selector,
-           style = paste("background:", team_colour),
-           # Header
-           h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center; margin-bottom:10%;"),
-           tags$div( id = div_selector,
-                class = 'player_input_forms',
-                # Player 1
-                # player_selectize_UI(player_ids[1], 'Player 1', player_choices),
-                 # Player 2
-                # player_selectize_UI(player_ids[2], 'Player 2', player_choices),
-                uiOutput(str_c("team_", team, "_input"), class = "player-inputs"),
-                h3(class = 'team-size-selector-title', 'How many players?'),
-                radioGroupButtons(str_c("team_", team, "_size"),
-                                  label = "",
-                                  choices = 2:4,selected = 2,
-                                  size = "lg"),
-                
-                # CSS: Increase font size, change color to white, add top and bottom margins
-                tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
-           )
-        )
-  )
-}
+# team_input_ui = function(team, player_choices){
+#   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
+#   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
+#   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
+# 
+#   well_selector = str_c('input_well_', team)
+#   div_selector = str_c('input_forms_', team)
+#   class_selector = paste0('input_well well_', team)
+#   player_ids = str_c(team, 1:2)
+# 
+#   column(4, align = "center",
+#          
+#          wellPanel(
+#            class = class_selector,
+#            id = well_selector,
+#            style = paste("background:", team_colour),
+#            # Header
+#            h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center; margin-bottom:10%;"),
+#            tags$div( id = div_selector,
+#                 class = 'player_input_forms',
+#                 # Player 1
+#                 # player_selectize_UI(player_ids[1], 'Player 1', player_choices),
+#                  # Player 2
+#                 # player_selectize_UI(player_ids[2], 'Player 2', player_choices),
+#                 uiOutput(str_c("team_", team, "_input"), class = "player-inputs"),
+#                 h3(class = 'team-size-selector-title', 'How many players?'),
+#                 radioGroupButtons(str_c("team_", team, "_size"),
+#                                   label = "",
+#                                   choices = 2:4,selected = 2,
+#                                   size = "lg"),
+#                 
+#                 # CSS: Increase font size, change color to white, add top and bottom margins
+#                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
+#            )
+#         )
+#   )
+# }
 
 
 team_edit_column = function(team){

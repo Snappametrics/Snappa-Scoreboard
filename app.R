@@ -148,41 +148,42 @@ ui <- dashboardPage(
 
       
       tabItem(tabName = "player_input",
-              fluidRow(
-                team_input_ui("A")
-                ,
-                
-                
-                # Column 2 - empty
-                column(4,  align = "center",
-                       pickerInput(
-                         inputId = "arena_select",
-                         label = "Arena",
-                         selected = "Greenhaus 2: Electric Boogaloo",
-                         choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo"),
-                         options = pickerOptions(
-                           mobile = T,
-                           showTick = T
-                         )
-                       ),
-                       disabled(
-                         actionBttn("start_game", 
-                                           label = "Throw dice?", style = "pill", color = "primary", 
-                                           icon = icon("dice"), size = "sm")),
-                       uiOutput("validate_start"),
-                       
-                       helpText("Note: All players must enter their name before the game can begin")
-                       # 
-                       # awesomeRadio(inputId = "play_to", 
-                       #              label = "What score are you playing to?", 
-                       #              choices = list("21" = 1, "32" = 2), 
-                       #              selected = 1, inline = T)
-                       ),
-                       
-                
-                # Column 3 - Team B
-                team_input_ui("B")
-              )
+              start_game_ui("player_input")
+              # fluidRow(
+              #   team_input_ui("A")
+              #   ,
+              #   
+              #   
+              #   # Column 2 - empty
+              #   column(4,  align = "center",
+              #          pickerInput(
+              #            inputId = "arena_select",
+              #            label = "Arena",
+              #            selected = "Greenhaus 2: Electric Boogaloo",
+              #            choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo"),
+              #            options = pickerOptions(
+              #              mobile = T,
+              #              showTick = T
+              #            )
+              #          ),
+              #          disabled(
+              #            actionBttn("start_game", 
+              #                              label = "Throw dice?", style = "pill", color = "primary", 
+              #                              icon = icon("dice"), size = "sm")),
+              #          uiOutput("validate_start"),
+              #          
+              #          helpText("Note: All players must enter their name before the game can begin")
+              #          # 
+              #          # awesomeRadio(inputId = "play_to", 
+              #          #              label = "What score are you playing to?", 
+              #          #              choices = list("21" = 1, "32" = 2), 
+              #          #              selected = 1, inline = T)
+              #          ),
+              #          
+              #   
+              #   # Column 3 - Team B
+              #   team_input_ui("B")
+              #)
               ),
 
 
