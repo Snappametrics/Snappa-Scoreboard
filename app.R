@@ -148,8 +148,8 @@ ui <- dashboardPage(
 
       
       tabItem(tabName = "player_input",
-              start_game_ui("player_input")
-              # fluidRow(
+              player_input_screen_ui("player_input")
+              # fluidRow(s
               #   team_input_ui("A")
               #   ,
               #   
