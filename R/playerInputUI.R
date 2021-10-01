@@ -4,8 +4,9 @@
 #' 
 #' @param id The namespace of the module
 
-teamInputUI = function(team){
-  ns = NS(team)
+teamInputUI = function(id){
+  ns = NS(id)
+  team = str_sub(id, -1, -1)
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
@@ -41,6 +42,9 @@ teamInputUI = function(team){
          )
   )
 }
+
+
+
 playerInputUI <- function(id) {
   # This isn't my favorite way to do it since we're sourcing the functions in the
   # module, but it will at least take these away from UI functions.
