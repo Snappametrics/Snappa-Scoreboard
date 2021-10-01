@@ -199,7 +199,7 @@ ui <- dashboardPage(
                                  actionBttn("switch_sides", 
                                             "Switch Sides", style = "material-flat", 
                                             color = "primary", 
-                                            icon = icon("refresh"), size = "sm")),
+                                            icon = icon("sync"), size = "sm")),
                           column(4, align = "center", 
                                  uiOutput("active_die_right"))
                           ),
@@ -423,7 +423,7 @@ server <- function(input, output, session) {
                  icon = icon("window-maximize"), selected = T),
         menuItem("Career Stats", 
                  tabName = "career_stats", 
-                 icon = icon("bar-chart")),
+                 icon = icon("chart-bar")),
         menuItem("Player Stats", tabName = "player_stats",
                  icon = icon("chart-line")),
         menuItem("Edit Teams", 
@@ -440,7 +440,7 @@ server <- function(input, output, session) {
                  icon = icon("users"), selected = T),
         menuItem("Career Stats", 
                  tabName = "career_stats", 
-                 icon = icon("bar-chart")),
+                 icon = icon("chart-bar")),
         menuItem("Player Stats", tabName = "player_stats",
                  icon = icon("chart-line"))
       )
