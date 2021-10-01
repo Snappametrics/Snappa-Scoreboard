@@ -380,9 +380,11 @@ server <- function(input, output, session) {
      str_c("Yeeting Imaginary Dice Into The Sky"
      )
    ))
+  start_outputs = playerInputServer("player_input", restart = restart_game_outputs()$restart())
+  
   output$sidebar_menu <- renderUI({
-    
-    if(input$start_game) {
+    browser()
+    if(start_outputs()$start) {
       sidebarMenu(
         menuItem("Scoreboard", 
                  tabName = "scoreboard", 
@@ -849,7 +851,7 @@ server <- function(input, output, session) {
 
   output$a_breakdown = renderPlot({
     
-    if(input$start_game == 0){
+    if(start_outputs()$start == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$db_tbls()[["players"]],
@@ -865,7 +867,7 @@ server <- function(input, output, session) {
   })
   output$b_breakdown = renderPlot({
     
-    if(input$start_game == 0){
+    if(start_outputs()$start == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$db_tbls()[["players"]],
@@ -881,7 +883,7 @@ server <- function(input, output, session) {
   })
   
   output$game_flow = renderPlot({
-    if(input$start_game == 0){
+    if(start_outputs()$start == 0){
       game_flow(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
                 players = vals$db_tbls()[["players"]], 
                 scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
@@ -904,7 +906,7 @@ server <- function(input, output, session) {
 
   output$team_a_summary = renderReactable({
 
-    if(input$start_game == 0){
+    if(start_outputs()$start == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
@@ -927,7 +929,7 @@ server <- function(input, output, session) {
   
   output$team_b_summary = renderReactable({
 
-    if(input$start_game == 0){
+    if(start_outputs()$start == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
@@ -1752,7 +1754,7 @@ output$edit_team_B <- renderUI({
   #   - Set the score outputs and shot number to 0
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
-  observeEvent(input$start_game, {
+  observeEvent(start_outputs()$start, {
 
     if(restart_game_outputs()$restart()){
       delay(5,
@@ -1900,7 +1902,7 @@ output$edit_team_B <- renderUI({
   
 
 game_summary = reactive({
-  if (input$start_game == 0 | is_integer(pluck(reactiveValuesToList(session$input), "send_to_db"))){
+  if (start_outputs()$start == 0 | is_integer(pluck(reactiveValuesToList(session$input), "send_to_db"))){
     df = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
     subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
     subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
