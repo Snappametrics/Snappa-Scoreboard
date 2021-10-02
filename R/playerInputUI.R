@@ -21,17 +21,16 @@ teamInputUI = function(id){
          wellPanel(
            class = class_selector,
            id = well_selector,
-           style = paste("background:", team_colour),
+           # style = paste("background:", team_colour),
            # Header
-           h1(paste("Team", toupper(team)), class="team-head"),
+           h1(paste("Team", toupper(team)), class=str_c("team-head ", team)),
            tags$div( id = div_selector,
-                     class = 'player_input_forms',
                      # How many players
                      h3(class = 'team-size-selector-title', 'How many players?'),
                      radioGroupButtons(ns("size"),
-                                       label = "",
+                                       label = NULL,
                                        choices = 2:4, selected = 2,
-                                       size = "lg"),
+                                       size = "lg", status = str_c("size btn-", team)),
                      # Player inputs
                      uiOutput(ns("input"), class = "player-inputs"),
                      
@@ -39,7 +38,8 @@ teamInputUI = function(id){
                      # CSS: Increase font size, change color to white, add top and bottom margins
                      tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
            )
-         )
+         ),
+         tags$link(rel = 'stylesheet', type = 'text/css', href = 'teamInputUI.css')
   )
 }
 
@@ -56,12 +56,12 @@ playerInputUI <- function(id) {
   # https://mastering-shiny.org/scaling-modules.html#modules-inside-of-modules
   ns = NS(id)
   
-  fluidRow(
+  fluidRow(class = id,
     teamInputUI(ns("A")),
     
     
     # Column 2 - empty
-    column(4,  align = "center",
+    column(4,  align = "center", class = ns("center"),
            pickerInput(
              inputId = ns("arena_select"),
              label = "Arena",
@@ -73,9 +73,9 @@ playerInputUI <- function(id) {
              )
            ),
            disabled(
-             actionBttn(ns("start_game"), 
-                        label = "Throw dice?", style = "pill", color = "primary", 
-                        icon = icon("dice"), size = "sm")),
+             actionButton(ns("start_game"), 
+                        label = "Throw dice?", class = "start",
+                        icon = icon("dice"))),
            uiOutput("validate_start"),
            
            helpText("Note: All players must enter their name before the game can begin")
@@ -83,7 +83,8 @@ playerInputUI <- function(id) {
     
     
     # Column 3 - Team B
-    teamInputUI(ns("B"))
+    teamInputUI(ns("B")),
+    tags$link(rel = 'stylesheet', type = 'text/css', href = 'playerInputUI.css')
   )
  
    
