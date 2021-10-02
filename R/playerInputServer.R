@@ -5,6 +5,7 @@
 #' @param id The namespace of the module
 #' 
 teamInputServer = function(id){
+  team = str_sub(id, -1, -1)
   
   moduleServer(id,
                
@@ -22,7 +23,7 @@ teamInputServer = function(id){
                    
                    # Put those inputs in a div, baby you got stew goin'
                    tags$div( id = "forms",
-                             class = 'player_input_forms',
+                             class = str_c('player_input_forms btn-', team),
                              tagList(input_list)
                              
                    )
