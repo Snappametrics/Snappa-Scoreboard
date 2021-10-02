@@ -28,12 +28,12 @@ teamInputUI = function(id){
                      class = 'player_input_forms',
                      # How many players
                      h3(class = 'team-size-selector-title', 'How many players?'),
-                     radioGroupButtons(ns(str_c("team_", team, "_size")),
+                     radioGroupButtons(ns("size"),
                                        label = "",
                                        choices = 2:4, selected = 2,
                                        size = "lg"),
                      # Player inputs
-                     uiOutput(ns(str_c("team_", team, "_input")), class = "player-inputs"),
+                     uiOutput(ns("input"), class = "player-inputs"),
                      
                      
                      # CSS: Increase font size, change color to white, add top and bottom margins
@@ -83,7 +83,7 @@ playerInputUI <- function(id) {
     
     
     # Column 3 - Team B
-    teamInputUI("B")
+    teamInputUI(ns("B"))
   )
  
    
