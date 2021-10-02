@@ -4,7 +4,9 @@
     --red: #DE3618;
     --red-outline: #FEAD9A;
     --light-red: #FBEAE5;
-    --bg-col: #fafaf9;
+    --bg-col: #ffffff;
+    --team-a: #e26a6a;
+    --team-b: #2574a9;
 
     --deep-blue: #084E8A;
     --blue: #006FBB;
@@ -462,10 +464,10 @@ label.control-label[for='score'] {
     width: 95vw!important;
 }
 #modal_team_title_A {
-  color: #e26a6a;
+  color: var(--team-a);
 }
 #modal_team_title_B {
-  color: #2574a9;
+  color: var(--team-b);
 }
 .modal_team_title {
   font-size: 3rem;
@@ -494,21 +496,13 @@ label.control-label[for='score'] {
 /* Styling for the landing page: size of input wells, flex on player forms, and additional styling due to the close button on 
 players 3 and 4 */
 .input_well {
-  min-height: 85vh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
 }
 
-.player_input_forms {
-  flex-grow: 4;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;  
-  height: auto;
-}
+
 
 .additional_players_form {
   display: flex;
@@ -823,8 +817,6 @@ input[type=radio]{
 }
 
 .btn:disabled {
-    color: var(--gray-4);
-    background-color: var(--gray-2);
     cursor: not-allowed;
 }
 
