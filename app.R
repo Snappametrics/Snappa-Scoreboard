@@ -1647,36 +1647,7 @@ output$edit_team_B <- renderUI({
   })
   
 
-  # Restart a game after indicating you would like to do so
-  observeEvent(restart_game_outputs()$restart(), {
-    updateRadioGroupButtons(session = getDefaultReactiveDomain(),
-                            inputId = "team_A_size",
-                            selected = restart_game_outputs()$team_sizes$A)
-    updateRadioGroupButtons(session = getDefaultReactiveDomain(),
-                            inputId = "team_B_size",
-                            selected = restart_game_outputs()$team_sizes$B)
-    
-    
-          iwalk(restart_game_outputs()$input_list[restart_game_outputs()$input_list != ""],
-                function(player, input_name){
-                  
-                  delay(40, updateSelectizeInput(session = getDefaultReactiveDomain(),
-                                       input_name,
-                                       selected = player,
-                                       choices = player))
-                })
-    # )
-    
-    
-    shinyjs::enable("start_game")
-    shinyjs::click("start_game")
-    
-    
-    
-    
-  }, 
-  ignoreInit = T, once = T
-  )
+  
   
   # Game Start --------------------------------------------------------------
   
