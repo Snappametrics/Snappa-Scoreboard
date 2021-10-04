@@ -10,14 +10,13 @@ teamInputServer = function(id){
   moduleServer(id,
                
                function(input, output, session) {
-                 
                  output$input <- renderUI({
                    req(input$size) # Require the team size
                    player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
                    
                    input_list = imap(1:input$size, ~{
                      # tagList(
-                     player_selectize_UI(.y, str_c("Player ", .y), player_choices)
+                     player_selectize_UI(as.character(.y), str_c("Player ", .y), player_choices)
                      # )
                    })
                    
@@ -28,6 +27,16 @@ teamInputServer = function(id){
                              
                    )
                  })
+                 
+                 team_inputs = imap(1:input$size, ~{
+                   player_selectize_server(as.character(.y))
+                 })
+                 
+                 reactive({
+                   team_inputs
+                 })
+                 
+                 
                }
   )
 }
