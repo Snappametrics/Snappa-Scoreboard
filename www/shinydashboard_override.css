@@ -1,0 +1,16 @@
+/* 
+This CSS document creates overrides for some shinydashboard elements. The goal
+here is to give us more control over the layout of html elements on each of 
+our pages. In particular, the tabs (like Player Input, Scoreboard, etc) do not
+Fit the entire width of the page, instead fitting only to the height of the 
+content. Having more control over this would allow us to do things like pin the
+start game button to a particular location
+*/
+
+.content {
+  height: 95vh;
+}
+
+.tab-content, div.tab-pane.active{
+  height: 100%;
+}
