@@ -11,11 +11,10 @@
 #'      \item{player_name} {a reactive value containing the string in the selectize box}
 #' }
 
-player_selectize_server = function(id, restart_input) {
+playerSelectizeServer = function(id, restart_input) {
   moduleServer(id,
                function(input, output, session) {
-                 browser()
-                 input[[id]]
+                 input$name
 
                })
 }

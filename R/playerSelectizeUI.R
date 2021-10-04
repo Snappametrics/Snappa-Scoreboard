@@ -4,7 +4,7 @@
 #' @param header The header to go over the selectize input, usually "Player __"
 #' @param player_choices The group of players to be sourced as options for the selectize
 
-player_selectize_UI = function(id, header, player_choices) {
+playerSelectizeUI = function(id, header, player_choices) {
   ns <- NS(id)
   tags$div(class = 'player-selectize-input',
            h2(class = 'player-selectize-title', header),
