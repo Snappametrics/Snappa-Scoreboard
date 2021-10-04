@@ -120,12 +120,12 @@ restart_game_server = function(id) {
                      
 
                      incomplete_player_summary = dbGetQuery(con, sql("SELECT * FROM ongoing_game_summary"))
-                     
+                     browser()
                      input_list <- incomplete_player_summary %>%
                        select(player_name, team, row) %>%
                        complete(row = 1:4, team = c('A', 'B'), fill = list(player_name = "")) %>%
                        group_by(team) %>%
-                       mutate(player_input = str_c(team, row, "-name")) %>%
+                       mutate(player_input = str_c(team, "-", row, "-name")) %>%
                        ungroup() %>%
                        select(player_input, player_name) %>%
                        deframe()
@@ -145,6 +145,7 @@ restart_game_server = function(id) {
                        "game_id" = incomplete_game$game_id,
                        "shot_num" = parse_round_num(incomplete_game$last_round),
                        "game_stats_db" = incomplete_game,
+                       "snappaneers" = dbGetQuery(con, sql(str_c("SELECT ps.player_id, p.player_name, ps.team FROM player_stats ps JOIN players p USING (player_id) WHERE ps.game_id = ", incomplete_game$game_id))),
                        "player_stats_db" = dbGetQuery(con, sql(str_c("SELECT * FROM player_stats WHERE game_id = ", incomplete_game$game_id))),
                        "casualties" = dbGetQuery(con, sql(str_c("SELECT * FROM casualties WHERE game_id = ", incomplete_game$game_id)))
                      )
