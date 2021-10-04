@@ -11,6 +11,7 @@
 
 #input_forms_A {
   color: var(--team-a);
+  background-color: var(--bg-col);
 }
 
 .btn-A.active {
@@ -20,6 +21,7 @@
 
 #input_forms_B {
   color: var(--team-b);
+  background-color: var(--bg-col);
 }
 
 .btn-B.active {
@@ -72,10 +74,12 @@
 
 .well_A {
   border-color: var(--team-a);
+  background-color: var(--team-a);
 }
 
 .well_B {
   border-color: var(--team-b);
+  background-color:var(--team-b);
 }
 
 .player_input {
