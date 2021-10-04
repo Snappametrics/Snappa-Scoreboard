@@ -54,51 +54,68 @@ playerInputServer = function(id, restart){
                    start(T)
                  })
                  
-                 teamInputServer("A")
-                 teamInputServer("B")
                  
+                 
+                 restart_game_outputs <- restart_game_server('restart')
+                 
+                 team_A_inputs = teamInputServer("A")
+                 team_B_inputs = teamInputServer("B")
+                 
+                 # Restart a game after indicating you would like to do so
+                 observeEvent(restart_game_outputs()$restart(), {
+                   
+                   browser()
+                   shinyjs::enable("start_game")
+                   shinyjs::click("start_game")
+
+                   
+                 }, 
+                 ignoreInit = T, once = T
+                 )
                  
                  # Create a UI output which validates that there are four players and the names are unique
-                 output$validate_start = reactive({
-                   # If one of the first two players on each team is removed, disable the button again.
-                   # This goes above the validate check because it needs to be updating before the validate
-                   # check is failed, or else the logic isn't going to pass through
-                   
-                   if(any(input$`A1-name` == "",
-                          input$`A2-name` == "",
-                          input$`B1-name` == "",
-                          input$`B2-name` == "")){
-                     shinyjs::disable("start_game")
-                   }
-                   # If a game is being restarted, then this step can be skipped, since we're assuming
-                   # that the game was validated the first time through. When and how this will come
-                   # back to bite us, I don't know and I don't want to
-                   req(!restart)
-                   validate(
-                     # Team A
-                     need(input$`A1-name`, label = "Player A1"),
-                     need(input$`A2-name`, label = "Player A2"),
-                     # Extra players A
-                     need_input(input$`A3-name`, 3, input$team_A_size),
-                     need_input(input$`A4-name`, 4, input$team_A_size),
-                     # Team B
-                     need(input$`B1-name`, label = "Player B1"), 
-                     need(input$`B2-name`, label = "Player B2"),
-                     # Extra players B
-                     need_input(input$`B3-name`, 3, input$team_B_size),
-                     need_input(input$`B4-name`, 4, input$team_B_size),
-                     # Unique players
-                     need(length(unique(snappaneers()$player_name)) == num_players(), 
-                          message = "Player names need to be unique")
-                   )
-                   
-                 })
+                 # output$validate_start = reactive({
+                 #   # If one of the first two players on each team is removed, disable the button again.
+                 #   # This goes above the validate check because it needs to be updating before the validate
+                 #   # check is failed, or else the logic isn't going to pass through
+                 #   
+                 #   if(any(input$`A-1-name` == "",
+                 #          input$`A-2-name` == "",
+                 #          input$`B-1-name` == "",
+                 #          input$`B-2-name` == "")){
+                 #     shinyjs::disable("start_game")
+                 #   }
+                 #   # If a game is being restarted, then this step can be skipped, since we're assuming
+                 #   # that the game was validated the first time through. When and how this will come
+                 #   # back to bite us, I don't know and I don't want to
+                 #   req(!restart)
+                 #   validate(
+                 #     # Team A
+                 #     need(input$`A1-name`, label = "Player A1"),
+                 #     need(input$`A2-name`, label = "Player A2"),
+                 #     # Extra players A
+                 #     need_input(input$`A3-name`, 3, input$team_A_size),
+                 #     need_input(input$`A4-name`, 4, input$team_A_size),
+                 #     # Team B
+                 #     need(input$`B1-name`, label = "Player B1"), 
+                 #     need(input$`B2-name`, label = "Player B2"),
+                 #     # Extra players B
+                 #     need_input(input$`B3-name`, 3, input$team_B_size),
+                 #     need_input(input$`B4-name`, 4, input$team_B_size),
+                 #     # Unique players
+                 #     need(length(unique(snappaneers()$player_name)) == num_players(), 
+                 #          message = "Player names need to be unique")
+                 #   )
+                 #   
+                 # })
                  
                  
                  
                  # Outputs ----
                  reactive(list(
-                   "start" = start()
+                   "start" = start(),
+                   "snappaneers" = list(team_A_inputs(),
+                                        team_B_inputs())
                  ))
                }
   )
