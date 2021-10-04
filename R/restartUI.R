@@ -6,7 +6,7 @@
 
 
 
-restart_game_UI = function(id, team_A_points, team_B_points) {
+restartUI = function(id, team_A_points, team_B_points) {
   ns <- NS(id)
   modalDialog(
     title = "Hol' up, did you want to continue the previous game?",

@@ -10,7 +10,7 @@
 #'  }
 
 
-restart_game_server = function(id) {
+restartServer = function(id) {
   moduleServer(id,
                
                function(input, output, session) {
@@ -114,7 +114,7 @@ restart_game_server = function(id) {
                      
 
                      # => Launch the dialog box ----
-                     showModal(restart_game_UI('restart',
+                     showModal(restartUI('restart',
                                                scores[scores$team == 'A', "points"], 
                                                scores[scores$team == 'B', "points"]) )
                      
