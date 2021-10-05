@@ -6,7 +6,6 @@
 #' 
 teamInputServer = function(id){
   team = str_sub(id, -1, -1)
-  
   moduleServer(id,
                
                function(input, output, session) {
@@ -15,28 +14,18 @@ teamInputServer = function(id){
                    req(input$size) # Require the team size
                    player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
                    
-                   input_list = imap(1:input$size, ~{
-                     # tagList(
+                   imap(1:input$size, ~{
                      playerSelectizeUI(as.character(.y), str_c("Player ", .y), player_choices)
-                     # )
                    })
                    
-                   # Put those inputs in a div, baby you got stew goin'
-                   tags$div( id = "forms",
-                             class = str_c('player_input_forms btn-', team),
-                             tagList(input_list)
-                             
-                   )
                  })
-                 
-                 team_inputs = reactive(
+                 team_inputs = reactive({
                    imap(1:input$size, ~{
-                    playerSelectizeServer(as.character(.y))
+                     playerSelectizeServer(as.character(.y))
                    })
-                 )
-                 
-                 return(team_inputs)
-                 
+                 })
+
+                 list("inputs" = team_inputs())
                  
                }
   )
@@ -44,7 +33,6 @@ teamInputServer = function(id){
 
 
 playerInputServer = function(id, restart){
-  
   moduleServer(id,
                
                function(input, output, session) {
