@@ -14,7 +14,7 @@
 playerSelectizeServer = function(id, restart_input) {
   moduleServer(id,
                function(input, output, session) {
-                 input$name
+                 reactive(input$name)
 
                })
 }
