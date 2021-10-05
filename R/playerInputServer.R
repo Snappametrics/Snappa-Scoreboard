@@ -47,8 +47,8 @@ playerInputServer = function(id, restart){
                  
                  restart_game_outputs <- restartServer('restart')
                  
-                 team_A_inputs = teamInputServer("A")
-                 team_B_inputs = teamInputServer("B")
+                 team_A = teamInputServer("A")
+                 team_B = teamInputServer("B")
                  
                  # Restart a game after indicating you would like to do so
                  observeEvent(restart_game_outputs()$restart(), {
@@ -99,12 +99,11 @@ playerInputServer = function(id, restart){
                  # })
                  
                  
-                 
                  # Outputs ----
                  reactive(list(
                    "start" = start(),
-                   "snappaneers" = list(team_A_inputs(),
-                                        team_B_inputs())
+                   "snappaneers" = list("A" = team_A$inputs,
+                                        "B" = team_B$inputs)
                  ))
                }
   )
