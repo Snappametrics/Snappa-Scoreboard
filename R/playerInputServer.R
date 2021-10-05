@@ -17,7 +17,7 @@ teamInputServer = function(id){
                    
                    input_list = imap(1:input$size, ~{
                      # tagList(
-                     playerSelectizeUI(as.character(.y), str_c("Player ", .y), player_choices)
+                     playerSelectizeUI(str_c(id, .y), str_c("Player ", .y), player_choices)
                      # )
                    })
                    
