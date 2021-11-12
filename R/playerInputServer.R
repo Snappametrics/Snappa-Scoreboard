@@ -10,6 +10,7 @@ teamInputServer = function(id){
                
                function(input, output, session) {
                  
+                 # Reactive player UI
                  output$input <- renderUI({
                    req(input$size) # Require the team size
                    player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
@@ -19,6 +20,8 @@ teamInputServer = function(id){
                    })
                    
                  })
+                 
+                 # Player inputs to output from playerInputServer
                  team_inputs = reactive({
                    imap(1:input$size, ~{
                      playerSelectizeServer(as.character(.y))
@@ -39,14 +42,16 @@ playerInputServer = function(id, restart){
                  # Start reactive value
                  start = reactiveVal(F)
                  
+                 # Observe Start button
                  observeEvent(input$start_game,{
                    start(T)
                  })
                  
                  
-                 
+                 # Checks for an incomplete game to restart
                  restart_game_outputs <- restartServer('restart')
                  
+                 # Assigns the outputs of teamInputServer for each team
                  team_A = teamInputServer("A")
                  team_B = teamInputServer("B")
                  

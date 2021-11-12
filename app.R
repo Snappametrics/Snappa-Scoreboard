@@ -1659,8 +1659,12 @@ output$edit_team_B <- renderUI({
   #   - Initialize the current game's player_stats table
   observeEvent(start_outputs()$start, {
 
+    # If a game needs to be restarted
     if(restart_game_outputs()$restart()){
+      
+      # Wait for 5 ms
       delay(5,
+            # For each item in score_inputs, assign it to its vals counterpart
             iwalk(restart_game_outputs()$score_inputs, function(value, name){
               vals[[name]] <- value
             })

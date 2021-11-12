@@ -14,12 +14,14 @@ restartServer = function(id) {
   moduleServer(id,
                
                function(input, output, session) {
-
-                  
+                 
                  restart_game <- reactiveVal({F})
                  check_function_return <- reactiveVal({F})
                  
+                 # Incomplete game data
                  incomplete_game = dbGetQuery(con, sql("SELECT * FROM incomplete_game"))
+                 
+                 # Empty lists for potential outputs
                  input_list = list()
                  team_sizes = list()
                  score_inputs = list()
@@ -44,9 +46,10 @@ restartServer = function(id) {
 
                    } else {
                      # If there were points ----
-                     # => Launch dialog box
-                     
+
                      # => Show game summary
+                     #  - Team A
+                     # TODO: Functionalize summary table
                      output$summary_table_A <- renderReactable({
                        incomplete_player_summary %>%
                          filter(team == 'A') %>%
@@ -72,6 +75,8 @@ restartServer = function(id) {
                          )
                      })
                      
+                     # => Show game summary
+                     #  - Team B
                      output$summary_table_B <- renderReactable({
                        incomplete_player_summary %>%
                          filter(team == 'B') %>%
@@ -151,13 +156,6 @@ restartServer = function(id) {
                      )
                      
                    }
-                   
-
-
-                   
-                   
-                   
-                   
 
                  }
                  
