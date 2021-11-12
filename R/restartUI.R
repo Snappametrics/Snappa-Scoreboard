@@ -6,13 +6,19 @@
 
 
 
-restartUI = function(id, team_A_points, team_B_points) {
+restartUI = function(id, scores) {
   ns <- NS(id)
+  
+  team_A_points = scores[scores$team == 'A', "points"] 
+  team_B_points = scores[scores$team == 'B', "points"]
+  # Restart game dialog box
   modalDialog(
     title = "Hol' up, did you want to continue the previous game?",
     style = str_c("background-color:", snappa_pal[1], ";"),
     fluidRow(
       style = 'display:flex;',
+      
+      # Team A information
       column(3,
              align = 'center',
              class = 'col-sm-offset-2',
@@ -21,12 +27,16 @@ restartUI = function(id, team_A_points, team_B_points) {
               h3(class = 'modal_team_points', id = 'modal_team_points_A',
                 team_A_points)
       ),
+      
+      # Round information
       column(2,
              align = 'center',
              style = 'align-self: center',
              withSpinner(uiOutput(ns('round_num')), type = 1),
              br()
       ),
+      
+      # Team B information
       column(3,
              align = 'center',
                 h3(class = 'modal_team_title', id = 'modal_team_title_B',
@@ -36,11 +46,16 @@ restartUI = function(id, team_A_points, team_B_points) {
       ),
       column(2)
     ),
+    
+    
     fluidRow(
+      # Team A summary table
       column(6, align = 'center',
              withSpinner(reactableOutput(ns('summary_table_A')),
                   type = 1)
       ),
+      
+      # Team B summary table
       column(6, align = 'center', 
              withSpinner(reactableOutput(ns('summary_table_B')),
                   type = 1)
@@ -49,6 +64,8 @@ restartUI = function(id, team_A_points, team_B_points) {
     footer = tagList(
       fluidRow(
         div(class = 'restart_game_footer',
+            
+            # Context of game restart choice
           column(8, align = "left",
                  helpText(
                    h4('Would you like to continue the previous game?',
@@ -57,6 +74,8 @@ restartUI = function(id, team_A_points, team_B_points) {
                         style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
                )
         ),
+        # Game restart buttons
+        # - Continue
         column(2,
                div(class = 'restart_game_control',
                  actionBttn(ns("continue"),
@@ -66,6 +85,8 @@ restartUI = function(id, team_A_points, team_B_points) {
                             size = "md")
                )
         ),
+        # Game restart buttons
+        # - Delete
         column(2,
                div(class = 'restart_game_control', 
                  actionBttn(ns("delete"),

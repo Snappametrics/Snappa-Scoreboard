@@ -108,38 +108,46 @@ restartServer = function(id) {
                      output$round_num <- renderUI({
                        team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
                        HTML(str_c('<h1 style = "font-size: 5rem">', 
-                                  str_extract(incomplete_game$last_round, "[0-9]+"), 
-                                  '<span style="color:', team_colours[[str_extract(incomplete_game$last_round, "[AB]+")]], ';">', 
-                                  str_extract(incomplete_game$last_round, "[AB]+"), "</span>",
+                                  str_extract(incomplete_game$last_round, "[0-9]+"), # Extract number in round
+                                  '<span style="color:', 
+                                  team_colours[[str_extract(incomplete_game$last_round, "[AB]+")]], # Colour code shooting team
+                                  ';">', 
+                                  str_extract(incomplete_game$last_round, "[AB]+"), # Extract team in round
+                                  "</span>",
                                   "</h1>"))
                      })
                      
-                     
+                     # Table of teams and their scores
                      scores = count(incomplete_player_summary, team, wt = points, name = "points")
                      
 
                      # => Launch the dialog box ----
-                     showModal(restartUI('restart',
-                                               scores[scores$team == 'A', "points"], 
-                                               scores[scores$team == 'B', "points"]) )
+                     showModal(
+                       restartUI('restart', scores)
+                       )
                      
-
+                     # Table of player points
                      incomplete_player_summary = dbGetQuery(con, sql("SELECT * FROM ongoing_game_summary"))
                      browser()
+                     
+                     # Create input ids from player information
                      input_list <- incomplete_player_summary %>%
                        select(player_name, team, row) %>%
+                       # Produce a dataframe with an input for all possible player inputs
                        complete(row = 1:4, team = c('A', 'B'), fill = list(player_name = "")) %>%
-                       group_by(team) %>%
+                       group_by(team) %>% # TODO: Confirm whether we need to group by
+                       # Produce inputs in the form: A-1-name
                        mutate(player_input = str_c(team, "-", row, "-name")) %>%
                        ungroup() %>%
                        select(player_input, player_name) %>%
+                       # Convert to named vector
                        deframe()
                      
-                     
+                     # Team size info
                      team_sizes = list('A' = sum(incomplete_player_summary$team == 'A'),
                                        'B' = sum(incomplete_player_summary$team == 'B'))
                      
-                     # Create the inputs for the score inputs
+                     # Create the inputs passed to the score inputs
                      score_inputs = list(
                        "current_scores" = tibble(
                          team_A = sum(incomplete_player_summary[incomplete_player_summary$team == "A", "points"]),
