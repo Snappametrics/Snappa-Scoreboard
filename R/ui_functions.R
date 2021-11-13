@@ -2228,13 +2228,16 @@ snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e",
 options(reactable.theme = reactableTheme(
   color = "gray20",
   backgroundColor = snappa_pal[1], 
+  cellStyle = list(borderTop = "none"),
+  rowStyle = list(borderBottom = "1px solid #7c7c7c"),
   tableBodyStyle = list(
-    padding = "4px 2px"
+    padding = "4px 2px",
+    borderTop = "none"
   ),
-  borderColor = "#DEDDDD",
+  # borderColor = "#7c7c7c", 
   headerStyle = list(
     alignSelf = "flex-end",
-    fontSize = "13px",
+    fontSize = "14px",
     borderBottom = "3px solid #7c7c7c"
   ))
 )
