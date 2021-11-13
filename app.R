@@ -366,7 +366,9 @@ server <- function(input, output, session) {
      str_c("Yeeting Imaginary Dice Into The Sky"
      )
    ))
-  start_outputs = playerInputServer("input")
+  
+  restart_outputs = restartServer("restart")
+  start_outputs = playerInputServer("input", restart = restart_outputs$restart)
   
   output$sidebar_menu <- renderUI({
     if(start_outputs$start()) {

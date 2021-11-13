@@ -27,6 +27,7 @@ teamInputServer = function(id){
                      playerSelectizeServer(ns(.y))
                    })
                  })
+                 
 
                  list("inputs" = reactive(team_inputs()))
                  
@@ -35,7 +36,7 @@ teamInputServer = function(id){
 }
 
 
-playerInputServer = function(id){
+playerInputServer = function(id, restart){
   moduleServer(id,
                
                function(input, output, session) {
@@ -47,12 +48,17 @@ playerInputServer = function(id){
                    start(T)
                  })
                  
-                 
-                 # Checks for an incomplete game to restart
-                 restart_game_outputs <- restartServer('restart')
+
                  # Assigns the outputs of teamInputServer for each team
                  team_A = teamInputServer("A")
                  team_B = teamInputServer("B")
+                 
+                 observeEvent(req(restart() == T), {
+                   start(T)
+                   return(
+                     list("start" = reactive(start()))
+                   )
+                 })
                  
 
                  # Create a UI output which validates that there are four players and the names are unique
@@ -95,8 +101,6 @@ playerInputServer = function(id){
                  # Outputs ----
                  list(
                    "start" = reactive(start()),
-                   "restart" = restart_game_outputs$restart,
-                   "restart_inputs" = reactive(restart_game_outputs[c("input_list", "team_sizes", "score_inputs")]),
                    "snappaneers" = reactive(
                      list("A" = team_A$inputs,
                           "B" = team_B$inputs)
