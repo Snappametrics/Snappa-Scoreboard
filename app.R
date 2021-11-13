@@ -147,7 +147,7 @@ ui <- dashboardPage(
 
       
       tabItem(tabName = "player_input",
-              playerInputUI("player_input")
+              playerInputUI("input")
               ),
 
 
@@ -379,10 +379,10 @@ server <- function(input, output, session) {
      str_c("Yeeting Imaginary Dice Into The Sky"
      )
    ))
-  start_outputs = playerInputServer("player_input", restart = restart_game_outputs()$restart())
+  start_outputs = playerInputServer("input")
   
   output$sidebar_menu <- renderUI({
-    if(start_outputs()$start) {
+    if(start_outputs$start()) {
       sidebarMenu(
         menuItem("Scoreboard", 
                  tabName = "scoreboard", 
@@ -569,14 +569,14 @@ server <- function(input, output, session) {
   team_sizes = reactive({
     tibble(
       team = c("A","B"),
-      size = as.integer(c(input$team_A_size, input$team_B_size))
+      size = as.integer(c(input$`input-A-size`, input$`input-B-size`))
     )
   })
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
   snappaneers = reactive({
     validate(need(length(active_player_inputs()) > 3, label = "active inputs"))
-    # browser()
+    
     tibble(
       # Team pulls the first letter from their input name
       team = substr(names(active_player_inputs()), 1, 1),
@@ -1637,13 +1637,13 @@ output$edit_team_B <- renderUI({
   # If the number of unique snappaneer names is the same as the number of active player inputs
   #   => enable start button
   observeEvent(req(length(unique(snappaneers()$player_name)) == num_players()), { 
-    shinyjs::enable("start_game")
+    shinyjs::enable("input-start_game")
   })
   
   # If the number of unique snappaneer names is not the same as the number of active player inputs
   #   => disable start button
   observeEvent(req(length(unique(snappaneers()$player_name)) != num_players()),{ 
-    shinyjs::disable("start_game")
+    shinyjs::disable("input-start_game")
   })
   
 
