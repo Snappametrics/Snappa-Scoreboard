@@ -817,7 +817,7 @@ server <- function(input, output, session) {
 
   output$a_breakdown = renderPlot({
     
-    if(start_outputs()$start == 0){
+    if(start_outputs$start() == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$db_tbls()[["players"]],
@@ -833,7 +833,7 @@ server <- function(input, output, session) {
   })
   output$b_breakdown = renderPlot({
     
-    if(start_outputs()$start == 0){
+    if(start_outputs$start() == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$db_tbls()[["players"]],
@@ -849,7 +849,7 @@ server <- function(input, output, session) {
   })
   
   output$game_flow = renderPlot({
-    if(start_outputs()$start == 0){
+    if(start_outputs$start() == 0){
       game_flow(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
                 players = vals$db_tbls()[["players"]], 
                 scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
@@ -872,7 +872,7 @@ server <- function(input, output, session) {
 
   output$team_a_summary = renderReactable({
 
-    if(start_outputs()$start == 0){
+    if(start_outputs$start() == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
@@ -895,7 +895,7 @@ server <- function(input, output, session) {
   
   output$team_b_summary = renderReactable({
 
-    if(start_outputs()$start == 0){
+    if(start_outputs$start() == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
@@ -1657,15 +1657,15 @@ output$edit_team_B <- renderUI({
   #   - Set the score outputs and shot number to 0
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
-  observeEvent(start_outputs()$start, {
-
+  observeEvent(start_outputs$start(), {
     # If a game needs to be restarted
-    if(restart_game_outputs()$restart()){
+    if(start_outputs$restart()){
       
       # Wait for 5 ms
       delay(5,
             # For each item in score_inputs, assign it to its vals counterpart
-            iwalk(restart_game_outputs()$score_inputs, function(value, name){
+            iwalk(start_outputs$restart_inputs(), function(value, name){
+              browser()
               vals[[name]] <- value
             })
       )
@@ -1676,7 +1676,7 @@ output$edit_team_B <- renderUI({
     # Check if the last game was finished
     # Switch to the scoreboard
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
-    else if (restart_game_outputs()$restart() == F) {
+    else if (start_outputs$restart() == F) {
       # LAST GAME WAS FINISHED
       
       vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
@@ -1809,7 +1809,7 @@ output$edit_team_B <- renderUI({
   
 
 game_summary = reactive({
-  if (start_outputs()$start == 0 | is_integer(pluck(reactiveValuesToList(session$input), "send_to_db"))){
+  if (start_outputs$start() == 0 | is_integer(pluck(reactiveValuesToList(session$input), "send_to_db"))){
     df = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
     subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
     subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")

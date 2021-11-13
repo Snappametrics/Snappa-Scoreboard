@@ -128,8 +128,7 @@ restartServer = function(id) {
                      
                      # Table of player points
                      incomplete_player_summary = dbGetQuery(con, sql("SELECT * FROM ongoing_game_summary"))
-                     browser()
-                     
+
                      # Create input ids from player information
                      input_list <- incomplete_player_summary %>%
                        select(player_name, team, row) %>%
@@ -193,11 +192,10 @@ restartServer = function(id) {
                  })
                  
                  
-                 reactive(list("restart" = restart_game,
-                               "input_list" = input_list,
-                               "team_sizes" = team_sizes,
-                               "score_inputs" = score_inputs))
-                 
+                 list("restart" = reactive(restart_game()),
+                      "input_list" = reactive(input_list),
+                      "team_sizes" = reactive(team_sizes),
+                      "score_inputs" = reactive(score_inputs))
                  
                  
                  

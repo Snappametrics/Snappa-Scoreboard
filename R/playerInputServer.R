@@ -6,17 +6,17 @@
 #' 
 teamInputServer = function(id){
   team = str_sub(id, -1, -1)
+  ns = NS(id)
   moduleServer(id,
                
                function(input, output, session) {
-                 
                  # Reactive player UI
                  output$input <- renderUI({
                    req(input$size) # Require the team size
                    player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
                    
                    imap(1:input$size, ~{
-                     playerSelectizeUI(as.character(.y), str_c("Player ", .y), player_choices)
+                     playerSelectizeUI(ns(.y), str_c("Player ", .y), player_choices)
                    })
                    
                  })
@@ -24,18 +24,18 @@ teamInputServer = function(id){
                  # Player inputs to output from playerInputServer
                  team_inputs = reactive({
                    imap(1:input$size, ~{
-                     playerSelectizeServer(as.character(.y))
+                     playerSelectizeServer(ns(.y))
                    })
                  })
 
-                 list("inputs" = team_inputs())
+                 list("inputs" = reactive(team_inputs()))
                  
                }
   )
 }
 
 
-playerInputServer = function(id, restart){
+playerInputServer = function(id){
   moduleServer(id,
                
                function(input, output, session) {
@@ -105,11 +105,15 @@ playerInputServer = function(id, restart){
                  
                  
                  # Outputs ----
-                 reactive(list(
-                   "start" = start(),
-                   "snappaneers" = list("A" = team_A$inputs,
-                                        "B" = team_B$inputs)
-                 ))
+                 list(
+                   "start" = reactive(start()),
+                   "restart" = restart_game_outputs$restart,
+                   "restart_inputs" = reactive(restart_game_outputs[c("input_list", "team_sizes", "score_inputs")]),
+                   "snappaneers" = reactive(
+                     list("A" = team_A$inputs,
+                          "B" = team_B$inputs)
+                   )
+                 )
                }
   )
 }
