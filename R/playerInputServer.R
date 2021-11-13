@@ -50,23 +50,11 @@ playerInputServer = function(id){
                  
                  # Checks for an incomplete game to restart
                  restart_game_outputs <- restartServer('restart')
-                 
                  # Assigns the outputs of teamInputServer for each team
                  team_A = teamInputServer("A")
                  team_B = teamInputServer("B")
                  
-                 # Restart a game after indicating you would like to do so
-                 observeEvent(restart_game_outputs()$restart(), {
-                   
-                   
-                   shinyjs::enable("start_game")
-                   shinyjs::click("start_game")
 
-                   
-                 }, 
-                 ignoreInit = T, once = T
-                 )
-                 
                  # Create a UI output which validates that there are four players and the names are unique
                  # output$validate_start = reactive({
                  #   # If one of the first two players on each team is removed, disable the button again.
