@@ -1647,17 +1647,34 @@ output$edit_team_B <- renderUI({
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
   observeEvent(req(start_outputs$start() == T), {
-    browser()
     # If a game needs to be restarted
-    if(start_outputs$restart()){
-      
+    if(restart_outputs$restart()){
+      iwalk(restart_outputs$input_list(),
+            ~updateSelectizeInput(inputId = .y, selected = .x))
       # Wait for 5 ms
       delay(5,
             # For each item in score_inputs, assign it to its vals counterpart
-            iwalk(start_outputs$restart_inputs(), function(value, name){
-              browser()
+            iwalk(restart_outputs$score_inputs(), function(value, name){
               vals[[name]] <- value
             })
+      )
+      
+      vals$cooldowns = reactivePoll(
+        intervalMillis = 100*70,
+        session = session,
+        # checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
+        #                                                   WHERE game_id = ", vals$game_id)))},
+        checkFunc = function() {nrow(vals$casualties)},
+        valueFunc = function() {
+          map(
+            # Map over each type of score-based casualty
+            unique(casualty_rules$casualty_title), 
+            ~cooldown_check(casualties = vals$casualties[vals$casualties$casualty_type == .x, ], 
+                            scores = vals$scores_db, 
+                            current_round = round_num(), 
+                            rounds = rounds)) %>% 
+            # Set the names of the list
+            set_names(unique(casualty_rules$casualty_title))}
       )
       
       
@@ -1666,7 +1683,7 @@ output$edit_team_B <- renderUI({
     # Check if the last game was finished
     # Switch to the scoreboard
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
-    else if (start_outputs$restart() == F) {
+    else if (restart_outputs$restart() == F) {
       # LAST GAME WAS FINISHED
       
       vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
