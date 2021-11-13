@@ -7,10 +7,7 @@
 
 
 restartUI = function(id, scores) {
-  ns <- NS(id)
-  
-  team_A_points = scores[scores$team == 'A', "points"] 
-  team_B_points = scores[scores$team == 'B', "points"]
+  ns = NS(id)
   # Restart game dialog box
   modalDialog(
     title = "Hol' up, did you want to continue the previous game?",
@@ -25,15 +22,15 @@ restartUI = function(id, scores) {
               h3(class = 'modal_team_title', id = 'modal_team_title_A',
                 'Team A'),
               h3(class = 'modal_team_points', id = 'modal_team_points_A',
-                team_A_points)
+                # team_A_points)
+                scores$team_A)
       ),
       
       # Round information
       column(2,
              align = 'center',
              style = 'align-self: center',
-             withSpinner(uiOutput(ns('round_num')), type = 1),
-             br()
+             withSpinner(uiOutput(ns('round_num')), type = 1)
       ),
       
       # Team B information
@@ -42,7 +39,8 @@ restartUI = function(id, scores) {
                 h3(class = 'modal_team_title', id = 'modal_team_title_B',
                 'Team B'),
                 h3(class = 'modal_team_points', id = 'modal_team_points_B',
-                team_B_points)
+                # team_B_points)
+                scores$team_B)
       ),
       column(2)
     ),
@@ -51,14 +49,12 @@ restartUI = function(id, scores) {
     fluidRow(
       # Team A summary table
       column(6, align = 'center',
-             withSpinner(reactableOutput(ns('summary_table_A')),
-                  type = 1)
+             withSpinner(reactableOutput(ns("summary-A")), type = 1)
       ),
       
       # Team B summary table
       column(6, align = 'center', 
-             withSpinner(reactableOutput(ns('summary_table_B')),
-                  type = 1)
+             withSpinner(reactableOutput(ns("summary-B")), type = 1)
       )
     ),
     footer = tagList(
