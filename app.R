@@ -601,14 +601,14 @@ server <- function(input, output, session) {
   
   # Length of active player inputs
   num_players = reactive({
-    sum(as.integer(c(input$team_A_size, input$team_B_size)))
+    sum(team_sizes()$size)
   })
   
   
 
 # Module Reactive Elements ------------------------------------------------
 ### Restart Game Reactive ---------------------------------------------------
-  restart_game_outputs <- restartServer('restart')
+  # restart_game_outputs <- restartServer('restart')
 
 
 ## Player Input Reactives --------------------------------------------------
