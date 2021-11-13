@@ -1657,7 +1657,8 @@ output$edit_team_B <- renderUI({
   #   - Set the score outputs and shot number to 0
   #   - Record the score we're playing to
   #   - Initialize the current game's player_stats table
-  observeEvent(start_outputs$start(), {
+  observeEvent(req(start_outputs$start() == T), {
+    browser()
     # If a game needs to be restarted
     if(start_outputs$restart()){
       
