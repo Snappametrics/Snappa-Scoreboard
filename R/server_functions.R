@@ -1,3 +1,7 @@
+library(extrafont)
+library(tidyverse)
+library(lubridate)
+
 casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text,
                          12, 7, "12-7", "Roll off to see who is taking the kamikaze to the face",
                          7, 12, "12-7", "Roll off to see who is taking the kamikaze to the face",
