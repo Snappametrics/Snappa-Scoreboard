@@ -50,18 +50,19 @@ restartServer = function(id) {
                      # => Show game summary
                      #  - Team A
                      # TODO: Functionalize summary table
-                     output$summary_table_A <- renderReactable({
-                       incomplete_player_summary %>%
-                         filter(team == 'A') %>%
-                         select(-team, row) %>%
+                     output$`summary-A` <- renderReactable({
+                       incomplete_player_summary[incomplete_player_summary$team == "A", c("player_name", "points", "paddle_points", "clink_points")]%>%
                          arrange(desc(points)) %>%
                          reactable(
                            highlight = T,
+                           compact = T, 
+                           rowStyle = list(height = "50px", alignItems = "center"), 
+                           defaultSorted = "points", defaultSortOrder = "desc",
                            columns = list(
                              player_name = 
                                colDef(
                                  header = 'Player Name',
-                                 style = list(color = '#e26a6a'),
+                                 # style = list(color = '#e26a6a'),
                                  align = 'center',
                                  width = 100) 
                            ),
@@ -69,7 +70,6 @@ restartServer = function(id) {
                              header = function(value) {
                                return(str_to_title(gsub('_', ' ', value, fixed = T )))
                              },
-                             width = 100,
                              align = 'center'
                            )
                          )
@@ -77,26 +77,26 @@ restartServer = function(id) {
                      
                      # => Show game summary
                      #  - Team B
-                     output$summary_table_B <- renderReactable({
-                       incomplete_player_summary %>%
-                         filter(team == 'B') %>%
-                         select(-team, row) %>%
+                     output$`summary-B` <- renderReactable({
+                       incomplete_player_summary[incomplete_player_summary$team == "B", c("player_name", "points", "paddle_points", "clink_points")] %>%
                          arrange(desc(points)) %>%
                          reactable(
                            highlight = T,
+                           compact = T, 
+                           rowStyle = list(height = "50px", alignItems = "center"),
+                           defaultSorted = "points", defaultSortOrder = "desc",
                            columns = list(
                              player_name = 
                                colDef(
                                  header = 'Player Name',
-                                 style = list(color = '#2574a9'),
+                                 # style = list(color = '#2574a9'),
                                  align = 'center',
                                  width = 100)
                            ),
                            defaultColDef = colDef(
                              header = function(value) {
                                return(str_to_title(gsub('_', ' ', value, fixed = T )))
-                             },
-                             width = 100,
+                             }, 
                              align = 'center'
                            )
                          )
