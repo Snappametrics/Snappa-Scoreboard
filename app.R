@@ -552,10 +552,10 @@ server <- function(input, output, session) {
   
   # Player input list
   player_input_list = reactive({
-    list("A1" = input$`A1-name`, "A2" = input$`A2-name`, 
-         "A3" = input$`A3-name`, "A4" = input$`A4-name`, 
-         "B1" = input$`B1-name`, "B2" = input$`B2-name`, 
-         "B3" = input$`B3-name`, "B4" = input$`B4-name`)
+    list("A1" = input$`A-1-name`, "A2" = input$`A-2-name`, 
+         "A3" = input$`A-3-name`, "A4" = input$`A-4-name`, 
+         "B1" = input$`B-1-name`, "B2" = input$`B-2-name`, 
+         "B3" = input$`B-3-name`, "B4" = input$`B-4-name`)
   })
   
   # Active input buttons
