@@ -249,11 +249,11 @@ db_update_player_stats = function(player_stats, specific_player, round_button = 
   if(missing(specific_player)){
     # Convert tibble to list of character strings in the format: COLNAME = VALUE
     # Separated for each player in player_stats
-    col_updates = player_stats %>% 
-      group_by(player_id) %>% 
+    col_updates = player_stats[,4:ncol(player_stats)] %>% 
+      rowwise() %>% 
       # Transpose each player id's row
       group_map(~t(.), .keep = T) %>% 
-      map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>% 
+      lapply(function(x)str_c(rownames(x), " = ", x, collapse = ", ")) %>% 
       # Set names for use with imap
       set_names(player_stats$player_id)
     
@@ -267,8 +267,9 @@ db_update_player_stats = function(player_stats, specific_player, round_button = 
     
     
     # If a player is specified, only update their row
+    fields_to_update = player_stats[player_stats$player_id == specific_player, 4:ncol(player_stats)]
     
-    col_updates = t(filter(player_stats, player_id == specific_player)) %>% 
+    col_updates = t(fields_to_update) %>% 
       str_c(rownames(.), " = ", ., collapse = ", ")
     
     update_player_stats_query = str_c("UPDATE player_stats
