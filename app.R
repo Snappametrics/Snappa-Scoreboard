@@ -367,8 +367,6 @@ server <- function(input, output, session) {
      )
    ))
   
-  restart_outputs = restartServer("restart")
-  start_outputs = playerInputServer("input", restart = restart_outputs$restart)
   
   output$sidebar_menu <- renderUI({
     if(start_outputs$start()) {
@@ -596,12 +594,11 @@ server <- function(input, output, session) {
   
 
 # Module Reactive Elements ------------------------------------------------
-### Restart Game Reactive ---------------------------------------------------
-  # restart_game_outputs <- restartServer('restart')
 
-
-## Player Input Reactives --------------------------------------------------
+  restart_outputs = restartServer("restart")
+  start_outputs = playerInputServer("input", restart = restart_outputs$restart)
   
+
 # Outputs -----------------------------------------------------------------
   
 
