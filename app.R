@@ -143,21 +143,7 @@ ui <- dashboardPage(
 
       
       tabItem(tabName = "scoreboard", #icon = icon("window-maximize"), 
-               div(
-                 fluidRow(id = "dice-row", 
-                          column(4, align = "center", 
-                                 uiOutput("active_die_left")),
-                          column(4, align = "center",
-                                 actionBttn("switch_sides", 
-                                            "Switch Sides", style = "material-flat", 
-                                            color = "primary", 
-                                            icon = icon("sync"), size = "sm")),
-                          column(4, align = "center", 
-                                 uiOutput("active_die_right"))
-                          ),
-                 team_scoreboard_ui()
-                 
-               )
+               scoreboardUI("scoreboard")
       ),
 
 # Career Stats ------------------------------------------------------------
@@ -514,7 +500,7 @@ server <- function(input, output, session) {
     want_B3 = F,
     want_B4 = F,
 
-    switch_counter = 1,
+    # switch_counter = 1,
     game_over = F,
     
     markov_vals = list("iterations" = 1,
@@ -597,6 +583,7 @@ server <- function(input, output, session) {
 
   restart_outputs = restartServer("restart")
   start_outputs = playerInputServer("input", restart = restart_outputs$restart)
+  scoreboardServer("scoreboard", round_num = round_num(), current_scores = vals$current_scores)
   
 
 # Outputs -----------------------------------------------------------------
@@ -665,82 +652,82 @@ server <- function(input, output, session) {
   
 
   # Output the round number
-  output$round_num = renderUI({
-    team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
-    HTML(str_c('<h3 class="numbers">', 
-               str_extract(round_num(), "[0-9]+"), 
-               '<span style="color:', team_colours[[str_extract(round_num(), "[AB]+")]], ';">', str_extract(round_num(), "[AB]+"), "</span>",
-               "</h3>"))
-  })
-  
-  output$round_control_buttons = renderUI({
-    team_colours = list("A" = "danger", "B" = "primary")
-    column(width=12, align = "center",
-           div( id = 'round_control_buttons',
-             actionBttn("previous_round", 
-                      label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = 
-                        team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
-             actionBttn("next_round", 
-                      label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), 
-                      color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
-           )
-    )
-  })
-  
-  # Die icon indicating the active team
-  output$active_die_left = renderUI({
-    # switch_counter is a counter for how many times switch_sides 
-    # even means that B should be on the left side
-    switch_is_even = (vals$switch_counter %% 2 == 0)
-    
-    
-    if(switch_is_even){
-      # If sides have been switched
-      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                             if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
-    } else {
-      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                             if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
-    }
-  })
-  
-  output$active_die_right = renderUI({
-    # switch_counter is a counter for how many times switch_sides 
-    # even means that A should be on the right side
-    switch_is_even = (vals$switch_counter %% 2 == 0)
-    
-    if(switch_is_even){
-    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                           if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
-      } else {
-        img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                               if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
-      }
-  })
-  
-  # Output Team A's score
-  output$score_A = renderText({
-    vals$current_scores$team_A
-  })
-  
-  output$player_names_A = renderText({
-    snappaneers() %>% 
-      filter(team == "A") %>% 
-      pull(player_name) %>% 
-      str_c(., collapse = ", ")
-  })
-  
-  # Output Team B's score
-  output$score_B = renderText({
-    vals$current_scores$team_B
-  })
-  
-  output$player_names_B = renderText({
-    snappaneers() %>% 
-      filter(team == "B") %>% 
-      pull(player_name) %>% 
-      str_c(., collapse = ", ")
-  })
+  # output$round_num = renderUI({
+  #   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+  #   HTML(str_c('<h3 class="numbers">', 
+  #              str_extract(round_num(), "[0-9]+"), 
+  #              '<span style="color:', team_colours[[str_extract(round_num(), "[AB]+")]], ';">', str_extract(round_num(), "[AB]+"), "</span>",
+  #              "</h3>"))
+  # })
+  # 
+  # output$round_control_buttons = renderUI({
+  #   team_colours = list("A" = "danger", "B" = "primary")
+  #   column(width=12, align = "center",
+  #          div( id = 'round_control_buttons',
+  #            actionBttn("previous_round", 
+  #                     label = "Previous Round", style = "jelly", icon = icon("arrow-left"), color = 
+  #                       team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg"),
+  #            actionBttn("next_round", 
+  #                     label = "Pass the dice", style = "jelly", icon = icon("arrow-right"), 
+  #                     color = team_colours[[str_extract(round_num(), "[AB]+")]], size = "lg")
+  #          )
+  #   )
+  # })
+  # 
+  # # Die icon indicating the active team
+  # output$active_die_left = renderUI({
+  #   # switch_counter is a counter for how many times switch_sides 
+  #   # even means that B should be on the left side
+  #   switch_is_even = (vals$switch_counter %% 2 == 0)
+  #   
+  #   
+  #   if(switch_is_even){
+  #     # If sides have been switched
+  #     img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+  #                                            if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
+  #   } else {
+  #     img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+  #                                            if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
+  #   }
+  # })
+  # 
+  # output$active_die_right = renderUI({
+  #   # switch_counter is a counter for how many times switch_sides 
+  #   # even means that A should be on the right side
+  #   switch_is_even = (vals$switch_counter %% 2 == 0)
+  #   
+  #   if(switch_is_even){
+  #   img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+  #                                          if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
+  #     } else {
+  #       img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
+  #                                              if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
+  #     }
+  # })
+  # 
+  # # Output Team A's score
+  # output$score_A = renderText({
+  #   vals$current_scores$team_A
+  # })
+  # 
+  # output$player_names_A = renderText({
+  #   snappaneers() %>% 
+  #     filter(team == "A") %>% 
+  #     pull(player_name) %>% 
+  #     str_c(., collapse = ", ")
+  # })
+  # 
+  # # Output Team B's score
+  # output$score_B = renderText({
+  #   vals$current_scores$team_B
+  # })
+  # 
+  # output$player_names_B = renderText({
+  #   snappaneers() %>% 
+  #     filter(team == "B") %>% 
+  #     pull(player_name) %>% 
+  #     str_c(., collapse = ", ")
+  # })
   
 
   output$recent_scores_rt = renderReactable({
@@ -1596,23 +1583,23 @@ output$edit_team_B <- renderUI({
 # Game Start Validation ---------------------------------------------------
 
   
-  observeEvent(input$switch_sides, {
-    # browser()
-    vals$switch_counter = vals$switch_counter+1
-    
-    switch_is_even = (vals$switch_counter %% 2 == 0)
-    
-    
-    if(switch_is_even){
-      removeUI("#ScoreboardUI", immediate=T)
-      insertUI(selector = "#dice-row", ui = team_scoreboard_ui("B", "A"), where = "afterEnd")
-    } else {
-      removeUI("#ScoreboardUI", immediate = T)
-      insertUI(selector = "#dice-row", ui = team_scoreboard_ui(), where = "afterEnd")
-    }
-    
-
-  })
+  # observeEvent(input$switch_sides, {
+  #   # browser()
+  #   vals$switch_counter = vals$switch_counter+1
+  #   
+  #   switch_is_even = (vals$switch_counter %% 2 == 0)
+  #   
+  #   
+  #   if(switch_is_even){
+  #     removeUI("#ScoreboardUI", immediate=T)
+  #     insertUI(selector = "#dice-row", ui = team_scoreboard_ui("B", "A"), where = "afterEnd")
+  #   } else {
+  #     removeUI("#ScoreboardUI", immediate = T)
+  #     insertUI(selector = "#dice-row", ui = team_scoreboard_ui(), where = "afterEnd")
+  #   }
+  #   
+  # 
+  # })
   
   
   
