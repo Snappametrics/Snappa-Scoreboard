@@ -171,7 +171,7 @@
 }
 
 
-#score_A, #score_B {
+.score .numbers {
     font-size: 20rem; 
     color: white;
     
@@ -437,7 +437,7 @@ label.control-label[for='score'] {
 }
 
 /* Styling for 'we-scored' button and box around it */
-#A_score_and_undo, #B_score_and_undo {
+.score-and-undo {
     flex: 2 1 50%;
     padding-bottom: 2vh;
     
@@ -583,17 +583,34 @@ players 3 and 4 */
   text-align: center;
 }
 
-.scoreboard_well {
+.scoreboard-well {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
+  margin-top: 2vh; 
+  padding-top: 2vh; 
+  padding-bottom: 2vh; 
+  min-height: 70vh; 
+  opacity: 0.92; 
 }
-.team_name {
+
+.scoreboard-well.well-A {
+  background: var(--team-a);
+}
+
+.scoreboard-well.well-B {
+  background: var(--team-b);
+}
+
+.team-name {
   padding-top: 2vh;
   flex: 1 1 auto;
+  color: white; 
+  font-size: 5.5rem; 
+  font-weight: 700;
 }
-.team_score {
+.score {
   flex: 1 1 auto;
 }
 
