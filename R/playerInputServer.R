@@ -31,26 +31,32 @@ teamInputServer = function(id){
   moduleServer(id,
                
                function(input, output, session) {
-                 # Reactive player UI
+                 # Reactive Player Input UI
                  output$input <- renderUI({
                    req(input$size) # Require the team size
+                   
+                   # QUERY: Retrieve player input options
                    player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
                    
+                   # Map over the team size and create that many inputs
                    imap(1:input$size, ~{
                      playerSelectizeUI(ns(.y), str_c("Player ", .y), player_choices)
                    })
                    
                  })
                  
-                 # Player inputs to output from playerInputServer
+                 # Reactive container for reactive player inputs
                  team_inputs = reactive({
+                   # Map over the team size and call that many reactive inputs
                    imap(1:input$size, ~{
                      playerSelectizeServer(ns(.y))
                    })
                  })
                  
-
-                 list("inputs" = reactive(team_inputs()))
+                 # OUTPUT: List containing the team's player inputs
+                 list(
+                   "inputs" = reactive(team_inputs())
+                   )
                  
                }
   )
@@ -61,21 +67,25 @@ playerInputServer = function(id, restart){
   moduleServer(id,
                
                function(input, output, session) {
-                 # Start reactive value
+                 
+                 # Reactive denoting whether the game has started
                  start = reactiveVal(F)
                  
-                 # Observe Start button
+                 # If start button is pressed, update start reactive
                  observeEvent(input$start_game,{
                    start(T)
                  })
                  
 
-                 # Assigns the outputs of teamInputServer for each team
+                 # Assign the outputs of teamInputServer for each team
                  team_A = teamInputServer("A")
                  team_B = teamInputServer("B")
                  
+                 # If a game restart is observed
                  observeEvent(req(restart() == T), {
+                   # Update start reactive
                    start(T)
+                   # Return a list with only the start reactive
                    return(
                      list("start" = reactive(start()))
                    )

@@ -1,14 +1,18 @@
-#' Player Input Screen UI
+#' playerInputUI
 #' Handles all of the UI elements outside of the dashboard options when players
 #' lauch the app
 #' 
 #' @param id The namespace of the module
-
-#' Player Selectize UI 
+#' 
+#' playerSelectizeUI 
 #' Adds selectize inputs for players on both teams 
 #' @param id The namespace of the app, as well as the positional ID of the player (e.g. 'A1')
 #' @param header The header to go over the selectize input, usually "Player __"
 #' @param player_choices The group of players to be sourced as options for the selectize
+#' 
+#' teamInputUI 
+#' Creates UI elements for a given team which includes inputs for team size and players
+#' @param id The namespace of the app, as well as the positional ID of the player (e.g. 'A1')
 
 playerSelectizeUI = function(id, header, player_choices) {
   ns <- NS(id)
@@ -22,22 +26,22 @@ playerSelectizeUI = function(id, header, player_choices) {
 
 teamInputUI = function(id){
   ns = NS(id)
+  
+  # Assign team and player references
   team = str_sub(id, -1, -1)
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
-  player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
+  
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
   
   well_selector = str_c('input_well_', team)
   div_selector = str_c('input_forms_', team)
   class_selector = paste0('input_well well_', team)
-  player_ids = str_c(team, 1:2)
-  
+
   column(4, align = "center",
          
          wellPanel(
            class = class_selector,
            id = well_selector,
-           # style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), class=str_c("team-head ", team)),
            tags$div( id = div_selector,
@@ -73,6 +77,7 @@ playerInputUI <- function(id) {
   ns = NS(id)
   
   fluidRow(class = id,
+           
     teamInputUI(ns("A")),
     
     
