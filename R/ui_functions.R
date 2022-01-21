@@ -1705,8 +1705,14 @@ score_heatmap = function(df){
 game_summary_dialog = function(df, current_round, a_sub, b_sub){
   showModal(
     modalDialog(
-      title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", 
-                         coalesce(rounds[df$rounds], current_round))),  
+      title = HTML(str_c(
+        # Indicate whether the previous or current game is being summarised
+        if_else(df$game_complete, "Last ", "Current "), "game: <strong>", 
+        # Show score
+        df$points_a, " - ", df$points_b, 
+        # Show rounds
+        "</strong> at ", coalesce(rounds[df$rounds], current_round))),  
+      
       style = str_c("background-color: ", snappa_pal[1], ";"),
       
       
@@ -1728,6 +1734,7 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
                                   proxy.height = "145px", color.background = snappa_pal[1])
                )
       ),
+      
       # Summary plot
       fluidRow(align = "center",
                column(3, style = "padding-right:0; top:60px;",
