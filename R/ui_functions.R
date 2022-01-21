@@ -1,4 +1,6 @@
+library(extrafont)
 library(reactable)
+library(ggrepel)
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
