@@ -55,7 +55,8 @@ teamInputServer = function(id){
                  
                  # OUTPUT: List containing the team's player inputs
                  list(
-                   "inputs" = reactive(team_inputs())
+                   "inputs" = reactive(team_inputs()),
+                   "size" = reactive(input$size)
                    )
                  
                }
