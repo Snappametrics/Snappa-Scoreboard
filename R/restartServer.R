@@ -15,13 +15,13 @@ restartServer = function(id) {
                
                function(input, output, session) {
                  
-                 restart_game <- reactiveVal({F})
-                 check_function_return <- reactiveVal({F})
-                 
-                 # Incomplete game data
+                 # Reactive denoting whether the game is being restarted
+                 restart_game <- reactiveVal(F)
+
+                 # QUERY: Check view for data on an incomplete game
                  incomplete_game = dbGetQuery(con, sql("SELECT * FROM incomplete_game"))
                  
-                 # Empty lists for potential outputs
+                 # Prepare empty lists for potential outputs
                  input_list = list()
                  team_sizes = list()
                  score_inputs = list()
@@ -30,29 +30,33 @@ restartServer = function(id) {
                  # When there is an incomplete game ----
                  if(nrow(incomplete_game) != 0){
                    
-                   # This is a reactivePoll because, for some reason, deleting a game does not cause this
-                   # to update even though it really, really should. 
+                   # QUERY: Retrieve player stats data that looks like this
+                   #
+                   #  | player_name | team | points | paddle_points | clink_points | row |
+                   #  |-------------|------|--------|---------------|--------------|-----|
+                   #  |     chr     |  chr |  int   |     int       |     int      | int |
                    incomplete_player_summary = dbGetQuery(con, sql("SELECT * FROM ongoing_game_summary"))
                    
                    # Prepare delete query
                    delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM incomplete_game);")
                    
-                   ## If there were no points => DELETE -----
+                   ## If there were no points => DELETE automatically -----
                    if(sum(incomplete_player_summary$points) == 0){
                      
-                     
                      dbExecute(con, delete_query)
-                     
 
                    } else {
                      # If there were points ----
-
                      # => Show game summary
+                     #  Create 3 outputs: summary-A, summary-B, and round_num
+                     
                      #  - Team A
                      # TODO: Functionalize summary table
                      output$`summary-A` <- renderReactable({
+                       # Select Team A's data
                        incomplete_player_summary[incomplete_player_summary$team == "A", c("player_name", "points", "paddle_points", "clink_points")]%>%
                          arrange(desc(points)) %>%
+                         # Create reactable object
                          reactable(
                            highlight = T,
                            compact = T, 
@@ -66,6 +70,7 @@ restartServer = function(id) {
                                  align = 'center',
                                  width = 100) 
                            ),
+                           # Function for making columns more human friendly
                            defaultColDef = colDef(
                              header = function(value) {
                                return(str_to_title(gsub('_', ' ', value, fixed = T )))
@@ -78,6 +83,7 @@ restartServer = function(id) {
                      # => Show game summary
                      #  - Team B
                      output$`summary-B` <- renderReactable({
+                       # Select Team A's data
                        incomplete_player_summary[incomplete_player_summary$team == "B", c("player_name", "points", "paddle_points", "clink_points")] %>%
                          arrange(desc(points)) %>%
                          reactable(
@@ -93,6 +99,7 @@ restartServer = function(id) {
                                  align = 'center',
                                  width = 100)
                            ),
+                           # Function for making columns more human friendly
                            defaultColDef = colDef(
                              header = function(value) {
                                return(str_to_title(gsub('_', ' ', value, fixed = T )))
@@ -107,6 +114,7 @@ restartServer = function(id) {
                      # => Show round num ----
                      output$round_num <- renderUI({
                        team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
+                       
                        HTML(str_c('<h1 style = "font-size: 5rem">', 
                                   str_extract(incomplete_game$last_round, "[0-9]+"), # Extract number in round
                                   '<span style="color:', 
@@ -117,18 +125,15 @@ restartServer = function(id) {
                                   "</h1>"))
                      })
                      
-                     # Table of teams and their scores
+                     # Create simple table of team scores for restartUI
                      scores = count(incomplete_player_summary, team, wt = points, name = "points")
                      
 
-                     # => Launch the dialog box ----
+                     # => Launch the dialog box with restartUI ----
                      showModal(
                        restartUI('restart', scores)
                        )
                      
-                     # Table of player points
-                     incomplete_player_summary = dbGetQuery(con, sql("SELECT * FROM ongoing_game_summary"))
-
                      # Create input ids from player information
                      input_list <- incomplete_player_summary %>%
                        select(player_name, team, row) %>%
