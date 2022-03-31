@@ -551,6 +551,8 @@ players 3 and 4 */
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
+  padding: 2vh 4vw;
+  margin:0;
 }
 .team_name {
   padding-top: 2vh;
@@ -938,7 +940,7 @@ input[type=radio]{
 .btn-icon {
     margin-right: 8px;
 }
-
+/*
 @media (max-width: 1500px) {
     .well .shiny-input-container {
         width: 80%;
@@ -947,7 +949,7 @@ input[type=radio]{
         width: 100%;
     }
 }
-
+*/
 
 
 
