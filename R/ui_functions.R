@@ -420,18 +420,14 @@ extra_player_ui = function(current_tab, player, player_choices){
               div(class = 'input_close_and_name',
                 actionBttn(inputId = remove_type,  label = "X", style = "jelly",
                                color = "danger", size = "sm"),
-                h1(id = paste0("name_", player_team, player_num),
-                   paste0('Player ', player_num)
-                )
                ),
                # Add extra player text input 
                selectizeInput(inputId = input_type, 
-                              label = NULL, c(`Player Name`='', player_choices), options = list(create = TRUE)),
+                              label = paste0('Player ', player_num), 
+                              c(`Player Name`='', player_choices), options = list(create = TRUE)),
 
              # Add remove player button outside fluid row
              
-             # CSS
-             tags$style(paste0(div_id, " {margin-left:auto; margin-right:auto; position: relative;}")),
 
            # If the extra player is not the fourth on a team yet, add another add player button
            if(player_num < 4){
@@ -451,7 +447,9 @@ add_player_input = function(current_tab, inputs, team, player, player_choices, s
   insertUI(
     selector = inputs,
     where = "afterEnd",
-    ui = extra_player_ui(current_tab, paste0(team, player), player_choices)
+    ui = extra_player_ui(current_tab, 
+                         paste0(team, player), 
+                         player_choices)
   )
   
   # Remove add player button       
