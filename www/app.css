@@ -312,6 +312,10 @@ label.control-label[for='score'] {
 .awesome-checkbox {
     margin-top: 2.5vh;
     margin-bottom: 2.5vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 8px;
 }
 
 .btn {
@@ -330,9 +334,7 @@ label.control-label[for='score'] {
   font-size: 13px;
 }
 
-.awesome-checkbox {
-    padding-left: 25px;
-}
+
 .awesome-checkbox label::before {
     transform: translateY(3px);
     left: -10px;
