@@ -124,7 +124,7 @@ ui <- dashboardPage(
 
       
       tabItem(tabName = "player_input",
-              fluidRow(
+              div(class = "player-input",
                 team_input_ui("A", 
                               player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]),
                 
