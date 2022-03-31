@@ -119,14 +119,14 @@
 .content {
     overflow: auto;
 }
-
+/*
 .well {
     margin-top: 2vh;
     padding-top: 2vh;
     padding-bottom:5vh;
     opacity: 0.9;
 }
-
+*/
 
 .dropdown-menu {
   background-color: var(--bg-col);
@@ -137,8 +137,7 @@
 }
 
 .numbers {
-  font-size:18rem; 
-    line-height: 20rem;
+  font-size:12rem; 
 }
 
 
@@ -147,7 +146,7 @@
 /* Player Input */
 
 #start_game {
-    margin-top: 25vh;
+    margin-top: 5vh;
     margin-bottom: 2rem;
 }
 
