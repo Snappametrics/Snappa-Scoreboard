@@ -1,5 +1,5 @@
 rsconnect::deployApp(
-  appName = "APP_NAME_HERE",
-  appFiles = list.files(recursive = T) %>% 
-    str_subset("(documentation|testing|analysis)/*", negate=T)
+  appName = "SnappaScoreboard2",
+  appFiles = stringr::str_subset(list.files(recursive = T), 
+                        "(documentation|testing|analysis)/*", negate=T)
 )
