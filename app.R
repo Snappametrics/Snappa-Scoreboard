@@ -717,11 +717,11 @@ server <- function(input, output, session) {
     
     if(switch_is_even){
       # If sides have been switched
-      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                             if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
+      img(class = "die-logo", src = "die_hex.png", style = str_c("opacity:", 
+                                             if_else(str_extract(round_num(), "[AB]+") == "B", "1;", "0;")))
     } else {
-      img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                             if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
+      img(class = "die-logo", src = "die_hex.png", style = str_c("opacity:", 
+                                             if_else(str_extract(round_num(), "[AB]+") == "A", "1;", "0;")))
     }
   })
   
@@ -731,11 +731,11 @@ server <- function(input, output, session) {
     switch_is_even = (vals$switch_counter %% 2 == 0)
     
     if(switch_is_even){
-    img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                           if_else(str_extract(round_num(), "[AB]+") == "A", "block;", "none;")))
+    img(class = "die-logo", src = "die_hex.png", style = str_c("opacity:", 
+                                           if_else(str_extract(round_num(), "[AB]+") == "A", "1;", "0;")))
       } else {
-        img(src = "die_hex.png", style = str_c("background: transparent;display: flex;transform: scale(1.25);position: relative;top: -1vh; display:", 
-                                               if_else(str_extract(round_num(), "[AB]+") == "B", "block;", "none;")))
+        img(class = "die-logo", src = "die_hex.png", style = str_c("opacity:", 
+                                               if_else(str_extract(round_num(), "[AB]+") == "B", "1;", "0;")))
       }
   })
   
@@ -1737,10 +1737,10 @@ observe({
     
     if(switch_is_even){
       removeUI("#ScoreboardUI", immediate=T)
-      insertUI(selector = "#dice-row", ui = team_scoreboard_ui("B", "A"), where = "afterEnd")
+      insertUI(selector = ".dice-row", ui = team_scoreboard_ui("B", "A"), where = "beforeBegin")
     } else {
       removeUI("#ScoreboardUI", immediate = T)
-      insertUI(selector = "#dice-row", ui = team_scoreboard_ui(), where = "afterEnd")
+      insertUI(selector = ".dice-row", ui = team_scoreboard_ui(), where = "beforeBegin")
     }
     
 
