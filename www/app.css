@@ -594,7 +594,102 @@ players 3 and 4 */
   color: var(--bg-col) !important;
 }
 
+/* quick and dirty CSS update for new scoreboard */
+.team-header {
+  text-align: center;
+  color: white;
+  font-size: 6vh;
+  font-weight: 700;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+}
 
+.team-score {
+  font-size: 32vh;
+  color: white;
+  line-height: 1;
+}
+
+.shiny-output-error-validation {
+  font-size: 1.5rem;
+}
+
+.help-block {
+  font-size: 1.25rem;
+}
+
+.round-control {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.score-checkbox {
+  padding-left: 4px;
+}
+
+.modal-body {
+  padding: 10px 15px !important;
+}
+
+.dice-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+  align-items: flex-start; 
+  margin: 0 3vh;
+}
+
+.awesome-checkbox label::after {
+  width: 20px !important;
+  height: 20px !important;
+  top: 9px !important;
+  padding-left: 4px !important;
+}
+
+.score-header {
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+.player-input {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+}
+
+.well-A, .well-B {
+  display: flex;
+  flex-direction:column;
+  flex-grow: 1;
+}
+
+.well-A {
+  background: #e26a6a;
+}
+
+.well-B {
+  background: #2574a9;
+}
+
+.scoreboard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+}
+
+.score-and-undo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 4px;
+}
+
+.die-logo {
+  background: transparent;
+  position: relative
+}
 
 /* Controls for text shading on wells */
 

@@ -27,7 +27,7 @@ score_check <- function(team, players, round) {
   modalDialog(align = "center", easyClose = T, size = "l",
               # Header
               h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>")),
-                 style = "margin-bottom: 2vh;"),
+                 class = "score-header"),
 
               fluidRow(
                 column(8,
@@ -54,23 +54,23 @@ score_check <- function(team, players, round) {
                 column(4, 
                        wellPanel(
                          align = "center",
-                         h3("Anything cool happen?", style = "font-weight:700; font-size: 2rem;"),
+                         h4("Anything cool happen?", style = "font-weight:700;"),
                          # Was it a paddle?
                          awesomeCheckbox(
                            inputId = "paddle", 
-                           label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
+                           label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper score-checkbox" style = "color:', team_colour, ';"></i>Paddle'))),#"Was it a paddle?",
                            status = "warning"
                          ),
                          # Was it a clink?
                          awesomeCheckbox(
                            inputId = "clink", 
-                           label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
+                           label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems score-checkbox" style = "color:', team_colour, ';"></i>Clink'))),#"Was it a clink?",
                            status = "warning"
                          ),
                          # feet?
                          awesomeCheckbox(
                            inputId = "foot", 
-                           label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
+                           label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints score-checkbox" style = "color:', team_colour, ';"></i>Foot'))),#"Was it a clink?",
                            status = "warning"
                          )
                        )
