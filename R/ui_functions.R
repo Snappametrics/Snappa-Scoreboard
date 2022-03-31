@@ -1292,14 +1292,15 @@ team_summary_tab_rt = function(df){
                                      style = list(padding = "4px 2px"), headerStyle = list(textAlign = "right")), 
               highlight = F,
               compact = T,
-              width = "400px",
+              # width = "400px",
               class = "snappaneers-tbl",
               # Column Groups
               columnGroups = list(
-                colGroup(name = "Total Points", columns = c("total_points", "total_points_diff")),
-                colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
-                colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
-                colGroup(name = "Def. PPR", columns = c("def_ppr", "def_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                colGroup(name = "Points", columns = c("total_points", "total_points_diff")),
+                # colGroup(name = "Paddle Points", columns = c("paddle_points", "paddle_points_diff")),
+                colGroup(name = HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper"></i>')), html = T, columns = c("paddle_points", "paddle_points_diff")),
+                # colGroup(name = "Off. PPR", columns = c("off_ppr", "off_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
+                # colGroup(name = "Def. PPR", columns = c("def_ppr", "def_ppr_diff"), headerStyle = list(alignSelf = "flex-end")),
                 colGroup(name = "Toss Efficiency", columns = c("toss_efficiency", "toss_efficiency_diff"))
               ),
               # Columns
@@ -1314,11 +1315,11 @@ team_summary_tab_rt = function(df){
                 paddle_points = colDef(name = "", minWidth = 19, maxWidth = 40),
                 paddle_points_diff = colDef(name = "Diff", minWidth = 30, maxWidth = 40, 
                                             style = JS(game_summary_diff_style("paddle_points_diff"))),
-                off_ppr = colDef(name = "", minWidth = 30, maxWidth = 50, format = colFormat(digits = 2)),
-                off_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
+                off_ppr = colDef(show=F, name = "", minWidth = 30, maxWidth = 50, format = colFormat(digits = 2)),
+                off_ppr_diff = colDef(show=F, name = "Diff", minWidth = 36, maxWidth = 60, 
                                       style = JS(game_summary_diff_style("off_ppr_diff"))),
-                def_ppr = colDef(name = "", minWidth = 30, format = colFormat(digits = 2)),
-                def_ppr_diff = colDef(name = "Diff", minWidth = 36, maxWidth = 60, 
+                def_ppr = colDef(show=F, name = "", minWidth = 30, format = colFormat(digits = 2)),
+                def_ppr_diff = colDef(show=F, name = "Diff", minWidth = 36, maxWidth = 60, 
                                       style = JS(game_summary_diff_style("def_ppr_diff"))),
                 toss_efficiency = colDef(name = "", minWidth = 29, format = colFormat(percent = T, digits = 0)),
                 toss_efficiency_diff = colDef(name = "Diff", minWidth = 32, maxWidth = 40, 
@@ -1684,34 +1685,32 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
       fluidRow(align = "center",
                # reactableOutput("team_a_summary")
                column(6, align = "center",
-                      h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
-                      h4(a_sub, align = "left"),
+                      h4("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+                      # h4(a_sub, align = "left"),
                       withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
                                   proxy.height = "145px", color.background = snappa_pal[1])
                ),
                column(6,align = "center",# offset = 2,
-                      h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
-                      h4(b_sub, align = "left"),
+                      h4("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+                      # h4(b_sub, align = "left"),
                       withSpinner(reactableOutput("team_b_summary"), color = snappa_pal[3], 
                                   proxy.height = "145px", color.background = snappa_pal[1])
                )
       ),
       # Summary plot
       fluidRow(align = "center", 
-               column(3, style = "padding-right:0; top:60px;",
+               column(3, style = "padding-right:0;",
                       withSpinner(plotOutput("a_breakdown", width = "100%", height = "44vh"), color = snappa_pal[2], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                ),
                column(6,style = "padding:0",
-                      div(style = "margin:0px 5px; padding:5px;",
-                          h4("How the die flies", align = "left"),
-                          h5("Point progression throughout the game", align = "left")
-                      )
+                          h4("How the die flies", align = "left", style = "margin:0px 4px; padding:0px 4px;")
+                          # h5("Point progression throughout the game", align = "left")
                       ,
                       withSpinner(plotOutput("game_flow", height = "44vh"), color.background = snappa_pal[1],
                                   color = snappa_pal[4])
                ),
-               column(3, style = "padding-left:0; top:60px;",
+               column(3, style = "padding-left:0;",
                       withSpinner(plotOutput("b_breakdown", width = "100%", height = "44vh"), color = snappa_pal[3], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                )
@@ -2080,7 +2079,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
             strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,5,0,0)),
             # No gridlines
             panel.grid.major = element_blank(), 
-            panel.spacing = unit(-12/(length(unique(plot_df$player_name))*1.5), "lines"))
+            panel.spacing = unit(-2/(length(unique(plot_df$player_name))*1.5), "lines"))
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
