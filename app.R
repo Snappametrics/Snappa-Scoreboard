@@ -161,22 +161,26 @@ ui <- dashboardPage(
 
 
       
-      tabItem(tabName = "scoreboard", #icon = icon("window-maximize"), 
-               div(
-                 fluidRow(id = "dice-row", 
-                          column(4, align = "center", 
-                                 uiOutput("active_die_left")),
-                          column(4, align = "center",
-                                 actionBttn("switch_sides", 
-                                            "Switch Sides", style = "material-flat", 
-                                            color = "primary", 
-                                            icon = icon("refresh"), size = "sm")),
-                          column(4, align = "center", 
-                                 uiOutput("active_die_right"))
-                          ),
-                 team_scoreboard_ui()
+      tabItem(tabName = "scoreboard", #icon = icon("window-maximize"),  
+              team_scoreboard_ui(),
+              div(class = "dice-row", 
+                  uiOutput("active_die_left"),
+                  actionBttn("switch_sides", 
+                             "Switch Sides", style = "material-flat", 
+                             color = "primary", 
+                             icon = icon("refresh"), size = "sm"),
+                  uiOutput("active_die_right")
+              )
+                 # fluidRow(
+                 #          column(4, align = "center", 
+                 #                 ),
+                 #          column(4, align = "center",
+                 #                 ),
+                 #          column(4, align = "center", 
+                 #                 )
+                 #          ),
                  
-               )
+               # )
       ),
 
 # Career Stats ------------------------------------------------------------
