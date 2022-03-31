@@ -564,7 +564,7 @@ players 3 and 4 */
 
 
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
-  margin-left: 8px;
+  margin: 8px 4px;
 }
 
 
@@ -868,7 +868,7 @@ input:focus {
 }
 
 .shiny-input-radiogroup {
-    margin: 3vh 0;
+    margin-bottom: 4vh;
 }
 
 .shiny-options-group {
