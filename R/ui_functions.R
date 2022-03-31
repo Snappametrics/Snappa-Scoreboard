@@ -1186,7 +1186,6 @@ team_summary_tab = function(df, game_over, score_difference, team){
 }
 
 game_summary_tab_rt = function(df){
-  browser()
   df %>% 
     reactable(defaultSorted = c("winning", "total_points"),
               sortable = F,
@@ -2356,7 +2355,7 @@ theme_snappa = function(title_family = "Inter SemiBold",
         plot.title = element_text(face = "bold",
                                   size = base_size * 2,
                                   lineheight = 1.2,
-                                  margin = margin(0,5,15,5)), 
+                                  margin = margin(0,5,5,5)), 
         plot.title.position = "plot",
         plot.subtitle = element_text(size = base_size * 1.5,
                                      lineheight = 1.1, 
