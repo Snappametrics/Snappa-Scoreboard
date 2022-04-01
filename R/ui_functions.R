@@ -24,7 +24,7 @@ score_check <- function(team, players, round) {
   score_val = paste(team, "score_val", sep = "_")
   
   # Ask how many points were scored and by whom
-  modalDialog(align = "center", easyClose = T, size = "l",
+  modalDialog(align = "center", easyClose = T, size = "xl",
               # Header
               h2(HTML(str_c("Round <span style='font-weight:700'>", round, "</span>", ": ", "<span style='color:", team_colour, "'>", "Team ", str_to_upper(team), " Scored</span>")),
                  class = "score-header"),
@@ -52,9 +52,8 @@ score_check <- function(team, players, round) {
                        )
                        ),
                 column(4, 
-                       wellPanel(
-                         align = "center",
-                         h4("Anything cool happen?", style = "font-weight:700;"),
+                       div(class="score-well",
+                         h3("Anything cool happen?", style = "font-weight:700;"),
                          # Was it a paddle?
                          awesomeCheckbox(
                            inputId = "paddle", 
