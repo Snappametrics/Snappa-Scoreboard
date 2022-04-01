@@ -137,7 +137,7 @@
 }
 
 .numbers {
-  font-size:12rem; 
+  font-size:25vh; 
 }
 
 
@@ -172,10 +172,6 @@
     border-radius: 15px;
 }
 
-#round_num {
-    font-size:18rem; 
-}
-
 /*
 #score_A, #score_B {
     font-size: 20rem; 
@@ -188,32 +184,23 @@ label.control-label[for='scorer'] {
     margin-bottom: 0;
 }
 
-label[for='paddle'] {
-    font-size: 2rem; 
-    font-weight:inherit;
-    
+.shiny-input-radiogroup label {
+  font-size: 4.5vh;
+    margin-bottom: -1vh;
 }
 
-label[for='clink'] {
-    font-size: 2rem;
-    font-weight:inherit;
-    
-}
-
-label[for='foot'] {
-    font-size: 2rem;
-    font-weight:inherit;
-    
+.awesome-checkbox label {
+  font-size:4.5vh;
 }
 
 #ok_A, #ok_B {
-    font-size: 1.5rem;
+    font-size: 3vh;
 }
 
 #undo_score_A, #undo_score_B {
     width: 80%;
     border-radius: 15px;
-    font-size: 1.5rem;
+    font-size: 3.5vh;
 }
 
 /*
@@ -248,7 +235,7 @@ label[for='foot'] {
 }*/
 
 label.control-label[for^='name_'] {
-    font-size: 2rem; 
+    font-size: 5vh; 
     color: white;
     
 }
@@ -258,11 +245,7 @@ label.control-label[for^='name_'] {
     
 }
 
-label.control-label[for='score'] {
-    font-size: 2.5rem;
-    margin-bottom: 0;
-    
-}
+
 
 .selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
     font-size: 1.75rem;
@@ -310,8 +293,7 @@ label.control-label[for='score'] {
 }
 
 .awesome-checkbox {
-    margin-top: 2.5vh;
-    margin-bottom: 2.5vh;
+    margin: 2.25vh 2vw;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -446,7 +428,7 @@ label.control-label[for='score'] {
 
 #A_score_button, #B_score_button {
   border-radius: 15px;
-  font-size: 2.5rem;
+  font-size: 5.5vh;
   margin-bottom: 4vh;
 }
 /*
@@ -566,7 +548,7 @@ players 3 and 4 */
 
 
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
-  margin: 8px 4px;
+  margin: 0.5vh 2vh;
 }
 
 
@@ -599,7 +581,7 @@ players 3 and 4 */
 .team-header {
   text-align: center;
   color: white;
-  font-size: 6vh;
+  font-size: 9vh;
   font-weight: 700;
   margin-bottom: 12px;
   padding: 8px 12px;
@@ -609,6 +591,7 @@ players 3 and 4 */
   font-size: 32vh;
   color: white;
   line-height: 1;
+  margin: -3vh 0;
 }
 
 .shiny-output-error-validation {
@@ -627,7 +610,7 @@ players 3 and 4 */
 }
 
 .score-checkbox {
-  padding-left: 4px;
+  font-size: 4.5vh;
 }
 
 .modal-body {
@@ -690,6 +673,19 @@ players 3 and 4 */
 .die-logo {
   background: transparent;
   position: relative
+}
+
+.modal-dialog.modal-xl {
+  width: 800px;
+}
+
+.score-well {
+    padding: 2.5vh;
+    background-color: #f5f5f5;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
 }
 
 /* Controls for text shading on wells */
