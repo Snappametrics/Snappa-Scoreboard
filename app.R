@@ -423,7 +423,7 @@ server <- function(input, output, session) {
                  icon = icon("window-maximize"), selected = T),
         menuItem("Career Stats", 
                  tabName = "career_stats", 
-                 icon = icon("bar-chart")),
+                 icon = icon("chart-column")),
         menuItem("Player Stats", tabName = "player_stats",
                  icon = icon("chart-line")),
         menuItem("Edit Teams", 
@@ -440,7 +440,7 @@ server <- function(input, output, session) {
                  icon = icon("users"), selected = T),
         menuItem("Career Stats", 
                  tabName = "career_stats", 
-                 icon = icon("bar-chart")),
+                 icon = icon("chart-column")),
         menuItem("Player Stats", tabName = "player_stats",
                  icon = icon("chart-line"))
       )
