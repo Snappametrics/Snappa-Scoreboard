@@ -1334,11 +1334,17 @@ server <- function(input, output, session) {
     # the original data format? Definitely...but this probably won't be too slow
     waffle_list = casualty_stats() %>% 
       uncount(weights = casualties) %>% 
-      group_split(casualty_type) %>% 
-      map(waffle_iron, rows = waffle_rows, aes_d(group = casualty_type))
+      group_split(casualty_type)
+    
+    waffle_sample_size = map_dbl(waffle_list, nrow)
     
     
-    waffle_data = bind_rows(waffle_list, no_casualties) %>% 
+    
+    
+    waffle_data = map2_dfr(waffle_list, waffle_sample_size,
+                           ~waffle_iron(.x, rows = min(c(.y, waffle_rows)), mapping = aes_d(group = casualty_type))
+    ) %>% 
+      bind_rows(no_casualties) %>% 
       group_by(group) %>% 
       mutate(casualties = if_else(x == 0, 0L, n()),
              group_lab = factor(group, 
@@ -1382,6 +1388,7 @@ server <- function(input, output, session) {
             panel.grid.major.y = element_blank(),
             panel.grid.minor.y = element_blank(),
             panel.grid.major.x = element_blank(), 
+            panel.grid.minor.x = element_blank(),
             strip.text = element_text(face = "bold", hjust = .4, margin = margin(b = 0)))
     
     # For when we want to plotly dis beez
