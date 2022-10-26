@@ -170,7 +170,7 @@ ui <- dashboardPage(
                                  actionBttn("switch_sides", 
                                             "Switch Sides", style = "material-flat", 
                                             color = "primary", 
-                                            icon = icon("refresh"), size = "sm")),
+                                            icon = icon("arrows-rotate"), size = "sm")),
                           column(4, align = "center", 
                                  uiOutput("active_die_right"))
                           ),
@@ -237,7 +237,7 @@ ui <- dashboardPage(
                 box(status = "success", 
                     title = "Paddle Stats",
                     collapsible = T,
-                    icon = icon("table-tennis"),
+                    icon = icon("table-tennis-paddle-ball"),
                     reactableOutput("paddle_stats", width = "100%")
                 )
                 # General and Paddle Stat boxes
@@ -257,7 +257,7 @@ ui <- dashboardPage(
                     closable = F,
                     width = 7,
                     status = "primary",
-                    icon = icon("user-friends"),
+                    icon = icon("user-group"),
                     reactableOutput("teammate_tab_rt",
                                     width = "100%")
                 )
@@ -302,11 +302,11 @@ ui <- dashboardPage(
                         closable = F,
                         collapsed = T,
                         status = "primary",
-                    icon = icon("history"),
+                    icon = icon("timeline"),
                         reactableOutput("player_game_stats"))
               )
 
-              ),
+              )
 
 # Edit teams --------------------------------------------------------
       # tabItem(tabName = "edit_teams",
