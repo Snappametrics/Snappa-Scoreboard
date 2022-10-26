@@ -518,8 +518,7 @@ server <- function(input, output, session) {
     
     
     # setup cooldowns as a list of false bools
-    cooldowns = list(F,F,F) %>% 
-      set_names(unique(casualty_rules$casualty_title)),
+    cooldowns = setNames(list(F,F,F), unique(casualty_rules$casualty_title)),
 
 
     # dataframe of the players and their teams
@@ -590,7 +589,7 @@ server <- function(input, output, session) {
     tibble(
       # Team pulls the first letter from their input name
       team = str_extract(names(active_player_inputs()), ".{1}"),
-      player_name = active_player_inputs() %>% flatten_chr()
+      player_name = flatten_chr(active_player_inputs())
     ) %>% 
       # Remove empty player inputs
       filter(player_name != "") %>% 
@@ -634,8 +633,8 @@ server <- function(input, output, session) {
                         scores_table = vals$scores_db,
                         rebuttal = vals$rebuttal_tag) == "valid",
         message = "That entry doesn't make sense for this round/shooter combination"),
-      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
-          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+      if (snappaneers()[snappaneers()$player_name == input$scorer, "player_id", drop=T] %in%
+          vals$scores_db[vals$scores_db$round_num == round_num() & vals$scores_db$paddle == F, "player_id", drop=T]){
         need(
            validate_scores(player = input$scorer,
                                shot = vals$shot_num, 
@@ -664,8 +663,8 @@ server <- function(input, output, session) {
         message = "That entry doesn't make sense for this round/shooter combination"
       ),
       # Make sure that the last person to score in this round on offense can't paddle
-      if (pull(filter(snappaneers(), player_name == input$scorer), player_id) %in%
-          pull(filter(vals$scores_db, round_num == round_num() & paddle == F), player_id)){
+      if (snappaneers()[snappaneers()$player_name == input$scorer, "player_id", drop=T] %in%
+          vals$scores_db[vals$scores_db$round_num == round_num() & vals$scores_db$paddle == F, "player_id", drop=T]){
         need(
           validate_scores(player = input$scorer,
                             shot = vals$shot_num, 
@@ -788,8 +787,8 @@ server <- function(input, output, session) {
     )
 
     # Take top 5 recent scores
-    head(vals$recent_scores(), n = 5) %>% 
-      reactable(compact = T, 
+    reactable(head(vals$recent_scores(), n = 5),
+              compact = T, 
                 defaultColDef = colDef(name = "", style = list(padding = "5px 0px"),
                                        # Hide header
                                        headerStyle = list(
@@ -1012,8 +1011,7 @@ server <- function(input, output, session) {
   
   
   output$teammate_tab_rt = renderReactable({
-    teammate_stats() %>% 
-      select(-1:-2) %>% 
+    select(teammate_stats(), -1:-2) %>% 
       reactable(
         defaultSorted = "games_played",
         columns = list(
@@ -1120,8 +1118,8 @@ server <- function(input, output, session) {
   })
   
   output$player_game_stats = renderReactable({
-    player_game_history() %>% 
-      reactable(
+    reactable(
+      player_game_history(), 
         defaultSorted = "game_id",
         defaultSortOrder = "desc",
         columns = list(
@@ -1224,8 +1222,8 @@ server <- function(input, output, session) {
   
   
   output$general_stats = renderReactable({
-    overall_player_stats() %>% 
-      mutate(sink_freq = HTML(if_else(sinks > 0, 
+    mutate(overall_player_stats(),
+           sink_freq = HTML(if_else(sinks > 0, 
                                       str_c("<span style='font-weight: 500;'>Every </span>", 
                                             round(1/(sinks/games_played), 1), 
                                             "<span style='font-weight: 500;'> games</span>"),
@@ -1258,8 +1256,8 @@ server <- function(input, output, session) {
   })
   
   output$paddle_stats = renderReactable({
-    overall_player_stats() %>% 
-      select(`PADDLE POINTS` = paddle_points, 
+    select(overall_player_stats(),
+           `PADDLE POINTS` = paddle_points, 
              `PADDLE SINKS` = paddle_sinks, 
              `FOOT PADDLES` = foot_paddles, 
              `FOOT SINKS` = foot_sinks) %>% 
@@ -1311,7 +1309,8 @@ server <- function(input, output, session) {
     no_casualties = tibble(
       x = 0, 
       y = 0,
-      group = pull(filter(casualty_stats(), casualties == 0), casualty_type)
+      # group = pull(filter(casualty_stats(), casualties == 0), casualty_type),
+      group = casualty_stats()[casualty_stats()$casualties == 0, "casualty_type", drop=T]
     ) %>% 
       group_split(group)
     
@@ -1332,8 +1331,7 @@ server <- function(input, output, session) {
     # Uncount is the dopest dope around for this particular task
     # Could this be done by rewriting the waffle_iron function for 
     # the original data format? Definitely...but this probably won't be too slow
-    waffle_list = casualty_stats() %>% 
-      uncount(weights = casualties) %>% 
+    waffle_list = uncount(casualty_stats(), weights = casualties) %>% 
       group_split(casualty_type)
     
     waffle_sample_size = map_dbl(waffle_list, nrow)
@@ -1360,7 +1358,8 @@ server <- function(input, output, session) {
     
     # Casualty
     ggplot(waffle_data, aes(x,y))+
-      geom_tile(data = filter(waffle_data, x > 0), 
+      # geom_tile(data = filter(waffle_data, x > 0), 
+      geom_tile(data = waffle_data[waffle_data$x > 0, ], 
                 aes(fill = group), 
                 colour = snappa_pal[1], size = 2)+
       #geom_waffle(data = filter(waffle_data, x > 0))+
@@ -1663,17 +1662,14 @@ output$edit_team_B <- renderUI({
 observe({
   validate(
     need(
-      dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
-        pull() %>% 
-        isFALSE(),
+      !dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)")[1,1],
       message = FALSE
     )
   )
-  lost_game_id = dbGetQuery(con, "SELECT game_id FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% pull()
+  lost_game_id = dbGetQuery(con, "SELECT game_id FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)")[1,1]
   
   # Pass an additional check to see if the game which is in question is a 0-0 or not. 
-  total_lost_game_score = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE game_id = ", lost_game_id)) %>% 
-    pull() %>% 
+  total_lost_game_score = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE game_id = ", lost_game_id))[1,1] %>% 
     replace_na(0)
   
   # Discard that game if it's 0-0 and continue on with business as usual, else
@@ -1847,14 +1843,11 @@ observe({
     # Check if the last game was finished
     # Switch to the scoreboard
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
-    if (dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)") %>% 
-              pull() %>% 
-              isFALSE()) {
+    if (!dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)")[1,1]) {
       
       # LAST GAME WAS NOT FINISHED
       
-        lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
-          pull()
+        lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats")[1,1]
       
         lost_game_stats = dbGetQuery(con, str_c("SELECT * FROM game_stats WHERE game_id = ", lost_game))
       
@@ -1862,15 +1855,15 @@ observe({
 
         
         # Set the score outputs and shot number to the values from the last game
-        vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game)) %>%
-          pull() %>% as.numeric()
+        vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game))[1,1] %>% 
+          as.numeric()
         
         
-        vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game)) %>%
-          pull() %>% as.numeric()
+        vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game))[1,1] %>% 
+          as.numeric()
         
-        vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game)) %>%
-          pull() %>% as.numeric()
+        vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game))[1,1] %>%
+          as.numeric()
         
 
         vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
@@ -1893,8 +1886,7 @@ observe({
       vals$current_scores$team_A = 0
       vals$current_scores$team_B = 0
 
-      vals$game_id = dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats") %>% 
-        as.integer()
+      vals$game_id = as.integer(dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats"))
       
       # Initialize the current game's game_stats table
       vals$game_stats_db = bind_rows(vals$game_stats_db,
@@ -2065,15 +2057,13 @@ observeEvent(input$game_summary, {
   observeEvent(input$resume_yes, {
     
     
-    lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats") %>% 
-      as.integer()
+    lost_game = as.integer(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"))
     
     lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
     
     players = dbGetQuery(con, "SELECT * FROM players")
   
-    lost_players = lost_player_stats %>%
-      left_join(players) %>%
+    lost_players = left_join(lost_player_stats[,2:3], players, by = "player_id") %>%
       select(player_name, team) %>% 
       group_by(team) %>% 
       mutate(player_input = str_c("name_", team, row_number())) %>% 
@@ -2087,10 +2077,12 @@ observeEvent(input$game_summary, {
     #Look at the number of lost players on each team to be certain of the values 
     # that you want
     
-    size_A = lost_players %>% filter(team == "A") %>%
+    # size_A = filter(lost_players, team == "A") %>%
+    size_A = lost_players[lost_players$team == "A", ] %>%
       summarize(sum = n()) %>%
         deframe()
-    size_B = lost_players %>% filter(team == "B") %>% 
+    # size_B = filter(lost_players, team == "B") %>% 
+    size_B = lost_players[lost_players$team == "B",] %>% 
       summarize(sum = n()) %>%
         deframe()
     
@@ -2589,8 +2581,8 @@ observeEvent(input$resume_no, {
   observeEvent(input$A_score_button, {
     vals$error_msg <- NULL
     
-    eligible_shooters = filter(snappaneers(), team == "A") %>% 
-      pull(player_name) %>% 
+    # eligible_shooters = filter(snappaneers(), team == "A") %>% 
+    eligible_shooters = snappaneers()[snappaneers()$team == "A", "player_name", drop = T] %>% 
       sample()
     
     showModal(
@@ -2620,9 +2612,12 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$players, player_name == input$scorer), player_id)
+      # scorer_pid = pull(filter(vals$players, player_name == input$scorer), player_id)
+      scorer_pid = vals$players[vals$players$player_name == input$scorer, "player_id", drop=T]
+      
       # Were they shooting?
-      scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
+      # scorers_team = pull(filter(snappaneers(), player_name == input$scorer), team) # pull the scorer's team from snappaneers
+      scorers_team = snappaneers()[snappaneers()$player_name == input$scorer, "team", drop=T] # pull the scorer's team from snappaneers
       shooting_team_lgl = all(str_detect(round_num(), "A"), scorers_team == "A") # Are they on team A & did they score for team A?
       
       new_score = tibble(
@@ -2657,10 +2652,12 @@ observeEvent(input$resume_no, {
       db_update_player_stats(vals$player_stats_db, specific_player = scorer_pid)
 
       # Congratulate paddlers
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
+      # if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Aa]") ){
+      if(input$paddle & str_detect(snappaneers()[snappaneers()$player_name == input$scorer, "team", drop=T], "[Aa]") ){
         game_notification()
       }
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
+      # if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
+      if(input$paddle & str_detect(snappaneers()[snappaneers()$player_name == input$scorer, "team", drop=T], "[Bb]") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
@@ -2707,8 +2704,7 @@ observeEvent(input$resume_no, {
   observeEvent(input$B_score_button, {
     vals$error_msg <- NULL
     
-    eligible_shooters = filter(snappaneers(), team == "B") %>% 
-      pull(player_name) %>% 
+    eligible_shooters = snappaneers()[snappaneers()$team == "B", "player_name", drop = T] %>% 
       sample()
     
     showModal(
@@ -2737,9 +2733,11 @@ observeEvent(input$resume_no, {
       
       ## Identify scoring characteristics
       # Player ID
-      scorer_pid = pull(filter(vals$players, player_name == input$scorer), player_id)
+      # scorer_pid = pull(filter(vals$players, player_name == input$scorer), player_id)
+      scorer_pid = vals$players[vals$players$player_name == input$scorer, "player_id", drop=T]
       # Were they shooting?
-      scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
+      # scorers_team = pull(filter(snappaneers(), player_name == scorer_pid), team)
+      scorers_team = snappaneers()[snappaneers()$player_name == input$scorer, "team", drop=T] # pull the scorer's team from snappaneers
       shooting_team_lgl = all(str_detect(round_num(), "[Bb]"), scorers_team == "B")
       
       new_score = tibble(
@@ -2778,10 +2776,10 @@ observeEvent(input$resume_no, {
       
       
       # Congratulate paddlers for good offense, chide those who paddled against their own team
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "[Bb]") ){
+      if(input$paddle & str_detect(snappaneers()[snappaneers()$player_name == input$scorer, "team", drop=T], "[Bb]") ){
         game_notification()
       }
-      if(input$paddle & str_detect(pull(filter(snappaneers(), player_name == input$scorer), team), "A") ){
+      if(input$paddle & str_detect(snappaneers()[snappaneers()$player_name == input$scorer, "team", drop=T], "A") ){
         showNotification("It's a bold strategy Cotton, let's see if it pays off for them.")
       }
     } else {
@@ -2939,8 +2937,7 @@ observeEvent(input$resume_no, {
     # Subset the column definitions
     cols_to_show = col_list[c("player_name", "round_num", "points_scored", emoji_to_show)]
     
-    last_score %>% 
-      select(player_name, round_num, points_scored, any_of(emoji_to_show)) %>% 
+    select(last_score, player_name, round_num, points_scored, any_of(emoji_to_show)) %>% 
       reactable(compact = T, 
                 sortable = F, 
                 filterable = F, 
@@ -2997,8 +2994,7 @@ observeEvent(input$resume_no, {
     # Subset the column definitions
     cols_to_show = col_list[c("player_name", "round_num", "points_scored", emoji_to_show)]
     
-    last_score %>% 
-      select(player_name, round_num, points_scored, any_of(emoji_to_show)) %>% 
+    select(last_score, player_name, round_num, points_scored, any_of(emoji_to_show)) %>% 
       reactable(compact = T, 
                 sortable = F, 
                 filterable = F, 
@@ -3188,8 +3184,7 @@ observeEvent(input$resume_no, {
     
 
     if(vals$rebuttal == T){
-    game_stats = vals$player_stats_db %>% 
-      group_by(game_id) %>% 
+    game_stats = group_by(vals$player_stats_db, game_id) %>% 
       summarise(points_a = sum((team == "A")*total_points),
                 points_b = sum((team == "B")*total_points),
                 rounds = as.integer(vals$shot_num),
@@ -3201,8 +3196,7 @@ observeEvent(input$resume_no, {
                 clink_points = sum(clink_points),
                 game_complete = T)
     } else {
-      game_stats = vals$player_stats_db %>% 
-        group_by(game_id) %>% 
+      game_stats = group_by(vals$player_stats_db, game_id) %>% 
         summarise(points_a = sum((team == "A")*total_points),
                   points_b = sum((team == "B")*total_points),
                   rounds = as.integer(vals$shot_num),
@@ -3215,9 +3209,8 @@ observeEvent(input$resume_no, {
                   game_complete = F)
     }
     # This uses select because the column names were no longer matching the DB ones after joining
-    vals$game_stats_db = vals$game_stats_db %>% 
-      replace_na(list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
-      mutate(night_dice = if_else(now(tzone = "America/Los_Angeles") %>% hour() > 20, T, F)) %>% 
+    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
+      mutate(night_dice = if_else(hour(now(tzone = "America/Los_Angeles")) > 20, T, F)) %>% 
       left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
       select(-contains("_old", ignore.case = F)) %>% 
       # Add quotes around character vars for update query
