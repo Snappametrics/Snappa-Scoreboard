@@ -3007,27 +3007,26 @@ observeEvent(input$resume_no, {
   # Team A
   # Remove the last score from the database
   observeEvent(input$undo_score_A_confirm, {
+
     validate(
       need(isTRUE(input$undo_score_A_confirm), label = "Nothin' to see here..")
     )
     # Select the ID which is the max on Team A
-    last_score = filter(vals$scores_db, scoring_team == "A") %>% 
-      pull(score_id) %>% 
+    last_score = vals$scores_db[vals$scores_db$scoring_team == "A", "score_id"] %>% 
       max()
     
     # Pull the number of points the last score was worth
-    last_score_row = filter(vals$scores_db, score_id == last_score) %>% 
-      select(points_scored, clink)
+    last_score_row = vals$scores_db[vals$scores_db$score_id == last_score, c("points_scored", "clink")]
     # Reduce the score ID for any scores which have happened since the score which is being removed
     # Note that score undo-ing is team specific
-    vals$scores_db = filter(vals$scores_db, score_id != last_score) %>% 
+    vals$scores_db = vals$scores_db[vals$scores_db$score_id != last_score, ] %>% 
       mutate(score_id = if_else(score_id > last_score, as.integer(score_id-1), score_id))
     # Reduce the team's score and score_id
     vals$current_scores$team_A = vals$current_scores$team_A - last_score_row$points_scored
     vals$score_id = as.integer(vals$score_id-1)
     
     #Remove the value from the snappaDB
-    dbSendQuery(con,
+    dbExecute(con,
                 str_c("DELETE FROM scores WHERE score_id = ", last_score, " AND game_id = ", vals$game_id, ";")
     )
     
@@ -3043,13 +3042,13 @@ observeEvent(input$resume_no, {
                                              5, T,
                                              7, T))){
       # In database
-      dbSendQuery(con,
+      dbExecute(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
       )
       # In reactive
-      vals$casualties = filter(vals$casualties, !((score_id == last_score) & casualty_type == "Sunk"))
+      vals$casualties = vals$casualties[!((vals$casualties$score_id == last_score) & vals$casualties$casualty_type == "Sunk"), ]
     }
       
     
@@ -3080,7 +3079,7 @@ observeEvent(input$resume_no, {
     
     
     #Remove the value from the snappaDB
-    dbSendQuery(con,
+    dbExecute(con,
                 str_c("DELETE FROM scores WHERE score_id = ", last_score, 
                       " AND game_id = ", vals$game_id)
     )    
@@ -3095,7 +3094,7 @@ observeEvent(input$resume_no, {
                                              5, T,
                                              7, T))){
       # In database
-      dbSendQuery(con,
+      dbExecute(con,
                   str_c("DELETE FROM casualties WHERE score_id = ", last_score, 
                         " AND game_id = ", vals$game_id,
                         " AND casualty_type = 'Sunk'")
