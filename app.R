@@ -12,7 +12,6 @@
 library(waiter)
 
 
-source("markov/Markov_model_functions.R")
 
 
 # Prior to app startup ----------------------------------------------------
@@ -308,63 +307,7 @@ ui <- dashboardPage(
 
               )
 
-# Edit teams --------------------------------------------------------
-      # tabItem(tabName = "edit_teams",
-      #         fluidRow(
-      #           team_edit_column("A"),
-      # 
-      #           # Column 2 - empty
-      #           column(4,  align = "center"),
-      #           team_edit_column("B")
-      #         )
-      # ),
 
-# Win Probability Model ---------------------------------------------
-    tabItem(tabName = "markov_model_summary",
-        div(id = "waiter",
-                box(title = "Simulation Parameters",
-                width = 12,
-                collapsable = T,
-                closable = F,
-                fluidRow(
-                  column(width = 4, align = "left",
-                    uiOutput("simulation_score_A")
-                  ),
-                  column(width = 4, align = "center",
-                    sliderTextInput(
-                      inputId = "num_simulations",
-                      label = "Number of Simulations",
-                      choices = c(1, 50, 100, 250, 500, 1000), selected = 1,
-                      grid = TRUE
-                    ),
-                    actionBttn("simulation_go",
-                               "Run the Simulations!",
-                               color = 'primary',
-                               style = 'pill',
-                               size = "lg")
-                  ),
-                  column(width = 4, align = "right",
-                    uiOutput("simulation_score_B")
-                  )
-                )
-
-            ),
-        div(class = "simulation_results",
-            uiOutput('simulation_warning'),
-            uiOutput("simulation_blurb"),
-            plotOutput("simulation_probability_bar",
-                       height = 100),
-            box(title = "Team Score Shares by Game",
-                    collapsible = T,
-                    closable = F,
-                    plotOutput("simulation_score_shares")),
-            box(title = "Overlap of Total Scores",
-                    collapsible = T,
-                    closable = F,
-                    plotOutput("simulation_overlap"))
-            )
-        )
-        )
 ),
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
@@ -425,12 +368,7 @@ server <- function(input, output, session) {
                  tabName = "career_stats", 
                  icon = icon("chart-column")),
         menuItem("Player Stats", tabName = "player_stats",
-                 icon = icon("chart-line")),
-        menuItem("Edit Teams", 
-                 tabName = "edit_teams",
-                 icon = icon("edit")),
-        menuItem("Win Probabilities", tabName = "markov_model_summary",
-                 icon = icon("flask"))
+                 icon = icon("chart-line"))
       )
       
     } else {
@@ -553,11 +491,7 @@ server <- function(input, output, session) {
     want_B4 = F,
 
     switch_counter = 1,
-    game_over = F,
-    
-    markov_vals = list("iterations" = 1,
-                       "A_score" = 0,
-                       "B_score" = 0)
+    game_over = F
   )
   
   
@@ -739,23 +673,8 @@ server <- function(input, output, session) {
     vals$current_scores$team_A
   })
   
-  output$player_names_A = renderText({
-    snappaneers() %>% 
-      filter(team == "A") %>% 
-      pull(player_name) %>% 
-      str_c(., collapse = ", ")
-  })
-  
-  # Output Team B's score
   output$score_B = renderText({
     vals$current_scores$team_B
-  })
-  
-  output$player_names_B = renderText({
-    snappaneers() %>% 
-      filter(team == "B") %>% 
-      pull(player_name) %>% 
-      str_c(., collapse = ", ")
   })
   
 
@@ -1399,198 +1318,6 @@ server <- function(input, output, session) {
   
 
 
-# Markov Model Reactives/Outputs ------------------------------------------
-
-
-  
-  team_transition_names = reactive({
-    team_A = snappaneers() %>%
-      filter(team == "A") %>% 
-      arrange(player_id) %>% 
-      mutate(n = row_number()) %>% 
-      pivot_wider(id_cols = team, names_from = n, values_from = player_id) %>%
-      ungroup() %>%
-      select(-team)
-    
-    # Make each team a simple vector 
-    team_A = as.vector(team_A)
-    while (length(team_A) < 4){
-      team_A = append(team_A, NA)
-    }
-    
-    team_B = snappaneers() %>%
-      filter(team == "B") %>% 
-      arrange(player_id) %>%
-      mutate(n = row_number()) %>% 
-      pivot_wider(id_cols = team, names_from = n, values_from = player_id) %>%
-      ungroup() %>%
-      select(-team)
-    
-    team_B = as.vector(team_B)     
-    while (length(team_B) < 4) {
-      team_B = append(team_B, NA)
-    }
-    return(list("team_A" = team_A,
-                "team_B" = team_B))
-      
-  })
-
-  markov_simulated_output = reactive({
-    markov_simulate_games(team_transition_names()$team_A, 
-                          team_transition_names()$team_B,
-                          iterations = vals$markov_vals$iterations ,
-                          points_to_win = score_to(),
-                          transitions_list = readRDS("markov/transition_probabilities.Rdata"),
-                          current_scores_A = vals$markov_vals$A_score,
-                          current_scores_B = vals$markov_vals$B_score)
-  })
-  
-  game_simulations = reactive({
-    markov_simulated_output()$games_record
-  })
-
-  markov_average_team_warning = reactive({
-    markov_simulated_output()$warning
-  })
-  
-  markov_summary = reactive({
-    markov_summary_data(game_simulations())
-  })
-
-  markov_ui_elements = reactive({
-    if (is.null(vals$markov_vals$A_score)){
-      invisible()
-    } else {
-     
-       w$show()
-    }
-    visuals = markov_visualizations(markov_summary())
-    
-    if (length(markov_summary()$winner) == 1){
-      winning_team = if_else(markov_summary()$winner == "A",
-                             "Team A",
-                             "Team B")
-      winning_color = ifelse(winning_team == "Team A",
-                             snappa_pal[2],
-                             snappa_pal[3])
-      
-    } else{
-      winning_team =  "both teams"
-      winning_color = "green"
-    }
-    
-    on.exit({
-      w$hide()
-    })
-    return(list("viz" = visuals,
-                "team" = winning_team,
-                "color" = winning_color)
-           )
-      })
-  
-# Update the simulation parameters when the values are changed
-observeEvent(input$simulation_go, {
-  vals$markov_vals = list("iterations" = as.integer(input$num_simulations),
-                          "A_score" = input$simulation_scores_A,
-                          "B_score" = input$simulation_scores_B)
-
-} )
-#Output to make the team score inputs reactive
-output$simulation_score_A = renderUI({
-  numericInput("simulation_scores_A", label = "Team A Starting Score",
-               value = vals$current_scores$team_A, min = 0, max = 50)
-})
-output$simulation_score_B = renderUI({
-  numericInput("simulation_scores_B", label = "Team B Starting Score",
-               value = vals$current_scores$team_B, min = 0, max = 50)
-})
-
-output$simulation_warning = renderUI({
-    fluidRow(
-      column(12,
-        HTML(str_c('<h3 style = \'color: red; text-align: center\'>',
-            if_else(markov_average_team_warning() != 'none',
-              str_c('Warning: ', 
-                  if_else(markov_average_team_warning() == 'Both teams', 'Neither team has ', 
-                          str_c(markov_average_team_warning(), ' does not have ')
-                          ),
-                  'an entry in the Markov simulation model. Aggregate values for 
-                  teams of the same size have been used instead. </span>'),
-              '<span style = \'display: none \' >'
-            )
-          )
-        )
-      )
-    )
-
-})
-
-output$simulation_blurb = renderUI({
-      fluidRow(
-        column(12,
-               align = "center",
-               h3(
-                 HTML(
-                   str_c("Across ", vals$markov_vals$iterations,
-                          ifelse(vals$markov_vals$iterations == 1, " game ", " games ") ,
-                          "which ",
-                          ifelse(vals$markov_vals$iterations == 1,"begins ", "begin "),
-                          "at ", 
-                          "<span style='color:", snappa_pal[2], "'>",
-                          vals$markov_vals$A_score, "</span>", " - ",
-                          "<span style='color:", snappa_pal[3], "'>",
-                          vals$markov_vals$B_score, "</span>", ", ",
-                          "<span style='color:", markov_ui_elements()$color, "'>",
-                          markov_ui_elements()$team, "</span> ",
-                          ifelse(markov_summary()$tie == T, "win ", "wins"), 
-                          ifelse(vals$markov_vals$iterations == 1,
-                                 ".", 
-                                 str_c(" an estimated ", 
-                                 round(markov_summary()$winrate * 100, 2),
-                                "% of games.")
-                                )
-                   )
-                       
-                )
-               ),
-              ##TODO: Move this to its own output below the main probability bar
-              h3(
-                HTML(
-                  str_c(
-                    ifelse(markov_summary()$tie == F, 
-                            str_c("In the ",
-                              ifelse(vals$markov_vals$iterations == 1, "game ", "games "
-                                     ),
-                            "that ",
-                            "<span style='color:", markov_ui_elements()$color, "'>",
-                            markov_ui_elements()$team, "</span>", 
-                            ifelse(vals$markov_vals$iterations == 1, " won, ", " wins, "
-                                   )),
-                            str_c("In the games played, ")
-                           ),
-                    ifelse(vals$markov_vals$iterations == 1,
-                           "the final score is ",
-                           "the most common final score is "
-                           ), 
-                    "<span style='color:", snappa_pal[2], "'>",
-                    markov_summary()$modal_A, "</span>", " - ",
-                    "<span style='color:", snappa_pal[3], "'>",
-                    markov_summary()$modal_B, "</span>",
-                    ifelse(vals$markov_vals$iterations == 1,
-                           ".",
-                           str_c(", which is observed in ",
-                                 markov_summary()$modal_freq,
-                                " games, or ", 
-                                round((markov_summary()$modal_freq / vals$markov_vals$iterations) * 100, 2),
-                                "% of the time."
-                                )
-                          )
-                    )
-                  )
-              )
-        )
-      )
-})
 
 # A little reactive styling for this bar, which looks really bad if it doesn't
 # span nearly the entire page
@@ -1599,22 +1326,6 @@ set_plot_width <- function(session, output_width_name){
     session$clientData[[output_width_name]] 
   }
 }
-output$simulation_probability_bar = 
-  renderPlot({markov_ui_elements()$viz$win_probability},
-             width = set_plot_width(session, "output_simulation_probability_bar_width"),
-             height = 75 ,
-    bg = "#ecf0f5"
-)
-  
-
-
-output$simulation_score_shares =
-  renderPlot({markov_ui_elements()$viz$shares
-    })
-
-output$simulation_overlap = 
-  renderPlot({markov_ui_elements()$viz$overlap
-  })
 
 
 # Restart Game Outputs ----------------------------------------------------
@@ -1638,15 +1349,7 @@ output$simulation_overlap =
   # })
   
   
-# # Generates outputs for the edit teams page
-output$edit_team_A <- renderUI({
-  tagList(team_edit_ui("A", pull(vals$players, player_name), active_player_inputs()))
-})
 
-output$edit_team_B <- renderUI({
-  tagList(team_edit_ui("B", pull(vals$players, player_name), active_player_inputs()))
-})
-    
 
 # Events ------------------------------------------------------------------
 
@@ -2454,119 +2157,6 @@ observeEvent(input$resume_no, {
     vals$want_B4 = F
 
   })  
-  
-  
-
-# Dynamic UI for the Edit Teams Tab ---------------------------------------
-
-  # New Player A3
-  #   - Add A3 text input
-  #   - Remove the add new player action button
-  # observeEvent(input$edit_add_A3, {
-  #   # Set input want to true
-  #   vals$want_A3 = T
-  #   
-  #   # Get add player button inputs
-  #   val <- paste0("#",getInputs("edit_add_A3"))
-  #   add_player_input("edit", val, "A", 3, current_choices(), session)
-  #   
-  # })
-  
-  # Remove A3
-  #   - Insert add new player action button
-  #   - Remove A3 player name input
-  # observeEvent(input$edit_remove_A3, {
-  #   remove_p3_input("edit", "A", session)
-  #   
-  #   #Don't consider these elements when looking at
-  #   # total length of players. Prevents the game
-  #   # from getting locked out after players have
-  #   # been added
-  #   vals$want_A3 = F
-  #   vals$want_A4 = F
-  #   
-  # })
-  
-  
-  # New Player A4
-  #   - Add A4 text input
-  #   - Remove the add new player action button
-  # observeEvent(input$edit_add_A4, {
-  #   # Set input want to true
-  #   vals$want_A4 = T
-  #   
-  #   # Get UI inputs for extra player button
-  #   vals <- paste0("#",getInputs("edit_add_A4"))
-  #   
-  #   add_player_input("edit", vals, "A", 4, current_choices(), session)
-  #   
-  # })
-  
-  # Remove A4
-  #   - Insert add new player action button
-  #   - Remove A4 player name input
-  # observeEvent(input$edit_remove_A4, {
-  #   remove_p4_input("edit", "A", session)
-  #   
-  #   vals$want_A4 = F
-  #   
-  # })  
-  
-  
-  # New Player B3
-  #   - Add B3 text input
-  #   - Remove the add new player action button
-  # observeEvent(input$edit_add_B3, {
-  #   
-  #   # Set want check to true
-  #   vals$want_B3 = T
-  #   
-  #   # Get inputs for add player button
-  #   vals <- paste0("#",getInputs("edit_add_B3"))
-  #   
-  #   add_player_input("edit", vals, "B", 3, current_choices(), session)
-  # })
-  
-  # Remove B3
-  #   - Insert add new player action button
-  #   - Remove B3 player name input
-  # observeEvent(input$edit_remove_B3, {
-  #   remove_p3_input("edit", "B", session)
-  #   
-  #   #Don't consider these elements when looking at
-  #   # total length of players. Prevents the game
-  #   # from getting locked out after players have
-  #   # been added
-  #   vals$want_B3 = F
-  #   vals$want_B4 = F
-  #   
-  # })
-  
-  # New Player B4
-  #   - Add B4 text input
-  #   - Remove the add new player action button
-  # observeEvent(input$edit_add_B4, {
-  #   # Set want check to true
-  #   vals$want_B4 = T
-  #   
-  #   # Get add player button inputs
-  #   vals <- paste0("#",getInputs("edit_add_B4"))
-  #   
-  #   add_player_input("edit", vals, "B", 4, current_choices(), session)
-  # })
-  
-  
-  # Remove B4
-  #   - Insert add new player action button
-  #   - Remove B4 player name input
-  # observeEvent(input$edit_remove_B4, {
-  #   remove_p4_input("edit", "B", session)
-  #   # Tells later checks to not worry about this
-  #   # empty slot in active_player_names
-  #   vals$want_B4 = F
-  #   
-  # })  
-  
   
   
 
