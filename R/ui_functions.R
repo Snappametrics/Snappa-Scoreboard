@@ -123,10 +123,10 @@ game_notification = function(rebuttal = F, round, current_scores){
                                 " needs ",
                                 abs(current_scores$team_A - current_scores$team_B) - 1,
                                 " points to bring it back")
-    ), duration = 20, closeButton = F)
+    ), duration = 5)
   } else {
     showNotification(HTML(str_c("<i class='fa fa-sign-language' style='padding: 1vh;'></i><span>That's some hot!</span>")),
-                     duration = 10, closeButton = F)
+                     duration = 6)
   }
   
 }
