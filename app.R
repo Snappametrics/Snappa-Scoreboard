@@ -2697,36 +2697,27 @@ observeEvent(input$resume_no, {
   
   
   
-  
-  
-  
-
-# Add/Edit Team Events ----------------------------------------------------
-
-
-# observeEvent(input$add_player_A3, {
-#   
-# })  
-  
-  
-  
-  
-  
-  
 
 # End of the game ---------------------------------------------------------
 
   
   
   observeEvent(input$finish_game, {
-    showModal(
-      modalDialog(easyClose = T,
-        helpText(h2("End Game", align = "center"),
-                 p("Is the game over?", align = "center")),
-        footer = tagList(
-          actionBttn("finish_game_sure", "Yes", style = "bordered", color = "warning"),
-        )
-      )
+    # showModal(
+    #   modalDialog(easyClose = T,
+    #     helpText(h2("End Game", align = "center"),
+    #              p("Is the game over?", align = "center")),
+    #     footer = tagList(
+    #       actionBttn("finish_game_sure", "Yes", style = "bordered", color = "warning"),
+    #     )
+    #   )
+    # )
+    
+    shinyWidgets::confirmSweetAlert(
+      inputId = "finish_game_sure",
+      title = "Finish game",
+      text = "Are you sure?",
+      type = "warning"
     )
 
   })
@@ -2735,16 +2726,88 @@ observeEvent(input$resume_no, {
     
     vals$game_over = T
 
-    showModal(
-      modalDialog(
-                  h2("Well full send that data to the SnappaDB!"),
-                  # Download to csv
-                  downloadBttn("downloadData", "Download", style = "unite", color = "warning"),
-                  # Send to DB
-                  actionBttn("send_to_db", "Send to the SnappaDB", style = "unite", color = "warning",
-                             icon = icon("cloud-upload-alt"))
-      )
-    )
+    # showModal(
+    #   modalDialog(
+    #               h2("Well full send that data to the SnappaDB!"),
+    #               # Download to csv
+    #               downloadBttn("downloadData", "Download", style = "unite", color = "warning"),
+    #               # Send to DB
+    #               actionBttn("send_to_db", "Send to the SnappaDB", style = "unite", color = "warning",
+    #                          icon = icon("cloud-upload-alt"))
+    #   )
+    # )
+    
+    # Update Game History
+    # Calculate game-level stats from game stats players, and vary it based on whether the game is actually complete or not
+    # to test it I use rebuttal since this is the one point in time where we can basically be certain that a game is/isn't over
+    # Checking vals$rebuttal here is redundant if we have already clicked next round, but this is necessary in games where
+    # players clicked "finish game" since rebuttal is checked on the next round button
+    vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
+                                   round = round_num(), points_to_win = score_to())
+    
+    
+    
+    if(vals$rebuttal == T){
+      game_stats = group_by(vals$player_stats_db, game_id) %>% 
+        summarise(points_a = sum((team == "A")*total_points),
+                  points_b = sum((team == "B")*total_points),
+                  rounds = as.integer(vals$shot_num),
+                  ones = sum(ones),
+                  twos = sum(twos),
+                  threes = sum(threes),
+                  impossibles = sum(impossibles),
+                  paddle_points = sum(paddle_points),
+                  clink_points = sum(clink_points),
+                  game_complete = T)
+    } else {
+      game_stats = group_by(vals$player_stats_db, game_id) %>% 
+        summarise(points_a = sum((team == "A")*total_points),
+                  points_b = sum((team == "B")*total_points),
+                  rounds = as.integer(vals$shot_num),
+                  ones = sum(ones),
+                  twos = sum(twos),
+                  threes = sum(threes),
+                  impossibles = sum(impossibles),
+                  paddle_points = sum(paddle_points),
+                  clink_points = sum(clink_points),
+                  game_complete = F)
+    }
+    # This uses select because the column names were no longer matching the DB ones after joining
+    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
+      mutate(night_dice = if_else(hour(now(tzone = "America/Los_Angeles")) > 20, T, F)) %>% 
+      left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
+      select(-contains("_old", ignore.case = F)) %>% 
+      # Add quotes around character vars for update query
+      mutate(across(where(is_character), ~str_c("'", ., "'")))
+    
+    
+    # Convert tibble to character string in the format: COLNAME = VALUE
+    col_updates = t(vals$game_stats_db) %>% 
+      str_c(rownames(.), " = ", ., collapse = ", ")
+    
+    update_game_query = str_c("UPDATE game_stats
+                              SET ", col_updates,
+                              " WHERE game_id = ", vals$game_id, ";")
+    
+    dbExecute(con, update_game_query)
+    
+    
+    
+    # Update player stats table one final time
+    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
+    
+    db_update_player_stats(vals$player_stats_db)
+    
+    
+    # Confirmation that data was sent to db
+    sendSweetAlert(session, 
+                   title = "The die is cast",
+                   text = "Data sent to SnappaDB",
+                   type = "success")
+    
+    
+    game_summary_dialog(game_summary()$df, round_num(), 
+                        game_summary()$subtitle_a, game_summary()$subtitle_b)
     
   })
   
