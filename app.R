@@ -472,7 +472,7 @@ server <- function(input, output, session) {
     shot_num = as.integer(1),
     
     # Current game Tables
-    game_stats_db = tbl_templates$game_stats %>% select(1:5),
+    game_stats_db = select(tbl_templates$game_stats, 1:5),
     player_stats_db = tbl_templates$player_stats,
     scores_db = tbl_templates$scores,
     

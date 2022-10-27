@@ -611,10 +611,9 @@ glance_ui_team = function(df, team){
   # need team, but not for the table
   
   title_colour = if_else(!!team == "A", snappa_pal[2], snappa_pal[3])
-  new_df = df %>% select(-team)
+  new_df = select(df, -team)
   # gt time
-  output_table = new_df %>% 
-    gt() %>%
+  output_table = gt(new_df) %>%
       tab_header(title = str_c("Team ", 
                               str_to_upper(team)
                               )) %>%
@@ -679,16 +678,15 @@ make_single_summary_table = function(current_player_stats, player_stats, neers, 
   current_shots = unique(current_player_stats[current_player_stats$team == team_name, "shots", drop=T])
   
   # Store players, their current team and opponent sizes
-  current_team_sizes = neers %>% 
-    mutate(team_size = case_when(team == "A" ~ sum(team == "A"),
+  current_team_sizes = mutate(neers,
+                              team_size = case_when(team == "A" ~ sum(team == "A"),
                                  team == "B" ~ sum(team == "B")),
            opp_size = case_when(team == "A" ~ sum(team == "B"),
                                 team == "B" ~ sum(team == "A"))) %>% 
     distinct(player_id, team_size, opp_size)
   
   # Keep player stats observations for each player where the team and opponent sizes match the current sizes
-  equivalent_player_stats = player_stats %>% 
-    arrange(game_id) %>% 
+  equivalent_player_stats = arrange(player_stats, game_id) %>% 
     # Calculate the team size for each game
     group_by(game_id) %>% 
     mutate(team_size = case_when(team == "A" ~ sum(team == "A"),
@@ -871,16 +869,14 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   
 
   # Make a dataframe of team sizes in past games
-  team_sizes = player_stats %>% 
-    # Count team size for each game
-    count(game_id, team, name = "team_size") %>% 
+  # Count team size for each game
+  team_sizes = count(player_stats, game_id, team, name = "team_size") %>% 
     # Pivot separate columns for team 
     pivot_wider(names_from = team, 
                 values_from = team_size, 
                 names_glue = "size_{team}")
 
-  equivalent_games_player_stats = team_players$player_id %>%
-    map(function(player){
+  equivalent_games_player_stats = map(team_players$player_id, function(player){
       # Subset each player's stats  to each player's stats and identify equivalent games
       player_stats[player_stats$player_id == player & player_stats$game_id != current_game, ] %>% 
         # Join team sizes to player stats
@@ -907,8 +903,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
     # Filter to scores which are:
     #   - only scored by players on this team
     #   - less than or equal to the current round
-    scores_comparison = past_scores %>% 
-      filter(player_id %in% team_players$player_id, # Only include players on this team
+    scores_comparison = filter(past_scores,
+                               player_id %in% team_players$player_id, # Only include players on this team
              parse_round_num(round_num) <= parse_round_num(current_round))
 
     ##
@@ -920,8 +916,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   }
 
   # List scores which occurred at or before the current game's round
-  historical_scores = team_players$player_id %>%
-    imap_dfr(function(player, index){
+  historical_scores = imap_dfr(team_players$player_id, function(player, index){
       # Join each player's equivalent games to their scores from those games
       left_join(equivalent_games_player_stats[[index]], 
                 scores_comparison, 
@@ -938,8 +933,8 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # That means I have to recreate player_stats using this table 
   
   # Calculate game performance in equivalent games
-  comparison_player_stats = historical_scores %>% 
-    replace_na(list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+  comparison_player_stats = replace_na(historical_scores,
+                                       list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
     # Group by game and player, (team and shots are held consistent)
     group_by(game_id, player_id, shots) %>% 
     # Calculate summary stats
@@ -956,17 +951,15 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
               toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
               .groups = "drop")
   
-  player_info = team_player_stats %>% 
-    # Filter player stats
-    select(game_id, player_id, team) %>% 
+  # Filter player stats
+  player_info = select(team_player_stats, game_id, player_id, team) %>% 
     inner_join(neers, by = c("player_id", "team")) 
   
   # Calculate current game performance
   #   - Team score
   #   - Which team is winning
   # Then join on player info
-  player_summary = current_player_stats %>% 
-    group_by(team) %>% 
+  player_summary = group_by(current_player_stats, team) %>% 
     mutate(team_score = sum(total_points)) %>% 
     ungroup() %>% 
     mutate(winning = (team_score == max(team_score))) %>% 
@@ -975,8 +968,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            total_points, paddle_points, clink_points, threes, 
            points_per_round:toss_efficiency)
   
-  historical_stats = comparison_player_stats %>% 
-    select(game_id, player_id, 
+  historical_stats = select(comparison_player_stats, game_id, player_id, 
            shots, total_points, paddle_points, clink_points, sinks = threes, 
            points_per_round:toss_efficiency) %>%
     arrange(player_id, game_id) %>% 
@@ -1066,8 +1058,7 @@ team_summary_tab = function(df, game_over, score_difference, team){
   
   
   
-  df %>% 
-    arrange(-total_points) %>% 
+  arrange(df, -total_points) %>% 
     gt(.) %>% 
     tab_header(title = str_c("Team ", team),
                subtitle = subtitle_name) %>% 
@@ -1226,7 +1217,6 @@ team_summary_tab = function(df, game_over, score_difference, team){
 }
 
 game_summary_tab_rt = function(df){
-  browser()
   df %>% 
     reactable(defaultSorted = c("winning", "total_points"),
               sortable = F,
@@ -1320,8 +1310,7 @@ game_summary_tab_rt = function(df){
 
 team_summary_tab_rt = function(df){
 
-  df %>% 
-    reactable(defaultSorted = "total_points",
+  reactable(df, defaultSorted = "total_points",
               sortable = F,
               resizable = F,
               style = list(
@@ -1369,11 +1358,9 @@ team_summary_tab_rt = function(df){
 
 
 leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
-  stats_eligible = career_stats_data %>% 
-    filter(rank < dividing_line)
+  stats_eligible = career_stats_data[career_stats_data$rank < dividing_line,]
   
-  career_stats_data %>% 
-    reactable(
+  reactable(career_stats_data, 
       defaultPageSize = 10, pagination = T, 
       defaultSorted = "rank",
       showSortable = T,
@@ -2082,9 +2069,8 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
                            labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
     
     # browser()
-    plot_df %>% 
-      # Show point type by the number of pts (because factoring above didn't work?)
-      ggplot(., aes(x = reorder(type, points), y = points))+
+    # Show point type by the number of pts (because factoring above didn't work?)
+    ggplot(plot_df, aes(x = reorder(type, points), y = points))+
       # Columns
       geom_col(aes(fill = type, y = points + 2),
                colour = snappa_pal[1],
@@ -2130,18 +2116,17 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
 }
 
 game_flow = function(player_stats, players, scores, game){
-  
-  player_info = player_stats %>% 
-    # Filter player stats
-    filter(game_id == !!game) %>% 
-    select(game_id, player_id, team) %>% 
+  # Filter player stats
+  # player_info = filter(player_stats, game_id == !!game) %>%
+  #   select(game_id, player_id, team) %>%
+  #   inner_join(players, by = "player_id")
+  player_info = player_stats[player_stats$game_id == game, c("game_id", "player_id", "team")] %>% 
     inner_join(players, by = "player_id")
   
-  # player_scores = vals$scores_db %>% 
+  # player_scores = vals$scores_db %>%
   # inner_join(snappaneers(), by = c("player_id")) %>%
-  player_scores = scores %>% 
-    # Join scores to the player info table
-    inner_join(player_info, by = c("game_id", "player_id")) %>% 
+  # Join scores to the player info table
+  player_scores = inner_join(scores, player_info, by = c("game_id", "player_id")) %>% 
     # Convert round_num into the actual round id
     rowwise() %>% 
     mutate(round = which(rounds == round_num)) %>% 
@@ -2153,26 +2138,25 @@ game_flow = function(player_stats, players, scores, game){
     mutate(cum_score = cumsum(points_scored))
 
   # Add zeroes
-  player_score_base = player_scores %>% 
-    # Filter player stats
-    filter(game_id == !!game) %>% 
+  # Filter player stats
+  # player_score_base = filter(player_scores, game_id == !!game) %>% 
+  player_score_base = player_scores[player_scores$game_id == game,] %>% 
     group_by(game_id, player_id, player_name, team) %>% 
     summarise(round = min(round)-1, 
               points_scored = 0, 
               cum_score = 0,
               .groups = "drop")
   
-  player_label_df = player_scores %>% 
-    filter(game_id == !!game) %>% 
-    filter(cum_score == max(cum_score)) %>% 
-    select(player_name, player_id, team, round, cum_score)
+  # player_label_df = filter(player_scores, game_id == !!game) %>% 
+  player_label_df = player_scores[player_scores$game_id == game, c("player_name", "player_id", "team", "round", "cum_score")] %>% 
+    filter(cum_score == max(cum_score))# %>% 
+    # select(player_name, player_id, team, round, cum_score)
   
   # Calculate max values for scales
   max_score = max(player_label_df$cum_score)
   max_round = max(player_label_df$round)
 
-  player_scores %>% 
-    bind_rows(player_score_base) %>% 
+  bind_rows(player_scores, player_score_base) %>% 
     ggplot(., aes(x = round, y = cum_score))+
     geom_line(aes(group = player_id, colour = team), size = 1, show.legend = F, alpha = .8)+
     geom_label_repel(data = player_label_df,

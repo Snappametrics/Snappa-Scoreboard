@@ -22,9 +22,8 @@ sink_criteria = tribble(~points_scored, ~clink,
 # a scores table to be passed on, since the snappaneers table that is also
 # called would always be the same
 aggregate_player_stats = function(scores_df, snappaneers, game){
-  scores_df %>% 
-    # Join scores to snappaneers to get each player's team
-    right_join(snappaneers, by = "player_id") %>% 
+  # Join scores to snappaneers to get each player's team
+  right_join(scores_df, snappaneers, by = "player_id") %>% 
     # Fill in game_id for players who have not scored yet
     replace_na(list(game_id = game)) %>% 
     # Group by game and player, (team and shots are held consistent)
@@ -65,9 +64,8 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
     # Only keep the one that does and use it to access the criteria
     map_dfr(., rlang::env_get, "sink_criteria")
   
-  scores_df %>% 
-    # Join scores to snappaneers to get each player's team
-    right_join(snappaneers, by = "player_id") %>% 
+  # Join scores to snappaneers to get each player's team
+  right_join(scores_df, snappaneers, by = "player_id") %>% 
     detect_sink(., sink_criteria) %>% 
     # Fill in game_id for players who have not scored yet
     replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
@@ -151,8 +149,8 @@ validate_scores = function(player, shot, snappaneers, paddle,
   
   # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
   # Players can only score once on a non-paddle shot
-  not_already_scored = !(scorer_id %in% pull(filter(scores_table, round_num == round_vector[shot], paddle == F), player_id))
-  
+  # not_already_scored = !(scorer_id %in% pull(filter(scores_table, round_num == round_vector[shot], paddle == F), player_id))
+  not_already_scored = !(scorer_id %in% scores_table[scores_table$round_num == round_vector[shot] & scores_table$paddle == F, "player_id", drop=T])
   
   # If teams are even
   if(nrow(distinct(count(snappaneers, team), n)) == 1){
@@ -180,7 +178,10 @@ validate_scores = function(player, shot, snappaneers, paddle,
       
       # NOTE: already scored in the rest of this function refers to having already scored a non-paddle shot
       # Players can only score once on a non-paddle shot
-      scored_already = (nrow(filter(scores_table, round_num == round_vector[shot], paddle == F, player_id == scorer_id)) > 1)
+      # scored_already = (nrow(filter(scores_table, round_num == round_vector[shot], paddle == F, player_id == scorer_id)) > 1)
+      scored_already = (nrow(scores_table[scores_table$round_num == round_vector[shot] & 
+                                            scores_table$paddle == F & 
+                                            scores_table$player_id == scorer_id,]) > 1)
       
       # Then they can have scored already
       valid_score = any(all(typical_offense,
@@ -256,8 +257,7 @@ db_update_player_stats = function(player_stats, specific_player, round_button = 
   if(missing(specific_player)){
     # Convert tibble to list of character strings in the format: COLNAME = VALUE
     # Separated for each player in player_stats
-    col_updates = player_stats %>% 
-      group_by(player_id) %>% 
+    col_updates = group_by(player_stats, player_id) %>% 
       # Transpose each player id's row
       group_map(~t(.), .keep = T) %>% 
       map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>% 
