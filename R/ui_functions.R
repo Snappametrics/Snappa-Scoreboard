@@ -1361,11 +1361,13 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   stats_eligible = career_stats_data[career_stats_data$rank < dividing_line,]
   
   reactable(career_stats_data, 
-      defaultPageSize = 10, pagination = T, 
+      defaultPageSize = 10, 
+      pagination = T, 
       defaultSorted = "rank",
       showSortable = T,
-      defaultColDef = colDef(headerStyle = list(minHeight = 51), format = colFormat(digits = 0, separators = T), 
-                             align = "left", defaultSortOrder = "desc"),
+      defaultColDef = colDef(headerStyle = list(minHeight = 51), 
+                             format = colFormat(digits = 0, separators = T), 
+                             align = "right", defaultSortOrder = "desc"),
       highlight = T, 
       # compact = T, 
       width = "100%",
@@ -1384,19 +1386,28 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
           "ranked"
         }
       },
+      columnGroups = list(
+        colGroup(name = "Overall", columns = c("games_played", "win_pct", "total_points", "clink_points", "points_per_game"), 
+                 headerClass = "col-group-head"),
+        colGroup(name = "Offense", columns = c("toss_efficiency", "offensive_points", "off_ppg")),
+        colGroup(name = "Defense", columns = c("paddle_points", "defensive_points", "def_ppg")),
+        colGroup(name = "Sinks", columns = c("sinks", "paddle_sinks")),
+        colGroup(name = "Foot Action", columns = c("foot_paddle_points"))
+      ),
       columns = list(
         rank = colDef("",
                       align = "left", 
                       minWidth = 35,
                       maxWidth = 45,
+                      sticky = "left",
                       defaultSortOrder = "asc",
-                      headerStyle = list(minHeight = 51, background = snappa_pal[1], position = "sticky", left = 0, zIndex = 1),
+                      headerStyle = list(minHeight = 51, background = snappa_pal[1]),
                       style = function(value){
                         if(value > max(stats_eligible$rank)){
                           list(background = "#E3E3DE",
-                               fontWeight = 200, position = "sticky", left = 0, zIndex = 1)
+                               fontWeight = 200)
                         } else {
-                          list(background = snappa_pal[1], fontWeight = 700, position = "sticky", left = 0, zIndex = 1)
+                          list(background = snappa_pal[1], fontWeight = 700)
                         }
                       },
                       class = function(value){
@@ -1410,12 +1421,13 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                              sortable = F,
                              minWidth = 100,
                              maxWidth = 200,
-                             headerStyle = list(minHeight = 51, background = snappa_pal[1], position = "sticky", left = 35,zIndex = 1),
+                             sticky = "left",
+                             headerStyle = list(minHeight = 51, background = snappa_pal[1]),
                              style = function(value){
                                if(value %in% unique(stats_eligible$player_name)){
-                                 list(background = snappa_pal[1], position = "sticky", left = 35,zIndex = 1)
+                                 list(background = snappa_pal[1], borderRight = "1px solid #DEDDDD")
                                } else {
-                                 list(background = "#E3E3DE", position = "sticky", left = 35,zIndex = 1)
+                                 list(background = "#E3E3DE", borderRight = "1px solid #fafaf9")
                                }
                              },
                              class = function(value){
@@ -1430,8 +1442,8 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                               maxWidth = 150),
         win_pct = colDef("Win %", 
                          format = colFormat(percent = T, digits = 1), 
-                         minWidth = 80,
-                         maxWidth = 150,
+                         minWidth = 82,
+                         maxWidth = 140,
                          style = function(value) {
                            if(max(stats_eligible[, "win_pct"], na.rm=T) == value){
                              list(color = snappa_pal[5],
@@ -1441,60 +1453,18 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
         total_points = colDef("Total Points", 
                               minWidth = 82,
                               maxWidth = 150),
-        offensive_points = colDef("Off. Points", 
-                              minWidth = 82,
-                              maxWidth = 150),
-        defensive_points = colDef("Def. Points", 
-                              minWidth = 82,
-                              maxWidth = 150),
-        paddle_points = colDef("Paddle Points", 
+        clink_points = colDef("Clink Points", 
                               minWidth = 82,
                               maxWidth = 150,
-                              style = function(value) {
-                                if(max(stats_eligible[, "paddle_points"], na.rm=T) == value){
-                                  list(color = snappa_pal[5],
-                                       fontWeight = 600)
-                                }
-                              }),
-        foot_paddle_points = colDef("Foot Paddle Points", 
-                               minWidth = 115,
-                               maxWidth = 150,
-                               style = function(value) {
-                                 if(max(stats_eligible[, "foot_paddle_points"], na.rm=T) == value){
-                                   list(color = snappa_pal[5],
-                                        fontWeight = 600)
-                                 }
-                               }),
-        clink_points = colDef("Clink Points", 
-                               minWidth = 82,
-                               maxWidth = 150,
                               style = function(value) {
                                 if(max(stats_eligible[, "clink_points"], na.rm=T) == value){
                                   list(color = snappa_pal[5],
                                        fontWeight = 600)
                                 }
                               }),
-        sinks = colDef("Sinks", 
-                               minWidth = 82,
-                               maxWidth = 150,
-                       style = function(value) {
-                         if(max(stats_eligible[, "sinks"], na.rm=T) == value){
-                           list(color = snappa_pal[5],
-                                fontWeight = 600)
-                         }
-                       }),
-        paddle_sinks = colDef("Paddle Sinks", 
-                               minWidth = 82,
-                               maxWidth = 150,
-                              style = function(value) {
-                                if(max(stats_eligible[, "paddle_sinks"], na.rm=T) == value){
-                                  list(color = snappa_pal[5],
-                                       fontWeight = 600)
-                                }
-                              }),
-        points_per_game = colDef("Points per Game\n(PPG)", 
+        points_per_game = colDef("Points / Game\n(PPG)", 
                                  format = colFormat(digits = 2), 
-                                 minWidth = 117,
+                                 minWidth = 95,
                                  maxWidth = 200,
                                  style = function(value) {
                                    if(max(stats_eligible[, "points_per_game"], na.rm=T) == value){
@@ -1502,20 +1472,45 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                                           fontWeight = 600)
                                    }
                                  }),
-        off_ppg = colDef("Offensive PPG", 
-                         format = colFormat(digits = 2),
-                         minWidth = 100,
-                         maxWidth = 200,
+        sinks = colDef("Total", 
+                       minWidth = 82,
+                       maxWidth = 150,
+                       style = function(value) {
+                         if(max(stats_eligible[, "sinks"], na.rm=T) == value){
+                           list(color = snappa_pal[5],
+                                fontWeight = 600)
+                         }
+                       }),
+        paddle_sinks = colDef("Paddle Sinks", 
+                              minWidth = 82,
+                              maxWidth = 150,
+                              style = function(value) {
+                                if(max(stats_eligible[, "paddle_sinks"], na.rm=T) == value){
+                                  list(color = snappa_pal[5],
+                                       fontWeight = 600)
+                                }
+                              }),
+        offensive_points = colDef("Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        off_ppg = colDef("PPG", 
+                         format = colFormat(digits = 2), 
+                         minWidth = 82,
+                         maxWidth = 150,
                          style = function(value) {
                            if(max(stats_eligible[, "off_ppg"], na.rm=T) == value){
                              list(color = snappa_pal[5],
                                   fontWeight = 600)
                            }
                          }),
-        def_ppg = colDef("Defensive PPG", 
+        defensive_points = colDef("Points", 
+                              minWidth = 82,
+                              maxWidth = 150),
+        paddle_points = colDef(show=F),
+        def_ppg = colDef("PPG", 
                          format = colFormat(digits = 2), 
-                         minWidth = 105,
-                         maxWidth = 200,
+                         minWidth = 82,
+                         maxWidth = 150,
                          style = function(value) {
                            if(max(stats_eligible[, "def_ppg"], na.rm=T) == value){
                              list(color = snappa_pal[5],
@@ -1524,14 +1519,23 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
                          }),
         toss_efficiency = colDef("Toss Efficiency", 
                                  format = colFormat(digits = 1, percent = T), 
-                                 minWidth = 105,
-                                 maxWidth = 200,
+                                 minWidth = 90,
+                                 maxWidth = 160,
                                  style = function(value) {
                                    if(max(stats_eligible[, "toss_efficiency"], na.rm=T) == value){
                                      list(color = snappa_pal[5],
                                           fontWeight = 600)
                                    }
-                                 })
+                                 }),
+        foot_paddle_points = colDef("Points", 
+                                    minWidth = 82,
+                                    maxWidth = 150,
+                                    style = function(value) {
+                                      if(max(stats_eligible[, "foot_paddle_points"], na.rm=T) == value){
+                                        list(color = snappa_pal[5],
+                                             fontWeight = 600)
+                                      }
+                                    })
       ),
       class = "snappaneers-tbl"
     )
