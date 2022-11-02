@@ -1717,9 +1717,7 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
                          coalesce(rounds[df$rounds], current_round))),  
       style = str_c("background-color: ", snappa_pal[1], ";"),
       
-      
-      
-      
+
       # Tables
       fluidRow(align = "center",
                # reactableOutput("team_a_summary")
@@ -1739,7 +1737,7 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
       # Summary plot
       fluidRow(align = "center", 
                column(3, style = "padding-right:0; top:60px;",
-                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "44vh"), color = snappa_pal[2], 
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "40vh"), color = snappa_pal[2], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                ),
                column(6,style = "padding:0",
@@ -1748,11 +1746,11 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
                           h5("Point progression throughout the game", align = "left")
                       )
                       ,
-                      withSpinner(plotOutput("game_flow", height = "44vh"), color.background = snappa_pal[1],
+                      withSpinner(plotOutput("game_flow", height = "40vh"), color.background = snappa_pal[1],
                                   color = snappa_pal[4])
                ),
                column(3, style = "padding-left:0; top:60px;",
-                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "44vh"), color = snappa_pal[3], 
+                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "40vh"), color = snappa_pal[3], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                )
       ),
