@@ -852,7 +852,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   # Store current game id and the given team's current player stats
   current_game = unique(current_player_stats$game_id)
   team_player_stats = current_player_stats[current_player_stats$team == team_name, ]
-  current_shots = unique(current_player_stats[current_player_stats$team == team_name, "shots", drop=T])
+  current_shots = unique(team_player_stats$shots)
   
   
   
@@ -993,7 +993,7 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
            toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
            # Format each difference for the table
            across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
-           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 2))),
+           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
            toss_efficiency_diff = map_chr(toss_efficiency_diff, 
                                           ~case_when(. >= 0 ~ toss_percent_plus(.), 
                                                      . < 0 ~ toss_percent_minus(.)))) %>% 
@@ -1006,7 +1006,9 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   
   inner_join(select(team_players, player_id, player_name),
              select(player_summary_historical,
-                    -contains("clink"), -contains("sink"), -contains("points_per")), by = "player_id")
+                    # -contains("clink"), -contains("sink"),
+                    -contains("points_per")), 
+             by = "player_id")
   
 }
 
