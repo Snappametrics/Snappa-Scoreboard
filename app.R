@@ -405,35 +405,14 @@ server <- function(input, output, session) {
     
     players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players")),
     
-    # Live data
-    # Updates when a game is completed
-    db_tbls = reactivePoll(
-      intervalMillis = 1000*120,
-      session = session,
-      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
-      valueFunc = function() {
-        set_names(
-          map(tbls,
-            function(table){
-              dbGetQuery(con,
-                         sql(
-                           str_c("SELECT * FROM ", table,
-                                 if_else(table %in% c("scores", "player_stats", "game_stats"),
-                                         " WHERE game_id IN (SELECT game_id FROM game_stats WHERE game_complete is true)",
-                                         "")
-                           )
-                         )
-              )
-            }),
-          tbls)
-      }
-    ),
-    recent_scores = reactivePoll(
-      intervalMillis = 100*30,
-      session = session,
-      checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
-      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
-    ),
+    # Lazy queries
+    # Are not run until collected
+    lazy_tbls = set_names(
+      map(tbls,
+          function(table){
+            tbl(con, table)
+          }),
+      tbls),
     casualties = tibble(
       casualty_id = integer(), 
       game_id  = integer(), 
@@ -693,9 +672,12 @@ server <- function(input, output, session) {
         width = sentence_width
       )
     )
+    
+    recent_scores = tbl(con, "recent_scores") %>% 
+      head(n = 5)
 
     # Take top 5 recent scores
-    reactable(head(vals$recent_scores(), n = 5),
+    reactable(collect(recent_scores),
               compact = T, 
                 defaultColDef = colDef(name = "", style = list(padding = "5px 0px"),
                                        # Hide header
