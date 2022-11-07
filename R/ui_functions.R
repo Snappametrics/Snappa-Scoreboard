@@ -2370,8 +2370,8 @@ rt_team_highlight = JS("function(rowInfo) {
                                             return { backgroundColor: color, color: '#fafaf9', fontWeight: 600 }
                                         }")
 
-theme_snappa = function(title_family = "Inter SemiBold",
-                        text_family = "Inter Medium",
+theme_snappa = function(title_family = "Roboto Medium",
+                        text_family = "Roboto",
                         base_size = 12, 
                         text_color = "gray20",
                         bg_color = snappa_pal[1], line_colour = "#DEDDDD",
