@@ -1692,19 +1692,20 @@ score_heatmap = function(df){
     # Record the 45 degree line for visual reference
     geom_abline(mapping = NULL, data = NULL, slope = 1, intercept = 0) + 
     scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20", na.value = "grey",
-                        guide = guide_colourbar(barheight = .5, barwidth = 15, direction = "horizontal",
-                                                title.vjust = 1, title.hjust = 0.5, title.position = "top"))+
+                        guide = guide_colourbar(barwidth = .5, barheight = 15, direction = "vertical",
+                                                title.vjust = 1, title.hjust = 0.5, 
+                                                title.position = "right", title.theme = element_text(angle = -90)))+
     labs(x = "Team B",
          y = "Team A",
-         title = "Heatmap of scores in Snappa",
-         subtitle = "How often does each score occur?")+
+         # title = "Heatmap of scores in Snappa",
+         subtitle = "Frequency of each combination of scores (e.g. 3-1)")+
     coord_cartesian(xlim = c(1, max_score - 1),
                     ylim = c(1, max_score - 1)) +
     scale_x_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
     scale_y_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
     theme_snappa()+
     theme(panel.grid.major = element_blank(),
-          legend.position = "bottom",
+          legend.position = "right",
           axis.ticks.x.bottom = element_line())
   
   
@@ -1912,8 +1913,8 @@ markov_visualizations = function(summary){
   
   score_shares = ggplot(data = score_counts) + 
       geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
-      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", size = 1) + 
-      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", size = 1) +
+      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", linewidth = 1) + 
+      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", linewidth = 1) +
     ylab("Share of Total Points") + 
     xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
@@ -2169,7 +2170,7 @@ game_flow = function(player_stats, players, scores, game){
 
   bind_rows(player_scores, player_score_base) %>% 
     ggplot(., aes(x = round, y = cum_score))+
-    geom_line(aes(group = player_id, colour = team), size = 1, show.legend = F, alpha = .8)+
+    geom_line(aes(group = player_id, colour = team), linewidth = 1, show.legend = F, alpha = .8)+
     geom_label_repel(data = player_label_df,
                      aes(group = player_id, colour = team, label = player_name),
                      size = 5, label.padding = .15, box.padding = .15, label.size = NA, fill = snappa_pal[1],
@@ -2206,7 +2207,7 @@ player_form_plot = function(stat, form_data){
     # geom_col(aes(fill = won_game), width = .5)+
     # Testing out line and circle
     geom_line(colour = "gray20", alpha = .3)+
-    geom_point(aes(colour = won_game), size = 3, alpha = .8)+
+    geom_point(aes(colour = won_game), size = 3, alpha = .7)+
     # Career avg. line
     geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
                      xend = max(game_num)+.45, yend = avg_points), 
@@ -2239,9 +2240,12 @@ player_form_plot = function(stat, form_data){
                          limits = c(0, pluck(form_data, "career_high")*1.25))
   }
   plot+
-    theme_snappa()+
+    theme_snappa(base_size = 14)+
     theme(axis.text.x = element_blank(),
-          legend.position = "bottom",
+          axis.text.y.left = element_text(hjust = 0),
+          axis.line.x.bottom = element_line(colour = "gray20", size = 1.1),
+          axis.ticks.x.bottom = element_line(colour = "gray20"),
+          legend.position = "top",
           legend.key.height = unit(.25, "cm"))
 }
 
