@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 :root {
     --deep-red: #BF0711;
     --red: #DE3618;
@@ -31,7 +31,7 @@
     --gray-3: rgba(8, 0, 26, 0.08);
     --gray-2: rgba(8, 0, 26, 0.03);
     
-    --font-sans-serif: "Inter", sans-serif;
+    --font-sans-serif: "Roboto", sans-serif;
     --font-family-monospace: "Source Code Pro";
 }
 
@@ -421,7 +421,7 @@ label.control-label[for='score'] {
 }
 
 .caption {
-  font-size: 0.95rem;
+  font-size: 1.25rem;
   padding: 2px;
   width: 100%;
   text-align: left;
@@ -846,6 +846,10 @@ input[type=radio]{
 .btn-icon {
     margin-right: 8px;
 }
+
+.modal-dialog.modal-lg {
+      width: 85%!important;
+  }
 
 @media (max-width: 1500px) {
     .well .shiny-input-container {
