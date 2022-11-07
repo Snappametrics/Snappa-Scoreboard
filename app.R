@@ -129,17 +129,6 @@ ui <- dashboardPage(
                 
                 # Column 2 - empty
                 column(4,  align = "center",
-                       pickerInput(
-                         inputId = "arena_select",
-                         label = "Arena",
-                         selected = "Greenhaus 2: Electric Boogaloo",
-                         choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo",
-                                     'The Oasis'),
-                         options = pickerOptions(
-                           mobile = T,
-                           showTick = T
-                         )
-                       ),
                        disabled(actionBttn("start_game", 
                                            label = "Throw dice?", style = "pill", color = "primary", 
                                            icon = icon("dice"), size = "sm")),
@@ -1516,6 +1505,55 @@ observe({
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
     
+    inputSweetAlert(
+      inputId = "arena_select",
+      title = "Arena",
+      text = "Where are the dice being thrown?",
+      type = "question",
+      input = "select",
+      inputOptions = c("Greenhaus 2: Electric Boogaloo", "Ventura", 
+                       'The Oasis', "Other?"),
+      allowOutsideClick = FALSE
+      # pickerInput(
+      #   inputId = "arena_select",
+      #   label = "Arena",
+      #   selected = "Greenhaus 2: Electric Boogaloo",
+      #   choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo",
+      #               'The Oasis'),
+      #   options = pickerOptions(
+      #     mobile = T,
+      #     showTick = T
+      #   )
+      # )
+    )
+    
+    # Setup a reactive poll for cooldowns to check if any casualty rules are still in effect
+    # but have not made their way around the horn yet
+    vals$cooldowns = reactivePoll(
+      intervalMillis = 100*70,
+      session = session,
+      # checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
+      #                                                   WHERE game_id = ", vals$game_id)))},
+      checkFunc = function() {nrow(vals$casualties)},
+      valueFunc = function() {
+        map(
+          # Map over each type of score-based casualty
+          unique(casualty_rules$casualty_title), 
+          ~cooldown_check(casualties = vals$casualties[vals$casualties$casualty_type == .x, ], 
+                          scores = vals$scores_db, 
+                          current_round = round_num(), 
+                          rounds = rounds)) %>% 
+          # Set the names of the list
+          set_names(unique(casualty_rules$casualty_title))}
+    )
+    
+    
+    
+    shinyjs::enable("tifu")
+
+  })
+  
+  observeEvent(input$arena_select, {
     # Add new players to the players table
     iwalk(snappaneers()$player_name, function(die_thrower, index){
       # If the player is not in the players table
@@ -1524,10 +1562,10 @@ observe({
         # Update the players database right here with the player name
         
         dbAppendTable(con, "players", 
-          tibble(
-            player_id = vals$new_player_id,
-            player_name = die_thrower
-          )
+                      tibble(
+                        player_id = vals$new_player_id,
+                        player_name = die_thrower
+                      )
         )
         
         vals$players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players"))
@@ -1550,37 +1588,37 @@ observe({
       
       # LAST GAME WAS NOT FINISHED
       
-        lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats")[1,1]
+      lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats")[1,1]
       
-        lost_game_stats = dbGetQuery(con, str_c("SELECT * FROM game_stats WHERE game_id = ", lost_game))
+      lost_game_stats = dbGetQuery(con, str_c("SELECT * FROM game_stats WHERE game_id = ", lost_game))
       
-        lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
-
-        
-        # Set the score outputs and shot number to the values from the last game
-        vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game))[1,1] %>% 
-          as.numeric()
-        
-        
-        vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game))[1,1] %>% 
-          as.numeric()
-        
-        vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game))[1,1] %>%
-          as.numeric()
-        
-
-        vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
-        vals$game_id = lost_game
-        vals$shot_num = parse_round_num(lost_game_stats$last_round)
-
-        vals$game_stats_db = lost_game_stats
-        
-        # Initialize the current game's player_stats table
-        vals$player_stats_db = lost_player_stats
-        
-        # Pull in lost game casualties 
-        vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game)))
-        
+      lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
+      
+      
+      # Set the score outputs and shot number to the values from the last game
+      vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game))[1,1] %>% 
+        as.numeric()
+      
+      
+      vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game))[1,1] %>% 
+        as.numeric()
+      
+      vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game))[1,1] %>%
+        as.numeric()
+      
+      
+      vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game))
+      vals$game_id = lost_game
+      vals$shot_num = parse_round_num(lost_game_stats$last_round)
+      
+      vals$game_stats_db = lost_game_stats
+      
+      # Initialize the current game's player_stats table
+      vals$player_stats_db = lost_player_stats
+      
+      # Pull in lost game casualties 
+      vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game)))
+      
     } else {
       
       # LAST GAME WAS FINISHED
@@ -1588,7 +1626,7 @@ observe({
       # Set the score outputs and shot number to 0
       vals$current_scores$team_A = 0
       vals$current_scores$team_B = 0
-
+      
       vals$game_id = as.integer(dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats"))
       
       # Initialize the current game's game_stats table
@@ -1632,31 +1670,6 @@ observe({
         append = T
       )
     }
-    
-    # Setup a reactive poll for cooldowns to check if any casualty rules are still in effect
-    # but have not made their way around the horn yet
-    vals$cooldowns = reactivePoll(
-      intervalMillis = 100*70,
-      session = session,
-      # checkFunc = function() {dbGetQuery(con, sql(str_c("SELECT COUNT(*) FROM casualties 
-      #                                                   WHERE game_id = ", vals$game_id)))},
-      checkFunc = function() {nrow(vals$casualties)},
-      valueFunc = function() {
-        map(
-          # Map over each type of score-based casualty
-          unique(casualty_rules$casualty_title), 
-          ~cooldown_check(casualties = vals$casualties[vals$casualties$casualty_type == .x, ], 
-                          scores = vals$scores_db, 
-                          current_round = round_num(), 
-                          rounds = rounds)) %>% 
-          # Set the names of the list
-          set_names(unique(casualty_rules$casualty_title))}
-    )
-    
-    
-    
-    shinyjs::enable("tifu")
-
   })
   
 
@@ -2703,16 +2716,7 @@ observeEvent(input$resume_no, {
   
   
   observeEvent(input$finish_game, {
-    # showModal(
-    #   modalDialog(easyClose = T,
-    #     helpText(h2("End Game", align = "center"),
-    #              p("Is the game over?", align = "center")),
-    #     footer = tagList(
-    #       actionBttn("finish_game_sure", "Yes", style = "bordered", color = "warning"),
-    #     )
-    #   )
-    # )
-    
+
     shinyWidgets::confirmSweetAlert(
       inputId = "finish_game_sure",
       title = "Finish game",
