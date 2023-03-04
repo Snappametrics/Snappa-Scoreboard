@@ -189,12 +189,20 @@ ui <- dashboardPage(
                         )
                     )
                 ),
-                box(width = 12,
-                    style = str_c("background:", snappa_pal[1]), align = "center",
-                                 plotOutput("scoring_heatmap", height = "75vw",
-                                            hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
-                                 uiOutput("heatmap_info")
-                )
+                # fluidRow(
+                  box(width = 6,
+                      title = "Snappa Timeline",
+                      style = str_c("background:", snappa_pal[1]), align = "center",
+                      plotOutput("game_timeline")
+                  ),
+                  box(width = 6,
+                      title = "Score Heatmap",
+                      style = str_c("background:", snappa_pal[1]), align = "center",
+                      plotOutput("scoring_heatmap",
+                                 hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
+                      uiOutput("heatmap_info")
+                  )
+                # )
 
               ),
 
@@ -204,49 +212,70 @@ ui <- dashboardPage(
       tabItem(tabName = "player_stats",
               fluidRow(
                 # Filters
-                box(width = 12, headerBorder = F, title = "Player Stats",
-                        # Player Select
-                    selectInput("player_select", label = "Player", selectize = F,
-                                    choices = dbGetQuery(con, sql("SELECT player_name, p.player_id
+                box(width = 4, 
+                    headerBorder = F, 
+                    title = "Player Stats",
+                    
+                    column(width = 6,
+                      # Player Select
+                      selectInput("player_select", label = "Player", selectize = F,
+                                  choices = dbGetQuery(con, sql("SELECT player_name, p.player_id
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
                                                             ON p.player_id = ps.player_id
                                                             GROUP BY player_name, p.player_id
                                                             ORDER BY COUNT(ps.*) DESC")) %>%
-                                      deframe())
+                                    deframe()),
+                      shinyWidgets::airDatepickerInput(
+                        inputId = "timeframe",
+                        value = c(game_stats_timeframe$min, game_stats_timeframe$max),
+                        multiple = 2,
+                        dateFormat = "MMM yyyy",
+                        label = "Timeframe",
+                        position = "right center",
+                        addon = "none",
+                        update_on = "close",
+                        toggleSelected = F,
+                        range = T,
+                        view = "months",
+                        minView = "months",
+                        monthsField = "monthsShort",
+                        todayButton = T
+                      )
+                    )
                 
+                ),
+                column(width=8,
+                  box(status = "success", 
+                      width = 12,
+                      title = "General Stats", 
+                      collapsible = T, 
+                      icon = icon("list"),
+                      reactableOutput("general_stats", width = "100%")
+                  ),
+                  box(status = "success", 
+                      width = 12, 
+                      title = "Paddle Stats",
+                      collapsible = T,
+                      icon = icon("table-tennis-paddle-ball"),
+                      reactableOutput("paddle_stats", width = "100%")
+                  )
                 )
+                
               )
               ,
               fluidRow(
-                box(status = "success", 
-                    title = "General Stats", 
-                    collapsible = T,
-                    icon = icon("list"),
-                    reactableOutput("general_stats", width = "100%")
-                ),
-                box(status = "success", 
-                    title = "Paddle Stats",
-                    collapsible = T,
-                    icon = icon("table-tennis-paddle-ball"),
-                    reactableOutput("paddle_stats", width = "100%")
-                )
-                # General and Paddle Stat boxes
-              ),
-              fluidRow(
-                box(title = "Casualty Stats",
+                box(title = "Point Distribution",
                     collapsible = T,
                     closable = F,
-                    width = 5,
-                    status = "danger",
-                    icon = icon("user-injured"),
-                    plotOutput("casualty_stats_plot")
-                       ),
+                    status = "primary",
+                    width = 6,
+                    plotOutput("point_distribution")),
                 # Top Teammates
                 box(title = "Top Teammates",
                     collapsible = T,
                     closable = F,
-                    width = 7,
+                    width = 6,
                     status = "primary",
                     icon = icon("user-group"),
                     reactableOutput("teammate_tab_rt",
@@ -256,7 +285,7 @@ ui <- dashboardPage(
               ,
               fluidRow(
                 box(title = "Player Form",
-                    width = 12,
+                    width = 6,
                         collapsible = T,
                         closable = F,
                         status = "primary",
@@ -283,9 +312,15 @@ ui <- dashboardPage(
 
                         ),
                         plotOutput("player_form")
+              ),
+              box(title = "Casualty Stats",
+                  collapsible = T,
+                  closable = F,
+                  width = 6,
+                  status = "danger",
+                  icon = icon("user-injured"),
+                  plotOutput("casualty_stats_plot")
               )
-              # Form plot
-
               ),
               fluidRow(
                 box(title = textOutput("game_history_title"),
@@ -713,42 +748,77 @@ server <- function(input, output, session) {
   output$a_breakdown = renderPlot({
     
     if(input$start_game == 0){
-      player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
-                             scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
-                             ps_players = vals$players,
-                             ps_team = "A")
-    } else {
-      player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "A"), player_id, team, shots),
-                             scores = vals$scores_db, 
-                             ps_players = vals$players,
-                             ps_game = vals$game_id, 
-                             ps_team = "A")
+      player_stats_a = select(filter(vals$lazy_tbls$player_stats, game_id == max(game_id), team == "A"), player_id, team, shots) %>% 
+        # Join player name
+        inner_join(vals$lazy_tbls$players, by = "player_id")
+      scores_a = filter(vals$lazy_tbls$scores, game_id == max(game_id))
       
+      # player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
+      #                        scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
+      #                        ps_players = vals$players,
+      #                        ps_team = "A")
+      player_score_breakdown(player_stats = player_stats_a,
+                             scores = scores_a, 
+                             team = "A")
+    } else {
+      player_stats_a = vals$player_stats_db[vals$player_stats_db$team == "A", 
+                                            c("player_id", "team", "shots")] %>% 
+        # Join player name
+        inner_join(vals$lazy_tbls$players, by = "player_id", copy = T)
+
+      player_score_breakdown(player_stats = player_stats_a,
+                             scores = vals$scores_db, 
+                             team = "A")
+      # player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "A"), player_id, team, shots),
+      #                        scores = vals$scores_db, 
+      #                        ps_players = vals$players,
+      #                        ps_game = vals$game_id, 
+      #                        ps_team = "A")
     }
   }, bg = snappa_pal[1])
   output$b_breakdown = renderPlot({
     
     if(input$start_game == 0){
-      player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), player_id, team, shots), 
-                             scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
-                             ps_players = vals$players,
-                             ps_team = "B")
+      player_stats_b = select(filter(vals$lazy_tbls$player_stats, game_id == max(game_id), team == "B"), player_id, team, shots) %>% 
+        # Join player name
+        inner_join(vals$lazy_tbls$players, by = "player_id")
+      scores = filter(vals$lazy_tbls$scores, game_id == max(game_id))
+      # player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), player_id, team, shots), 
+      #                        scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
+      #                        ps_players = vals$players,
+      #                        ps_team = "B")
+      player_score_breakdown(player_stats = player_stats_b,
+                             scores = scores, 
+                             team = "B")
     } else {
-      player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "B"), player_id, team, shots),
+      player_stats_b = vals$player_stats_db[vals$player_stats_db$team == "B", 
+                                            c("player_id", "team", "shots")] %>% 
+        # Join player name
+        inner_join(vals$lazy_tbls$players, by = "player_id", copy = T)
+      
+      player_score_breakdown(player_stats = player_stats_b,
                              scores = vals$scores_db, 
-                             ps_players = vals$players,
-                             ps_game = vals$game_id, 
-                             ps_team = "B")
+                             team = "B")
+      # player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "B"), player_id, team, shots),
+      #                        scores = vals$scores_db, 
+      #                        ps_players = vals$players,
+      #                        ps_game = vals$game_id, 
+      #                        ps_team = "B")
       
     }
   }, bg = snappa_pal[1])
   
   output$game_flow = renderPlot({
     if(input$start_game == 0){
-      game_flow(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
+      
+      game_flow(player_stats = collect(filter(vals$lazy_tbls$player_stats, game_id == max(game_id))),
                 players = vals$players, 
-                scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
-                game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
+                scores = collect(filter(vals$lazy_tbls$scores, game_id == max(game_id))),
+                game = pull(collect(select(filter(vals$lazy_tbls$game_stats, game_id == max(game_id)), game_id))))
+      # game_flow(player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)),
+      #           players = vals$players, 
+      #           scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)),
+      #           game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))$game_id)
     } else {
       game_flow(player_stats = vals$player_stats_db,
                 players = vals$players, 
@@ -768,20 +838,30 @@ server <- function(input, output, session) {
   output$team_a_summary = renderReactable({
 
     if(input$start_game == 0){
-      last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
-      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
-                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
-                         team_name = "A", 
-                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
+      # last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+      make_summary_table(
+        # current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+        # player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
+        player_stats = vals$lazy_tbls$player_stats,
+        players = tbl(con, "players"),
+        # neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
+        team_name = "A", 
+        # past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))
+        past_scores = vals$lazy_tbls$scores
+      ) %>%
         team_summary_tab_rt(.)
     } else {
-      make_summary_table(current_player_stats = vals$player_stats_db, 
-                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
-                         neers = snappaneers(), 
-                         team_name = "A", 
-                         current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)) %>%
+      make_summary_table(
+        # current_player_stats = vals$player_stats_db, 
+        # player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
+        player_stats = vals$lazy_tbls$player_stats,
+        players = tbl(con, "players"),
+        # neers = snappaneers(), 
+        team_name = "A", 
+        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+        # past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)
+        past_scores = vals$lazy_tbls$scores
+      ) %>%
         team_summary_tab_rt(.)
     }
   })  
@@ -791,20 +871,30 @@ server <- function(input, output, session) {
   output$team_b_summary = renderReactable({
 
     if(input$start_game == 0){
-      last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
-      make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
-                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-                         neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
-                         team_name = "B", 
-                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
+      # last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+      make_summary_table(
+        # current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
+        # player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
+        player_stats = vals$lazy_tbls$player_stats,
+        players = tbl(con, "players"),
+        # neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
+        team_name = "B", 
+        # past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))
+        past_scores = vals$lazy_tbls$scores
+      ) %>%
         team_summary_tab_rt(.)
     } else {
-      make_summary_table(current_player_stats = vals$player_stats_db, 
-                         player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
-                         neers = snappaneers(), 
-                         team_name = "B", 
-                         current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-                         past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)) %>%
+      make_summary_table(
+        # current_player_stats = vals$player_stats_db, 
+        # player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
+        player_stats = vals$lazy_tbls$player_stats,
+        players = tbl(con, "players"),
+        # neers = snappaneers(), 
+        team_name = "B", 
+        current_round = as.numeric(str_sub(round_num(), 1, -2)), 
+        # past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)
+        past_scores = vals$lazy_tbls$scores
+      ) %>%
         team_summary_tab_rt(.)
     }
   })  
@@ -821,7 +911,7 @@ server <- function(input, output, session) {
 
   output$leaderboard_rt = renderReactable({
     # Create the rank column, arrange the data, and select the columns
-    aggregated_data = vals$db_tbls()[["career_stats"]]
+    aggregated_data = collect(vals$lazy_tbls$career_stats)
     
     # Separate out those with under 5 games
     dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
@@ -829,10 +919,13 @@ server <- function(input, output, session) {
     leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
   })
 
-  
+
+  output$game_timeline = renderPlot({
+    snappa_timeline(collect(select(vals$lazy_tbls$game_stats, game_start)))
+  })  
 
   output$scoring_heatmap = renderPlot({
-    score_heatmap(vals$db_tbls()[["score_progression"]])
+    score_heatmap(vals$lazy_tbls$score_progression)
   })
   
   output$heatmap_info <- renderUI({
@@ -840,7 +933,7 @@ server <- function(input, output, session) {
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
-    freq = filter(vals$db_tbls()[["score_progression"]], score_a == y, score_b == x) %>% 
+    freq = collect(filter(vals$lazy_tbls$score_progression, score_a == y, score_b == x)) %>% 
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
@@ -852,14 +945,17 @@ server <- function(input, output, session) {
   
   
   player_game_stats = reactive({
-    inner_join(vals$players, 
-               vals$db_tbls()[["player_stats"]], 
-               by = "player_id") %>%
-      inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
-                 by = "game_id") %>% 
+    # browser()
+    complete_game_stats = select(vals$lazy_tbls$game_stats, game_id, game_start, points_a, points_b)
+    # Join players to player stats
+    inner_join(tbl(con, "players"), 
+               vals$lazy_tbls$player_stats, 
+               by = "player_id") %>% 
+      inner_join(complete_game_stats, by = "game_id") %>% 
       # Identify which games were won
       mutate(winning = if_else(points_a > points_b, "A", "B"),
-             won_game = if_else(team == winning, "Won", "Lost"))
+             won_game = if_else(team == winning, "Won", "Lost")) %>% 
+      select(player_id, game_id, won_game)
   })
   
   
@@ -868,21 +964,27 @@ server <- function(input, output, session) {
   
   # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
-    recent_games = filter(vals$db_tbls()[["player_stats"]], player_id == input$player_select) %>% 
+    # Filter selected player
+    recent_games = filter(vals$lazy_tbls$player_stats, player_id == !!input$player_select) %>% 
+      # Calculate career avg and career high for stat selected
       mutate(avg_points = mean(!!sym(input$stat_select)),
              max_points = max(!!sym(input$stat_select))) %>% 
+      # Select the last X games
       when(input$sample_select != "All" ~ (.) %>% 
              slice_max(order_by = game_id, n = as.numeric(input$sample_select)), 
-           ~ (.)) %>% 
+           ~ (.))
+    
+    # Sort games by recency and join the player's stats from those games
+    recent_games_arranged = collect(recent_games) %>% 
       arrange(game_id) %>% 
       mutate(game_num = row_number()) %>% 
-      inner_join(select(player_game_stats(), player_id, game_id, won_game),
+      inner_join(collect(player_game_stats()),
                  by = c("player_id", "game_id"))
     
-    career_high = unique(recent_games$max_points)
+    career_high = unique(recent_games_arranged$max_points)
 
-    list("data" = recent_games,
-         "x_lims" = c(min(recent_games$game_num)-.5, max(recent_games$game_num)+.5),
+    list("data" = recent_games_arranged,
+         "x_lims" = c(min(recent_games_arranged$game_num)-.5, max(recent_games_arranged$game_num)+.5),
          "career_high" = career_high)
     
   })
@@ -1103,6 +1205,27 @@ server <- function(input, output, session) {
     
   })
   
+  output$point_distribution = renderPlot({
+    # browser()
+    # Select player
+    filter(vals$lazy_tbls$player_stats, player_id == !!input$player_select) %>% 
+      # Subset columns
+      select(game_id, total_points, paddle_points, clink_points) %>% 
+      collect() %>% 
+      # Histogram
+      ggplot(aes(x = total_points))+
+      geom_histogram(binwidth = 1, colour = snappa_pal[1], fill = snappa_pal[5])+
+      # Add histograms for paddle and clink points
+      # geom_histogram(aes(x = paddle_points), binwidth = 1, colour = snappa_pal[1], fill = snappa_pal[6], alpha = .6)+
+      # geom_histogram(aes(x = clink_points), binwidth = 1, colour = snappa_pal[1], fill = snappa_pal[7], alpha = .6)+
+      labs(x = "Points", y = "# of games")+
+      scale_x_continuous(breaks = scales::breaks_pretty(), expand = expansion())+
+      scale_y_continuous(breaks = scales::breaks_pretty(), expand = expansion())+
+      theme_snappa()+
+      theme(panel.grid.major.x = element_blank(),
+            panel.grid.minor.x = element_blank())
+  })
+  
   
   overall_player_stats = reactive({
     dbGetQuery(con,
@@ -1115,12 +1238,25 @@ server <- function(input, output, session) {
   
   
   output$general_stats = renderReactable({
-    mutate(overall_player_stats(),
-           sink_freq = HTML(if_else(sinks > 0, 
+    # browser()
+    req(input$timeframe[1])
+    req(input$timeframe[2])
+    general_stats_df = query_career_stats(player = input$player_select, 
+                       min_date = coalesce(input$timeframe[1], game_stats_timeframe$min), 
+                       max_date = coalesce(input$timeframe[2], game_stats_timeframe$max)) %>% 
+      mutate(sink_freq = HTML(if_else(sinks > 0, 
                                       str_c("<span style='font-weight: 500;'>Every </span>", 
-                                            round(1/(sinks/games_played), 1), 
+                                            round(sink_freq, 1), 
                                             "<span style='font-weight: 500;'> games</span>"),
-                                      "TBD"))) %>% 
+                                      "TBD")))
+    # general_stats_df = mutate(overall_player_stats(),
+    #        sink_freq = HTML(if_else(sinks > 0, 
+    #                                   str_c("<span style='font-weight: 500;'>Every </span>", 
+    #                                         round(1/(sinks/games_played), 1), 
+    #                                         "<span style='font-weight: 500;'> games</span>"),
+    #                                   "TBD")))
+    
+    general_stats_df %>% 
       select(`GAMES` = games_played, 
              `WIN %` = win_pct, 
              `SINKS` = sinks, 
@@ -1679,7 +1815,8 @@ observe({
 
 game_summary = reactive({
   if (input$start_game == 0 | is_integer(pluck(reactiveValuesToList(session$input), "send_to_db"))){
-    df = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+    
+    df = collect(filter(vals$lazy_tbls$game_stats, game_id == max(game_id)))
     subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
     subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
     

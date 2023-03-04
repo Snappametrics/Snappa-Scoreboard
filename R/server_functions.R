@@ -323,3 +323,44 @@ cooldown_check = function(casualties, scores, current_round, casualty_to_check, 
 
   
 }
+
+query_career_stats = function(player, min_date = "2020-07-03", max_date = "2022-10-29"){
+  
+  games_query = filter(tbl(con, "game_stats"),
+                          game_start >= min_date, 
+                          game_start <= max_date) %>% 
+    select(game_id, points_a, points_b)
+  
+  scores_query = tbl(con, "scores") %>% 
+    group_by(game_id, player_id) %>% 
+    summarise(
+      sinks = sum(case_when(points_scored == 3 & clink==F ~ 1, T ~ 0 )),
+      paddle_sinks = sum(case_when(points_scored == 3 & clink==F & paddle ~ 1, T ~ 0 )),
+      foot_paddles = sum(case_when(foot ~ points_scored, T ~ 0 )),
+      foot_sinks = sum(case_when(points_scored == 3 & foot ~ 1, T ~ 0 )),
+      .groups = "drop"
+    )
+  
+  
+  tbl(con, "player_stats") %>% 
+    filter(player_id == !!player) %>% 
+    inner_join(games_query, 
+              by = "game_id") %>% 
+    left_join(scores_query,
+              by = c("game_id", "player_id")) %>% 
+    group_by(player_id) %>% 
+    summarise(games_played = n_distinct(game_id),
+              win_pct = round(
+                sum(
+                  case_when(team == "B" & points_b > points_a ~ 1,
+                            team == "A" & points_a > points_b ~ 1,
+                            T ~ 0)
+                )/n_distinct(game_id), 3
+              ),
+              sink_freq = n_distinct(game_id)/sum(sinks),
+              across(c(paddle_points, sinks, paddle_sinks, foot_paddles, foot_sinks), sum, na.rm=T),
+              toss_efficiency = round(sum(toss_efficiency*shots, na.rm=T)/sum(shots, na.rm=T), 4),
+              .groups = "drop"
+    ) %>% 
+    collect()
+}
