@@ -38,11 +38,14 @@ players_tbl = dbGetQuery(con, "SELECT * FROM players")
 # game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
 # Makea list of table templates
-tbls = c("scores", "player_stats", "game_stats", "score_progression", "career_stats")
+tbls = c("scores", "player_stats", "game_stats", "score_progression", "career_stats", "players")
 tbl_templates = map(tbls, function(table){
   dbGetQuery(con, str_c("SELECT * FROM ", table, " LIMIT 0")) 
 }) %>% 
   set_names(tbls)
+
+game_stats_timeframe = as.list(collect(summarise(tbl(con, "game_stats"), min = min(game_start), max = max(game_start)))) %>% 
+  map(as.Date)
 
 
 
