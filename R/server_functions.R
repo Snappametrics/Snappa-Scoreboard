@@ -13,10 +13,12 @@ casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text,
                          20, 03, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams",
                          03, 20, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams")
 
-sink_criteria = tribble(~points_scored, ~clink, 
-                        3, F,
-                        5, T,
-                        7, T)
+sink_criteria = tribble(
+  ~points_scored, ~clink, ~sink,
+  3, F, T,
+  5, T, T,
+  7, T, T
+  )
 # For the sake of code simplicity, I'm going to define a function which
 # writes player_stats_db off of scores. This should only require
 # a scores table to be passed on, since the snappaneers table that is also
@@ -49,28 +51,25 @@ aggregate_player_stats = function(scores_df, snappaneers, game){
 
 }
 
-aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
+aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game, criteria = sink_criteria){
   
-  if(is_integer(unique(scores_df$game_id))){
-    game = unique(scores_df$game_id)
-  }
   # This is the environment hopping mayhem. 
   # environments are kinda confusing, and I don't know how to call sink_criteria without passing it as an argument
   # Based Hadley trying to teach me: https://adv-r.hadley.nz/environments.html#environments
   
   # Check each parent environment for sink_criteria
-  sink_criteria = rlang::env_parents(rlang::current_env()) %>% 
-    keep(~rlang::env_has(., "sink_criteria")) %>% 
-    # Only keep the one that does and use it to access the criteria
-    map_dfr(., rlang::env_get, "sink_criteria")
+  # sink_criteria = rlang::env_parents(rlang::current_env()) %>% 
+  #   keep(~rlang::env_has(., "sink_criteria")) %>% 
+  #   # Only keep the one that does and use it to access the criteria
+  #   map_dfr(., rlang::env_get, "sink_criteria")
   
   # Join scores to snappaneers to get each player's team
   right_join(scores_df, snappaneers, by = "player_id") %>% 
-    detect_sink(., sink_criteria) %>% 
+    detect_sink(., criteria) %>% 
     # Fill in game_id for players who have not scored yet
-    replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+    replace_na(list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
     # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, team, shots) %>% 
+    group_by(game_id, player_id, player_name, team, shots) %>% 
     # Calculate summary stats
     summarise(
       total_points = sum(points_scored),
@@ -98,8 +97,9 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
 
 detect_sink = function(scores, criteria){
   # Detect sinks in a dataframe of score data
-  left_join(scores, 
-            mutate(criteria, sink = T), by = c("points_scored", "clink")) %>% 
+  right_join(criteria, scores, 
+             by = c("points_scored", "clink"),
+             copy = T) %>% 
     replace_na(list(sink = F))
 }
 
