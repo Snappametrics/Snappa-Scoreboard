@@ -323,3 +323,22 @@ cooldown_check = function(casualties, scores, current_round, casualty_to_check, 
 
   
 }
+
+find_similar_games = function(player_id, player_stats, team_size = 2, opponent_size = 2){
+  
+  # Make a dataframe of team sizes in past games
+  # Count team size for each game
+  team_sizes = count(player_stats, game_id, team, name = "team_size") %>% 
+    # Pivot separate columns for team 
+    pivot_wider(names_from = team, 
+                values_from = team_size, 
+                names_glue = "size_{team}")
+  
+  # Subset each player's stats  identify equivalent games
+  player_stats[player_stats$player_id == player_id, ] %>% 
+    # Join team sizes to player stats
+    inner_join(team_sizes, by = "game_id") %>%
+    # Keep cases where the team sizes are equivalent
+    filter(if_else(team == "A", size_A, size_B) == team_size,
+           if_else(team == "B", size_A, size_B) == opponent_size)
+}
