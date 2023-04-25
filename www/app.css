@@ -75,6 +75,16 @@
 }
 
 
+
+.h1, h1 {
+  font-family: var(--font-title) !important;
+}
+
+.h2, .h3, .h4, .h5, .h6, h2, h3, h4, h5, h6 {
+  font-family: var(--font-subtitle) !important;
+} 
+
+
 #shiny-notification-panel {
     background-color: var(--grey-bg);
     min-width: max-content;
@@ -105,14 +115,14 @@
 .content {
     overflow: auto;
 }
-
+/*
 .well {
     margin-top: 2vh;
     padding-top: 2vh;
     padding-bottom:5vh;
     opacity: 0.9;
 }
-
+*/
 
 .dropdown-menu {
   background-color: var(--bg-col);
@@ -123,8 +133,7 @@
 }
 
 .numbers {
-  font-size:18rem; 
-    line-height: 20rem;
+  font-size:25vh; 
 }
 
 
@@ -133,7 +142,7 @@
 /* Player Input */
 
 #start_game {
-    margin-top: 25vh;
+    margin-top: 5vh;
     margin-bottom: 2rem;
 }
 
@@ -152,69 +161,49 @@
     font-size: 1.75rem;
     margin-bottom: 2rem;
     border-radius: 15px;
-    height: 9vh;
-    width: 40%;
 }
 
 #next_round {
-    font-size: 3rem;
     margin-bottom: 2rem;
     border-radius: 15px;
-    height: 10vh;
-    width: 40%;
 }
 
-#round_num {
-    font-size:18rem; 
-    line-height: 20rem;
-}
-
-
+/*
 #score_A, #score_B {
     font-size: 20rem; 
     color: white;
     
-}
+}*/
 
 label.control-label[for='scorer'] {
-    font-size: 3rem;
-    
+    font-size: 2.5rem;
+    margin-bottom: 0;
 }
 
-label[for='paddle'] {
-    font-size: 2.25rem; 
-    font-weight:inherit;
-    
+.shiny-input-radiogroup label {
+  font-size: 4.5vh;
+    margin-bottom: -1vh;
 }
 
-label[for='clink'] {
-    font-size: 2.25rem;
-    font-weight:inherit;
-    
-}
-
-label[for='foot'] {
-    font-size: 2.25rem;
-    font-weight:inherit;
-    
+.awesome-checkbox label {
+  font-size:4.5vh;
 }
 
 #ok_A, #ok_B {
-    font-size: x-large;
+    font-size: 3vh;
 }
 
 #undo_score_A, #undo_score_B {
     width: 80%;
-    flex: 1 3 5vh;
     border-radius: 15px;
-    font-size: 2rem;
+    font-size: 3.5vh;
 }
 
-
+/*
 #start_game, #scorer, #paddle, #score, #clink, #foot {
     font-size: 2rem; 
     margin-bottom: 1.5vh;
-}
+}*/
 
 #game_summary, .sw-dropdown {
     display: inline-block;
@@ -236,16 +225,13 @@ label[for='foot'] {
 
 /* Buttons */
 
-
+/*
 .bttn-unite.bttn-md { 
     font-size: 200%;
-}
-.bttn-unite.bttn-lg {
-    padding: 1rem 4rem;
-    
-}
+}*/
+
 label.control-label[for^='name_'] {
-    font-size: 4rem; 
+    font-size: 5vh; 
     color: white;
     
 }
@@ -255,18 +241,16 @@ label.control-label[for^='name_'] {
     
 }
 
-label.control-label[for='score'] {
-    font-size: 3rem;
-    
-}
+
 
 .selectize-control.single .selectize-input, .selectize-control.single .selectize-input input {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
+    text-align: center;
 }
 
 
 .selectize-dropdown-content {
-    font-size: 3rem;
+    font-size: 2rem;
 }
 
 .selectize-dropdown {
@@ -277,10 +261,11 @@ label.control-label[for='score'] {
 .selectize-input.items.has-options.full.has-items {
     line-height: normal;
 }
-
+/*
 .form-control.selectize-control {
     font-size:5rem;
 }
+*/
 
 .btn-group {
     padding: 0 0.1rem;
@@ -288,7 +273,6 @@ label.control-label[for='score'] {
 
 .form-group {
     display: block;
-    font-size: 2rem;
     margin-bottom: 0;
 }
 
@@ -305,8 +289,11 @@ label.control-label[for='score'] {
 }
 
 .awesome-checkbox {
-    margin-top: 2.5vh;
-    margin-bottom: 2.5vh;
+    margin: 2.25vh 2vw;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: 8px;
 }
 
 .btn {
@@ -325,9 +312,7 @@ label.control-label[for='score'] {
   font-size: 13px;
 }
 
-.awesome-checkbox {
-    padding-left: 25px;
-}
+
 .awesome-checkbox label::before {
     transform: translateY(3px);
     left: -10px;
@@ -375,7 +360,7 @@ label.control-label[for='score'] {
 
 .snappaneers-tbl {
   font-size: 14px;
-  line-height: 18px;
+  line-height: 14px;
 }
 
 .snappaneers-tbl a {
@@ -421,7 +406,7 @@ label.control-label[for='score'] {
 }
 
 .caption {
-  font-size: 1.25rem;
+  font-size: 0.95rem;
   padding: 2px;
   width: 100%;
   text-align: left;
@@ -435,30 +420,23 @@ label.control-label[for='score'] {
 }
 
 /* Styling for 'we-scored' button and box around it */
-#A_score_and_undo, #B_score_and_undo {
-    flex: 2 1 50%;
-    padding-bottom: 2vh;
-    
-}
+
 
 #A_score_button, #B_score_button {
-  width: 95%;
-  flex: 3 1 20vh;
   border-radius: 15px;
-  font-size: 3rem;
-  text-align: center;
-  padding: 3vw 0vw;
-  margin-bottom: 3vh;
+  font-size: 5.5vh;
+  margin-bottom: 4vh;
 }
-
+/*
 #round_control_buttons {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
 }
-
+*/
 /* Styling for the landing page: size of input wells, flex on player forms, and additional styling due to the close button on 
 players 3 and 4 */
+/*
 .input-well {
   min-height: 85vh;
   display: flex;
@@ -467,15 +445,18 @@ players 3 and 4 */
   align-items: stretch;
 }
 
+
 .player-input-forms {
-  flex-grow: 4;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
   align-items: center;  
-  height: auto;
 }
+*/
 
+.player-input-forms .shiny-input-container {
+  margin: 8px 4px;
+}
 .additional_players_form {
   display: flex;
   flex-direction: column;
@@ -485,10 +466,8 @@ players 3 and 4 */
 
 
 #extra_player_A3, #extra_player_A4, #extra_player_B3, #extra_player_B4 {
-  height: 10vh;
-  width: 80%;
   border-radius: 15px;
-  font-size: 2rem;
+  margin: 8px 4px;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 12px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -533,8 +512,6 @@ players 3 and 4 */
 }
 
 #switch_sides {
-  height: 6vh;
-  width: 80%;
   border-radius: 15px;
 }
 
@@ -554,6 +531,8 @@ players 3 and 4 */
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
+  padding: 2vh 4vw;
+  margin:0;
 }
 .team_name {
   padding-top: 2vh;
@@ -565,7 +544,7 @@ players 3 and 4 */
 
 
 #paddle-icon, #foot-icon, #clink-icon, #head-icon {
-  margin-left: 8px;
+  margin: 0.5vh 2vh;
 }
 
 
@@ -594,7 +573,116 @@ players 3 and 4 */
   color: var(--bg-col) !important;
 }
 
+/* quick and dirty CSS update for new scoreboard */
+.team-header {
+  text-align: center;
+  color: white;
+  font-size: 9vh;
+  font-weight: 700;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+}
 
+.team-score {
+  font-size: 32vh;
+  color: white;
+  line-height: 1;
+  margin: -3vh 0;
+}
+
+.shiny-output-error-validation {
+  font-size: 1.5rem;
+}
+
+.help-block {
+  font-size: 1.25rem;
+}
+
+.round-control {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.score-checkbox {
+  font-size: 4.5vh;
+}
+
+.modal-body {
+  padding: 10px 15px !important;
+}
+
+.dice-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+  align-items: flex-start; 
+  margin: 0 3vh;
+}
+
+.awesome-checkbox label::after {
+  width: 20px !important;
+  height: 20px !important;
+  top: 9px !important;
+  padding-left: 4px !important;
+}
+
+.score-header {
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+.player-input {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+}
+
+.well-A, .well-B {
+  display: flex;
+  flex-direction:column;
+  flex-grow: 1;
+}
+
+.well-A {
+  background: #e26a6a;
+}
+
+.well-B {
+  background: #2574a9;
+}
+
+.scoreboard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+}
+
+.score-and-undo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 8px 4px;
+}
+
+.die-logo {
+  background: transparent;
+  position: relative
+}
+
+.modal-dialog.modal-xl {
+  width: 800px;
+}
+
+.score-well {
+    padding: 2.5vh;
+    background-color: #f5f5f5;
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+}
 
 /* Controls for text shading on wells */
 
@@ -774,7 +862,7 @@ input:focus {
 }
 
 .shiny-input-radiogroup {
-    margin: 3vh 0;
+    margin-bottom: 4vh;
 }
 
 .shiny-options-group {
@@ -846,11 +934,7 @@ input[type=radio]{
 .btn-icon {
     margin-right: 8px;
 }
-
-.modal-dialog.modal-lg {
-      width: 85%!important;
-  }
-
+/*
 @media (max-width: 1500px) {
     .well .shiny-input-container {
         width: 80%;
@@ -859,7 +943,7 @@ input[type=radio]{
         width: 100%;
     }
 }
-
+*/
 
 
 
@@ -929,13 +1013,10 @@ input[type=radio]{
         left: 6vw;
         font-size: 2.5vh;
     }
- */   
+    
     #previous_round{
-        padding: 0vh 1vw 0vh 1vw;
-        margin-bottom: 2vh;
+        padding: 1.5vh 2.5vw;
         margin-top: 1vh;
-        min-height: 9vh;
-        width: 75%;
         order: 2;
     }
     
@@ -947,14 +1028,14 @@ input[type=radio]{
         width: 90%;
         order: 1;
     }
-    
+  
     #round_num {
         font-size: 15rem;
         margin-top:0;
         margin-bottom:2vh;
         line-height: 15rem;
     }
-    
+   */  
     #score_heatmap {
         height: 500px;
     }
@@ -973,7 +1054,7 @@ input[type=radio]{
         font-size: 2.5rem;
         margin: 1vh;
     }
-    
+    /*
     #round_control_buttons {
       height: 32vh;
       display: flex;
@@ -981,8 +1062,8 @@ input[type=radio]{
       justify-content: space-between;
       align-items: center;
       
-    }
-    
+    } 
+    */
 }
 
 
