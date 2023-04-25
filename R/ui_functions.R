@@ -1710,9 +1710,23 @@ score_heatmap = function(df){
   
 }
 
-game_summary_dialog = function(df, current_round, a_sub, b_sub){
+#' Game Summary Modal
+#'
+#' @param df Game summary data
+#' @param current_round Current round number
+#' @param a_sub Subtitle for Team A
+#' @param b_sub Subtitle for Team B
+#'
+#' @return
+#' @export
+#'
+#' @examples
+game_summary_modal = function(df, current_round, a_sub, b_sub){
+  # Display Modal
   showModal(
+    # Create Modal
     modalDialog(
+      # Title displays score
       title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", 
                          coalesce(rounds[df$rounds], current_round))),  
       style = str_c("background-color: ", snappa_pal[1], ";"),
@@ -1720,6 +1734,7 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
 
       # Tables
       fluidRow(align = "center",
+               # Team A
                # reactableOutput("team_a_summary")
                column(6, align = "center",
                       h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
@@ -1727,6 +1742,8 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
                       withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
                                   proxy.height = "145px", color.background = snappa_pal[1])
                ),
+               
+               # Team B
                column(6,align = "center",# offset = 2,
                       h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
                       h4(b_sub, align = "left"),
@@ -1734,12 +1751,14 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
                                   proxy.height = "145px", color.background = snappa_pal[1])
                )
       ),
-      # Summary plot
+      # Summary plots
       fluidRow(align = "center", 
+               # Team A Player Breakdown
                column(3, style = "padding-right:0; top:60px;",
                       withSpinner(plotOutput("a_breakdown", width = "100%", height = "40vh"), color = snappa_pal[2], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                ),
+               # Game Flow
                column(6,style = "padding:0",
                       div(style = "margin:0px 5px; padding:5px;",
                           h4("How the die flies", align = "left"),
@@ -1749,6 +1768,7 @@ game_summary_dialog = function(df, current_round, a_sub, b_sub){
                       withSpinner(plotOutput("game_flow", height = "40vh"), color.background = snappa_pal[1],
                                   color = snappa_pal[4])
                ),
+               # Team B Player Breakdown
                column(3, style = "padding-left:0; top:60px;",
                       withSpinner(plotOutput("b_breakdown", width = "100%", height = "40vh"), color = snappa_pal[3], 
                                   proxy.height = "200px", color.background = snappa_pal[1])

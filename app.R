@@ -1693,11 +1693,14 @@ observe({
   
 
 game_summary = reactive({
+  # If game has not started:
   if (input$start_game == 0 | is_integer(pluck(reactiveValuesToList(session$input), "send_to_db"))){
+    # Display the last game in the database
     df = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
     subtitle_a = if_else(df$points_a > df$points_b, "the winners.", "the losers.")
     subtitle_b = if_else(df$points_a < df$points_b, "the winners.", "the losers.")
     
+    # Return a list object with the data and both subtitles
     list(
       df = df,
       subtitle_a = subtitle_a,
@@ -1705,23 +1708,23 @@ game_summary = reactive({
     )
     
   } else {
-    
+    # If the game HAS started
+    # - Use current game data
     df = replace_na(vals$game_stats_db, list(points_a = vals$current_scores$team_A, 
                                              points_b = vals$current_scores$team_B))
+    
+    # Calculate score difference for the flavour text
     score_difference = abs(df$points_a - df$points_b)
     
     subtitle_a = if_else(df$points_a > df$points_b, 
                          "in the lead.", 
-                         str_c("chasing ", 
-                               score_difference,
-                               ".")
+                         str_c("chasing ", score_difference, ".")
     )
     subtitle_b = if_else(df$points_a < df$points_b, 
                          "in the lead.", 
-                         str_c("chasing ", 
-                               score_difference,
-                               ".")
+                         str_c("chasing ", score_difference, ".")
     )
+    # Return a list object with the data and both subtitles
     list(
       df = df,
       subtitle_a = subtitle_a,
@@ -1734,10 +1737,10 @@ game_summary = reactive({
 
 
 
-
+# When game summary input is pressed
 observeEvent(input$game_summary, {
 
-  game_summary_dialog(game_summary()$df, round_num(), 
+  game_summary_modal(game_summary()$df, round_num(), 
                  game_summary()$subtitle_a, game_summary()$subtitle_b)
   
 
@@ -2810,7 +2813,7 @@ observeEvent(input$resume_no, {
                    type = "success")
     
     
-    game_summary_dialog(game_summary()$df, round_num(), 
+    game_summary_modal(game_summary()$df, round_num(), 
                         game_summary()$subtitle_a, game_summary()$subtitle_b)
     
   })
@@ -2898,7 +2901,7 @@ observeEvent(input$resume_no, {
                    type = "success")
     
 
-    game_summary_dialog(game_summary()$df, round_num(), 
+    game_summary_modal(game_summary()$df, round_num(), 
                         game_summary()$subtitle_a, game_summary()$subtitle_b)
     
   })
