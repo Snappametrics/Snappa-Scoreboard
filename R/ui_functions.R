@@ -1011,6 +1011,172 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
   
 }
 
+#' Player Performance Summary
+#'
+#' @param game_started Start Game Input
+#' @param player_stats Player Stats data
+#' @param team_name Team
+#' @param game_obj Current Game object
+#' @param current_round Current Round
+#' @param past_scores Scores data from past games
+#' 
+#' Summarise how a player is performing in relation to their past performance in "similar" games".
+#' By similar, we mean games with the same team sizes e.g. 2v2, 2v3, 3v3, etc.
+#' For a 2 player team in a 2v3, only games where they were on the team of 2 are considered to be similar.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+player_performance_summary = function(game_started, player_stats, team_name, game_obj = NULL, current_round = NULL, past_scores){
+  # Produce a team's performance summary and comparison to historical performance in equivalent games
+  # 1. Get a list of games the player has played in
+  # 2. Get a list of scores from historical games at the equivalent point in the game
+  # 3. Calculate current game player stats
+  # 4. Calculate historical player stats from 1 & 2
+  
+  # TODO: Specify relevant columns early on
+  if(game_started == 0){
+    ps_current = filter(player_stats, game_id == max(game_id))
+  } else {
+    ps_current = game_obj$player_stats_db
+  }
+  
+  # Separate past game player stats
+  ps_past = filter(player_stats, game_id != max(game_id)) |> 
+    select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
+           points_per_round, off_ppr, def_ppr, toss_efficiency)
+  # List players on the given team
+  ps_current_team = ps_current[ps_current$team == team_name, ]
+
+  # Store current team and opponent sizes
+  team_size = nrow(ps_current_team) 
+  opponent_size = nrow(ps_current[ps_current$team != team_name, ]) # Perhaps subtract? nrow(ps_current) - team_size
+  
+  # Store current game id and the given team's current player stats
+  current_game = unique(ps_current$game_id)
+  current_shots = unique(ps_current_team$shots)
+  
+  # Make a historical stats table that is only comparing games which are similar
+  # to the current one.
+  # First, obtain a list of games in which the players on this team were on
+  # an equally sized team. This is player specific, so map() is used
+
+  # A not particularly elegant but probably working solution to making sure that games
+  # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
+  # and opponent_team_size and merge it to player_stats to be used as a 
+  
+  # Make a dataframe of team sizes in past games
+  ps_comparable = map(ps_current_team[, "player_id"],
+      find_similar_games, player_stats = ps_past, team_size = team_size, opponent_size = opponent_size)
+
+  ## Scenario 1: Game is in progress
+  in_progress = (game_started != 0)
+  if (in_progress){
+    # browser()
+    # Filter to scores which are:
+    #   - only scored by players on this team
+    #   - less than or equal to the current round
+    scores_comparable = filter(past_scores,
+                               player_id %in% ps_current_team$player_id, # Only include players on this team
+                               parse_round_num(round_num) <= parse_round_num(current_round))
+    # scores_comparison = past_scores[past_scores$player_id %in% ps_current_team$player_id & parse_round_num(past_scores$round_num) <= parse_round_num(current_round), ]
+    
+  } else {
+    ## Scenario 2: Game is complete
+    scores_comparable = past_scores
+  }
+  
+  # List scores which occurred at or before the current game's round
+  scores_historical = imap_dfr(ps_current_team$player_id, function(player, index){
+    # Join each player's comparable games to their scores from those games
+    left_join(ps_comparable[[index]], 
+              scores_comparable, 
+              by = c("game_id", "player_id")) %>% 
+      # Remove hard-coded games without player stats?
+      filter(!(game_id %in% 38:48))
+  })
+  
+  # When in progress, keep the shot counter generated from current_shots
+  if(in_progress){
+    scores_historical = mutate(scores_historical, shots = current_shots)
+  }
+  
+  # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
+  # That means I have to recreate player_stats using this table 
+  
+  # Calculate game performance in comparable games
+  ps_historical = replace_na(scores_historical,
+                                       list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              # ones = sum((points_scored == 1)),
+              # twos = sum((points_scored == 2)),
+              # threes = sum((points_scored == 3)),
+              # impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
+              .groups = "drop")
+  
+  # Calculate current game performance
+  #   - Team score
+  #   - Which team is winning
+  # Then join on player info
+  current_game_stats = group_by(ps_current, team) %>% 
+    mutate(team_score = sum(total_points)) %>% 
+    ungroup() %>% 
+    mutate(winning = (team_score == max(team_score))) %>% 
+    filter(team == team_name) %>% 
+    select(team, winning, player_id,  
+           total_points, paddle_points, clink_points, #threes, 
+           points_per_round:toss_efficiency)
+  
+  historical_avg = select(ps_historical, game_id, player_id, 
+                            shots, total_points, paddle_points, clink_points, #sinks = threes, 
+                            points_per_round:toss_efficiency) %>%
+    arrange(player_id, game_id) %>% 
+    group_by(player_id) %>% 
+    summarise(
+      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
+      # across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
+      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
+             .fns = ~weighted.mean(., w = shots), 
+             .names = "{col}_wavg"),
+      .groups = "drop"
+    )
+  
+  current_game_comparison = full_join(current_game_stats, historical_avg, by = "player_id") %>% 
+    # Calculate the difference between current game and historical performance
+    mutate(total_points_diff = total_points - total_points_avg,
+           paddle_points_diff = paddle_points - paddle_points_avg,
+           clink_points_diff = clink_points - clink_points_avg,
+           points_per_round_diff = points_per_round - points_per_round_wavg,
+           off_ppr_diff = off_ppr - off_ppr_wavg,
+           def_ppr_diff = def_ppr - def_ppr_wavg,
+           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
+           # Format each difference for the table
+           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           toss_efficiency_diff = map_chr(toss_efficiency_diff, 
+                                          ~case_when(. >= 0 ~ toss_percent_plus(.), 
+                                                     . < 0 ~ toss_percent_minus(.))))
+  
+  current_game_comparison %>% 
+    # Remove historical stats
+    select(-ends_with("_avg"), -ends_with("wavg"), -contains("points_per")) %>% 
+    # Order columns
+    select(starts_with("player"), team, winning, 
+           contains("total_points"), contains("paddle"), contains("clink"), #sinks = threes, 
+           contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
+  
+  
+}
 
 
 
