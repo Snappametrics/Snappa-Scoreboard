@@ -777,19 +777,42 @@ server <- function(input, output, session) {
   
   
   
-  
+  team_a_summary_stats = reactive({
+    
+    scores = vals$db_tbls()[["scores"]]
+    past_games_scores = filter(scores, game_id != max(game_id))
+    
+    if(input$start_game == 0){
+      player_performance_summary(game_started = input$start_game, 
+                                 player_stats = vals$db_tbls()[["player_stats"]], 
+                                 team_name = "A", 
+                                 # current_round, 
+                                 past_scores = past_games_scores)
+    } else {
+      player_performance_summary(game_started = input$start_game, 
+                                 game_obj = vals,
+                                 player_stats = vals$db_tbls()[["player_stats"]], 
+                                 team_name = "A", 
+                                 current_round = round_num(), 
+                                 past_scores = past_games_scores)
+    }
+  }, label = "Team A Summary")
   
 
   output$team_a_summary = renderReactable({
-
+    # browser()
+    
+    
     if(input$start_game == 0){
       last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
+      browser()
       make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
                          neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
                          team_name = "A", 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
         team_summary_tab_rt(.)
+      
     } else {
       make_summary_table(current_player_stats = vals$player_stats_db, 
                          player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
@@ -798,7 +821,11 @@ server <- function(input, output, session) {
                          current_round = as.numeric(str_sub(round_num(), 1, -2)), 
                          past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)) %>%
         team_summary_tab_rt(.)
+      
     }
+    
+    team_summary_tab_rt(right_join(vals$players, team_a_summary_stats(), by = "player_id"))
+    
   })  
   
   
