@@ -1779,14 +1779,54 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     
     # browser()
     # Show point type by the number of pts (because factoring above didn't work?)
-    ggplot(plot_df, aes(x = reorder(type, points), y = points))+
+    # ggplot(plot_df, aes(x = reorder(type, points), y = points))+
+    #   # Columns
+    #   geom_col(aes(fill = type, y = points + 2),
+    #            colour = snappa_pal[1],
+    #            position = position_dodge(width = 1), width = 1)+
+    #   # Pt labels
+    #   geom_text(aes(y = (points+3)/2, label = na_if(points, 0), 
+    #                 size = 4+sqrt(points)),
+    #             colour = snappa_pal[1],
+    #             family = "Inter Medium", fontface = "bold")+
+    #   # Axes
+    #   scale_x_discrete(drop=T)+
+    #   # Colours
+    #   scale_fill_manual(name = NULL, drop=T,
+    #                     values = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B"),
+    #                     guide = guide_legend(direction = "horizontal", byrow = T,
+    #                                          ncol = 3, reverse = T))+#090C9B
+    #   scale_size(guide = guide_none())+
+    #   # Make it polar
+    #   coord_polar(start = pi/2, direction = -1)+
+    #   # Facet on player
+    #   facet_wrap(~player_name, ncol=1,
+    #              strip.position = if_else(reverse_legend, "left", "right"),
+    #              as.table = F, drop = T)+
+    #   # Theme elements
+    #   theme_snappa(md=T, plot_margin = team_margin)+
+    #   theme(axis.title = element_blank(), # no title
+    #         legend.position = "bottom",# legend on bottom 
+    #         axis.line = element_blank(), # No axis line
+    #         axis.text.y.left = element_blank(), # No axis text
+    #         axis.text.x = element_blank(),
+    #         # Facet labels
+    #         strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,0,0,5)),
+    #         strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,5,0,0)),
+    #         # No gridlines
+    #         panel.grid.major = element_blank(), 
+    #         panel.spacing = unit(-12/(length(unique(plot_df$player_name))*1.5), "lines"))
+    
+    # alt
+    ggplot(plot_df, aes(x = player_name, y = points, fill = type))+
       # Columns
-      geom_col(aes(fill = type, y = points + 2),
+      geom_bar(stat = "identity", 
                colour = snappa_pal[1],
-               position = position_dodge(width = 1), width = 1)+
+               position = "stack", width = 1)+
+      
       # Pt labels
-      geom_text(aes(y = (points+3)/2, label = na_if(points, 0), 
-                    size = 4+sqrt(points)),
+      geom_text(aes(y = points*.85, label = na_if(points, 0)), 
+                size = 5, position = "stack",
                 colour = snappa_pal[1],
                 family = "Inter Medium", fontface = "bold")+
       # Axes
@@ -1795,27 +1835,20 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
       scale_fill_manual(name = NULL, drop=T,
                         values = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B"),
                         guide = guide_legend(direction = "horizontal", byrow = T,
-                                             ncol = 2, reverse = T))+#090C9B
+                                             ncol = 3, reverse = T))+#090C9B
       scale_size(guide = guide_none())+
       # Make it polar
       coord_polar(start = pi/2, direction = -1)+
       # Facet on player
-      facet_wrap(~player_name, ncol=1,
-                 strip.position = if_else(reverse_legend, "left", "right"),
-                 as.table = F, drop = T)+
       # Theme elements
       theme_snappa(md=T, plot_margin = team_margin)+
       theme(axis.title = element_blank(), # no title
             legend.position = "bottom",# legend on bottom 
             axis.line = element_blank(), # No axis line
             axis.text.y.left = element_blank(), # No axis text
-            axis.text.x = element_blank(),
-            # Facet labels
-            strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,0,0,5)),
-            strip.text.y.right = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,5,0,0)),
+            axis.text.y = element_blank(),
             # No gridlines
-            panel.grid.major = element_blank(), 
-            panel.spacing = unit(-12/(length(unique(plot_df$player_name))*1.5), "lines"))
+            panel.grid.major = element_blank())
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
@@ -1870,21 +1903,21 @@ game_flow = function(player_stats, players, scores, game){
     geom_line(aes(group = player_id, colour = team), linewidth = 1, show.legend = F, alpha = .8)+
     geom_label_repel(data = player_label_df,
                      aes(group = player_id, colour = team, label = player_name),
-                     size = 5, label.padding = .15, box.padding = .15, label.size = NA, fill = snappa_pal[1],
+                     size = 5.5, label.padding = .15, box.padding = .15, label.size = NA, fill = snappa_pal[1],
                      nudge_x = 1.25, nudge_y = .5, force = .35, show.legend = F, segment.alpha = 0)+
     # geom_image(data = filter(game_flow_df, !is.na(sink_image)))+
     scale_y_continuous(name = "Points", 
                        breaks = scales::breaks_pretty(n = 5), 
                        limits = c(0, max_score+5-(max_score%%5)),
                        expand = expansion())+
-    scale_x_continuous(name = "Round", 
+    scale_x_continuous(name = NULL, 
                        breaks = breaks_rounds(n =7), 
                        limits = c(0, max_round+5),
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
     # labs(title = "How the die flies",
     #      subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
-    theme_snappa(md=T)
+    theme_snappa(md=T, base_size = 14)
 }
 
 
