@@ -358,10 +358,6 @@ label.control-label[for^='name_'] {
   overflow:auto;
 }
 
-.snappaneers-tbl {
-  font-size: 14px;
-  line-height: 14px;
-}
 
 .snappaneers-tbl a {
   color: inherit;
