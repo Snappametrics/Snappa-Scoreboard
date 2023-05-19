@@ -1399,6 +1399,12 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
       title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", 
                          coalesce(rounds[df$rounds], current_round))),  
       style = str_c("background-color: ", snappa_pal[1], ";"),
+      # plotOutput("summary_plot", height = "50vh"),
+      # reactableOutput("scores_tbl"),
+      
+      footer = NULL, 
+      easyClose = TRUE,
+      size = "l",
       
 
       # Tables
@@ -1442,13 +1448,7 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
                       withSpinner(plotOutput("b_breakdown", width = "100%", height = "40vh"), color = snappa_pal[3], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                )
-      ),
-      # plotOutput("summary_plot", height = "50vh"),
-      # reactableOutput("scores_tbl"),
-      
-      footer = NULL, 
-      easyClose = TRUE,
-      size = "l"
+      )
     )
   )
 }
