@@ -945,6 +945,12 @@ input[type=radio]{
 }
 */
 
+@media (min-width: 768px) {
+  .modal-lg {
+    width: 1204px;
+  }
+}
+
 
 
 @media (max-width: 1200px) {
