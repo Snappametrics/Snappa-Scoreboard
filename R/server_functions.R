@@ -97,6 +97,12 @@ aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
 }
 
 detect_sink = function(scores, criteria){
+  if(missing(criteria)){
+    criteria = tribble(~points_scored, ~clink, 
+                       3, F,
+                       5, T,
+                       7, T)
+  }
   # Detect sinks in a dataframe of score data
   left_join(scores, 
             mutate(criteria, sink = T), by = c("points_scored", "clink")) %>% 
