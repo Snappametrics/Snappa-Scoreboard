@@ -1107,7 +1107,6 @@ team_summary_tab_rt = function(df){
   reactable(df, defaultSorted = "total_points",
               sortable = F,
               resizable = F, #fullWidth = F, 
-            wrap = F,
               style = list(
                 fontSize = "16px", lineHeight = "2"#, width = "fit-content"
               ),
