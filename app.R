@@ -727,11 +727,14 @@ server <- function(input, output, session) {
 
   output$a_breakdown = renderPlot({
     
+    max_player_points = max(team_b_summary_stats()$total_points, team_a_summary_stats()$total_points)
+    
     if(input$start_game == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "A"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$players,
-                             ps_team = "A")
+                             ps_team = "A",
+                             chart_max = max_player_points)
     } else {
       player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "A"), player_id, team, shots),
                              scores = vals$scores_db, 
@@ -741,13 +744,16 @@ server <- function(input, output, session) {
       
     }
   }, bg = snappa_pal[1])
+  
   output$b_breakdown = renderPlot({
+    max_player_points = max(team_b_summary_stats()$total_points, team_a_summary_stats()$total_points)
     
     if(input$start_game == 0){
       player_score_breakdown(snappaneers = select(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id), team == "B"), player_id, team, shots), 
                              scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)), 
                              ps_players = vals$players,
-                             ps_team = "B")
+                             ps_team = "B",
+                             chart_max = max_player_points)
     } else {
       player_score_breakdown(snappaneers = select(filter(vals$player_stats_db, game_id == vals$game_id, team == "B"), player_id, team, shots),
                              scores = vals$scores_db, 

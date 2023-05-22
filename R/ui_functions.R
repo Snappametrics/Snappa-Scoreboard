@@ -1672,7 +1672,7 @@ markov_visualizations = function(summary){
 
 
 
-player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_team){
+player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_team, chart_max = NA){
   
   # Break down a player's points into their different score types
   # View each score type as a proportion of the total points
@@ -1684,6 +1684,8 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     team_margin = margin(0,0,0,5)
   }
   reverse_legend = (!!ps_team == "A")
+  
+  
   
   
   
@@ -1763,18 +1765,43 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     #         strip.text.y.left = element_text(size = 14, angle = 0, face = "bold", margin = margin(0,10,0,0)))
     
     # Option 2: Nightingale/Radar plot
-    plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
-      inner_join(ps_players, by = "player_id") %>% 
-      select(player_name, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
-      # Add total as persistent var
-      mutate(total = total_points) %>%
-      # Pivot separate variables into an input for fill
-      pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
-      arrange(team, desc(total), player_name, desc(points)) %>%
-      # Remove total from our fill var
-      filter(type != "total") %>%
-      mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"),
-                           labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
+    # plot_df = aggregate_player_stats_and_sinks(scores, snappaneers) %>%
+    #   inner_join(ps_players, by = "player_id") %>% 
+    #   select(player_name, team, shots, total_points, normal_points, sink_points, paddle_sinks, paddle_points, foot_points, clink_points) %>%
+    #   # Add total as persistent var
+    #   mutate(total = total_points) %>%
+    #   # Pivot separate variables into an input for fill
+    #   pivot_longer(cols = ends_with("points"), names_to = "type", values_to = "points", names_transform = list(type = ~str_remove(., "_points"))) %>%
+    #   arrange(team, desc(total), player_name, desc(points)) %>%
+    #   # Remove total from our fill var
+    #   filter(type != "total") %>%
+    #   mutate(type = factor(type, levels = c("sink", "foot", "paddle", "clink", "normal"),
+    #                        labels = c("Sink", "Foot", "Paddle", "Clink", "Normal"), ordered = T))
+  
+    # Option 3: Toss/Paddle Bar
+    plot_df = scores |> 
+      # Tally total points
+      add_count(player_id, wt = points_scored, name = "total") |> 
+      # categorize as paddle or toss
+      mutate(toss_paddle = if_else(paddle, "Paddle", "Toss")) |> 
+      group_by(player_id, toss_paddle) |> 
+      # filter to team players via join and detect sinks
+      right_join(snappaneers, by = "player_id") |> 
+      detect_sink(sink_criteria) |> 
+      mutate(point_type = case_when(sink ~ "Sink",
+                                    clink ~ "Clink",
+                                    T ~ "Normal"),
+             bar_col = case_when(paddle & point_type == "Normal" ~ "Paddle",
+                                 T ~ point_type),
+             bar_col = factor(bar_col, levels = c("Sink", "Foot", "Paddle", "Clink", "Normal"),
+                              ordered = T)) |>
+      group_by(point_type, bar_col, total, .add = T) |> 
+      summarise(points = sum(points_scored), .groups = "drop") |> 
+      inner_join(ps_players, by = "player_id") |> 
+      # Sort by points, then paddles
+      add_count(player_id, wt = points*(toss_paddle=="Paddle"), name = "paddles") |> 
+      arrange(desc(total), desc(paddles)) |> 
+      mutate(player_name = fct_inorder(factor(player_name)))
     
     # browser()
     # Show point type by the number of pts (because factoring above didn't work?)
@@ -1817,37 +1844,63 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     #         panel.spacing = unit(-12/(length(unique(plot_df$player_name))*1.5), "lines"))
     
     # alt
-    ggplot(plot_df, aes(x = player_name, y = points, fill = type))+
-      # Columns
-      geom_bar(stat = "identity", 
-               colour = snappa_pal[1],
-               position = "stack", width = 1)+
-      
-      # Pt labels
-      geom_text(aes(y = points*.85, label = na_if(points, 0)), 
-                size = 5, position = "stack",
-                colour = snappa_pal[1],
-                family = "Inter Medium", fontface = "bold")+
-      # Axes
-      scale_x_discrete(drop=T)+
+    # ggplot(plot_df, aes(x = player_name, y = points, fill = type))+
+    #   # Columns
+    #   geom_bar(stat = "identity", 
+    #            colour = snappa_pal[1],
+    #            position = "stack", width = 1)+
+    #   
+    #   # Pt labels
+    #   geom_text(aes(y = points*.85, label = na_if(points, 0)), 
+    #             size = 5, position = "stack",
+    #             colour = snappa_pal[1],
+    #             family = "Inter Medium", fontface = "bold")+
+    #   # Axes
+    #   scale_x_discrete(drop=T)+
+    #   # Colours
+    #   scale_fill_manual(name = NULL, drop=T,
+    #                     values = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B"),
+    #                     guide = guide_legend(direction = "horizontal", byrow = T,
+    #                                          ncol = 3, reverse = T))+#090C9B
+    #   scale_size(guide = guide_none())+
+    #   # Make it polar
+    #   coord_polar(start = pi/2, direction = -1)+
+    #   # Facet on player
+    #   # Theme elements
+    #   theme_snappa(md=T, plot_margin = team_margin)+
+    #   theme(axis.title = element_blank(), # no title
+    #         legend.position = "bottom",# legend on bottom 
+    #         axis.line = element_blank(), # No axis line
+    #         axis.text.y.left = element_blank(), # No axis text
+    #         axis.text.y = element_blank(),
+    #         # No gridlines
+    #         panel.grid.major = element_blank())
+    # browser()
+    # Toss/Paddle bar
+    ggplot(plot_df, aes(y = toss_paddle, x = points, group = point_type, fill = bar_col))+
+      geom_col(show.legend=F, width = .6, colour = snappa_pal[1])+
+      scale_x_continuous(name = NULL, breaks = scales::breaks_pretty(n = 3), limits = c(0, chart_max), 
+                         position = "top", sec.axis = dup_axis())+
+      scale_y_discrete(name = NULL, 
+                       # labels = c("Toss" = "Toss", "Paddle" = emo::ji("waving_hand")), 
+                       position = "left")+#if_else(reverse_legend, "left", "right"))+
       # Colours
-      scale_fill_manual(name = NULL, drop=T,
+      scale_fill_manual(name = NULL, drop=F,
                         values = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B"),
                         guide = guide_legend(direction = "horizontal", byrow = T,
-                                             ncol = 3, reverse = T))+#090C9B
-      scale_size(guide = guide_none())+
-      # Make it polar
-      coord_polar(start = pi/2, direction = -1)+
-      # Facet on player
-      # Theme elements
-      theme_snappa(md=T, plot_margin = team_margin)+
+                                             ncol = 3, reverse = T))+
+      facet_wrap(~player_name, ncol = 1, strip.position = "left")+#if_else(reverse_legend, "left", "right"))+
+      theme_snappa(plot_margin = margin(20,20,20,0), base_size = 14, line_colour = "#7c7c7c")+
       theme(axis.title = element_blank(), # no title
             legend.position = "bottom",# legend on bottom 
             axis.line = element_blank(), # No axis line
-            axis.text.y.left = element_blank(), # No axis text
-            axis.text.y = element_blank(),
+            axis.text.y = element_text(size = 14, hjust = 1), #hjust = if_else(reverse_legend, 1, 0)),
             # No gridlines
-            panel.grid.major = element_blank())
+            panel.grid.major.y = element_blank(),
+            panel.grid.minor.y = element_blank(),
+            strip.placement = "outside", 
+            strip.text.y.left = element_text(size = 16, family = "Roboto Medium", angle = 0), 
+            strip.text.y.right = element_text(size = 16, family = "Roboto Medium", angle = 0))
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
