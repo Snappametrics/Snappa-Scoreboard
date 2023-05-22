@@ -1420,16 +1420,16 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
                # Team A
                # reactableOutput("team_a_summary")
                column(6, align = "center",
-                      h3("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
-                      h4(a_sub, align = "left"),
+                      h4("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+                      h5(a_sub, align = "left"),
                       withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
                                   proxy.height = "145px", color.background = snappa_pal[1])
                ),
                
                # Team B
                column(6,align = "center",# offset = 2,
-                      h3("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
-                      h4(b_sub, align = "left"),
+                      h4("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+                      h5(b_sub, align = "left"),
                       withSpinner(reactableOutput("team_b_summary"), color = snappa_pal[3], 
                                   proxy.height = "145px", color.background = snappa_pal[1])
                )
@@ -1438,22 +1438,22 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
       fluidRow(align = "center", 
                # Team A Player Breakdown
                column(3, style = "padding-right:0; top:60px;",
-                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "40vh"), color = snappa_pal[2], 
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "39vh"), color = snappa_pal[2], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                ),
                # Game Flow
                column(6,style = "padding:0",
-                      div(style = "margin:0px 5px; padding:5px;",
+                      div(style = "margin:0px 24px; padding:8px;",
                           h4("How the die flies", align = "left"),
                           h5("Point progression throughout the game", align = "left")
                       )
                       ,
-                      withSpinner(plotOutput("game_flow", height = "40vh"), color.background = snappa_pal[1],
+                      withSpinner(plotOutput("game_flow", height = "38vh"), color.background = snappa_pal[1],
                                   color = snappa_pal[4])
                ),
                # Team B Player Breakdown
                column(3, style = "padding-left:0; top:60px;",
-                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "40vh"), color = snappa_pal[3], 
+                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "39vh"), color = snappa_pal[3], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                )
       )
