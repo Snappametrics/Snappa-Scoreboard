@@ -1969,7 +1969,10 @@ game_flow = function(player_stats, players, scores, game){
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
     # labs(title = "How the die flies",
     #      subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
-    theme_snappa(md=T, base_size = 14)
+    theme_snappa(base_size = 14)+
+    theme(panel.grid.minor.x = element_blank(),
+          panel.grid.major.x = element_blank(),
+          axis.line.y = element_blank())
 }
 
 
