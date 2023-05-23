@@ -1928,6 +1928,32 @@ observeEvent(input$game_summary, {
     })
     
     
+    
+    lost_game_id = collect(lost_game)$game_id
+    # Set the score outputs and shot number to the values from the last game
+    vals$current_scores$team_A = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'A' AND game_id = ", lost_game_id))[1,1] %>% 
+      as.numeric()
+    
+    
+    vals$current_scores$team_B = dbGetQuery(con, str_c("SELECT SUM(total_points) FROM player_stats WHERE team = 'B' AND game_id = ", lost_game_id))[1,1] %>% 
+      as.numeric()
+    
+    vals$score_id = dbGetQuery(con, str_c("SELECT MAX(score_id) FROM scores WHERE game_id = ", lost_game_id))[1,1] %>%
+      as.numeric()
+    
+    
+    vals$scores_db = dbGetQuery(con, str_c("SELECT * FROM scores WHERE game_id = ", lost_game_id))
+    vals$game_id = lost_game_id
+    vals$shot_num = parse_round_num(collect(lost_game)$last_round)
+    
+    vals$game_stats_db = collect(lost_game)
+    
+    # Initialize the current game's player_stats table
+    vals$player_stats_db = collect(lost_player_stats)
+    
+    # Pull in lost game casualties 
+    vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game_id)))
+    
     delay(500, shinyjs::click("start_game"))
 })
   
