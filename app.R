@@ -782,7 +782,8 @@ server <- function(input, output, session) {
                              scores = vals$scores_db, 
                              ps_players = vals$players,
                              ps_game = vals$game_id, 
-                             ps_team = "A")
+                             ps_team = "A",
+                             chart_max = max_player_points)
       
     }
   }, bg = snappa_pal[1])
@@ -801,7 +802,8 @@ server <- function(input, output, session) {
                              scores = vals$scores_db, 
                              ps_players = vals$players,
                              ps_game = vals$game_id, 
-                             ps_team = "B")
+                             ps_team = "B",
+                             chart_max = max_player_points)
       
     }
   }, bg = snappa_pal[1])
