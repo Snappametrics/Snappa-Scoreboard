@@ -1428,47 +1428,62 @@ observe({
     delete_query = sql("DELETE FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats);")
     dbExecute(con, delete_query)
   } else {
-  
-  showModal(
-    modalDialog(
-      title = "Hol' up, did you want to continue the previous game?",
-      style = str_c("background-color:", snappa_pal[1], ";"),
-      div(
-        h3("Summary of the Previous Game", 
-           align = 'center')
-      ),
+    last_game_tbl = tbl(con, "incomplete_game")
 
-      br(),
-      renderUI({glance_ui_game(lost_game_id)}),
-      
-      footer = tagList(
-                fluidRow(
-                  column(9, align = "left",
-                         helpText("Warning: 'No' will delete the game from the database", 
-                                  style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
-                         ),
-                  column(1,
-                         actionBttn("resume_no",
-                                    label = "No",
-                                    style = "material-flat",
-                                    color = "danger",
-                                    size = "md")
-                         ),
-                  column(1,
-                         actionBttn("resume_yes",
-                                    label = "Yes",
-                                    style = "material-flat", 
-                                    color = "warning",
-                                    size = "md")
-                         )
-                )
-              ),
-      size = "l",
-      easyClose = F,
-      fade = F
-    )
-   
-  )
+    # last_game_start = last_game_tbl |> 
+    #   select(game_start) |> 
+    #   collect()
+    # 
+    # last_game_start_rel = now(tzone = "America/Los_Angeles") - ymd_hms(last_game_start$game_start, tz = "America/Los_Angeles")
+    
+    last_game_ps_tbl = last_game_tbl |> 
+      select(game_id) |> 
+      # Join player stats
+      left_join(tbl(con, "player_stats"), by = "game_id") |> 
+      inner_join(tbl(con, "players"), by = "player_id") |> 
+      select(player_name, team, total_points)
+  
+    restart_game_popup(last_game_ps_tbl)
+  # showModal(
+  #   modalDialog(
+  #     title = "Hol' up, did you want to continue the previous game?",
+  #     style = str_c("background-color:", snappa_pal[1], ";"),
+  #     div(
+  #       h3("Summary of the Previous Game", 
+  #          align = 'center')
+  #     ),
+  # 
+  #     br(),
+  #     renderUI({glance_ui_game(lost_game_id)}),
+  #     
+  #     footer = tagList(
+  #               fluidRow(
+  #                 column(9, align = "left",
+  #                        helpText("Warning: 'No' will delete the game from the database", 
+  #                                 style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
+  #                        ),
+  #                 column(1,
+  #                        actionBttn("resume_no",
+  #                                   label = "No",
+  #                                   style = "material-flat",
+  #                                   color = "danger",
+  #                                   size = "md")
+  #                        ),
+  #                 column(1,
+  #                        actionBttn("resume_yes",
+  #                                   label = "Yes",
+  #                                   style = "material-flat", 
+  #                                   color = "warning",
+  #                                   size = "md")
+  #                        )
+  #               )
+  #             ),
+  #     size = "l",
+  #     easyClose = F,
+  #     fade = F
+  #   )
+  #  
+  # )
   }
   
 })
