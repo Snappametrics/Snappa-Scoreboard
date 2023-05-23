@@ -1543,11 +1543,11 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
                # Game Flow
                column(6,style = "padding:0",
                       div(style = "margin:0px 24px; padding:8px;",
-                          h4("How the die flies", align = "left"),
-                          h5("Point progression throughout the game", align = "left")
+                          h4("How the die flies", align = "left")#,
+                          # h5("Point progression throughout the game", align = "left")
                       )
                       ,
-                      withSpinner(plotOutput("game_flow", height = "38vh"), color.background = snappa_pal[1],
+                      withSpinner(plotOutput("game_flow", height = "39vh"), color.background = snappa_pal[1],
                                   color = snappa_pal[4])
                ),
                # Team B Player Breakdown
