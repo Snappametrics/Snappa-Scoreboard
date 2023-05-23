@@ -166,7 +166,7 @@ sink_casualty_popup = function(session, score_row, players = snappaneers()$playe
     inputSweetAlert(session, 
                     inputId = "sink_casualty",
                     title = "Sploosh! Who got sunk?",
-                    text = str_c("Remember: you have a ", scales::percent(1/6), " chance of rolling a one!"),
+                    text = str_c("Remember: you have a ", scales::percent(1/6, accuracy = .001), " chance of rolling a one!"),
                     # Want to add images, but these don't work yet
                     # url = 'https://cdn.britannica.com/96/192896-131-ECCA4FB7/Explosion-USS-Shaw-magazine-attack-Pearl-Harbor-Dec-7-1941.jpg',
                     # imageWidth = 400,
