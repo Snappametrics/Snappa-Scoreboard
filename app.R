@@ -1859,24 +1859,36 @@ observeEvent(input$game_summary, {
 # Restart a game after indicating you would like to do so
   observeEvent(input$resume_yes, {
     
+    # lost_game = as.integer(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"))
+    lost_game = tbl(con, "incomplete_game")
     
-    lost_game = as.integer(dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats"))
-    
-    lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
-    
-    players = dbGetQuery(con, "SELECT * FROM players")
+    # lost_player_stats = dbGetQuery(con, str_c("SELECT * FROM player_stats WHERE game_id = ", lost_game))
+    lost_player_stats = lost_game |> 
+      select(game_id) |> 
+      left_join(tbl(con, "player_stats"), by = "game_id") |> 
+      left_join(tbl(con, "players"), by = "player_id")
+      
+    # players = dbGetQuery(con, "SELECT * FROM players")
   
-    lost_players = left_join(lost_player_stats[,2:3], players, by = "player_id") %>%
-      select(player_name, team) %>% 
-      group_by(team) %>% 
-      mutate(player_input = str_c("name_", team, row_number())) %>% 
-      ungroup()
+    # lost_players = left_join(lost_player_stats[,2:3], players, by = "player_id") %>%
+    #   select(player_name, team) %>% 
+    #   group_by(team) %>% 
+    #   mutate(player_input = str_c("name_", team, row_number())) %>% 
+    #   ungroup()
     
-    input_list = lost_players %>%
-      select(player_input, player_name) %>% 
+    lost_players = lost_player_stats |> 
+      select(player_name, team) |> 
+      group_by(team) |> 
+      mutate(player_input = str_c("name_", team, row_number())) |> 
+      ungroup() |>  
+      collect()
+    
+    input_list = lost_players |> 
+      select(player_input, player_name) |> 
       deframe()
     
     removeModal()
+    
     #Look at the number of lost players on each team to be certain of the values 
     # that you want
     
