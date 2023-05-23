@@ -897,7 +897,7 @@ player_performance_summary = function(game_started, player_stats, team_name, gam
   # and opponent_team_size and merge it to player_stats to be used as a 
   
   # Make a dataframe of team sizes in past games
-  ps_comparable = map(ps_current_team[, "player_id"],
+  ps_comparable = map(ps_current_team[, "player_id", drop=T],
       find_similar_games, player_stats = ps_past, team_size = team_size, opponent_size = opponent_size)
 
   ## Scenario 1: Game is in progress
