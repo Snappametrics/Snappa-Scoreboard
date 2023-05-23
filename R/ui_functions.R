@@ -1783,7 +1783,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
       # Tally total points
       add_count(player_id, wt = points_scored, name = "total") |> 
       # categorize as paddle or toss
-      mutate(toss_paddle = if_else(paddle, "Paddle", "Toss")) |> 
+      mutate(toss_paddle = factor(if_else(paddle, "Paddle", "Toss"))) |> 
       group_by(player_id, toss_paddle) |> 
       # filter to team players via join and detect sinks
       right_join(snappaneers, by = "player_id") |> 
@@ -1881,7 +1881,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
       geom_col(show.legend=F, width = .6, colour = snappa_pal[1])+
       scale_x_continuous(name = NULL, breaks = scales::breaks_pretty(n = 3), limits = c(0, chart_max), 
                          position = "top", sec.axis = dup_axis())+
-      scale_y_discrete(name = NULL, 
+      scale_y_discrete(name = NULL, drop=F, 
                        # labels = c("Toss" = "Toss", "Paddle" = emo::ji("waving_hand")), 
                        position = "left")+#if_else(reverse_legend, "left", "right"))+
       # Colours
