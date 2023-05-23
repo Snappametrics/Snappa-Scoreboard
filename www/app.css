@@ -603,7 +603,7 @@ players 3 and 4 */
   padding: 8px 12px;
 }
 
-.team-score {
+.team-score.numbers {
   font-size: 32vh;
   color: white;
   line-height: 1;
