@@ -659,6 +659,76 @@ glance_ui_game = function(game.id){
  return(ui_output)
 }
 
+restart_game_popup = function(ps_tbl){
+  # Gather the items that are needed to assemble the UI
+  df_a = collect(filter(ps_tbl, team == "A"))
+  df_b = collect(filter(ps_tbl, team == "B"))
+  
+  score_a = sum(df_a$total_points)
+  score_b = sum(df_b$total_points)
+  
+  # Now, set up the UI 
+  ui_output = fluidRow(
+    column(5, align = "right",
+           h3("Team A", style = str_c("color:", snappa_pal[2])),
+           restart_summary_tab_rt(df_a)
+           ),
+    column(2,
+           h2(str_c(score_a, " - ", score_b), align = 'center')
+           ),
+    column(5,
+           h3("Team B", style = str_c("color:", snappa_pal[3])), 
+           restart_summary_tab_rt(df_b)
+           )
+  )
+  
+  showModal(
+    modalDialog(
+      title = "There's still unfinished game in the system, do you want to continue it?",
+      style = str_c("background-color:", snappa_pal[1], ";"),
+      div(
+        h3("Summary of the Previous Game", 
+           align = 'center')
+      ),
+      
+      br(),
+      ui_output,
+      
+      br(),
+      
+      div(align = "right", class = "restart-warning",
+        helpText("Warning: 'No' will delete the game from the database", 
+                 style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
+      ),
+      
+      footer = tagList(
+        # fluidRow(
+          # column(2,
+                 actionBttn("resume_no",
+                            label = "No",
+                            style = "material-flat",
+                            color = "danger",
+                            size = "md", 
+                            class = "restart-bttn", 
+                            icon = icon("trash")),
+          # ),
+          # column(2,
+                 actionBttn("resume_yes",
+                            label = "Yes",
+                            style = "material-flat", 
+                            color = "warning",
+                            size = "md", 
+                            class = "restart-bttn", 
+                            icon = icon("check"))
+          # )
+        # )
+      ),
+      size = "l",
+      easyClose = F,
+      fade = F
+    )
+  )
+}
 
 
 
@@ -1100,6 +1170,35 @@ game_summary_tab_rt = function(df){
               ),
               defaultExpanded = TRUE
     )
+}
+
+restart_summary_tab_rt = function(df){
+  
+  team = unique(df$team)
+  
+  reactable(df, defaultSorted = "total_points",
+            sortable = F,
+            resizable = F, 
+            fullWidth = T, 
+            style = list(
+              fontSize = "20px", lineHeight = "2", textAlign = if_else(team == "A", "-webkit-right", "left")#, width = "fit-content"
+            ),
+            defaultColDef = colDef(show=F, format = colFormat(digits = 0), 
+                                   align = "right", vAlign = "center", defaultSortOrder = "desc",
+                                   #style = list(padding = "4px 0px"), 
+                                   headerStyle = list(textAlign = "right", fontSize = "16px")), 
+            highlight = F,
+            # compact = T,
+            # wrap = F,
+            width = "240px",
+            class = "restart-tbl",
+            # Columns
+            columns = list(
+              player_name = colDef(name = "Player", show=T, align = "left", headerStyle = list(textAlign = "left")),
+              total_points = colDef(name = "Pts", show=T, minWidth = 48, #maxWidth = 40
+              )
+            )
+  )
 }
 
 team_summary_tab_rt = function(df){
