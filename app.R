@@ -2082,6 +2082,12 @@ observeEvent(input$resume_no, {
       value = new_casualty,
       append=T
     )
+    
+    if(new_casualty$casualty_type == "12-7"){
+      insertUI(selector = "#switch_sides",
+               where = "afterEnd",
+               ui = tags$audio(src = "PearlHarbor.mp3", type = "audio/mp3", autoplay = NA, controls = NA, class = "sound-effect"))
+    }
     # In the event that there was a sink which caused this, also popup the sink menu
     last_score = vals$scores_db[ max(vals$scores_db$score_id),]
     sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
