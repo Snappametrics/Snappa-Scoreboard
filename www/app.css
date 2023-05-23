@@ -359,6 +359,21 @@ label.control-label[for^='name_'] {
 }
 
 
+.sound-effect {
+  display: none;
+}
+
+.halftime {
+  padding: 3em 6em !important;
+  width: 40em !important;
+}
+
+.halftime > .swal2-title {
+  font-size: 4em;
+}
+.halftime > .swal2-html-container {
+  font-size: 1.75em;
+}
 .snappaneers-tbl a {
   color: inherit;
 }

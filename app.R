@@ -1735,8 +1735,15 @@ observe({
   observeEvent(req(sum(vals$scores_db$points_scored) >= score_to()), {
     sendSweetAlert(session, 
                    title = "Halftime", 
-                   type = "info",
+                   type = "info", 
+                   timer = 2250,
+                   btn_labels = NA,
+                   imageUrl = "gifs/futurama-change-places.gif", customClass = "halftime",
                    text = HTML(str_c("Change places!")), html = T)
+    
+    insertUI(selector = "#switch_sides",
+             where = "afterEnd",
+             ui = tags$audio(src = "change_places.mp3", type = "audio/mp3", autoplay = NA, controls = NA, class = "sound-effect"))
 
     shinyjs::click("switch_sides")
     
@@ -2047,6 +2054,10 @@ observeEvent(input$resume_no, {
       value = new_casualty,
       append=T
     )  
+    
+    insertUI(selector = "#switch_sides",
+             where = "afterEnd",
+             ui = tags$audio(src = "sploosh.mp3", type = "audio/mp3", autoplay = NA, controls = NA, class = "sound-effect"))
     
     })
   
