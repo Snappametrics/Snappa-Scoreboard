@@ -1886,6 +1886,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
       group_by(player_id, toss_paddle) |> 
       # filter to team players via join and detect sinks
       right_join(snappaneers, by = "player_id") |> 
+      replace_na(list(toss_paddle = "Toss", total = 0, points = 0)) |> 
       detect_sink(sink_criteria) |> 
       mutate(point_type = case_when(sink ~ "Sink",
                                     clink ~ "Clink",
