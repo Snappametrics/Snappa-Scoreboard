@@ -2502,3 +2502,20 @@ tab_theme_snappa = function(data,
   data
 }
 
+last_score_col_list = list(
+  player_name = colDef(name = "Player", maxWidth = 100),
+  round_num = colDef(name = "Round", maxWidth = 70),
+  points_scored = colDef(name = "Pts", maxWidth = 50),
+  paddle = colDef(name = "", width = 30, 
+                  cell = function(value) {
+                    if (value) emo::ji("waving_hand") else ""
+                  }),
+  clink = colDef(name = "", width = 30, 
+                 cell = function(value) {
+                   if (value) emo::ji("ear") else ""
+                 }),
+  foot = colDef(name = "", width = 30, 
+                cell = function(value) {
+                  if (value) emo::ji("foot") else ""
+                })
+)
