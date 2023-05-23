@@ -724,6 +724,48 @@ server <- function(input, output, session) {
 
 # Game Summary Stats ------------------------------------------------------
   
+  team_a_summary_stats = reactive({
+    
+    scores = vals$db_tbls()[["scores"]]
+    past_games_scores = filter(scores, game_id != max(game_id))
+    
+    if(input$start_game == 0){
+      player_performance_summary(game_started = input$start_game, 
+                                 player_stats = vals$db_tbls()[["player_stats"]], 
+                                 team_name = "A", 
+                                 # current_round, 
+                                 past_scores = past_games_scores)
+    } else {
+      # browser()
+      player_performance_summary(game_started = input$start_game, 
+                                 game_obj = vals,
+                                 player_stats = vals$db_tbls()[["player_stats"]], 
+                                 team_name = "A", 
+                                 current_round = round_num(), 
+                                 past_scores = past_games_scores)
+    }
+  }, label = "Team A Summary")
+  
+  team_b_summary_stats = reactive({
+    
+    scores = vals$db_tbls()[["scores"]]
+    past_games_scores = filter(scores, game_id != max(game_id))
+    
+    if(input$start_game == 0){
+      player_performance_summary(game_started = input$start_game, 
+                                 player_stats = vals$db_tbls()[["player_stats"]], 
+                                 team_name = "B", 
+                                 # current_round, 
+                                 past_scores = past_games_scores)
+    } else {
+      player_performance_summary(game_started = input$start_game, 
+                                 game_obj = vals,
+                                 player_stats = vals$db_tbls()[["player_stats"]], 
+                                 team_name = "B", 
+                                 current_round = round_num(), 
+                                 past_scores = past_games_scores)
+    }
+  }, label = "Team A Summary")
 
   output$a_breakdown = renderPlot({
     
@@ -783,47 +825,7 @@ server <- function(input, output, session) {
   
   
   
-  team_a_summary_stats = reactive({
-    
-    scores = vals$db_tbls()[["scores"]]
-    past_games_scores = filter(scores, game_id != max(game_id))
-    
-    if(input$start_game == 0){
-      player_performance_summary(game_started = input$start_game, 
-                                 player_stats = vals$db_tbls()[["player_stats"]], 
-                                 team_name = "A", 
-                                 # current_round, 
-                                 past_scores = past_games_scores)
-    } else {
-      player_performance_summary(game_started = input$start_game, 
-                                 game_obj = vals,
-                                 player_stats = vals$db_tbls()[["player_stats"]], 
-                                 team_name = "A", 
-                                 current_round = round_num(), 
-                                 past_scores = past_games_scores)
-    }
-  }, label = "Team A Summary")
   
-  team_b_summary_stats = reactive({
-    
-    scores = vals$db_tbls()[["scores"]]
-    past_games_scores = filter(scores, game_id != max(game_id))
-    
-    if(input$start_game == 0){
-      player_performance_summary(game_started = input$start_game, 
-                                 player_stats = vals$db_tbls()[["player_stats"]], 
-                                 team_name = "B", 
-                                 # current_round, 
-                                 past_scores = past_games_scores)
-    } else {
-      player_performance_summary(game_started = input$start_game, 
-                                 game_obj = vals,
-                                 player_stats = vals$db_tbls()[["player_stats"]], 
-                                 team_name = "B", 
-                                 current_round = round_num(), 
-                                 past_scores = past_games_scores)
-    }
-  }, label = "Team A Summary")
   
 
   output$team_a_summary = renderReactable({
