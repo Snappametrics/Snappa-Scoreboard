@@ -374,6 +374,15 @@ label.control-label[for^='name_'] {
 .halftime > .swal2-html-container {
   font-size: 1.75em;
 }
+
+.restart-warning {
+  opacity: .8
+}
+
+.restart-bttn {
+  margin: 8px 16px;
+}
+
 .snappaneers-tbl a {
   color: inherit;
 }
