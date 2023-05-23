@@ -1979,7 +1979,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     ggplot(plot_df, aes(y = toss_paddle, x = points, group = point_type, fill = bar_col))+
       geom_col(show.legend=F, width = .6, colour = snappa_pal[1])+
       scale_x_continuous(name = NULL, breaks = scales::breaks_pretty(n = 3), limits = c(0, chart_max), 
-                         position = "top", sec.axis = dup_axis())+
+                         position = "top", sec.axis = dup_axis(name = "Points"))+
       scale_y_discrete(name = NULL, drop=F, 
                        # labels = c("Toss" = "Toss", "Paddle" = emo::ji("waving_hand")), 
                        position = "left")+#if_else(reverse_legend, "left", "right"))+
@@ -1990,16 +1990,15 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
                                              ncol = 3, reverse = T))+
       facet_wrap(~player_name, ncol = 1, strip.position = "left")+#if_else(reverse_legend, "left", "right"))+
       theme_snappa(plot_margin = margin(20,20,20,0), base_size = 14, line_colour = "#7c7c7c")+
-      theme(axis.title = element_blank(), # no title
-            legend.position = "bottom",# legend on bottom 
+      theme(legend.position = "bottom",# legend on bottom 
             axis.line = element_blank(), # No axis line
             axis.text.y = element_text(size = 14, hjust = 1), #hjust = if_else(reverse_legend, 1, 0)),
             # No gridlines
             panel.grid.major.y = element_blank(),
             panel.grid.minor.y = element_blank(),
             strip.placement = "outside", 
-            strip.text.y.left = element_text(size = 16, family = "Roboto Medium", angle = 0), 
-            strip.text.y.right = element_text(size = 16, family = "Roboto Medium", angle = 0))
+            strip.text.y.left = element_text(size = 16, family = "Roboto Medium", hjust = 1, angle = 0), 
+            strip.text.y.right = element_text(size = 16, family = "Roboto Medium", hjust = 1, angle = 0))
     
     # TODO: Add troll image for the trolls
     # Potentially an if statement and detect if any player trolls
