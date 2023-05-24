@@ -364,12 +364,12 @@ label.control-label[for^='name_'] {
 }
 
 .halftime {
-  padding: 3em 6em !important;
-  width: 40em !important;
+  padding: 2em 6em !important;
+  width: 32em !important;
 }
 
 .halftime > .swal2-title {
-  font-size: 4em;
+  font-size: 3em;
 }
 .halftime > .swal2-html-container {
   font-size: 1.75em;
