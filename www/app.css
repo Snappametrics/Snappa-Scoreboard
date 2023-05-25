@@ -375,6 +375,16 @@ label.control-label[for^='name_'] {
   font-size: 1.75em;
 }
 
+.swal2-container > .high-noon {
+  width: 50%;
+}
+
+.swal2-icon.high-noon-icon{
+    background-clip: border-box;
+    background-color: black;
+    padding: 16px;
+}
+
 .restart-warning {
   opacity: .8
 }
