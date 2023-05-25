@@ -970,24 +970,40 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
 #' @export
 #'
 #' @examples
-player_performance_summary = function(game_started, player_stats, team_name, game_obj = NULL, current_round = NULL, past_scores){
+player_performance_summary = function(
+    game_started, 
+    player_stats, 
+    team_name, 
+    game_obj = NULL, 
+    current_round = NULL, 
+    past_scores
+    ){
   # Produce a team's performance summary and comparison to historical performance in equivalent games
   # 1. Get a list of games the player has played in
   # 2. Get a list of scores from historical games at the equivalent point in the game
   # 3. Calculate current game player stats
   # 4. Calculate historical player stats from 1 & 2
-  
   # TODO: Specify relevant columns early on
   if(game_started == 0){
     ps_current = filter(player_stats, game_id == max(game_id))
+    
+    # Separate past game player stats
+    ps_past = filter(player_stats, game_id != max(game_id)) |> 
+      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
+             points_per_round, off_ppr, def_ppr, toss_efficiency)
+    current_game = unique(ps_current$game_id)
   } else {
     ps_current = game_obj$player_stats_db
+    
+    # Separate past game player stats
+    ps_past = filter(player_stats, game_id != game_obj$game_id) |> 
+      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
+             points_per_round, off_ppr, def_ppr, toss_efficiency)
+    
+    current_game = game_obj$game_id
   }
   
-  # Separate past game player stats
-  ps_past = filter(player_stats, game_id != max(game_id)) |> 
-    select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
-           points_per_round, off_ppr, def_ppr, toss_efficiency)
+  
   # List players on the given team
   ps_current_team = ps_current[ps_current$team == team_name, ]
 
@@ -996,20 +1012,20 @@ player_performance_summary = function(game_started, player_stats, team_name, gam
   opponent_size = nrow(ps_current[ps_current$team != team_name, ]) # Perhaps subtract? nrow(ps_current) - team_size
   
   # Store current game id and the given team's current player stats
-  current_game = unique(ps_current$game_id)
   current_shots = unique(ps_current_team$shots)
   
   # Make a historical stats table that is only comparing games which are similar
-  # to the current one.
-  # First, obtain a list of games in which the players on this team were on
-  # an equally sized team. This is player specific, so map() is used
+  # to the current game
+  # 1) list games where player was in same team format e.g. 2v2,2v3,etc
+  #  This is player specific, so map() is used
 
   # A not particularly elegant but probably working solution to making sure that games
   # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
   # and opponent_team_size and merge it to player_stats to be used as a 
   
   # Make a dataframe of team sizes in past games
-  ps_comparable = map(ps_current_team[, "player_id", drop=T],
+  # ps_comparable = map(ps_current_team[, "player_id", drop=T],
+  ps_comparable = map(ps_current_team$player_id,
       find_similar_games, player_stats = ps_past, team_size = team_size, opponent_size = opponent_size)
 
   ## Scenario 1: Game is in progress
@@ -1019,16 +1035,19 @@ player_performance_summary = function(game_started, player_stats, team_name, gam
     # Filter to scores which are:
     #   - only scored by players on this team
     #   - less than or equal to the current round
-    scores_comparable = filter(past_scores,
-                               player_id %in% ps_current_team$player_id, # Only include players on this team
-                               parse_round_num(round_num) <= parse_round_num(current_round))
+    # scores_comparable = filter(past_scores,
+    #                            player_id %in% ps_current_team$player_id, # Only include players on this team
+    #                            parse_round_num(round_num) <= parse_round_num(current_round))
+    scores_comparable = semi_join(past_scores,
+                                  ps_current_team, by = "player_id") |> # Only include players on this team
+      filter(parse_round_num(round_num) <= parse_round_num(current_round))
     # scores_comparison = past_scores[past_scores$player_id %in% ps_current_team$player_id & parse_round_num(past_scores$round_num) <= parse_round_num(current_round), ]
     
   } else {
     ## Scenario 2: Game is complete
     scores_comparable = past_scores
   }
-  
+
   # List scores which occurred at or before the current game's round
   scores_historical = imap_dfr(ps_current_team$player_id, function(player, index){
     # Join each player's comparable games to their scores from those games
