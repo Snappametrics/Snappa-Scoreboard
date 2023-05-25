@@ -334,7 +334,7 @@ find_similar_games = function(player_id, player_stats, team_size = 2, opponent_s
   
   # Make a dataframe of team sizes in past games
   # Count team size for each game
-  team_sizes = count(player_stats, game_id, team, name = "team_size") %>% 
+  team_sizes = count(player_stats, game_id, team, name = "team_size") |> 
     # Pivot separate columns for team 
     pivot_wider(names_from = team, 
                 values_from = team_size, 
@@ -346,5 +346,6 @@ find_similar_games = function(player_id, player_stats, team_size = 2, opponent_s
     inner_join(team_sizes, by = "game_id") %>%
     # Keep cases where the team sizes are equivalent
     filter(if_else(team == "A", size_A, size_B) == team_size,
-           if_else(team == "B", size_A, size_B) == opponent_size)
+           if_else(team == "B", size_A, size_B) == opponent_size) |> 
+    select(game_id, player_id, shots)
 }
