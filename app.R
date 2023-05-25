@@ -1733,6 +1733,32 @@ observe({
 
   }, once = T, ignoreNULL = T)
   
+  observeEvent(req(str_detect(round_num(), "^12[AB]")), {
+    delay(runif(n = 1, min = 1000, max = 100000),
+          {
+            sendSweetAlert(session, 
+                         title = "It's high noon.", 
+                         type = "warning", 
+                         btn_labels = NA,
+                         imageUrl = "gifs/mccree-duel.gif", 
+                         #customClass = "halftime",
+                         text = HTML(str_c("Throw the die high in the sky")), html = T)
+            
+            insertUI(selector = "#switch_sides",
+                     where = "afterEnd",
+                     ui = tags$audio(src = "highnoon.mp3", type = "audio/mp3", autoplay = NA, controls = NA, class = "sound-effect"))
+            })
+    
+    
+    
+
+    # In the event that there was a sink which caused this, also popup the sink menu
+    last_score = vals$scores_db[ max(vals$scores_db$score_id),]
+    
+    sink_casualty_popup(session, score_row = last_score, players = snappaneers()[snappaneers()$team != last_score$scoring_team, "player_name", drop=T])
+    
+  }, once = T, ignoreNULL = T)
+  
 
 game_summary = reactive({
   # If game has not started:
