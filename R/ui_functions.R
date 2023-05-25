@@ -267,6 +267,40 @@ tifu_casualty_popup <- function(players) {
   
 }
 
+highnoon_popup = function(players){
+  insertUI(selector = "#switch_sides",
+           where = "afterEnd",
+           ui = tags$audio(src = "highnoon.mp3", type = "audio/mp3", 
+                           autoplay = NA, controls = NA, class = "sound-effect"))
+  
+  inputSweetAlert(
+    inputId = "highnoon",
+    customClass = list(
+      "popup" = "high-noon",
+      "icon" = "high-noon-icon"
+    ),
+    iconHtml = '<img height="100%" src="https://static.wikia.nocookie.net/overwatch/images/2/2c/DeadeyeIcon.png">',
+    title = "It's high noon.",
+    # type = "warning",
+    backdrop = T,
+    btn_labels = NA,
+    imageUrl = "gifs/mccree-duel.gif",
+    text = "Throw the die high in the sky",
+    # tags$span(
+    #   tags$h3("Throw the die high in the sky"),
+    #   # "In", tags$b("bold"), "and", tags$em("italic"),
+    #   tags$br(),
+    #   "Everyone who gets caught throwing low rolls a die until someone rolls a one."
+    # ),
+    input = "radio",
+    inputOptions = players,
+    showDenyButton = T,
+    denyButtonText = "Everyone's safe",
+    confirmButtonText = "Got 'em"
+    # btn_labels = c("Everyone's safe", "Got 'em") 
+  )
+}
+
 
 
 

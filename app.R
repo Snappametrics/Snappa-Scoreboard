@@ -104,7 +104,15 @@ ui <- dashboardPage(
         br(),
         actionBttn("finish_game", "Finish",
                    icon = icon("check"), size = "sm",
-                   style = "material-flat", color = "warning")
+                   style = "material-flat", color = "warning"),
+        br(),
+        actionBttn("highnoon_manual", 
+                   "High noon", size = "sm",
+                   style = "material-flat", color = "success"),
+        br(),
+        actionBttn("casualty_manual", 
+                   "Casualty Check", size = "sm",
+                   style = "material-flat", color = "royal")
       )
       
       # icon = "desktop",
@@ -1733,20 +1741,54 @@ observe({
 
   }, once = T, ignoreNULL = T)
   
+  observeEvent(input$highnoon_manual, {
+    highnoon_popup(snappaneers()$player_name)
+  }, ignoreNULL = T)
+  
   observeEvent(req(str_detect(round_num(), "^12[AB]")), {
-    delay(runif(n = 1, min = 1000, max = 100000),
+    delay(runif(n = 1, min = 1000, max = 1200),
           {
-            sendSweetAlert(session, 
-                         title = "It's high noon.", 
-                         type = "warning", 
-                         btn_labels = NA,
-                         imageUrl = "gifs/mccree-duel.gif", 
-                         #customClass = "halftime",
-                         text = HTML(str_c("Throw the die high in the sky")), html = T)
+            # sendSweetAlert(session,
+            #              title = "It's high noon.",
+            #              type = "warning",
+            #              btn_labels = NA,
+            #              imageUrl = "gifs/mccree-duel.gif",
+            #              #customClass = "halftime",
+            #              text = tags$span(
+            #                tags$h3("Throw the die high in the sky"),
+            #                # "In", tags$b("bold"), "and", tags$em("italic"),
+            #                tags$br(),
+            #                "Everyone who gets caught throwing low rolls a die until someone rolls a one."
+            #                ),
+            #              #HTML(str_c("Throw the die high in the sky")),
+            #              html = T)
+            highnoon_popup(snappaneers()$player_name)
+            # insertUI(selector = "#switch_sides",
+            #          where = "afterEnd",
+            #          ui = tags$audio(src = "highnoon.mp3", type = "audio/mp3", 
+            #                          autoplay = NA, controls = NA, class = "sound-effect"))
+            # 
+            # inputSweetAlert(
+            #   inputId = "highnoon",
+            #   customClass = list(
+            #     "popup" = "high-noon",
+            #     "icon" = "high-noon-icon"
+            #     ),
+            #   iconHtml = '<img height="100%" src="https://static.wikia.nocookie.net/overwatch/images/2/2c/DeadeyeIcon.png">',
+            #   title = "It's high noon.",
+            #   # type = "warning",
+            #   backdrop = T,
+            #   btn_labels = NA,
+            #   imageUrl = "gifs/mccree-duel.gif",
+            #   text = "Throw the die high in the sky",
+            #   input = "radio",
+            #   inputOptions = snappaneers()$player_name,
+            #   showDenyButton = T,
+            #   denyButtonText = "Everyone's safe",
+            #   confirmButtonText = "Got 'em"
+            # )
             
-            insertUI(selector = "#switch_sides",
-                     where = "afterEnd",
-                     ui = tags$audio(src = "highnoon.mp3", type = "audio/mp3", autoplay = NA, controls = NA, class = "sound-effect"))
+            
             })
     
     
@@ -2038,24 +2080,62 @@ observeEvent(input$resume_no, {
                    players = snappaneers()$player_name)
   }, autoDestroy = F)
   
+  observeEvent(input$casualty_manual, {
+    casualty_popup(session,
+                   score = vals$current_scores,
+                   rules = casualty_rules,
+                   players = snappaneers()$player_name)
+  })
 
-  observeEvent(input$casualty, {
-    # Convert player name to ID
-    casualty = select(snappaneers(), starts_with("player")) %>% 
-      deframe() %>% 
-      pluck(input$casualty)
-    
-    type = casualty_rules$casualty_title[vctrs::vec_match(vals$current_scores, haystack = casualty_rules[, 1:2])]
-    
-    # Insert casualty details
-    new_casualty = tibble(
-      casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
-      game_id = vals$game_id,
-      score_id = vals$score_id,
-      player_id = casualty,
-      casualty_type = type,
-      reported_player = NA_integer_
+  observeEvent(ignoreInit = T,
+               c(
+                 input$casualty,
+                 input$highnoon
+               ), {
+                 # browser()
+    if(is.null(input$casualty) && is.character(input$highnoon)){
+      
+      
+      # Convert player name to ID
+      casualty = select(snappaneers(), starts_with("player")) %>% 
+        deframe() %>% 
+        pluck(input$highnoon)
+      # Insert casualty details
+      new_casualty = tibble(
+        casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
+        game_id = vals$game_id,
+        score_id = vals$score_id,
+        player_id = casualty,
+        casualty_type = "High noon",
+        reported_player = NA_integer_,
+        round = round_num()
+      )
+    } else {
+      validate(
+        need(input$casualty, label = "Casualty")
+      )
+      # Convert player name to ID
+      casualty = select(snappaneers(), starts_with("player")) %>% 
+        deframe() %>% 
+        pluck(input$casualty)
+      
+      type = casualty_rules$casualty_title[vctrs::vec_match(vals$current_scores, haystack = casualty_rules[, 1:2])]
+      
+      # Insert casualty details
+      new_casualty = tibble(
+        casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
+        game_id = vals$game_id,
+        score_id = vals$score_id,
+        player_id = casualty,
+        casualty_type = type,
+        reported_player = NA_integer_,
+        round = round_num()
+      )
+    }
+    validate(
+      need(is.tibble(new_casualty), label = "New casualty")
     )
+
     # Add to casualties reactive
     vals$casualties = add_row(vals$casualties, new_casualty)
     
