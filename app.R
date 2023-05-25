@@ -1442,46 +1442,6 @@ observe({
       select(player_name, team, total_points)
   
     restart_game_popup(last_game_ps_tbl)
-  # showModal(
-  #   modalDialog(
-  #     title = "Hol' up, did you want to continue the previous game?",
-  #     style = str_c("background-color:", snappa_pal[1], ";"),
-  #     div(
-  #       h3("Summary of the Previous Game", 
-  #          align = 'center')
-  #     ),
-  # 
-  #     br(),
-  #     renderUI({glance_ui_game(lost_game_id)}),
-  #     
-  #     footer = tagList(
-  #               fluidRow(
-  #                 column(9, align = "left",
-  #                        helpText("Warning: 'No' will delete the game from the database", 
-  #                                 style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
-  #                        ),
-  #                 column(1,
-  #                        actionBttn("resume_no",
-  #                                   label = "No",
-  #                                   style = "material-flat",
-  #                                   color = "danger",
-  #                                   size = "md")
-  #                        ),
-  #                 column(1,
-  #                        actionBttn("resume_yes",
-  #                                   label = "Yes",
-  #                                   style = "material-flat", 
-  #                                   color = "warning",
-  #                                   size = "md")
-  #                        )
-  #               )
-  #             ),
-  #     size = "l",
-  #     easyClose = F,
-  #     fade = F
-  #   )
-  #  
-  # )
   }
   
 })
