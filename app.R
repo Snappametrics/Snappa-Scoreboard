@@ -1731,6 +1731,7 @@ observe({
                    title = "Halftime", 
                    type = "info", 
                    timer = 2450,
+                   timerProgressBar = T,
                    btn_labels = NA,
                    imageUrl = "gifs/futurama-change-places.gif", customClass = "halftime",
                    text = HTML(str_c("Change places!")), html = T)
