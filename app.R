@@ -682,7 +682,7 @@ server <- function(input, output, session) {
       scoring_team = colDef(show = F),
       player_name = colDef(
         align = "right",
-        maxWidth = 80,
+        minWidth = 80,
         # Use team colours for player names
         style = JS(str_c("function(rowInfo) {
                     var value = rowInfo.row['scoring_team']
