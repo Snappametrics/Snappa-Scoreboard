@@ -1560,21 +1560,31 @@ score_heatmap = function(df){
 #' @examples
 game_summary_modal = function(df, current_round, a_sub, b_sub){
   # Display Modal
-  showModal(
+  # showModal(
     # Create Modal
-    modalDialog(
+    # modalDialog(
+  sendSweetAlert(
+    html=T,
+    grow = "fullscreen",
+    btn_labels = NA,
+    showCloseButton = T,
       # Title displays score
-      title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), "game: <strong>", df$points_a, " - ", df$points_b, "</strong> at ", 
-                         coalesce(rounds[df$rounds], current_round))),  
-      style = str_c("background-color: ", snappa_pal[1], ";"),
+      title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), 
+                         "game: <strong>", df$points_a, " - ", df$points_b, 
+                         "</strong> at ", 
+                         coalesce(rounds[df$rounds], current_round)
+                         )),  
+      # style = str_c("background-color: ", snappa_pal[1], ";"),
       # plotOutput("summary_plot", height = "50vh"),
       # reactableOutput("scores_tbl"),
       
-      footer = NULL, 
-      easyClose = TRUE,
-      size = "l",
+      # footer = NULL, 
+      # easyClose = TRUE,
+      # size = "l",
       
 
+    text = fluidPage(
+      # if_else(df$game_complete, stamp("Saturday, May 1 @ 10:30PM")(ymd_hms(df$game_end, tz = "America/Los_Angeles")), ""),
       # Tables
       fluidRow(align = "center",
                # Team A
