@@ -140,12 +140,18 @@ casualty_popup = function(session, score, rules, players = snappaneers()$player_
                     title = current_rule$casualty_title,
                     text = current_rule$casualty_text,
                     # Want to add images, but these don't work yet
-                    # url = 'https://cdn.britannica.com/96/192896-131-ECCA4FB7/Explosion-USS-Shaw-magazine-attack-Pearl-Harbor-Dec-7-1941.jpg',
-                    # imageWidth = 400,
-                    # imageHeight = 200,
+                    imageUrl = current_rule$image,
+                    imageWidth = 400,
+                    imageHeight = 200,
                     type = "warning",
                     input = "radio",
                     inputOptions = players)
+    
+    if(current_rule$casualty_title == "12-7"){
+      insertUI(selector = "#switch_sides",
+               where = "afterEnd",
+               ui = tags$audio(src = "PearlHarbor.mp3", type = "audio/mp3", autoplay = NA, controls = NA, class = "sound-effect"))
+    }
   } else {
     invisible()
   }
