@@ -684,10 +684,10 @@ restart_game_popup = function(ps_tbl){
   
   showModal(
     modalDialog(
-      title = "There's still unfinished game in the system, do you want to continue it?",
+      title = "There's still unfinished game in the system",
       style = str_c("background-color:", snappa_pal[1], ";"),
       div(
-        h3("Summary of the Previous Game", 
+        h4("Summary of the last game", 
            align = 'center')
       ),
       
@@ -695,6 +695,8 @@ restart_game_popup = function(ps_tbl){
       ui_output,
       
       br(),
+      
+      h3("Do you want to continue?", align = "center"),
       
       div(align = "right", class = "restart-warning",
         helpText("Warning: 'No' will delete the game from the database", 
