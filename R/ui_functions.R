@@ -2050,10 +2050,10 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     # Toss/Paddle bar
     ggplot(plot_df, aes(y = toss_paddle, x = points, group = point_type, fill = bar_col))+
       geom_col(show.legend=reverse_legend, width = .6, colour = snappa_pal[1])+
-      scale_x_continuous(name = NULL, 
+      scale_x_continuous(name = "Points", 
                          breaks = scales::breaks_pretty(n = 3), minor_breaks = 0:chart_max,
                          limits = c(0, chart_max), 
-                         position = "top", sec.axis = dup_axis(name = "Points"))+
+                         position = "top", sec.axis = dup_axis(name = NULL))+
       scale_y_discrete(name = NULL, drop=F, 
                        # labels = c("Toss" = "Toss", "Paddle" = emo::ji("waving_hand")), 
                        position = "left")+#if_else(reverse_legend, "left", "right"))+
