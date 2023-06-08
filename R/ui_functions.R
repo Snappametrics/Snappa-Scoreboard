@@ -1299,7 +1299,7 @@ team_summary_tab_rt = function(df){
                                       ),
                 total_points_diff = colDef(name = "Diff", minWidth = 44, #maxWidth = 52, 
                                            style = JS(game_summary_diff_style("total_points_diff"))),
-                paddle_points = colDef(name = "", minWidth = 32#, maxWidth = 40
+                paddle_points = colDef(name = "", minWidth = 36#, maxWidth = 40
                                        ),
                 paddle_points_diff = colDef(name = "Diff", minWidth = 48, 
                                              # maxWidth = 56, 
