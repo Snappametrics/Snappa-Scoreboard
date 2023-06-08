@@ -96,7 +96,7 @@ ui <- dashboardPage(
         sliderInput(
           inputId = "score_to",
           label = "What score are you playing to?",
-          min = 21, max = 50, value = 21
+          min = 11, max = 50, value = 21
         ),
         disabled(actionBttn("tifu", "Friendly Fire",
                             style = "material-flat",
