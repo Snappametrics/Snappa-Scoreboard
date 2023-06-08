@@ -2130,7 +2130,7 @@ game_flow = function(player_stats, players, scores, game){
                      size = 5.5, label.padding = .15, box.padding = .15, label.size = NA, fill = snappa_pal[1],
                      nudge_x = 1.25, nudge_y = .5, force = .35, show.legend = F, segment.alpha = 0)+
     # geom_image(data = filter(game_flow_df, !is.na(sink_image)))+
-    scale_y_continuous(name = "Points", 
+    scale_y_continuous(name = NULL, 
                        breaks = scales::breaks_pretty(n = 5), 
                        limits = c(0, max_score+5-(max_score%%5)),
                        expand = expansion())+
@@ -2139,6 +2139,7 @@ game_flow = function(player_stats, players, scores, game){
                        limits = c(0, max_round+5),
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
+    labs(caption = "Point progression throughout the game")+
     # labs(title = "How the die flies",
     #      subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
     theme_snappa(base_size = 14)+
