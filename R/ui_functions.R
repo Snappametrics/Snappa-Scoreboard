@@ -1607,23 +1607,23 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
       # Summary plots
       fluidRow(align = "center", 
                # Team A Player Breakdown
-               column(3, style = "padding-right:0; top:60px;",
-                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "40vh"), color = snappa_pal[2], 
+               column(4, style = "padding-right:0;",
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "54vh"), color = snappa_pal[2], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                ),
                # Game Flow
-               column(6,style = "padding:0",
+               column(4,style = "padding:0",
                       div(style = "margin:0px 24px; padding:8px;",
                           h4("How the die flies", align = "left")#,
                           # h5("Point progression throughout the game", align = "left")
                       )
                       ,
-                      withSpinner(plotOutput("game_flow", height = "40vh"), color.background = snappa_pal[1],
+                      withSpinner(plotOutput("game_flow", height = "46vh"), color.background = snappa_pal[1],
                                   color = snappa_pal[4])
                ),
                # Team B Player Breakdown
-               column(3, style = "padding-left:0; top:60px;",
-                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "40vh"), color = snappa_pal[3], 
+               column(4, style = "padding-left:0; top:6vh;",
+                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "48vh"), color = snappa_pal[3], 
                                   proxy.height = "200px", color.background = snappa_pal[1])
                )
       )
