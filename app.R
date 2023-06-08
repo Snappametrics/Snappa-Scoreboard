@@ -940,14 +940,27 @@ server <- function(input, output, session) {
   
   
   player_game_stats = reactive({
-    inner_join(vals$players, 
-               vals$db_tbls()[["player_stats"]], 
-               by = "player_id") %>%
-      inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
-                 by = "game_id") %>% 
+    
+    completed_games = tbl(con, "game_stats") |> 
+      filter(game_complete) |> 
+      select(game_id, points_a, points_b)
+    
+    inner_join(tbl(con, "players"), 
+               tbl(con, "player_stats"),
+               by = "player_id") |> 
+      inner_join(completed_games, by = "game_id") |> 
       # Identify which games were won
       mutate(winning = if_else(points_a > points_b, "A", "B"),
-             won_game = if_else(team == winning, "Won", "Lost"))
+             won_game = if_else(team == winning, "Won", "Lost")) |> 
+      select(player_id, game_id, won_game)
+    # inner_join(vals$players, 
+    #            vals$db_tbls()[["player_stats"]], 
+    #            by = "player_id") %>%
+    #   inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
+    #              by = "game_id") %>% 
+    #   # Identify which games were won
+    #   mutate(winning = if_else(points_a > points_b, "A", "B"),
+    #          won_game = if_else(team == winning, "Won", "Lost"))
   })
   
   
@@ -956,23 +969,31 @@ server <- function(input, output, session) {
   
   # Reactive list of data for a given player's previous 5 games
   player_form_data = reactive({
-    recent_games = filter(vals$db_tbls()[["player_stats"]], player_id == input$player_select) %>% 
+    # Ensure player ID is an integer
+    player_selected = as.integer(input$player_select)
+    
+    # Calculate player's career avg and max for stat selected
+    player_career = tbl(con, "player_stats") |> 
+      filter(player_id == player_selected) |> 
       mutate(avg_points = mean(!!sym(input$stat_select)),
-             max_points = max(!!sym(input$stat_select))) %>% 
-      when(input$sample_select != "All" ~ (.) %>% 
-             slice_max(order_by = game_id, n = as.numeric(input$sample_select)), 
-           ~ (.)) %>% 
-      arrange(game_id) %>% 
-      mutate(game_num = row_number()) %>% 
-      inner_join(select(player_game_stats(), player_id, game_id, won_game),
-                 by = c("player_id", "game_id"))
+             max_points = max(!!sym(input$stat_select))) |> 
+      select(game_id, player_id, !!sym(input$stat_select), avg_points, max_points)
     
-    career_high = unique(recent_games$max_points)
+    # Subset to recent games
+    if(input$sample_select != "All"){
+      player_career = player_career |> 
+        slice_max(order_by = game_id, n = as.numeric(input$sample_select))
+    }
+    
+    # Join won/loss data and assign relative game number
+    recent_games = player_career |> 
+      left_join(player_game_stats(), by = c("player_id", "game_id")) |> 
+      arrange(game_id) |> 
+      mutate(game_num = row_number(), .before = "player_id")
+    
 
-    list("data" = recent_games,
-         "x_lims" = c(min(recent_games$game_num)-.5, max(recent_games$game_num)+.5),
-         "career_high" = career_high)
-    
+    collect(recent_games)
+
   })
   
   

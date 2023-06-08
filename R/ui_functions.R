@@ -2151,24 +2151,30 @@ player_form_plot = function(stat, form_data){
   
   stat_name = str_to_title(str_replace(stat, "_", " "))
   
+  x_lims = c(min(form_data$game_num)-.5, max(form_data$game_num)+.5)
+  career_high = unique(form_data$max_points)
+  
+  # Scale point size by number of games
+  scaled_point_size = plogis(nrow(form_data)/40, location = 2, scale = 2, lower.tail = F)*6+.5
+  
   # X axis title conditional on number of games chosen
   # plot_title = str_c(stat_name, ": ", 
   #                 if_else(input$sample_select == "All", 
   #                         str_c("All games (n = ", max(pluck(player_form_data(), "x_lims"))-.5, ")"), 
   #                 paste("Last", input$sample_select, "games")))
-  plot = pluck(form_data, "data") %>% 
-    ggplot(., aes(x = game_num, y = !!sym(stat)))+
+  plot = form_data |> # pluck(form_data, "data") %>% 
+    ggplot(aes(x = game_num, y = !!sym(stat)))+
     # Bars
     # geom_col(aes(fill = won_game), width = .5)+
     # Testing out line and circle
     geom_line(colour = "gray20", alpha = .3)+
-    geom_point(aes(colour = won_game), size = 3, alpha = .7)+
+    geom_point(aes(colour = won_game), size = scaled_point_size, alpha = .7)+
     # Career avg. line
     geom_segment(aes(x = min(game_num)-.45, y = avg_points, 
                      xend = max(game_num)+.45, yend = avg_points), 
                  lty = "dashed", size = .75)+
     # X axis
-    scale_x_continuous(limits = pluck(form_data, "x_lims"), 
+    scale_x_continuous(limits = x_lims, #pluck(form_data, "x_lims"), 
                        expand = expansion())+
     scale_colour_manual(values = set_names(snappa_pal[c(2, 5)], c("Lost", "Won")), 
                         guide = guide_legend(title = NULL, reverse = T))
@@ -2190,9 +2196,11 @@ player_form_plot = function(stat, form_data){
       labs(x = expression(More ~ Recent ~ Games %->% ""), y = stat_name, 
            # title = plot_title,
            caption = str_c("- - - -  Career Avg. (", 
-                           scales::comma(unique(pluck(form_data, "data")[["avg_points"]]), accuracy = 1), " points)"))+
+                           # scales::comma(unique(pluck(form_data, "data")[["avg_points"]]), accuracy = 1), " points)", 
+                           scales::comma(unique(form_data$avg_points), accuracy = 1), " points)"))+
       scale_y_continuous(breaks = scales::pretty_breaks(), expand = expansion(),
-                         limits = c(0, pluck(form_data, "career_high")*1.25))
+                         # limits = c(0, pluck(form_data, "career_high")*1.25),
+                         limits = c(0, career_high*1.25))
   }
   plot+
     theme_snappa(base_size = 14)+
@@ -2201,7 +2209,9 @@ player_form_plot = function(stat, form_data){
           axis.line.x.bottom = element_line(colour = "gray20", size = 1.1),
           axis.ticks.x.bottom = element_line(colour = "gray20"),
           legend.position = "top",
-          legend.key.height = unit(.25, "cm"))
+          legend.key.height = unit(.25, "cm"),
+          panel.grid.major.x = element_blank(),
+          axis.line.y = element_blank())
 }
 
 breaks_rounds = function (n = 5, ...) {
