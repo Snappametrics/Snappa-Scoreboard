@@ -2049,8 +2049,10 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     # browser()
     # Toss/Paddle bar
     ggplot(plot_df, aes(y = toss_paddle, x = points, group = point_type, fill = bar_col))+
-      geom_col(show.legend=F, width = .6, colour = snappa_pal[1])+
-      scale_x_continuous(name = NULL, breaks = scales::breaks_pretty(n = 3), limits = c(0, chart_max), 
+      geom_col(show.legend=reverse_legend, width = .6, colour = snappa_pal[1])+
+      scale_x_continuous(name = NULL, 
+                         breaks = scales::breaks_pretty(n = 3), minor_breaks = 0:chart_max,
+                         limits = c(0, chart_max), 
                          position = "top", sec.axis = dup_axis(name = "Points"))+
       scale_y_discrete(name = NULL, drop=F, 
                        # labels = c("Toss" = "Toss", "Paddle" = emo::ji("waving_hand")), 
@@ -2062,7 +2064,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
                                              ncol = 3, reverse = T))+
       facet_wrap(~player_name, ncol = 1, strip.position = "left")+#if_else(reverse_legend, "left", "right"))+
       theme_snappa(plot_margin = margin(20,20,20,0), base_size = 14, line_colour = "#7c7c7c")+
-      theme(legend.position = "bottom",# legend on bottom 
+      theme(legend.position = "top",
             axis.line = element_blank(), # No axis line
             axis.text.y = element_text(size = 14, hjust = 1), #hjust = if_else(reverse_legend, 1, 0)),
             # No gridlines
