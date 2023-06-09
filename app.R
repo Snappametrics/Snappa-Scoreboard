@@ -2282,11 +2282,7 @@ observeEvent(input$resume_no, {
 
 # New Players -------------------------------------------------------------
 
-  getInputs <- function(pattern){
-    reactives <- names(reactiveValuesToList(input))
-    reactives[grep(pattern,reactives)]
-  }
-  
+
   # Observe extra player inputs
   observe({
     toggleState(id = "player-input-A3", condition = input$add_player_A3)
@@ -2301,114 +2297,7 @@ observeEvent(input$resume_no, {
     toggleState(id = "player-input-B4", condition = input$add_player_B4)
   })
   
-  # New Player A3
-  #   - Add A3 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_A3, {
-    # Set input want to true
-    vals$want_A3 = T
-    
-    # Get add player button inputs
-    val <- paste0("#",getInputs("extra_player_A3"))
-    add_player_input("start", val, "A", 3, current_choices(), session)
-    
-  })
-  
-  # Remove A3
-  #   - Insert add new player action button
-  #   - Remove A3 player name input
-  observeEvent(input$remove_A3, {
-    remove_p3_input("start", "A", session)
 
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_A3 = F
-    vals$want_A4 = F
-    
-  })
-  
-  
-  # New Player A4
-  #   - Add A4 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_A4, {
-    # Set input want to true
-    vals$want_A4 = T
-    
-    # Get UI inputs for extra player button
-    vals <- paste0("#",getInputs("extra_player_A4"))
-    
-    add_player_input("start", vals, "A", 4, current_choices(), session)
-    
-  })
-  
-  # Remove A4
-  #   - Insert add new player action button
-  #   - Remove A4 player name input
-  observeEvent(input$remove_A4, {
-    remove_p4_input("start", "A", session)
-    
-    vals$want_A4 = F
-    
-  })  
-  
-  
-  # New Player B3
-  #   - Add B3 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_B3, {
-    
-    # Set want check to true
-    vals$want_B3 = T
-    
-    # Get inputs for add player button
-    vals <- paste0("#",getInputs("extra_player_B3"))
-    
-    add_player_input("start", vals, "B", 3, current_choices(), session)
-  })
-
-  # Remove B3
-  #   - Insert add new player action button
-  #   - Remove B3 player name input
-  observeEvent(input$remove_B3, {
-    remove_p3_input("start", "B", session)
-    
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_B3 = F
-    vals$want_B4 = F
-    
-  })
-  
-  # New Player B4
-  #   - Add B4 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_B4, {
-    # Set want check to true
-    vals$want_B4 = T
-    
-    # Get add player button inputs
-    vals <- paste0("#",getInputs("extra_player_B4"))
-    
-    add_player_input("start", vals, "B", 4, current_choices(), session)
-  })
-  
-
-  # Remove B4
-  #   - Insert add new player action button
-  #   - Remove B4 player name input
-  observeEvent(input$remove_B4, {
-    remove_p4_input("start", "B", session)
-    # Tells later checks to not worry about this
-    # empty slot in active_player_names
-    vals$want_B4 = F
-
-  })  
-  
   
 
 # Scoring -----------------------------------------------------------------
@@ -2416,7 +2305,7 @@ observeEvent(input$resume_no, {
   #TODO: Fix score_id, game_id, and num_points_scored in scores_db in vals: change from dbl to int
 
 
-# Team A ------------------------------------------------------------------
+## Team A ------------------------------------------------------------------
 
   
   observeEvent(input$A_score_button, {
