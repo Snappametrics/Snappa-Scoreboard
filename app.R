@@ -527,9 +527,9 @@ server <- function(input, output, session) {
       discard(is_null)
   })
   
-  expected_player_inputs = reactive({
+  player_inputs = reactive({
     tribble(
-      ~input, ~team, ~value, ~expected,
+      ~input, ~team, ~player_name, ~expected,
       "A1", "A", input$name_A1, T,
       "A2", "A", input$name_A2, T,
       "A3", "A", input$name_A3, input$add_player_A3,
@@ -539,6 +539,12 @@ server <- function(input, output, session) {
       "B3", "B", input$name_B3, input$add_player_B3,
       "B4", "B", input$name_B4, input$add_player_B4
     )
+  })
+  
+  expected_player_inputs = reactive({
+    player_inputs() |> 
+      # Keep expected players
+      filter(expected)
     
   })
   
@@ -549,11 +555,9 @@ server <- function(input, output, session) {
   # Snappaneers - | Team | Player name | Player ID  | Shots
   snappaneers = reactive({
     
-    tibble(
-      # Team pulls the first letter from their input name
-      team = str_extract(names(active_player_inputs()), ".{1}"),
-      player_name = flatten_chr(active_player_inputs())
-    ) %>% 
+    player_inputs() |> 
+      filter(player_name !="") |> 
+      select(-expected) |> 
       # Remove empty player inputs
       filter(player_name != "") %>% 
       left_join(vals$players, by = "player_name") %>% 
@@ -1536,7 +1540,17 @@ observe({
 
   })
   
+  need_unique_players = reactive({
+    # All player names are unique
+    length(unique(expected_player_inputs()$player_name)) == nrow(expected_player_inputs())
+  })
   
+  need_player_names = reactive({
+    # All player names are non-empty
+    all(expected_player_inputs()$player_name != "")
+  })
+  
+
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
     # If one of the first two players on each team
@@ -1546,50 +1560,26 @@ observe({
     # check is failed, or else the logic isn't
     # going to pass through
     
-    if(any(input$name_A1 == "",
-           input$name_A2 == "",
-           input$name_B1 == "",
-           input$name_B2 == "")){
-      shinyjs::disable("start_game")
-    }
-    
-    validate(
-      need(input$name_A1 != "", label = "Player A1"),
-      need(input$name_A2 != "", label = "Player A2"), 
-      need(input$name_B1 != "", label = "Player B1"), 
-      need(input$name_B2 != "", label = "Player B2")
-      )
-    
     #Record the players that you need to be looking for
     # (i.e., which ui elements are open right now?)
     
     
     # If the number of unique snappaneer names is the same as the number of active player inputs
     #   => enable start button
-    
-    if(sum(length(unique(snappaneers()$player_name)), 
-             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
-             isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
-             isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
-             )
-           ) == num_players()){ 
-      shinyjs::enable("start_game")
-    } 
+    # validate(
+    #   need(need_unique_players(), label = "Unique players", message = "Player names need to be unique"),
+    #   need(need_player_names(), label = "Empty player names", message = "Some player names are empty")
+    # )
+
     
     # If the number of unique snappaneer names is not the same as the number of active player inputs
     #   => disable start button
-    if(sum(length(unique(snappaneers()$player_name)), 
-           sum(
-             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
-                isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
-                isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-                isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
-                ) 
-           )
-    ) != num_players()){ 
+    if(length(unique(expected_player_inputs()$player_name)) != nrow(expected_player_inputs()) |
+       any(expected_player_inputs()$player_name == "")){ 
       
     shinyjs::disable("start_game")
+    } else {
+      shinyjs::enable("start_game")
     }
     
 
