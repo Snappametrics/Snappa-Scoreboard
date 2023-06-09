@@ -1327,9 +1327,18 @@ team_summary_tab_rt = function(df){
 
 
 leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
-  stats_eligible = career_stats_data[career_stats_data$rank < dividing_line,]
-  
-  reactable(career_stats_data, 
+  if(missing(dividing_line)){
+    stats_eligible = career_stats_data
+  } else {
+    stats_eligible = career_stats_data[career_stats_data$rank < dividing_line,]
+  }
+  # browser()
+  select(career_stats_data, rank, player_name, games_played, win_pct, total_points, clink_points, points_per_game,
+           toss_efficiency, offensive_points, off_ppg,
+           paddle_points, defensive_points, def_ppg,
+           sinks, paddle_sinks,
+           foot_paddle_points) |> 
+  reactable(#.,
       defaultPageSize = 10, 
       pagination = T, 
       defaultSorted = "rank",
@@ -1340,30 +1349,32 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
       highlight = T, 
       # compact = T, 
       width = "100%",
-      rowStyle = function(index) {
-        if (career_stats_data[index, "games_played"] < 5) {
-          list(background = "#E3E3DE",
-               fontWeight = 200)
-        }
-      },
-      rowClass = function(index) {
-        if (career_stats_data[index, "rank"] == max(stats_eligible$rank)) {
-          "dividing-line"
-        } else if (career_stats_data[index, "rank"] > max(stats_eligible$rank)) {
-          "unranked"
-        } else if (career_stats_data[index, "rank"] <= max(stats_eligible$rank)) {
-          "ranked"
-        }
-      },
+      # rowStyle = function(index) {
+      #   if (career_stats_data[index, "games_played"] < 5) {
+      #     list(background = "#E3E3DE",
+      #          fontWeight = 200)
+      #   }
+      # },
+      # rowClass = function(index) {
+      #   if (career_stats_data[index, "rank"] == max(stats_eligible$rank)) {
+      #     "dividing-line"
+      #   } else if (career_stats_data[index, "rank"] > max(stats_eligible$rank)) {
+      #     "unranked"
+      #   } else if (career_stats_data[index, "rank"] <= max(stats_eligible$rank)) {
+      #     "ranked"
+      #   }
+      # },
       columnGroups = list(
         colGroup(name = "Overall", columns = c("games_played", "win_pct", "total_points", "clink_points", "points_per_game"), 
                  headerClass = "col-group-head"),
         colGroup(name = "Offense", columns = c("toss_efficiency", "offensive_points", "off_ppg")),
         colGroup(name = "Defense", columns = c("paddle_points", "defensive_points", "def_ppg")),
         colGroup(name = "Sinks", columns = c("sinks", "paddle_sinks")),
-        colGroup(name = "Foot Action", columns = c("foot_paddle_points"))
+        colGroup(name = "Feet", columns = c("foot_paddle_points"))
       ),
       columns = list(
+        player_id = colDef(show=F),
+        foot_sinks = colDef(show=F),
         rank = colDef("",
                       align = "left", 
                       minWidth = 35,
