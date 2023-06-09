@@ -37,6 +37,14 @@
 
 /* My CSS */
 
+.leaderboard-row {
+    display: flex;
+    flex-flow: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
 .box, .swal2-popup, .modal-header {
     background-color: #fafaf9 !important;
 }
