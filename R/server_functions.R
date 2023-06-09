@@ -17,118 +17,16 @@ sink_criteria = tribble(~points_scored, ~clink,
                         3, F,
                         5, T,
                         7, T)
-# For the sake of code simplicity, I'm going to define a function which
-# writes player_stats_db off of scores. This should only require
-# a scores table to be passed on, since the snappaneers table that is also
-# called would always be the same
-aggregate_player_stats = function(scores_df, snappaneers, game){
-  # Join scores to snappaneers to get each player's team
-  right_join(scores_df, snappaneers, by = "player_id") %>% 
-    # Fill in game_id for players who have not scored yet
-    replace_na(list(game_id = game)) %>% 
-    # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, team, shots) %>% 
-    # Calculate summary stats
-    summarise(total_points = sum(points_scored),
-              ones = sum((points_scored == 1)),
-              twos = sum((points_scored == 2)),
-              threes = sum((points_scored == 3)),
-              impossibles = sum((points_scored > 3)),
-              paddle_points = sum(points_scored * (paddle | foot)),
-              clink_points = sum(points_scored * clink),
-              points_per_round = na_if(total_points / last(shots), Inf),
-              off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
-              def_ppr = na_if(sum(points_scored * (paddle | foot)) / last(shots), Inf),
-              toss_efficiency = sum((points_scored>0) * !(paddle | foot)) / last(shots), 
-              .groups = "drop") %>% 
-    # Replace NA values with 0s
-    replace_na(list(total_points = 0, 
-                    ones = 0, twos = 0, threes = 0, impossibles = 0, 
-                    paddle_points = 0, clink_points = 0, 
-                    points_per_round = 0, off_ppr = 0, def_ppr = 0, toss_efficiency = 0))
 
-}
 
-aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
-  
-  if(is_integer(unique(scores_df$game_id))){
-    game = unique(scores_df$game_id)
-  }
-  # This is the environment hopping mayhem. 
-  # environments are kinda confusing, and I don't know how to call sink_criteria without passing it as an argument
-  # Based Hadley trying to teach me: https://adv-r.hadley.nz/environments.html#environments
-  
-  # Check each parent environment for sink_criteria
-  sink_criteria = rlang::env_parents(rlang::current_env()) %>% 
-    keep(~rlang::env_has(., "sink_criteria")) %>% 
-    # Only keep the one that does and use it to access the criteria
-    map_dfr(., rlang::env_get, "sink_criteria")
-  
-  # Join scores to snappaneers to get each player's team
-  right_join(scores_df, snappaneers, by = "player_id") %>% 
-    detect_sink(., sink_criteria) %>% 
-    # Fill in game_id for players who have not scored yet
-    replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
-    # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, team, shots) %>% 
-    # Calculate summary stats
-    summarise(
-      total_points = sum(points_scored),
-      ones = sum((points_scored == 1)),
-      twos = sum((points_scored == 2)),
-      threes = sum((points_scored == 3)),
-      normal_points = sum(points_scored * !(paddle | clink | sink)),
-      sinks = sum(sink), # NEW
-      sink_points = sum(points_scored*sink),
-      paddle_sinks = sum(sink*paddle), # NEW
-      impossibles = sum((points_scored > 3)),
-      paddle_points = sum(points_scored * (paddle | foot)),
-      foot_points = sum(points_scored * foot), # NEW
-      clink_points = sum(points_scored * clink),
-      points_per_round = na_if(total_points / last(shots), Inf),
-      off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
-      def_ppr = na_if(sum(points_scored * (paddle | foot)) / last(shots), Inf),
-      toss_efficiency = sum((points_scored>0) * !(paddle | foot)) / last(shots), 
-      .groups = "drop"
-    ) %>% 
-    # Replace NA values with 0s
-    replace_na(list(points_per_round = 0, off_ppr = 0, def_ppr = 0, toss_efficiency = 0))
-  
-}
+# Helper functions --------------------------------------------------------
 
-detect_sink = function(scores, criteria){
-  if(missing(criteria)){
-    criteria = tribble(~points_scored, ~clink, 
-                       3, F,
-                       5, T,
-                       7, T)
-  }
-  # Detect sinks in a dataframe of score data
-  left_join(scores, 
-            mutate(criteria, sink = T), by = c("points_scored", "clink")) %>% 
-    replace_na(list(sink = F))
-}
+rowAny <- function(x) {
+  rowSums(x) > 0
+} 
 
-toss_percent_plus = function(x){
-  str_c("+", round(x*100, 0), "%")
-}
-toss_percent_minus = function(x){
-  str_c(round(x*100, 0), "%")
-}
 
-rebuttal_check <- function(a , b , round, points_to_win) {
-  if (any(is.null(a),is.null(b))){
-    check <- F
-  } else{ 
-    check <- case_when(
-      (a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")) ~ T, 
-      (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]")) ~ T,
-      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")), 
-           (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]"))) ~ F)
-  }
-  
-  return(check)
-}
+
 
 add_shot_count = function(df, shot_num){
   add_count(df, team, name = "n_players") %>% # Count the number of rows for each team
@@ -232,9 +130,540 @@ parse_round_num = function(round){
     map_dbl(eval)
 }
 
-rowAny <- function(x) {
-  rowSums(x) > 0
-} 
+
+find_similar_games = function(player_id, player_stats, team_size = 2, opponent_size = 2){
+  
+  # Make a dataframe of team sizes in past games
+  # Count team size for each game
+  team_sizes = count(player_stats, game_id, team, name = "team_size") |> 
+    # Pivot separate columns for team 
+    pivot_wider(names_from = team, 
+                values_from = team_size, 
+                names_glue = "size_{team}")
+  
+  # Subset each player's stats  identify equivalent games
+  player_stats[player_stats$player_id == player_id, ] %>% 
+    # Join team sizes to player stats
+    inner_join(team_sizes, by = "game_id") %>%
+    # Keep cases where the team sizes are equivalent
+    filter(if_else(team == "A", size_A, size_B) == team_size,
+           if_else(team == "B", size_A, size_B) == opponent_size) |> 
+    select(game_id, player_id, shots)
+}
+
+
+# Event Detection ---------------------------------------------------------
+
+rebuttal_check <- function(a , b , round, points_to_win) {
+  if (any(is.null(a),is.null(b))){
+    check <- F
+  } else{ 
+    check <- case_when(
+      (a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")) ~ T, 
+      (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]")) ~ T,
+      !any((a >= points_to_win & a - b >= 2 & str_detect(round, "[Bb]")), 
+           (b >= points_to_win & b - a >= 2 & str_detect(round, "[Aa]"))) ~ F)
+  }
+  
+  return(check)
+}
+
+cooldown_check = function(casualties, scores, current_round, casualty_to_check, rounds){
+  # Check whether the last casualty of a certain type occurred 
+  # a full round (both teams shot) ago, determining whether the rule is reactivated
+  #   rounds is the round_label vector i.e. "1A", "1B", etc.
+  
+  # Pull the round_num associated with the casualties in the current game
+  # Also count the number of times -1 the casualty has occurred
+  
+  if(nrow(casualties) < 1){
+    invisible()
+  } else {
+    
+    # Increment the round by 2x the times the casualty has been repeated
+    last_casualty_round = which(rounds == scores[scores$score_id == unique(casualties$score_id), "round_num"]) + (nrow(casualties)-1)*2
+    
+    which(rounds == current_round) - last_casualty_round < 2
+    
+    
+  }
+  
+  
+}
+
+
+# Formatting --------------------------------------------------------------
+
+toss_percent_plus = function(x){
+  str_c("+", round(x*100, 0), "%")
+}
+toss_percent_minus = function(x){
+  str_c(round(x*100, 0), "%")
+}
+
+
+# Calculate Stats -----------------------------------------------------
+
+detect_sink = function(scores, criteria){
+  if(missing(criteria)){
+    criteria = tribble(~points_scored, ~clink, 
+                       3, F,
+                       5, T,
+                       7, T)
+  }
+  # Detect sinks in a dataframe of score data
+  left_join(scores, 
+            mutate(criteria, sink = T), by = c("points_scored", "clink")) %>% 
+    replace_na(list(sink = F))
+}
+
+
+# For the sake of code simplicity, I'm going to define a function which
+# writes player_stats_db off of scores. This should only require
+# a scores table to be passed on, since the snappaneers table that is also
+# called would always be the same
+aggregate_player_stats = function(scores_df, snappaneers, game){
+  # Join scores to snappaneers to get each player's team
+  right_join(scores_df, snappaneers, by = "player_id") %>% 
+    # Fill in game_id for players who have not scored yet
+    replace_na(list(game_id = game)) %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, team, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored * (paddle | foot)),
+              clink_points = sum(points_scored * clink),
+              points_per_round = na_if(total_points / last(shots), Inf),
+              off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
+              def_ppr = na_if(sum(points_scored * (paddle | foot)) / last(shots), Inf),
+              toss_efficiency = sum((points_scored>0) * !(paddle | foot)) / last(shots), 
+              .groups = "drop") %>% 
+    # Replace NA values with 0s
+    replace_na(list(total_points = 0, 
+                    ones = 0, twos = 0, threes = 0, impossibles = 0, 
+                    paddle_points = 0, clink_points = 0, 
+                    points_per_round = 0, off_ppr = 0, def_ppr = 0, toss_efficiency = 0))
+  
+}
+
+aggregate_player_stats_and_sinks = function(scores_df, snappaneers, game){
+  
+  if(is_integer(unique(scores_df$game_id))){
+    game = unique(scores_df$game_id)
+  }
+  # This is the environment hopping mayhem. 
+  # environments are kinda confusing, and I don't know how to call sink_criteria without passing it as an argument
+  # Based Hadley trying to teach me: https://adv-r.hadley.nz/environments.html#environments
+  
+  # Check each parent environment for sink_criteria
+  sink_criteria = rlang::env_parents(rlang::current_env()) %>% 
+    keep(~rlang::env_has(., "sink_criteria")) %>% 
+    # Only keep the one that does and use it to access the criteria
+    map_dfr(., rlang::env_get, "sink_criteria")
+  
+  # Join scores to snappaneers to get each player's team
+  right_join(scores_df, snappaneers, by = "player_id") %>% 
+    detect_sink(., sink_criteria) %>% 
+    # Fill in game_id for players who have not scored yet
+    replace_na(list(game_id = game, points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, team, shots) %>% 
+    # Calculate summary stats
+    summarise(
+      total_points = sum(points_scored),
+      ones = sum((points_scored == 1)),
+      twos = sum((points_scored == 2)),
+      threes = sum((points_scored == 3)),
+      normal_points = sum(points_scored * !(paddle | clink | sink)),
+      sinks = sum(sink), # NEW
+      sink_points = sum(points_scored*sink),
+      paddle_sinks = sum(sink*paddle), # NEW
+      impossibles = sum((points_scored > 3)),
+      paddle_points = sum(points_scored * (paddle | foot)),
+      foot_points = sum(points_scored * foot), # NEW
+      clink_points = sum(points_scored * clink),
+      points_per_round = na_if(total_points / last(shots), Inf),
+      off_ppr = sum(points_scored * !(paddle | foot)) / last(shots), 
+      def_ppr = na_if(sum(points_scored * (paddle | foot)) / last(shots), Inf),
+      toss_efficiency = sum((points_scored>0) * !(paddle | foot)) / last(shots), 
+      .groups = "drop"
+    ) %>% 
+    # Replace NA values with 0s
+    replace_na(list(points_per_round = 0, off_ppr = 0, def_ppr = 0, toss_efficiency = 0))
+  
+}
+
+make_summary_table = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
+  # Produce a team's performance summary and comparison to historical performance in equivalent games
+  # 1. Get a list of games the player has played in
+  # 2. Get a list of scores from historical games at the equivalent point in the game
+  # 3. Calculate current game player stats
+  # 4. Calculate historical player stats from 1 & 2
+  # browser()
+  # List players on the given team
+  team_players = neers[neers$team == team_name, ]
+  # Store current team and opponent sizes
+  team_size = nrow(team_players) 
+  opponent_size = nrow(neers[neers$team != team_name, ])
+  
+  # Store current game id and the given team's current player stats
+  current_game = unique(current_player_stats$game_id)
+  team_player_stats = current_player_stats[current_player_stats$team == team_name, ]
+  current_shots = unique(team_player_stats$shots)
+  
+  
+  
+  # Make a historical stats table that is only comparing games which are similar
+  # to the current one.
+  # First, obtain a list of games in which the players on this team were on
+  # an equally sized team. This is player specific, so map() is used
+  
+  
+  
+  # A not particularly elegant but probably working solution to making sure that games
+  # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
+  # and opponent_team_size and merge it to player_stats to be used as a 
+  
+  
+  # Make a dataframe of team sizes in past games
+  # Count team size for each game
+  team_sizes = count(player_stats, game_id, team, name = "team_size") %>% 
+    # Pivot separate columns for team 
+    pivot_wider(names_from = team, 
+                values_from = team_size, 
+                names_glue = "size_{team}")
+  
+  equivalent_games_player_stats = map(team_players$player_id, function(player){
+    # Subset each player's stats  to each player's stats and identify equivalent games
+    player_stats[player_stats$player_id == player & player_stats$game_id != current_game, ] %>% 
+      # Join team sizes to player stats
+      inner_join(team_sizes, by = "game_id") %>%
+      # Keep cases where the team sizes are equivalent
+      filter(if_else(team == "A", size_A, size_B) == team_size,
+             if_else(team == "B", size_A, size_B) == opponent_size)
+    
+  })
+  
+  
+  # make a unique subsection of the scores table which only considers the given player in the
+  # given games. round_comparison should only be applied when a game is in progress. 
+  # While we're here, also tell the display not to care about winners maybe? I could also set
+  # a value here so that I don't have to execute a query later, but the issue becomes 
+  
+  ##
+  ## Scenario 1: Game is in progress
+  ##
+  in_progress = isFALSE(pull(dbGetQuery(con, sql(str_c("SELECT game_complete FROM game_stats WHERE game_id =", current_game, ";"))), 
+                             game_complete))
+  if (in_progress){
+    
+    # Filter to scores which are:
+    #   - only scored by players on this team
+    #   - less than or equal to the current round
+    scores_comparison = filter(past_scores,
+                               player_id %in% team_players$player_id, # Only include players on this team
+                               parse_round_num(round_num) <= parse_round_num(current_round))
+    
+    ##
+    ## Scenario 2: Game is complete
+    ##
+  } else {
+    
+    scores_comparison = past_scores
+  }
+  
+  # List scores which occurred at or before the current game's round
+  historical_scores = imap_dfr(team_players$player_id, function(player, index){
+    # Join each player's equivalent games to their scores from those games
+    left_join(equivalent_games_player_stats[[index]], 
+              scores_comparison, 
+              by = c("game_id", "player_id")) %>% 
+      filter(!(game_id %in% 38:48))
+  })
+  
+  # When in progress, keep the shot counter generated from current_shots
+  if(in_progress){
+    historical_scores = mutate(historical_scores, shots = current_shots)
+  }
+  
+  # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
+  # That means I have to recreate player_stats using this table 
+  
+  # Calculate game performance in equivalent games
+  comparison_player_stats = replace_na(historical_scores,
+                                       list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              ones = sum((points_scored == 1)),
+              twos = sum((points_scored == 2)),
+              threes = sum((points_scored == 3)),
+              impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
+              .groups = "drop")
+  
+  # Filter player stats
+  player_info = select(team_player_stats, game_id, player_id, team) %>% 
+    inner_join(neers, by = c("player_id", "team")) 
+  
+  # Calculate current game performance
+  #   - Team score
+  #   - Which team is winning
+  # Then join on player info
+  player_summary = group_by(current_player_stats, team) %>% 
+    mutate(team_score = sum(total_points)) %>% 
+    ungroup() %>% 
+    mutate(winning = (team_score == max(team_score))) %>% 
+    filter(team == team_name) %>% 
+    select(team, winning, player_id,  
+           total_points, paddle_points, clink_points, threes, 
+           points_per_round:toss_efficiency)
+  
+  historical_stats = select(comparison_player_stats, game_id, player_id, 
+                            shots, total_points, paddle_points, clink_points, sinks = threes, 
+                            points_per_round:toss_efficiency) %>%
+    arrange(player_id, game_id) %>% 
+    group_by(player_id) %>% 
+    summarise(
+      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
+      across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
+      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
+             .fns = ~weighted.mean(., w = shots), 
+             .names = "{col}_wavg"),
+      .groups = "drop"
+    )
+  
+  player_summary_historical = full_join(player_summary, historical_stats, by = "player_id") %>% 
+    # Calculate the difference between current game and historical performance
+    mutate(total_points_diff = total_points - total_points_avg,
+           paddle_points_diff = paddle_points - paddle_points_avg,
+           clink_points_diff = clink_points - clink_points_avg,
+           points_per_round_diff = points_per_round - points_per_round_wavg,
+           off_ppr_diff = off_ppr - off_ppr_wavg,
+           def_ppr_diff = def_ppr - def_ppr_wavg,
+           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
+           # Format each difference for the table
+           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           toss_efficiency_diff = map_chr(toss_efficiency_diff, 
+                                          ~case_when(. >= 0 ~ toss_percent_plus(.), 
+                                                     . < 0 ~ toss_percent_minus(.)))) %>% 
+    # Remove historical stats
+    select(-ends_with("_avg"), -ends_with("wavg")) %>% 
+    # Order columns
+    select(starts_with("player"), team, winning, 
+           contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
+           contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
+  
+  inner_join(select(team_players, player_id, player_name),
+             select(player_summary_historical,
+                    # -contains("clink"), -contains("sink"),
+                    -contains("points_per")), 
+             by = "player_id")
+  
+}
+
+#' Player Performance Summary
+#'
+#' @param game_started Start Game Input
+#' @param player_stats Player Stats data
+#' @param team_name Team
+#' @param game_obj Current Game object
+#' @param current_round Current Round
+#' @param past_scores Scores data from past games
+#' 
+#' Summarise how a player is performing in relation to their past performance in "similar" games".
+#' By similar, we mean games with the same team sizes e.g. 2v2, 2v3, 3v3, etc.
+#' For a 2 player team in a 2v3, only games where they were on the team of 2 are considered to be similar.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+player_performance_summary = function(
+    game_started, 
+    player_stats, 
+    team_name, 
+    game_obj = NULL, 
+    current_round = NULL, 
+    past_scores
+){
+  # Produce a team's performance summary and comparison to historical performance in equivalent games
+  # 1. Get a list of games the player has played in
+  # 2. Get a list of scores from historical games at the equivalent point in the game
+  # 3. Calculate current game player stats
+  # 4. Calculate historical player stats from 1 & 2
+  # TODO: Specify relevant columns early on
+  if(game_started == 0){
+    ps_current = filter(player_stats, game_id == max(game_id))
+    
+    # Separate past game player stats
+    ps_past = filter(player_stats, game_id != max(game_id)) |> 
+      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
+             points_per_round, off_ppr, def_ppr, toss_efficiency)
+    current_game = unique(ps_current$game_id)
+  } else {
+    ps_current = game_obj$player_stats_db
+    
+    # Separate past game player stats
+    ps_past = filter(player_stats, game_id != game_obj$game_id) |> 
+      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
+             points_per_round, off_ppr, def_ppr, toss_efficiency)
+    
+    current_game = game_obj$game_id
+  }
+  
+  
+  # List players on the given team
+  ps_current_team = ps_current[ps_current$team == team_name, ]
+  
+  # Store current team and opponent sizes
+  team_size = nrow(ps_current_team) 
+  opponent_size = nrow(ps_current[ps_current$team != team_name, ]) # Perhaps subtract? nrow(ps_current) - team_size
+  
+  # Store current game id and the given team's current player stats
+  current_shots = unique(ps_current_team$shots)
+  
+  # Make a historical stats table that is only comparing games which are similar
+  # to the current game
+  # 1) list games where player was in same team format e.g. 2v2,2v3,etc
+  #  This is player specific, so map() is used
+  
+  # A not particularly elegant but probably working solution to making sure that games
+  # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
+  # and opponent_team_size and merge it to player_stats to be used as a 
+  
+  # Make a dataframe of team sizes in past games
+  # ps_comparable = map(ps_current_team[, "player_id", drop=T],
+  ps_comparable = map(ps_current_team$player_id,
+                      find_similar_games, player_stats = ps_past, team_size = team_size, opponent_size = opponent_size)
+  
+  ## Scenario 1: Game is in progress
+  in_progress = (game_started != 0)
+  if (in_progress){
+    # browser()
+    # Filter to scores which are:
+    #   - only scored by players on this team
+    #   - less than or equal to the current round
+    # scores_comparable = filter(past_scores,
+    #                            player_id %in% ps_current_team$player_id, # Only include players on this team
+    #                            parse_round_num(round_num) <= parse_round_num(current_round))
+    scores_comparable = semi_join(past_scores,
+                                  ps_current_team, by = "player_id") |> # Only include players on this team
+      filter(parse_round_num(round_num) <= parse_round_num(current_round))
+    # scores_comparison = past_scores[past_scores$player_id %in% ps_current_team$player_id & parse_round_num(past_scores$round_num) <= parse_round_num(current_round), ]
+    
+  } else {
+    ## Scenario 2: Game is complete
+    scores_comparable = past_scores
+  }
+  
+  # List scores which occurred at or before the current game's round
+  scores_historical = imap_dfr(ps_current_team$player_id, function(player, index){
+    # Join each player's comparable games to their scores from those games
+    left_join(ps_comparable[[index]], 
+              scores_comparable, 
+              by = c("game_id", "player_id")) %>% 
+      # Remove hard-coded games without player stats?
+      filter(!(game_id %in% 38:48))
+  })
+  
+  # When in progress, keep the shot counter generated from current_shots
+  if(in_progress){
+    scores_historical = mutate(scores_historical, shots = current_shots)
+  }
+  
+  # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
+  # That means I have to recreate player_stats using this table 
+  
+  # Calculate game performance in comparable games
+  ps_historical = replace_na(scores_historical,
+                             list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
+    # Group by game and player, (team and shots are held consistent)
+    group_by(game_id, player_id, shots) %>% 
+    # Calculate summary stats
+    summarise(total_points = sum(points_scored),
+              # ones = sum((points_scored == 1)),
+              # twos = sum((points_scored == 2)),
+              # threes = sum((points_scored == 3)),
+              # impossibles = sum((points_scored > 3)),
+              paddle_points = sum(points_scored* (paddle | foot)),
+              clink_points = sum(points_scored*clink),
+              points_per_round = total_points / last(shots),
+              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
+              def_ppr = paddle_points/last(shots),
+              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
+              .groups = "drop")
+  
+  # Calculate current game performance
+  #   - Team score
+  #   - Which team is winning
+  # Then join on player info
+  current_game_stats = group_by(ps_current, team) %>% 
+    mutate(team_score = sum(total_points)) %>% 
+    ungroup() %>% 
+    mutate(winning = (team_score == max(team_score))) %>% 
+    filter(team == team_name) %>% 
+    select(team, winning, player_id,  
+           total_points, paddle_points, clink_points, #threes, 
+           points_per_round:toss_efficiency)
+  
+  historical_avg = select(ps_historical, game_id, player_id, 
+                          shots, total_points, paddle_points, clink_points, #sinks = threes, 
+                          points_per_round:toss_efficiency) %>%
+    arrange(player_id, game_id) %>% 
+    group_by(player_id) %>% 
+    summarise(
+      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
+      # across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
+      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
+             .fns = ~weighted.mean(., w = shots), 
+             .names = "{col}_wavg"),
+      .groups = "drop"
+    )
+  
+  current_game_comparison = full_join(current_game_stats, historical_avg, by = "player_id") %>% 
+    # Calculate the difference between current game and historical performance
+    mutate(total_points_diff = total_points - total_points_avg,
+           paddle_points_diff = paddle_points - paddle_points_avg,
+           clink_points_diff = clink_points - clink_points_avg,
+           points_per_round_diff = points_per_round - points_per_round_wavg,
+           off_ppr_diff = off_ppr - off_ppr_wavg,
+           def_ppr_diff = def_ppr - def_ppr_wavg,
+           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
+           # Format each difference for the table
+           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
+           toss_efficiency_diff = map_chr(toss_efficiency_diff, 
+                                          ~case_when(. >= 0 ~ toss_percent_plus(.), 
+                                                     . < 0 ~ toss_percent_minus(.))))
+  
+  current_game_comparison %>% 
+    # Remove historical stats
+    select(-ends_with("_avg"), -ends_with("wavg"), -contains("points_per")) %>% 
+    # Order columns
+    select(starts_with("player"), team, winning, 
+           contains("total_points"), contains("paddle"), contains("clink"), #sinks = threes, 
+           contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
+  
+  
+}
+
+
+
+# Database updating -------------------------------------------------------
+
+
 
 db_update_player_stats = function(player_stats, specific_player, round_button = F){
   
@@ -307,45 +736,5 @@ db_update_round = function(round, game){
                       "WHERE game_id = ", game, ";")))
 }
 
-cooldown_check = function(casualties, scores, current_round, casualty_to_check, rounds){
-  # Check whether the last casualty of a certain type occurred 
-  # a full round (both teams shot) ago, determining whether the rule is reactivated
-  #   rounds is the round_label vector i.e. "1A", "1B", etc.
-  
-  # Pull the round_num associated with the casualties in the current game
-  # Also count the number of times -1 the casualty has occurred
-  
-  if(nrow(casualties) < 1){
-    invisible()
-  } else {
 
-    # Increment the round by 2x the times the casualty has been repeated
-    last_casualty_round = which(rounds == scores[scores$score_id == unique(casualties$score_id), "round_num"]) + (nrow(casualties)-1)*2
-    
-    which(rounds == current_round) - last_casualty_round < 2
-    
-    
-  }
 
-  
-}
-
-find_similar_games = function(player_id, player_stats, team_size = 2, opponent_size = 2){
-  
-  # Make a dataframe of team sizes in past games
-  # Count team size for each game
-  team_sizes = count(player_stats, game_id, team, name = "team_size") |> 
-    # Pivot separate columns for team 
-    pivot_wider(names_from = team, 
-                values_from = team_size, 
-                names_glue = "size_{team}")
-  
-  # Subset each player's stats  identify equivalent games
-  player_stats[player_stats$player_id == player_id, ] %>% 
-    # Join team sizes to player stats
-    inner_join(team_sizes, by = "game_id") %>%
-    # Keep cases where the team sizes are equivalent
-    filter(if_else(team == "A", size_A, size_B) == team_size,
-           if_else(team == "B", size_A, size_B) == opponent_size) |> 
-    select(game_id, player_id, shots)
-}
