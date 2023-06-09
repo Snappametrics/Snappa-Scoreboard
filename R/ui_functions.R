@@ -302,37 +302,61 @@ highnoon_popup = function(players){
 }
 
 
+player_input = function(team, number, player_choices){
+  div(id = str_c("player-input-", team, number), 
+      class = str_c("player-input ", team),
+      selectizeInput(inputId = paste0('name_', team, number), 
+                     label = NULL, 
+                     choices = c(`Player Name`='', player_choices), 
+                     options = list(create = TRUE, hideSelected=T), width = "125%"))
+}
 
+extra_player_input = function(team, number, player_choices){
+  tagList(
+    htmltools::tagAppendAttributes(
+      prettySwitch(inputId = str_c("add_player_", team, number), 
+                   label = str_c("Player ", number), inline = T, bigger = T,
+                   status = if_else(team == "A", "primary", "danger")),
+      class = "toggle-player",
+      style = "text-align:initial;"
+    ),
+    disabled(player_input(team = team, number = number, player_choices = player_choices))
+  )
+}
 
 team_input_ui = function(team, player_choices){
   
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-  well_selector = if_else(team == 'A', 'input-well-A', 'input-well-B')
-  div_selector = if_else(team == 'A', 'input-forms-A','input-forms-B')
-  class_selector = paste0('input-well ', if_else(team == 'A', 'well-A', 'well-B'))
+  # well_selector = if_else(team == 'A', 'input-well-A', 'input-well-B')
+  # div_selector = if_else(team == 'A', 'input-forms-A','input-forms-B')
+  # class_selector = paste0('input-well ', if_else(team == 'A', 'well-A', 'well-B'))
   
   column(4, align = "center",
          
          wellPanel(
-           class = class_selector,
-           id = well_selector,
+           class = str_c("input-well well-", team),
+           id = str_c("input-well-", team),
            style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
-           tags$div( id = div_selector,
+           tags$div( id = str_c("input-forms-", team),
                 class = 'player-input-forms',
                 # Player 1
                 selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
                           options = list(create = TRUE, hideSelected=T), width = "125%"),
-                 # Player 2
+                # Player 2
                 selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
                                options = list(create = TRUE, hideSelected=T), width = "125%"),
                 # Add Player 3 button
-                actionBttn(paste0("extra_player_", team, "3"), 
-                           label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
-                
+                # actionBttn(paste0("extra_player_", team, "3"), 
+                #            label = "+ Add Player", style = "unite", color = "danger", size = "sm"),
+                # Player 3
+                extra_player_input(team = team, number = 3, player_choices = player_choices),
+                # Player 4
+                extra_player_input(team = team, number = 4, player_choices = player_choices),
+
                 # CSS: Increase font size, change color to white, add top and bottom margins
                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
            )
