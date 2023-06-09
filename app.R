@@ -149,7 +149,8 @@ ui <- dashboardPage(
                                            icon = icon("dice"), size = "sm")),
                        uiOutput("validate_start"),
                        
-                       helpText("Note: All players must enter their name before the game can begin")
+                       helpText("Note: All players must enter their name before the game can begin"),
+                       reactableOutput("expected_inputs")
                        ),
                        
                 
@@ -524,6 +525,25 @@ server <- function(input, output, session) {
     list("A1" = input$name_A1, "A2" = input$name_A2, "A3" = input$name_A3, "A4" = input$name_A4, 
          "B1" = input$name_B1, "B2" = input$name_B2, "B3" = input$name_B3, "B4" = input$name_B4) %>% 
       discard(is_null)
+  })
+  
+  expected_player_inputs = reactive({
+    tribble(
+      ~input, ~team, ~value, ~expected,
+      "A1", "A", input$name_A1, T,
+      "A2", "A", input$name_A2, T,
+      "A3", "A", input$name_A3, input$add_player_A3,
+      "A4", "A", input$name_A4, input$add_player_A4,
+      "B1", "B", input$name_B1, T,
+      "B2", "B", input$name_B2, T, 
+      "B3", "B", input$name_B3, input$add_player_B3,
+      "B4", "B", input$name_B4, input$add_player_B4
+    )
+    
+  })
+  
+  output$expected_inputs = renderReactable({
+    reactable(expected_player_inputs())
   })
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
