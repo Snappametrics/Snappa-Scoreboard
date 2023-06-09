@@ -98,13 +98,19 @@ ui <- dashboardPage(
           label = "What score are you playing to?",
           min = 11, max = 50, value = 21
         ),
-        disabled(actionBttn("tifu", "Friendly Fire",
-                            style = "material-flat",
-                            size = "sm", color = "danger")),
         br(),
         actionBttn("finish_game", "Finish",
                    icon = icon("check"), size = "sm",
                    style = "material-flat", color = "warning"),
+        br(),
+        actionBttn("debug", label = "debug", icon = icon("bug"), 
+                   style = "material-flat", color = "danger")
+      ),
+      controlbarItem(
+        title = "Casualties",
+        disabled(actionBttn("tifu", "Friendly Fire",
+                            style = "material-flat",
+                            size = "sm", color = "danger")),
         br(),
         actionBttn("highnoon_manual", 
                    "High noon", size = "sm",
@@ -113,6 +119,7 @@ ui <- dashboardPage(
         actionBttn("casualty_manual", 
                    "Casualty Check", size = "sm",
                    style = "material-flat", color = "royal")
+        
       )
       
       # icon = "desktop",
@@ -345,6 +352,11 @@ ui <- dashboardPage(
 
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
+  
+  observeEvent(input$debug, {
+    browser()
+  })
+
   # This is an initial value which will be overwritten when you run
   # the simulations
   w = Waiter$new(
