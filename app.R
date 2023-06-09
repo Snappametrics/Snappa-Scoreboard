@@ -183,6 +183,7 @@ ui <- dashboardPage(
               box(width = 12, title = "Top Snappaneers",
                     style = str_c("background:", snappa_pal[1]), align = "center",
                     div(class = "top-snappaneers",
+                        uiOutput("leaderboard_date_filter", width = "100%", class = "leaderboard-row"),
                         div(class = "snappaneers-header",
                             # div(class = "snappaneers-title", "Top Snappaneers"),
                             "The deadliest die-throwers in all the land."
