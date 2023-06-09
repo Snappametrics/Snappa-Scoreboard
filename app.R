@@ -2299,6 +2299,20 @@ observeEvent(input$resume_no, {
     reactives[grep(pattern,reactives)]
   }
   
+  # Observe extra player inputs
+  observe({
+    toggleState(id = "player-input-A3", condition = input$add_player_A3)
+  })
+  observe({
+    toggleState(id = "player-input-A4", condition = input$add_player_A4)
+  })
+  observe({
+    toggleState(id = "player-input-B3", condition = input$add_player_B3)
+  })
+  observe({
+    toggleState(id = "player-input-B4", condition = input$add_player_B4)
+  })
+  
   # New Player A3
   #   - Add A3 text input
   #   - Remove the add new player action button
