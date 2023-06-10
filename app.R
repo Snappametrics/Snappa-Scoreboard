@@ -2127,11 +2127,11 @@ observeEvent(input$resume_no, {
                  # browser()
     if(is.null(input$casualty) && is.character(input$highnoon)){
       
-      
       # Convert player name to ID
       casualty = select(snappaneers(), starts_with("player")) %>% 
         deframe() %>% 
         pluck(input$highnoon)
+      
       # Insert casualty details
       new_casualty = tibble(
         casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
@@ -2139,8 +2139,8 @@ observeEvent(input$resume_no, {
         score_id = vals$score_id,
         player_id = casualty,
         casualty_type = "High noon",
-        reported_player = NA_integer_,
-        round = round_num()
+        reported_player = NA_integer_#,
+        # round = round_num()
       )
     } else {
       validate(
@@ -2160,12 +2160,12 @@ observeEvent(input$resume_no, {
         score_id = vals$score_id,
         player_id = casualty,
         casualty_type = type,
-        reported_player = NA_integer_,
-        round = round_num()
+        reported_player = NA_integer_#,
+        # round = round_num()
       )
     }
     validate(
-      need(is.tibble(new_casualty), label = "New casualty")
+      need(is_tibble(new_casualty), label = "New casualty")
     )
 
     # Add to casualties reactive
