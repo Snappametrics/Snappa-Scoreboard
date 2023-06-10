@@ -58,6 +58,15 @@
 .pretty.p-switch .state:before {
   top: calc((0% - (100% - 4em)) - 30%)!important;
 }
+
+.leaderboard-row {
+    display: flex;
+    flex-flow: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
 .box, .swal2-popup, .modal-header {
     background-color: #fafaf9 !important;
 }

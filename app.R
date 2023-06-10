@@ -191,6 +191,7 @@ ui <- dashboardPage(
               box(width = 12, title = "Top Snappaneers",
                     style = str_c("background:", snappa_pal[1]), align = "center",
                     div(class = "top-snappaneers",
+                        uiOutput("leaderboard_date_filter", width = "100%", class = "leaderboard-row"),
                         div(class = "snappaneers-header",
                             # div(class = "snappaneers-title", "Top Snappaneers"),
                             "The deadliest die-throwers in all the land."
@@ -945,16 +946,49 @@ server <- function(input, output, session) {
   
 
   output$leaderboard_rt = renderReactable({
+    req(input$leaderboard_range)
     # Create the rank column, arrange the data, and select the columns
     aggregated_data = vals$db_tbls()[["career_stats"]]
     
+    leaderboard_stats = calculate_leaderboard_stats(con, min_date = input$leaderboard_range[1], max_date = input$leaderboard_range[2])
+    
     # Separate out those with under 5 games
-    dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
+    # dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
       
-    leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
+    # leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
+    leaderboard_table_rt(collect(leaderboard_stats))
+  })
+  
+  output$leaderboard_date_filter = renderUI({
+    games = tbl(con, "game_stats") |> 
+      summarise(min_date = min(as.Date(game_start), na.rm=T))
+    
+    tagList(
+            # column(width = 4,
+              dateRangeInput("leaderboard_range", label = "Timeframe", 
+                             startview = "year", 
+                             start = pull(games, min_date), end = today(tzone = "America/Los_Angeles"), 
+                             min = pull(games, min_date), max = today(tzone = "America/Los_Angeles")),
+            # ),
+            # column(width = 4,
+              actionBttn("past_month", label = "Past Month", style = "fill"),
+            # ),
+            # column(width = 4,
+                   actionBttn("past_year", label = "Past 12 Months", style = "fill")
+            # )
+    )
   })
 
-  
+  observeEvent(input$past_month, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(1), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  observeEvent(input$past_year, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(12), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
 
   output$scoring_heatmap = renderPlot({
     score_heatmap(tbl(con, "score_progression"))

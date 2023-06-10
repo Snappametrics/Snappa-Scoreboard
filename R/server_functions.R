@@ -738,3 +738,56 @@ db_update_round = function(round, game){
 
 
 
+
+calculate_leaderboard_stats = function(
+    con, 
+    min_date = ymd("2023-01-01"), 
+    max_date = ceiling_date(today(), unit = "year")){
+  
+  # browser()
+  games_filtered = tbl(con, "game_stats") |> 
+    mutate(game_start_date = as.Date(game_start),
+           game_end_date = as.Date(game_end)) |> 
+    filter(game_start_date >= min_date,
+           game_end_date <= max_date) |> 
+    select(game_id, points_a, points_b)
+  
+  score_stats = games_filtered |> 
+    left_join(tbl(con, "scores"), by = "game_id") |> 
+    mutate(sinks = case_when(points_scored == 3 & !clink ~ 1,
+                            T ~ 0),
+           paddle_sinks = case_when(points_scored == 3 & !clink & paddle ~ 1,
+                                   T ~ 0),
+           foot_sinks = case_when(points_scored == 3 & !clink & foot ~ 1,
+                            T ~ 0),
+           foot_paddle_points = case_when(foot ~ points_scored,
+                                   T ~ 0)) |> 
+    group_by(player_id) |> 
+    summarise(
+      across(c(sinks, paddle_sinks, foot_paddle_points, foot_sinks), \(x) sum(x, na.rm=T))
+    )
+  
+  games_filtered |> 
+    left_join(tbl(con, "player_stats"), by = "game_id") |> 
+    mutate(game_won = case_when(points_a > points_b & team == "A" ~ 1,
+                                points_a < points_b & team == "B" ~ 1,
+                                T ~ 0)) |> 
+    group_by(player_id) |> 
+    summarise(
+      games_played = n(),
+      win_pct = sum(game_won, na.rm=T)/n(),
+      across(c(total_points, clink_points, paddle_points), \(x) sum(x, na.rm=T)),
+      points_per_game = mean(total_points, na.rm=T),
+      toss_efficiency = sum(shots * toss_efficiency, na.rm=T) / sum(shots, na.rm=T),
+      offensive_points = sum(off_ppr * shots, na.rm=T),
+      off_ppg = mean(off_ppr * shots, na.rm=T),
+      defensive_points = sum(def_ppr * shots, na.rm=T),
+      def_ppg = mean(def_ppr * shots, na.rm=T)
+    ) |> 
+    left_join(score_stats, by = "player_id") |> 
+    replace_na(list(sinks = 0, paddle_sinks = 0, foot_paddle_points = 0, foot_sinks = 0)) |> 
+    inner_join(tbl(con, "players"), by = "player_id") |> 
+    # mutate(weighted_score = paddle_sinks * 6 + sinks * 5 + total_points + paddle_points * 1.5 + points_per_page * 2 + toss_efficiency * 10) |> 
+    arrange(desc(total_points)) |> 
+    mutate(rank = row_number())
+}
