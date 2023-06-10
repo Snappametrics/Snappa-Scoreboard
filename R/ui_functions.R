@@ -502,6 +502,18 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
   )
 }
 
+arena_select_popup = function(){
+  inputSweetAlert(
+    inputId = "arena_select",
+    title = "Arena",
+    text = "Where are the dice being thrown?",
+    type = "question",
+    input = "select",
+    inputOptions = c("Greenhaus 2: Electric Boogaloo", "Ventura", 
+                     'The Oasis', "Other?"),
+    allowOutsideClick = FALSE
+  )
+}
 
 # Player Input ------------------------------------------------------------
 

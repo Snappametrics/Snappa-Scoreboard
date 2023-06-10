@@ -1595,29 +1595,8 @@ observe({
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
     
-    # browser()
     if(as.integer(collect(tally(tbl(con, "incomplete_game")))) == 0){
-      inputSweetAlert(
-        inputId = "arena_select",
-        title = "Arena",
-        text = "Where are the dice being thrown?",
-        type = "question",
-        input = "select",
-        inputOptions = c("Greenhaus 2: Electric Boogaloo", "Ventura", 
-                         'The Oasis', "Other?"),
-        allowOutsideClick = FALSE
-        # pickerInput(
-        #   inputId = "arena_select",
-        #   label = "Arena",
-        #   selected = "Greenhaus 2: Electric Boogaloo",
-        #   choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo",
-        #               'The Oasis'),
-        #   options = pickerOptions(
-        #     mobile = T,
-        #     showTick = T
-        #   )
-        # )
-      )
+      arena_select_popup()
     }
     
     
