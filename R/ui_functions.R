@@ -1279,13 +1279,14 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
 # Visualizations ----------------------------------------------------------
 
 score_heatmap = function(df){
-  max_score = summarise_at(df, vars(starts_with("score")), max) %>% 
-    pull() %>% 
-    max()
+  max_score = summarise(df, across(starts_with("score"), max)) |> 
+    collect() |> 
+    summarise(max = max(c_across(score_a:score_b))) |> 
+    pull()
   
   score_labels = seq_len(max_score + 1) - 1 
   score_labels[score_labels %% 2 == 0] = ""
-  score_labels = score_labels %>% as.character()
+  score_labels = as.character(score_labels)
   # Create helpers for the labels in the scale
   
   
@@ -1295,20 +1296,32 @@ score_heatmap = function(df){
     # Record the 45 degree line for visual reference
     geom_abline(mapping = NULL, data = NULL, slope = 1, intercept = 0) + 
     scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20", na.value = "grey",
-                        guide = guide_colourbar(barwidth = .5, barheight = 15, direction = "vertical",
+                        guide = guide_colourbar(barwidth = .5, barheight = 13, 
+                                                # barheight = .5, barwidth = 13, 
+                                                direction = "vertical", 
                                                 title.vjust = 1, title.hjust = 0.5, 
-                                                title.position = "right", title.theme = element_text(angle = -90)))+
-    labs(x = "Team B",
-         y = "Team A",
-         # title = "Heatmap of scores in Snappa",
-         subtitle = "Frequency of each combination of scores (e.g. 3-1)")+
-    coord_cartesian(xlim = c(1, max_score - 1),
-                    ylim = c(1, max_score - 1)) +
-    scale_x_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
-    scale_y_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
-    theme_snappa()+
+                                                ticks = T, ticks.linewidth = 0.75, ticks.colour = snappa_pal[1],
+                                                title.position = "right", title.theme = element_text(angle = -90, size = 14)))+
+    labs(# title = "Heatmap of scores in Snappa",
+         # subtitle = "How often do each combination of scores (e.g. 3-1) occur?",
+         x = "Team B",
+         y = "Team A")+
+    coord_cartesian(xlim = c(1, max_score),
+                    ylim = c(1, max_score)) +
+    scale_x_continuous(breaks = scales::breaks_pretty(n = 10), minor_breaks = 0:max_score+.5, 
+                       expand = expansion(add = 1.5), 
+                       # limits = c(0, max_score),
+                       sec.axis = dup_axis(name = NULL)) +
+    scale_y_continuous(breaks = scales::breaks_pretty(n = 10), minor_breaks = 0:max_score+.5, 
+                       expand = expansion(add = 1.5),
+                       # limits = c(1, max_score), 
+                       sec.axis = dup_axis(name = NULL)) +
+    theme_snappa(plot_margin = margin(5,5,5,5))+
     theme(panel.grid.major = element_blank(),
-          legend.position = "right",
+          axis.title.x = element_text(colour = snappa_pal[2]),
+          axis.title.y = element_text(colour = snappa_pal[3]),
+          legend.position = "right",#c(.13, .95), 
+          # legend.background = element_rect(fill = snappa_pal[1], colour = NULL),
           axis.ticks.x.bottom = element_line())
   
   

@@ -38,7 +38,7 @@ players_tbl = dbGetQuery(con, "SELECT * FROM players")
 # game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
 # Makea list of table templates
-tbls = c("scores", "player_stats", "game_stats", "score_progression", "career_stats")
+tbls = c("scores", "player_stats", "game_stats", "career_stats")
 tbl_templates = map(tbls, function(table){
   dbGetQuery(con, str_c("SELECT * FROM ", table, " LIMIT 0")) 
 }) %>% 
@@ -956,15 +956,15 @@ server <- function(input, output, session) {
   
 
   output$scoring_heatmap = renderPlot({
-    score_heatmap(vals$db_tbls()[["score_progression"]])
-  })
+    score_heatmap(tbl(con, "score_progression"))
+  }, res = 96)
   
   output$heatmap_info <- renderUI({
     req(input$heat_hover)
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
-    freq = filter(vals$db_tbls()[["score_progression"]], score_a == y, score_b == x) %>% 
+    freq = filter(tbl(con, "score_progression"), score_a == y, score_b == x) %>% 
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
