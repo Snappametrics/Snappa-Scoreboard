@@ -202,9 +202,10 @@ ui <- dashboardPage(
                         )
                     )
                 ),
-                box(width = 12,
+                box(width = 8, title = "Score Heatmap",
                     style = str_c("background:", snappa_pal[1]), align = "center",
-                                 plotOutput("scoring_heatmap", height = "75vw",
+                    p("A heatmap of the different scores that have occurred in games of Snappa."),
+                                 plotOutput("scoring_heatmap", height = "38em", width = "100%", 
                                             hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
                                  uiOutput("heatmap_info")
                 )
