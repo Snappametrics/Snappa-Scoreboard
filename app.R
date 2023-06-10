@@ -1641,14 +1641,13 @@ observe({
                       )
         )
         
-        vals$players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players"))
+        # vals$players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players"))
+        vals$players = collect(tbl(con, "players"))
         
         # Increment the ID for the next new player
         vals$new_player_id = vals$new_player_id+1
         
-        
-        
-        
+
       } else {
         invisible()
       }
@@ -1657,9 +1656,9 @@ observe({
     # Check if the last game was finished
     # Switch to the scoreboard
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
+    # LAST GAME WAS NOT FINISHED
     if (!dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)")[1,1]) {
       
-      # LAST GAME WAS NOT FINISHED
       
       lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats")[1,1]
       
@@ -2398,7 +2397,7 @@ observeEvent(input$resume_no, {
 
   })
   
-  # Team B ---------------------------------------------------------
+  ## Team B ---------------------------------------------------------
   
   
   observeEvent(input$B_score_button, {
@@ -2519,7 +2518,7 @@ observeEvent(input$resume_no, {
   
   
 
-# Undo Score --------------------------------------------------------------
+## Undo Score --------------------------------------------------------------
 
   # Undo score consists of:
   # - Observe the press of the undo score button
