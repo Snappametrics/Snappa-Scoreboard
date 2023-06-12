@@ -65,6 +65,7 @@
     width: 100%;
     justify-content: space-between;
     align-items: flex-end;
+    margin: 2vh 1vh;
 }
 
 .box, .swal2-popup, .modal-header {

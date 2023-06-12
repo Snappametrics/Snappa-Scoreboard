@@ -965,33 +965,53 @@ server <- function(input, output, session) {
     games = tbl(con, "game_stats") |> 
       summarise(min_date = min(as.Date(game_start), na.rm=T))
     
+    current_date = today(tzone = "America/Los_Angeles")
+    
     tagList(
             # column(width = 4,
               dateRangeInput("leaderboard_range", label = "Timeframe", 
                              startview = "year", 
-                             start = pull(games, min_date), end = today(tzone = "America/Los_Angeles"), 
-                             min = pull(games, min_date), max = today(tzone = "America/Los_Angeles")),
-            # ),
-            # column(width = 4,
-              actionBttn("past_month", label = "Past Month", style = "fill"),
-            # ),
-            # column(width = 4,
-                   actionBttn("past_year", label = "Past 12 Months", style = "fill")
-            # )
+                             start = floor_date(current_date, unit = "year"), end = current_date, 
+                             min = pull(games, min_date), max = current_date, ),
+              # Quick filters
+              actionButton("leaderboard_all", label = "All", class = "btn-primary"),
+              actionButton("leaderboard_past_year", label = "Past 12 Months", class = "btn-primary"),
+              actionButton("leaderboard_past_6mo", label = "Past 6 Months", class = "btn-primary"),
+              actionButton("leaderboard_past_3mo", label = "Past 3 Months", class = "btn-primary"),
+              actionButton("leaderboard_past_month", label = "Past Month", class = "btn-info")
     )
   })
 
-  observeEvent(input$past_month, {
+  # Observe quick filters
+  observeEvent(input$leaderboard_all, {
+    games = tbl(con, "game_stats") |> 
+      summarise(min_date = min(as.Date(game_start), na.rm=T))
+    
     updateDateRangeInput(inputId = "leaderboard_range", 
-                         start = today(tzone = "America/Los_Angeles") %m-% months(1), 
+                         start = pull(games, min_date), 
                          end = today(tzone = "America/Los_Angeles"))
   })
-  observeEvent(input$past_year, {
+  observeEvent(input$leaderboard_past_year, {
     updateDateRangeInput(inputId = "leaderboard_range", 
                          start = today(tzone = "America/Los_Angeles") %m-% months(12), 
                          end = today(tzone = "America/Los_Angeles"))
   })
-
+  observeEvent(input$leaderboard_past_6mo, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(6), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  observeEvent(input$leaderboard_past_3mo, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(3), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  observeEvent(input$leaderboard_past_month, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(1), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  
   output$scoring_heatmap = renderPlot({
     score_heatmap(tbl(con, "score_progression"))
   }, res = 96)
