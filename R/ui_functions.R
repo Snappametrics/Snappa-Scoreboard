@@ -572,6 +572,8 @@ team_input_ui = function(team, player_choices){
                 extra_player_input(team = team, number = 3, player_choices = player_choices),
                 # Player 4
                 extra_player_input(team = team, number = 4, player_choices = player_choices),
+                # Player 5
+                extra_player_input(team = team, number = 5, player_choices = player_choices),
 
                 # CSS: Increase font size, change color to white, add top and bottom margins
                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))

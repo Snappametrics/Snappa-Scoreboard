@@ -524,8 +524,8 @@ server <- function(input, output, session) {
   # Active input buttons
   #   - List of player inputs which are not null
   active_player_inputs = reactive({
-    list("A1" = input$name_A1, "A2" = input$name_A2, "A3" = input$name_A3, "A4" = input$name_A4, 
-         "B1" = input$name_B1, "B2" = input$name_B2, "B3" = input$name_B3, "B4" = input$name_B4) %>% 
+    list("A1" = input$name_A1, "A2" = input$name_A2, "A3" = input$name_A3, "A4" = input$name_A4, "A5" = input$name_A5, 
+         "B1" = input$name_B1, "B2" = input$name_B2, "B3" = input$name_B3, "B4" = input$name_B4, "B5" = input$name_B5) %>% 
       discard(is_null)
   })
   
@@ -536,10 +536,12 @@ server <- function(input, output, session) {
       "A2", "A", input$name_A2, T,
       "A3", "A", input$name_A3, input$add_player_A3,
       "A4", "A", input$name_A4, input$add_player_A4,
+      "A5", "A", input$name_A5, input$add_player_A5,
       "B1", "B", input$name_B1, T,
       "B2", "B", input$name_B2, T, 
       "B3", "B", input$name_B3, input$add_player_B3,
-      "B4", "B", input$name_B4, input$add_player_B4
+      "B4", "B", input$name_B4, input$add_player_B4,
+      "B5", "B", input$name_B5, input$add_player_B5
     )
   })
   
@@ -2285,21 +2287,59 @@ observeEvent(input$resume_no, {
 
 # New Players -------------------------------------------------------------
 
-
-  # Observe extra player inputs
+  # Enable/disable extra player inputs
+  # Also reset them upon disabling
+  
+  ## Team A
+  ### Player A3
   observe({
     toggleState(id = "player-input-A3", condition = input$add_player_A3)
   })
+  observeEvent(isFALSE(input$add_player_A3), {
+    reset("player-input-A3")
+  }, ignoreInit = T)
+  
+  ### Player A4
   observe({
     toggleState(id = "player-input-A4", condition = input$add_player_A4)
   })
+  observeEvent(isFALSE(input$add_player_A4), {
+    reset("player-input-A4")
+  }, ignoreInit = T)
+  
+  
+  ### Player A5
+  observe({
+    toggleState(id = "player-input-A5", condition = input$add_player_A5)
+  })
+  observeEvent(isFALSE(input$add_player_A5), {
+    reset("player-input-A5")
+  }, ignoreInit = T)
+  
+  ## Team B
+  ### Player B3
   observe({
     toggleState(id = "player-input-B3", condition = input$add_player_B3)
   })
+  observeEvent(isFALSE(input$add_player_B3), {
+    reset("player-input-B3")
+  }, ignoreInit = T)
+  
+  ### Player B4
   observe({
     toggleState(id = "player-input-B4", condition = input$add_player_B4)
   })
+  observeEvent(isFALSE(input$add_player_B4), {
+    reset("player-input-B4")
+  }, ignoreInit = T)
   
+  ### Player B5
+  observe({
+    toggleState(id = "player-input-B5", condition = input$add_player_B5)
+  })
+  observeEvent(isFALSE(input$add_player_B5), {
+    reset("player-input-B5")
+  }, ignoreInit = T)
 
   
 
