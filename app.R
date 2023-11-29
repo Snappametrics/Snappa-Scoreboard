@@ -950,7 +950,7 @@ server <- function(input, output, session) {
   output$leaderboard_rt = renderReactable({
     req(input$leaderboard_range)
     # Create the rank column, arrange the data, and select the columns
-    aggregated_data = vals$db_tbls()[["career_stats"]]
+    # aggregated_data = vals$db_tbls()[["career_stats"]]
     
     leaderboard_stats = calculate_leaderboard_stats(con, min_date = input$leaderboard_range[1], max_date = input$leaderboard_range[2])
     
