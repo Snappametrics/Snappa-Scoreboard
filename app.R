@@ -972,7 +972,7 @@ server <- function(input, output, session) {
               dateRangeInput("leaderboard_range", label = "Timeframe", 
                              startview = "year", 
                              start = floor_date(current_date, unit = "year"), end = current_date, 
-                             min = pull(games, min_date), max = current_date, ),
+                             min = pull(games, min_date), max = current_date, format = "M d, yyyy"),
               # Quick filters
               actionButton("leaderboard_all", label = "All", class = "btn-primary"),
               actionButton("leaderboard_past_year", label = "Past 12 Months", class = "btn-primary"),
