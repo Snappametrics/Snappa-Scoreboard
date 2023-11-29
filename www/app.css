@@ -370,7 +370,7 @@ label.control-label[for^='name_'] {
   flex-direction: column;
   align-items: flex-start;
   padding: 0vh 2vw;
-  overflow: auto;
+  width: 100%;
 }
 
 .snappaneers-header {
