@@ -37,6 +37,37 @@
 
 /* My CSS */
 
+.hidden {
+  display: none;
+}
+
+.toggle-player {
+  color: white;
+  font-size: 2vh;
+}
+
+.toggle-player > .p-switch > .state label > span {
+  font-weight: 700;
+  font-size: 5vh;
+}
+
+.pretty.p-bigger .icon, .pretty.p-bigger .img, .pretty.p-bigger .svg, .pretty.p-bigger label:after, .pretty.p-bigger label:before {
+  top: calc((0% - (100% - 4em)) - 65%)!important;
+}
+
+.pretty.p-switch .state:before {
+  top: calc((0% - (100% - 4em)) - 30%)!important;
+}
+
+.leaderboard-row {
+    display: flex;
+    flex-flow: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin: 2vh 1vh;
+}
+
 .box, .swal2-popup, .modal-header {
     background-color: #fafaf9 !important;
 }
@@ -339,7 +370,7 @@ label.control-label[for^='name_'] {
   flex-direction: column;
   align-items: flex-start;
   padding: 0vh 2vw;
-  overflow: auto;
+  width: 100%;
 }
 
 .snappaneers-header {

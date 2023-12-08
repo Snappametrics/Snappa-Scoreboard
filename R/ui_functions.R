@@ -502,41 +502,79 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
   )
 }
 
+arena_select_popup = function(){
+  inputSweetAlert(
+    inputId = "arena_select",
+    title = "Arena",
+    text = "Where are the dice being thrown?",
+    type = "question",
+    input = "select",
+    inputOptions = c("Greenhaus 2: Electric Boogaloo", "Ventura", 
+                     'The Oasis', "Other?"),
+    allowOutsideClick = FALSE
+  )
+}
 
 # Player Input ------------------------------------------------------------
 
 
+player_input = function(team, number, player_choices){
+  div(id = str_c("player-input-", team, number), 
+      class = str_c("player-input ", team),
+      selectizeInput(inputId = paste0('name_', team, number), 
+                     label = NULL, 
+                     choices = c(`Player Name`='', player_choices), 
+                     options = list(create = TRUE, hideSelected=T), width = "125%"))
+}
 
+extra_player_input = function(team, number, player_choices){
+  tagList(
+    htmltools::tagAppendAttributes(
+      prettySwitch(inputId = str_c("add_player_", team, number), 
+                   label = str_c("Player ", number), inline = T, bigger = T,
+                   status = if_else(team == "A", "primary", "danger")),
+      class = "toggle-player",
+      style = "text-align:initial;"
+    ),
+    disabled(player_input(team = team, number = number, player_choices = player_choices))
+  )
+}
 
 team_input_ui = function(team, player_choices){
   
   players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
   player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-  well_selector = if_else(team == 'A', 'input-well-A', 'input-well-B')
-  div_selector = if_else(team == 'A', 'input-forms-A','input-forms-B')
-  class_selector = paste0('input-well ', if_else(team == 'A', 'well-A', 'well-B'))
+  # well_selector = if_else(team == 'A', 'input-well-A', 'input-well-B')
+  # div_selector = if_else(team == 'A', 'input-forms-A','input-forms-B')
+  # class_selector = paste0('input-well ', if_else(team == 'A', 'well-A', 'well-B'))
   
   column(4, align = "center",
          
          wellPanel(
-           class = class_selector,
-           id = well_selector,
+           class = str_c("input-well well-", team),
+           id = str_c("input-well-", team),
            style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
-           tags$div( id = div_selector,
+           tags$div( id = str_c("input-forms-", team),
                 class = 'player-input-forms',
                 # Player 1
                 selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
                           options = list(create = TRUE, hideSelected=T), width = "125%"),
-                 # Player 2
+                # Player 2
                 selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
                                options = list(create = TRUE, hideSelected=T), width = "125%"),
                 # Add Player 3 button
-                actionBttn(paste0("extra_player_", team, "3"), 
-                           label = "+ Add Player", style = "unite", color = "danger", size = "sm"), 
-                
+                # actionBttn(paste0("extra_player_", team, "3"), 
+                #            label = "+ Add Player", style = "unite", color = "danger", size = "sm"),
+                # Player 3
+                extra_player_input(team = team, number = 3, player_choices = player_choices),
+                # Player 4
+                extra_player_input(team = team, number = 4, player_choices = player_choices),
+                # Player 5
+                extra_player_input(team = team, number = 5, player_choices = player_choices),
+
                 # CSS: Increase font size, change color to white, add top and bottom margins
                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
            )
@@ -1067,9 +1105,18 @@ team_summary_tab_rt = function(df){
 
 
 leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colour = snappa_pal[5]){
-  stats_eligible = career_stats_data[career_stats_data$rank < dividing_line,]
-  
-  reactable(career_stats_data, 
+  if(missing(dividing_line)){
+    stats_eligible = career_stats_data
+  } else {
+    stats_eligible = career_stats_data[career_stats_data$rank < dividing_line,]
+  }
+  # browser()
+  select(career_stats_data, rank, player_name, games_played, win_pct, total_points, clink_points, points_per_game,
+           toss_efficiency, offensive_points, off_ppg,
+           paddle_points, defensive_points, def_ppg,
+           sinks, paddle_sinks,
+           foot_paddle_points) |> 
+  reactable(#.,
       defaultPageSize = 10, 
       pagination = T, 
       defaultSorted = "rank",
@@ -1080,30 +1127,32 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
       highlight = T, 
       # compact = T, 
       width = "100%",
-      rowStyle = function(index) {
-        if (career_stats_data[index, "games_played"] < 5) {
-          list(background = "#E3E3DE",
-               fontWeight = 200)
-        }
-      },
-      rowClass = function(index) {
-        if (career_stats_data[index, "rank"] == max(stats_eligible$rank)) {
-          "dividing-line"
-        } else if (career_stats_data[index, "rank"] > max(stats_eligible$rank)) {
-          "unranked"
-        } else if (career_stats_data[index, "rank"] <= max(stats_eligible$rank)) {
-          "ranked"
-        }
-      },
+      # rowStyle = function(index) {
+      #   if (career_stats_data[index, "games_played"] < 5) {
+      #     list(background = "#E3E3DE",
+      #          fontWeight = 200)
+      #   }
+      # },
+      # rowClass = function(index) {
+      #   if (career_stats_data[index, "rank"] == max(stats_eligible$rank)) {
+      #     "dividing-line"
+      #   } else if (career_stats_data[index, "rank"] > max(stats_eligible$rank)) {
+      #     "unranked"
+      #   } else if (career_stats_data[index, "rank"] <= max(stats_eligible$rank)) {
+      #     "ranked"
+      #   }
+      # },
       columnGroups = list(
         colGroup(name = "Overall", columns = c("games_played", "win_pct", "total_points", "clink_points", "points_per_game"), 
                  headerClass = "col-group-head"),
         colGroup(name = "Offense", columns = c("toss_efficiency", "offensive_points", "off_ppg")),
         colGroup(name = "Defense", columns = c("paddle_points", "defensive_points", "def_ppg")),
         colGroup(name = "Sinks", columns = c("sinks", "paddle_sinks")),
-        colGroup(name = "Foot Action", columns = c("foot_paddle_points"))
+        colGroup(name = "Feet", columns = c("foot_paddle_points"))
       ),
       columns = list(
+        player_id = colDef(show=F),
+        foot_sinks = colDef(show=F),
         rank = colDef("",
                       align = "left", 
                       minWidth = 35,
@@ -1255,13 +1304,14 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
 # Visualizations ----------------------------------------------------------
 
 score_heatmap = function(df){
-  max_score = summarise_at(df, vars(starts_with("score")), max) %>% 
-    pull() %>% 
-    max()
+  max_score = summarise(df, across(starts_with("score"), max)) |> 
+    collect() |> 
+    summarise(max = max(c_across(score_a:score_b))) |> 
+    pull()
   
   score_labels = seq_len(max_score + 1) - 1 
   score_labels[score_labels %% 2 == 0] = ""
-  score_labels = score_labels %>% as.character()
+  score_labels = as.character(score_labels)
   # Create helpers for the labels in the scale
   
   
@@ -1271,20 +1321,32 @@ score_heatmap = function(df){
     # Record the 45 degree line for visual reference
     geom_abline(mapping = NULL, data = NULL, slope = 1, intercept = 0) + 
     scale_fill_gradient(name = "Frequency", low = "#ffeda0", high = "#f03b20", na.value = "grey",
-                        guide = guide_colourbar(barwidth = .5, barheight = 15, direction = "vertical",
+                        guide = guide_colourbar(barwidth = .5, barheight = 13, 
+                                                # barheight = .5, barwidth = 13, 
+                                                direction = "vertical", 
                                                 title.vjust = 1, title.hjust = 0.5, 
-                                                title.position = "right", title.theme = element_text(angle = -90)))+
-    labs(x = "Team B",
-         y = "Team A",
-         # title = "Heatmap of scores in Snappa",
-         subtitle = "Frequency of each combination of scores (e.g. 3-1)")+
-    coord_cartesian(xlim = c(1, max_score - 1),
-                    ylim = c(1, max_score - 1)) +
-    scale_x_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
-    scale_y_continuous(breaks = scales::breaks_pretty(n = 10), sec.axis = dup_axis(name = NULL)) +
-    theme_snappa()+
+                                                ticks = T, ticks.linewidth = 0.75, ticks.colour = snappa_pal[1],
+                                                title.position = "right", title.theme = element_text(angle = -90, size = 14)))+
+    labs(# title = "Heatmap of scores in Snappa",
+         # subtitle = "How often do each combination of scores (e.g. 3-1) occur?",
+         x = "Team B",
+         y = "Team A")+
+    coord_cartesian(xlim = c(1, max_score),
+                    ylim = c(1, max_score)) +
+    scale_x_continuous(breaks = scales::breaks_pretty(n = 10), minor_breaks = 0:max_score+.5, 
+                       expand = expansion(add = 1.5), 
+                       # limits = c(0, max_score),
+                       sec.axis = dup_axis(name = NULL)) +
+    scale_y_continuous(breaks = scales::breaks_pretty(n = 10), minor_breaks = 0:max_score+.5, 
+                       expand = expansion(add = 1.5),
+                       # limits = c(1, max_score), 
+                       sec.axis = dup_axis(name = NULL)) +
+    theme_snappa(plot_margin = margin(5,5,5,5))+
     theme(panel.grid.major = element_blank(),
-          legend.position = "right",
+          axis.title.x = element_text(colour = snappa_pal[2]),
+          axis.title.y = element_text(colour = snappa_pal[3]),
+          legend.position = "right",#c(.13, .95), 
+          # legend.background = element_rect(fill = snappa_pal[1], colour = NULL),
           axis.ticks.x.bottom = element_line())
   
   
@@ -2034,7 +2096,7 @@ theme_snappa = function(title_family = "Roboto Medium",
         axis.text = element_text(size = base_size * 1.2),
         axis.text.x = element_text(margin = margin(10,10,10,10)),
         axis.text.y = element_text(hjust = 1),
-        axis.title.y.left = element_text(margin = margin(0,20,0,10)),
+        axis.title.y.left = element_text(margin = margin(0,10,0,10)),
         axis.title.x.bottom = element_text(margin = margin(10,0,10,0)),
         axis.title.x.top = element_text(margin = margin(10,0,10,0)),
         axis.title = element_text(size = base_size * 1.4,

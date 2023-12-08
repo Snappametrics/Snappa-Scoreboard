@@ -38,7 +38,7 @@ players_tbl = dbGetQuery(con, "SELECT * FROM players")
 # game_stats_tbl = dbGetQuery(con, "SELECT * FROM game_stats") 
 
 # Makea list of table templates
-tbls = c("scores", "player_stats", "game_stats", "score_progression", "career_stats")
+tbls = c("scores", "player_stats", "game_stats", "career_stats")
 tbl_templates = map(tbls, function(table){
   dbGetQuery(con, str_c("SELECT * FROM ", table, " LIMIT 0")) 
 }) %>% 
@@ -98,13 +98,19 @@ ui <- dashboardPage(
           label = "What score are you playing to?",
           min = 11, max = 50, value = 21
         ),
-        disabled(actionBttn("tifu", "Friendly Fire",
-                            style = "material-flat",
-                            size = "sm", color = "danger")),
         br(),
         actionBttn("finish_game", "Finish",
                    icon = icon("check"), size = "sm",
                    style = "material-flat", color = "warning"),
+        br(),
+        actionBttn("debug", label = "debug", icon = icon("bug"), 
+                   style = "material-flat", color = "danger")
+      ),
+      controlbarItem(
+        title = "Casualties",
+        disabled(actionBttn("tifu", "Friendly Fire",
+                            style = "material-flat",
+                            size = "sm", color = "danger")),
         br(),
         actionBttn("highnoon_manual", 
                    "High noon", size = "sm",
@@ -113,6 +119,7 @@ ui <- dashboardPage(
         actionBttn("casualty_manual", 
                    "Casualty Check", size = "sm",
                    style = "material-flat", color = "royal")
+        
       )
       
       # icon = "desktop",
@@ -142,7 +149,8 @@ ui <- dashboardPage(
                                            icon = icon("dice"), size = "sm")),
                        uiOutput("validate_start"),
                        
-                       helpText("Note: All players must enter their name before the game can begin")
+                       helpText("Note: All players must enter their name before the game can begin"),
+                       reactableOutput("expected_inputs")
                        ),
                        
                 
@@ -183,6 +191,7 @@ ui <- dashboardPage(
               box(width = 12, title = "Top Snappaneers",
                     style = str_c("background:", snappa_pal[1]), align = "center",
                     div(class = "top-snappaneers",
+                        uiOutput("leaderboard_date_filter", width = "100%", class = "leaderboard-row"),
                         div(class = "snappaneers-header",
                             # div(class = "snappaneers-title", "Top Snappaneers"),
                             "The deadliest die-throwers in all the land."
@@ -194,9 +203,10 @@ ui <- dashboardPage(
                         )
                     )
                 ),
-                box(width = 12,
+                box(width = 8, title = "Score Heatmap",
                     style = str_c("background:", snappa_pal[1]), align = "center",
-                                 plotOutput("scoring_heatmap", height = "75vw",
+                    p("A heatmap of the different scores that have occurred in games of Snappa."),
+                                 plotOutput("scoring_heatmap", height = "38em", width = "100%", 
                                             hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
                                  uiOutput("heatmap_info")
                 )
@@ -345,6 +355,11 @@ ui <- dashboardPage(
 
 # Server ------------------------------------------------------------------
 server <- function(input, output, session) {
+  
+  observeEvent(input$debug, {
+    browser()
+  })
+
   # This is an initial value which will be overwritten when you run
   # the simulations
   w = Waiter$new(
@@ -509,19 +524,44 @@ server <- function(input, output, session) {
   # Active input buttons
   #   - List of player inputs which are not null
   active_player_inputs = reactive({
-    list("A1" = input$name_A1, "A2" = input$name_A2, "A3" = input$name_A3, "A4" = input$name_A4, 
-         "B1" = input$name_B1, "B2" = input$name_B2, "B3" = input$name_B3, "B4" = input$name_B4) %>% 
+    list("A1" = input$name_A1, "A2" = input$name_A2, "A3" = input$name_A3, "A4" = input$name_A4, "A5" = input$name_A5, 
+         "B1" = input$name_B1, "B2" = input$name_B2, "B3" = input$name_B3, "B4" = input$name_B4, "B5" = input$name_B5) %>% 
       discard(is_null)
+  })
+  
+  player_inputs = reactive({
+    tribble(
+      ~input, ~team, ~player_name, ~expected,
+      "A1", "A", input$name_A1, T,
+      "A2", "A", input$name_A2, T,
+      "A3", "A", input$name_A3, input$add_player_A3,
+      "A4", "A", input$name_A4, input$add_player_A4,
+      "A5", "A", input$name_A5, input$add_player_A5,
+      "B1", "B", input$name_B1, T,
+      "B2", "B", input$name_B2, T, 
+      "B3", "B", input$name_B3, input$add_player_B3,
+      "B4", "B", input$name_B4, input$add_player_B4,
+      "B5", "B", input$name_B5, input$add_player_B5
+    )
+  })
+  
+  expected_player_inputs = reactive({
+    player_inputs() |> 
+      # Keep expected players
+      filter(expected)
+    
+  })
+  
+  output$expected_inputs = renderReactable({
+    reactable(expected_player_inputs())
   })
   
   # Snappaneers - | Team | Player name | Player ID  | Shots
   snappaneers = reactive({
     
-    tibble(
-      # Team pulls the first letter from their input name
-      team = str_extract(names(active_player_inputs()), ".{1}"),
-      player_name = flatten_chr(active_player_inputs())
-    ) %>% 
+    player_inputs() |> 
+      filter(player_name !="") |> 
+      select(-expected) |> 
       # Remove empty player inputs
       filter(player_name != "") %>% 
       left_join(vals$players, by = "player_name") %>% 
@@ -908,27 +948,80 @@ server <- function(input, output, session) {
   
 
   output$leaderboard_rt = renderReactable({
+    req(input$leaderboard_range)
     # Create the rank column, arrange the data, and select the columns
-    aggregated_data = vals$db_tbls()[["career_stats"]]
+    # aggregated_data = vals$db_tbls()[["career_stats"]]
+    
+    leaderboard_stats = calculate_leaderboard_stats(con, min_date = input$leaderboard_range[1], max_date = input$leaderboard_range[2])
     
     # Separate out those with under 5 games
-    dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
+    # dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
       
-    leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
+    # leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
+    leaderboard_table_rt(collect(leaderboard_stats))
   })
-
   
-
-  output$scoring_heatmap = renderPlot({
-    score_heatmap(vals$db_tbls()[["score_progression"]])
+  output$leaderboard_date_filter = renderUI({
+    games = tbl(con, "game_stats") |> 
+      summarise(min_date = min(as.Date(game_start), na.rm=T))
+    
+    current_date = today(tzone = "America/Los_Angeles")
+    
+    tagList(
+            # column(width = 4,
+              dateRangeInput("leaderboard_range", label = "Timeframe", 
+                             startview = "year", 
+                             start = floor_date(current_date, unit = "year"), end = current_date, 
+                             min = pull(games, min_date), max = current_date, format = "M d, yyyy"),
+              # Quick filters
+              actionButton("leaderboard_all", label = "All", class = "btn-primary"),
+              actionButton("leaderboard_past_year", label = "Past 12 Months", class = "btn-primary"),
+              actionButton("leaderboard_past_6mo", label = "Past 6 Months", class = "btn-primary"),
+              actionButton("leaderboard_past_3mo", label = "Past 3 Months", class = "btn-primary"),
+              actionButton("leaderboard_past_month", label = "Past Month", class = "btn-info")
+    )
   })
+
+  # Observe quick filters
+  observeEvent(input$leaderboard_all, {
+    games = tbl(con, "game_stats") |> 
+      summarise(min_date = min(as.Date(game_start), na.rm=T))
+    
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = pull(games, min_date), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  observeEvent(input$leaderboard_past_year, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(12), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  observeEvent(input$leaderboard_past_6mo, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(6), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  observeEvent(input$leaderboard_past_3mo, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(3), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  observeEvent(input$leaderboard_past_month, {
+    updateDateRangeInput(inputId = "leaderboard_range", 
+                         start = today(tzone = "America/Los_Angeles") %m-% months(1), 
+                         end = today(tzone = "America/Los_Angeles"))
+  })
+  
+  output$scoring_heatmap = renderPlot({
+    score_heatmap(tbl(con, "score_progression"))
+  }, res = 96)
   
   output$heatmap_info <- renderUI({
     req(input$heat_hover)
     x <- round(input$heat_hover$x, 0)
     y <- round(input$heat_hover$y, 0)
     
-    freq = filter(vals$db_tbls()[["score_progression"]], score_a == y, score_b == x) %>% 
+    freq = filter(tbl(con, "score_progression"), score_a == y, score_b == x) %>% 
       pull(n)
     
     HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
@@ -1504,7 +1597,17 @@ observe({
 
   })
   
+  need_unique_players = reactive({
+    # All player names are unique
+    length(unique(expected_player_inputs()$player_name)) == nrow(expected_player_inputs())
+  })
   
+  need_player_names = reactive({
+    # All player names are non-empty
+    all(expected_player_inputs()$player_name != "")
+  })
+  
+
   # Create a UI output which validates that there are four players and the names are unique
   output$validate_start = reactive({
     # If one of the first two players on each team
@@ -1514,50 +1617,26 @@ observe({
     # check is failed, or else the logic isn't
     # going to pass through
     
-    if(any(input$name_A1 == "",
-           input$name_A2 == "",
-           input$name_B1 == "",
-           input$name_B2 == "")){
-      shinyjs::disable("start_game")
-    }
-    
-    validate(
-      need(input$name_A1 != "", label = "Player A1"),
-      need(input$name_A2 != "", label = "Player A2"), 
-      need(input$name_B1 != "", label = "Player B1"), 
-      need(input$name_B2 != "", label = "Player B2")
-      )
-    
     #Record the players that you need to be looking for
     # (i.e., which ui elements are open right now?)
     
     
     # If the number of unique snappaneer names is the same as the number of active player inputs
     #   => enable start button
-    
-    if(sum(length(unique(snappaneers()$player_name)), 
-             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
-             isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
-             isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-             isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
-             )
-           ) == num_players()){ 
-      shinyjs::enable("start_game")
-    } 
+    # validate(
+    #   need(need_unique_players(), label = "Unique players", message = "Player names need to be unique"),
+    #   need(need_player_names(), label = "Empty player names", message = "Some player names are empty")
+    # )
+
     
     # If the number of unique snappaneer names is not the same as the number of active player inputs
     #   => disable start button
-    if(sum(length(unique(snappaneers()$player_name)), 
-           sum(
-             c(isTRUE(active_player_inputs()$A3 == "" & vals$want_A3), 
-                isTRUE(active_player_inputs()$A4 == "" & vals$want_A4), 
-                isTRUE(active_player_inputs()$B3 == "" & vals$want_B3), 
-                isTRUE(active_player_inputs()$B4 == "" & vals$want_B4)
-                ) 
-           )
-    ) != num_players()){ 
+    if(length(unique(expected_player_inputs()$player_name)) != nrow(expected_player_inputs()) |
+       any(expected_player_inputs()$player_name == "")){ 
       
     shinyjs::disable("start_game")
+    } else {
+      shinyjs::enable("start_game")
     }
     
 
@@ -1572,29 +1651,8 @@ observe({
   #   - Initialize the current game's player_stats table
   observeEvent(input$start_game, {
     
-    # browser()
     if(as.integer(collect(tally(tbl(con, "incomplete_game")))) == 0){
-      inputSweetAlert(
-        inputId = "arena_select",
-        title = "Arena",
-        text = "Where are the dice being thrown?",
-        type = "question",
-        input = "select",
-        inputOptions = c("Greenhaus 2: Electric Boogaloo", "Ventura", 
-                         'The Oasis', "Other?"),
-        allowOutsideClick = FALSE
-        # pickerInput(
-        #   inputId = "arena_select",
-        #   label = "Arena",
-        #   selected = "Greenhaus 2: Electric Boogaloo",
-        #   choices = c("Greenhaus", "Ventura", "Greenhaus 2: Electric Boogaloo",
-        #               'The Oasis'),
-        #   options = pickerOptions(
-        #     mobile = T,
-        #     showTick = T
-        #   )
-        # )
-      )
+      arena_select_popup()
     }
     
     
@@ -1639,14 +1697,13 @@ observe({
                       )
         )
         
-        vals$players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players"))
+        # vals$players = dbGetQuery(con, sql("SELECT player_id, player_name FROM players"))
+        vals$players = collect(tbl(con, "players"))
         
         # Increment the ID for the next new player
         vals$new_player_id = vals$new_player_id+1
         
-        
-        
-        
+
       } else {
         invisible()
       }
@@ -1655,9 +1712,9 @@ observe({
     # Check if the last game was finished
     # Switch to the scoreboard
     # Using isFALSE also denies character(0) in the event that we're starting on a fresh table. Nice!
+    # LAST GAME WAS NOT FINISHED
     if (!dbGetQuery(con, "SELECT game_complete FROM game_stats WHERE game_id = (SELECT MAX(game_id) FROM game_stats)")[1,1]) {
       
-      # LAST GAME WAS NOT FINISHED
       
       lost_game = dbGetQuery(con, "SELECT MAX(game_id) FROM game_stats")[1,1]
       
@@ -1941,40 +1998,6 @@ observeEvent(input$game_summary, {
       select(player_input, player_name) |> 
       deframe()
     
-    removeModal()
-    
-    #Look at the number of lost players on each team to be certain of the values 
-    # that you want
-    
-    # size_A = filter(lost_players, team == "A") %>%
-    size_A = lost_players[lost_players$team == "A", ] %>%
-      summarize(sum = n()) %>%
-        deframe()
-    # size_B = filter(lost_players, team == "B") %>% 
-    size_B = lost_players[lost_players$team == "B",] %>% 
-      summarize(sum = n()) %>%
-        deframe()
-    
-    # Check to see if you should be signaling to the app to care about extra
-    # players
-     if (size_A == 3){
-      shinyjs::click("extra_player_A3")
-    } else if (size_A == 4){
-      shinyjs::click("extra_player_A3")
-      shinyjs::click("extra_player_A4")
-    } else {
-      invisible()
-    }
-    
-    if (size_B == 3){
-      shinyjs::click("extra_player_B3")
-    } else if (size_B == 4){
-      shinyjs::click("extra_player_B3")
-      shinyjs::click("extra_player_B4")
-    } else {
-      invisible()
-    }
-    
     iwalk(input_list, function(name, id){
       
       updateSelectizeInput(session, inputId = id, selected = name)
@@ -2007,6 +2030,8 @@ observeEvent(input$game_summary, {
     
     # Pull in lost game casualties 
     vals$casualties = as_tibble(dbGetQuery(con, str_c("SELECT * FROM casualties WHERE game_id = ", lost_game_id)))
+    
+    removeModal()
     
     delay(500, shinyjs::click("start_game"))
 })
@@ -2123,11 +2148,11 @@ observeEvent(input$resume_no, {
                  # browser()
     if(is.null(input$casualty) && is.character(input$highnoon)){
       
-      
       # Convert player name to ID
       casualty = select(snappaneers(), starts_with("player")) %>% 
         deframe() %>% 
         pluck(input$highnoon)
+      
       # Insert casualty details
       new_casualty = tibble(
         casualty_id = as.numeric(dbGetQuery(con, sql("SELECT MAX(casualty_id)+1 FROM casualties"))),
@@ -2135,8 +2160,8 @@ observeEvent(input$resume_no, {
         score_id = vals$score_id,
         player_id = casualty,
         casualty_type = "High noon",
-        reported_player = NA_integer_,
-        round = round_num()
+        reported_player = NA_integer_#,
+        # round = round_num()
       )
     } else {
       validate(
@@ -2156,12 +2181,12 @@ observeEvent(input$resume_no, {
         score_id = vals$score_id,
         player_id = casualty,
         casualty_type = type,
-        reported_player = NA_integer_,
-        round = round_num()
+        reported_player = NA_integer_#,
+        # round = round_num()
       )
     }
     validate(
-      need(is.tibble(new_casualty), label = "New casualty")
+      need(is_tibble(new_casualty), label = "New casualty")
     )
 
     # Add to casualties reactive
@@ -2281,119 +2306,60 @@ observeEvent(input$resume_no, {
 
 # New Players -------------------------------------------------------------
 
-  getInputs <- function(pattern){
-    reactives <- names(reactiveValuesToList(input))
-    reactives[grep(pattern,reactives)]
-  }
+  # Enable/disable extra player inputs
+  # Also reset them upon disabling
   
-  # New Player A3
-  #   - Add A3 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_A3, {
-    # Set input want to true
-    vals$want_A3 = T
-    
-    # Get add player button inputs
-    val <- paste0("#",getInputs("extra_player_A3"))
-    add_player_input("start", val, "A", 3, current_choices(), session)
-    
+  ## Team A
+  ### Player A3
+  observe({
+    toggleState(id = "player-input-A3", condition = input$add_player_A3)
   })
+  observeEvent(isFALSE(input$add_player_A3), {
+    reset("player-input-A3")
+  }, ignoreInit = T)
   
-  # Remove A3
-  #   - Insert add new player action button
-  #   - Remove A3 player name input
-  observeEvent(input$remove_A3, {
-    remove_p3_input("start", "A", session)
+  ### Player A4
+  observe({
+    toggleState(id = "player-input-A4", condition = input$add_player_A4)
+  })
+  observeEvent(isFALSE(input$add_player_A4), {
+    reset("player-input-A4")
+  }, ignoreInit = T)
+  
+  
+  ### Player A5
+  observe({
+    toggleState(id = "player-input-A5", condition = input$add_player_A5)
+  })
+  observeEvent(isFALSE(input$add_player_A5), {
+    reset("player-input-A5")
+  }, ignoreInit = T)
+  
+  ## Team B
+  ### Player B3
+  observe({
+    toggleState(id = "player-input-B3", condition = input$add_player_B3)
+  })
+  observeEvent(isFALSE(input$add_player_B3), {
+    reset("player-input-B3")
+  }, ignoreInit = T)
+  
+  ### Player B4
+  observe({
+    toggleState(id = "player-input-B4", condition = input$add_player_B4)
+  })
+  observeEvent(isFALSE(input$add_player_B4), {
+    reset("player-input-B4")
+  }, ignoreInit = T)
+  
+  ### Player B5
+  observe({
+    toggleState(id = "player-input-B5", condition = input$add_player_B5)
+  })
+  observeEvent(isFALSE(input$add_player_B5), {
+    reset("player-input-B5")
+  }, ignoreInit = T)
 
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_A3 = F
-    vals$want_A4 = F
-    
-  })
-  
-  
-  # New Player A4
-  #   - Add A4 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_A4, {
-    # Set input want to true
-    vals$want_A4 = T
-    
-    # Get UI inputs for extra player button
-    vals <- paste0("#",getInputs("extra_player_A4"))
-    
-    add_player_input("start", vals, "A", 4, current_choices(), session)
-    
-  })
-  
-  # Remove A4
-  #   - Insert add new player action button
-  #   - Remove A4 player name input
-  observeEvent(input$remove_A4, {
-    remove_p4_input("start", "A", session)
-    
-    vals$want_A4 = F
-    
-  })  
-  
-  
-  # New Player B3
-  #   - Add B3 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_B3, {
-    
-    # Set want check to true
-    vals$want_B3 = T
-    
-    # Get inputs for add player button
-    vals <- paste0("#",getInputs("extra_player_B3"))
-    
-    add_player_input("start", vals, "B", 3, current_choices(), session)
-  })
-
-  # Remove B3
-  #   - Insert add new player action button
-  #   - Remove B3 player name input
-  observeEvent(input$remove_B3, {
-    remove_p3_input("start", "B", session)
-    
-    #Don't consider these elements when looking at
-    # total length of players. Prevents the game
-    # from getting locked out after players have
-    # been added
-    vals$want_B3 = F
-    vals$want_B4 = F
-    
-  })
-  
-  # New Player B4
-  #   - Add B4 text input
-  #   - Remove the add new player action button
-  observeEvent(input$extra_player_B4, {
-    # Set want check to true
-    vals$want_B4 = T
-    
-    # Get add player button inputs
-    vals <- paste0("#",getInputs("extra_player_B4"))
-    
-    add_player_input("start", vals, "B", 4, current_choices(), session)
-  })
-  
-
-  # Remove B4
-  #   - Insert add new player action button
-  #   - Remove B4 player name input
-  observeEvent(input$remove_B4, {
-    remove_p4_input("start", "B", session)
-    # Tells later checks to not worry about this
-    # empty slot in active_player_names
-    vals$want_B4 = F
-
-  })  
-  
   
 
 # Scoring -----------------------------------------------------------------
@@ -2401,7 +2367,7 @@ observeEvent(input$resume_no, {
   #TODO: Fix score_id, game_id, and num_points_scored in scores_db in vals: change from dbl to int
 
 
-# Team A ------------------------------------------------------------------
+## Team A ------------------------------------------------------------------
 
   
   observeEvent(input$A_score_button, {
@@ -2524,7 +2490,7 @@ observeEvent(input$resume_no, {
 
   })
   
-  # Team B ---------------------------------------------------------
+  ## Team B ---------------------------------------------------------
   
   
   observeEvent(input$B_score_button, {
@@ -2645,7 +2611,7 @@ observeEvent(input$resume_no, {
   
   
 
-# Undo Score --------------------------------------------------------------
+## Undo Score --------------------------------------------------------------
 
   # Undo score consists of:
   # - Observe the press of the undo score button
