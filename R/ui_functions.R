@@ -13,7 +13,90 @@ library(htmltools)
 
 rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 
+snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
+
 # UI functions ------------------------------------------------------------
+
+dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") {
+  if (!is.null(badgeStatus)) 
+    validateStatus(badgeStatus)
+  items <- c(list(...))
+  dropdownClass <- paste0("dropdown")
+  numItems <- length(items)
+  if (is.null(badgeStatus)) {
+    badge <- NULL
+  }
+  else {
+    badge <- dashboardLabel(status = badgeStatus, numItems)
+  }
+  shiny::tags$li(shiny::singleton(shiny::tags$head(shiny::tags$script(shiny::HTML(paste0("$(document).ready(function(){\n                $('#", 
+                                                                                         id, "').find('ul').click(function(e){\n                  e.stopPropagation();\n                });\n              });\n              "))))), 
+                 class = dropdownClass, id = id, shiny::tags$a(href = "#", 
+                                                               class = "dropdown-toggle", `data-toggle` = "dropdown", 
+                                                               shiny::icon(icon), title, badge), 
+                 shiny::tags$div(class = "dropdown-menu", 
+                                 style = "left: 0; right: auto;", 
+                                 items))
+}
+
+game_notification = function(rebuttal = F, round, current_scores){
+  if(rebuttal){
+    
+    team_in_rebuttal = str_extract(round, "[AB]+")
+    text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
+    showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
+                                team_in_rebuttal, "</span>",
+                                " needs ",
+                                abs(current_scores$team_A - current_scores$team_B) - 1,
+                                " points to bring it back")
+    ), duration = 5)
+  } else {
+    showNotification(HTML(str_c("<i class='fa fa-sign-language' style='padding: 1vh;'></i><span>That's some hot!</span>")),
+                     duration = 6)
+  }
+  
+}
+
+recent_scores_tab = function(scores_data){
+  
+  scores_data %>% 
+    mutate(colour = if_else(scoring_team == "A", snappa_pal[2], snappa_pal[3]),
+           # Who scored?
+           scorer = str_c("<span style = 'font-weight: 600;color:", 
+                          colour, ";'>",
+                          player_name, "</span>"), 
+           # How many points?
+           points = str_c(" scored <span style='font-weight: 600;'>",
+                          points_scored,
+                          if_else(points_scored > 1, " points", " point"), "</span>",
+                          if_else(clink, " with a clink", ""), " for"),
+           # In what round?
+           when_scored= str_c(" in round <span style = 'font-weight: 600;'>", round_num, "</span>"),
+           # For which team?
+           for_whom = str_c(" <span style = 'font-weight: 600;color:", 
+                            colour, ";'>", "Team ", toupper(scoring_team), "</span>"),
+           # Anything special?
+           special = str_c(
+             if_else(paddle, str_c(" and it was a", 
+                                   if_else(foot, " foot", ""), " paddle!"), ""
+             )
+           ),
+           # Put the sentence together
+           sentence = str_c(scorer, points, for_whom, when_scored, special)
+    ) %>% 
+    select(sentence) %>% 
+    gt() %>% 
+    # Format the sentence with markdown
+    fmt_markdown(vars(sentence)) %>% 
+    tab_theme_snappa() %>% 
+    tab_options(column_labels.hidden = T,
+                heading.align = 'center')
+}
+
+
+# Pop-ups -----------------------------------------------------------------
+
+
 
 # Score pop-up dialog box
 score_check <- function(team, players, round) {
@@ -87,48 +170,9 @@ score_check <- function(team, players, round) {
   
 }
 
-dropdownBlock2 = function (..., id, icon = NULL, title = NULL, badgeStatus = "danger") 
-{
-  if (!is.null(badgeStatus)) 
-    validateStatus(badgeStatus)
-  items <- c(list(...))
-  dropdownClass <- paste0("dropdown")
-  numItems <- length(items)
-  if (is.null(badgeStatus)) {
-    badge <- NULL
-  }
-  else {
-    badge <- dashboardLabel(status = badgeStatus, numItems)
-  }
-  shiny::tags$li(shiny::singleton(shiny::tags$head(shiny::tags$script(shiny::HTML(paste0("$(document).ready(function(){\n                $('#", 
-                                                                                         id, "').find('ul').click(function(e){\n                  e.stopPropagation();\n                });\n              });\n              "))))), 
-                 class = dropdownClass, id = id, shiny::tags$a(href = "#", 
-                                                               class = "dropdown-toggle", `data-toggle` = "dropdown", 
-                                                               shiny::icon(icon), title, badge), 
-                 shiny::tags$div(class = "dropdown-menu", 
-                                style = "left: 0; right: auto;", 
-                                items))
-}
 
 
 
-game_notification = function(rebuttal = F, round, current_scores){
-  if(rebuttal){
-    
-    team_in_rebuttal = str_extract(round, "[AB]+")
-    text_colour = if_else(team_in_rebuttal == "A", snappa_pal[2], snappa_pal[3])
-    showNotification(HTML(str_c("Rebuttal: ", "<span style='color:", text_colour, "'>Team ", 
-                                team_in_rebuttal, "</span>",
-                                " needs ",
-                                abs(current_scores$team_A - current_scores$team_B) - 1,
-                                " points to bring it back")
-    ), duration = 5)
-  } else {
-    showNotification(HTML(str_c("<i class='fa fa-sign-language' style='padding: 1vh;'></i><span>That's some hot!</span>")),
-                     duration = 6)
-  }
-  
-}
 
 casualty_popup = function(session, score, rules, players = snappaneers()$player_name){
   # Create a pop up given a score and a set of rules
@@ -300,6 +344,166 @@ highnoon_popup = function(players){
     # btn_labels = c("Everyone's safe", "Got 'em") 
   )
 }
+
+restart_game_popup = function(ps_tbl){
+  # Gather the items that are needed to assemble the UI
+  df_a = collect(filter(ps_tbl, team == "A"))
+  df_b = collect(filter(ps_tbl, team == "B"))
+  
+  score_a = sum(df_a$total_points)
+  score_b = sum(df_b$total_points)
+  
+  # Now, set up the UI 
+  ui_output = fluidRow(
+    column(5, align = "right",
+           h3("Team A", style = str_c("color:", snappa_pal[2])),
+           restart_summary_tab_rt(df_a)
+    ),
+    column(2,
+           h2(str_c(score_a, " - ", score_b), align = 'center')
+    ),
+    column(5,
+           h3("Team B", style = str_c("color:", snappa_pal[3])), 
+           restart_summary_tab_rt(df_b)
+    )
+  )
+  
+  showModal(
+    modalDialog(
+      title = "There's still unfinished game in the system",
+      style = str_c("background-color:", snappa_pal[1], ";"),
+      div(
+        h4("Summary of the last game", 
+           align = 'center')
+      ),
+      
+      br(),
+      ui_output,
+      
+      br(),
+      
+      h3("Do you want to continue?", align = "center"),
+      
+      div(align = "right", class = "restart-warning",
+          helpText("Warning: 'No' will delete the game from the database", 
+                   style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
+      ),
+      
+      footer = tagList(
+        # fluidRow(
+        # column(2,
+        actionBttn("resume_no",
+                   label = "No",
+                   style = "material-flat",
+                   color = "danger",
+                   size = "md", 
+                   class = "restart-bttn", 
+                   icon = icon("trash")),
+        # ),
+        # column(2,
+        actionBttn("resume_yes",
+                   label = "Yes",
+                   style = "material-flat", 
+                   color = "warning",
+                   size = "md", 
+                   class = "restart-bttn", 
+                   icon = icon("check"))
+        # )
+        # )
+      ),
+      size = "l",
+      easyClose = F,
+      fade = F
+    )
+  )
+}
+
+#' Game Summary Modal
+#'
+#' @param df Game summary data
+#' @param current_round Current round number
+#' @param a_sub Subtitle for Team A
+#' @param b_sub Subtitle for Team B
+#'
+#' @return
+#' @export
+#'
+#' @examples
+game_summary_modal = function(df, current_round, a_sub, b_sub){
+  # Display Modal
+  # showModal(
+  # Create Modal
+  # modalDialog(
+  sendSweetAlert(
+    html=T,
+    grow = "fullscreen",
+    btn_labels = NA,
+    showCloseButton = T,
+    # Title displays score
+    title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), 
+                       "game: <strong>", df$points_a, " - ", df$points_b, 
+                       "</strong> at ", 
+                       coalesce(rounds[df$rounds], current_round)
+    )),  
+    # style = str_c("background-color: ", snappa_pal[1], ";"),
+    # plotOutput("summary_plot", height = "50vh"),
+    # reactableOutput("scores_tbl"),
+    
+    # footer = NULL, 
+    # easyClose = TRUE,
+    # size = "l",
+    
+    
+    text = fluidPage(
+      # if_else(df$game_complete, stamp("Saturday, May 1 @ 10:30PM")(ymd_hms(df$game_end, tz = "America/Los_Angeles")), ""),
+      # Tables
+      fluidRow(align = "center",
+               # Team A
+               # reactableOutput("team_a_summary")
+               column(6, align = "center",
+                      h4("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
+                      h5(a_sub, align = "left"),
+                      withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
+                                  proxy.height = "145px", color.background = snappa_pal[1])
+               ),
+               
+               # Team B
+               column(6,align = "center",# offset = 2,
+                      h4("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
+                      h5(b_sub, align = "left"),
+                      withSpinner(reactableOutput("team_b_summary"), color = snappa_pal[3], 
+                                  proxy.height = "145px", color.background = snappa_pal[1])
+               )
+      ),
+      # Summary plots
+      fluidRow(align = "center", 
+               # Team A Player Breakdown
+               column(4, style = "padding-right:0;",
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "54vh"), color = snappa_pal[2], 
+                                  proxy.height = "200px", color.background = snappa_pal[1])
+               ),
+               # Game Flow
+               column(4,style = "padding:0",
+                      div(style = "padding:16px;",
+                          h4("How the die flies", align = "left")#,
+                          # h5("Point progression throughout the game", align = "left")
+                      )
+                      ,
+                      withSpinner(plotOutput("game_flow", height = "48vh"), color.background = snappa_pal[1],
+                                  color = snappa_pal[4])
+               ),
+               # Team B Player Breakdown
+               column(4, style = "padding-left:0; top:6vh;",
+                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "48vh"), color = snappa_pal[3], 
+                                  proxy.height = "200px", color.background = snappa_pal[1])
+               )
+      )
+    )
+  )
+}
+
+
+# Player Input ------------------------------------------------------------
 
 
 
@@ -599,41 +803,6 @@ remove_p4_input = function(current_tab, team, session){
   updateSelectizeInput(session, selectize_name, selected = character(0))
 }
 
-recent_scores_tab = function(scores_data){
-  
-  scores_data %>% 
-    mutate(colour = if_else(scoring_team == "A", snappa_pal[2], snappa_pal[3]),
-           # Who scored?
-           scorer = str_c("<span style = 'font-weight: 600;color:", 
-                          colour, ";'>",
-                          player_name, "</span>"), 
-           # How many points?
-           points = str_c(" scored <span style='font-weight: 600;'>",
-                          points_scored,
-                          if_else(points_scored > 1, " points", " point"), "</span>",
-                          if_else(clink, " with a clink", ""), " for"),
-           # In what round?
-           when_scored= str_c(" in round <span style = 'font-weight: 600;'>", round_num, "</span>"),
-           # For which team?
-           for_whom = str_c(" <span style = 'font-weight: 600;color:", 
-                            colour, ";'>", "Team ", toupper(scoring_team), "</span>"),
-           # Anything special?
-           special = str_c(
-             if_else(paddle, str_c(" and it was a", 
-                                   if_else(foot, " foot", ""), " paddle!"), ""
-             )
-           ),
-           # Put the sentence together
-           sentence = str_c(scorer, points, for_whom, when_scored, special)
-    ) %>% 
-    select(sentence) %>% 
-    gt() %>% 
-    # Format the sentence with markdown
-    fmt_markdown(vars(sentence)) %>% 
-    tab_theme_snappa() %>% 
-    tab_options(column_labels.hidden = T,
-                heading.align = 'center')
-}
 
 #For the restart game screen, I'm going to make a UI to handle most of the modalDialog
 # output. My idea is that if I make a function which can just do this based on the game, 
@@ -699,446 +868,17 @@ glance_ui_game = function(game.id){
  return(ui_output)
 }
 
-restart_game_popup = function(ps_tbl){
-  # Gather the items that are needed to assemble the UI
-  df_a = collect(filter(ps_tbl, team == "A"))
-  df_b = collect(filter(ps_tbl, team == "B"))
-  
-  score_a = sum(df_a$total_points)
-  score_b = sum(df_b$total_points)
-  
-  # Now, set up the UI 
-  ui_output = fluidRow(
-    column(5, align = "right",
-           h3("Team A", style = str_c("color:", snappa_pal[2])),
-           restart_summary_tab_rt(df_a)
-           ),
-    column(2,
-           h2(str_c(score_a, " - ", score_b), align = 'center')
-           ),
-    column(5,
-           h3("Team B", style = str_c("color:", snappa_pal[3])), 
-           restart_summary_tab_rt(df_b)
-           )
-  )
-  
-  showModal(
-    modalDialog(
-      title = "There's still unfinished game in the system",
-      style = str_c("background-color:", snappa_pal[1], ";"),
-      div(
-        h4("Summary of the last game", 
-           align = 'center')
-      ),
-      
-      br(),
-      ui_output,
-      
-      br(),
-      
-      h3("Do you want to continue?", align = "center"),
-      
-      div(align = "right", class = "restart-warning",
-        helpText("Warning: 'No' will delete the game from the database", 
-                 style = "color: red; display: inline-block; padding: 1.5vh; font-size: 2rem; font-weight: 600;")
-      ),
-      
-      footer = tagList(
-        # fluidRow(
-          # column(2,
-                 actionBttn("resume_no",
-                            label = "No",
-                            style = "material-flat",
-                            color = "danger",
-                            size = "md", 
-                            class = "restart-bttn", 
-                            icon = icon("trash")),
-          # ),
-          # column(2,
-                 actionBttn("resume_yes",
-                            label = "Yes",
-                            style = "material-flat", 
-                            color = "warning",
-                            size = "md", 
-                            class = "restart-bttn", 
-                            icon = icon("check"))
-          # )
-        # )
-      ),
-      size = "l",
-      easyClose = F,
-      fade = F
-    )
-  )
-}
 
 
 
 # Stats Output ------------------------------------------------------------
 
 
-make_summary_table = function(current_player_stats, player_stats, neers, team_name, current_round, past_scores){
-  # Produce a team's performance summary and comparison to historical performance in equivalent games
-  # 1. Get a list of games the player has played in
-  # 2. Get a list of scores from historical games at the equivalent point in the game
-  # 3. Calculate current game player stats
-  # 4. Calculate historical player stats from 1 & 2
-  # browser()
-  # List players on the given team
-  team_players = neers[neers$team == team_name, ]
-  # Store current team and opponent sizes
-  team_size = nrow(team_players) 
-  opponent_size = nrow(neers[neers$team != team_name, ])
-  
-  # Store current game id and the given team's current player stats
-  current_game = unique(current_player_stats$game_id)
-  team_player_stats = current_player_stats[current_player_stats$team == team_name, ]
-  current_shots = unique(team_player_stats$shots)
-  
-  
-  
-  # Make a historical stats table that is only comparing games which are similar
-  # to the current one.
-  # First, obtain a list of games in which the players on this team were on
-  # an equally sized team. This is player specific, so map() is used
 
-  
-  
-  # A not particularly elegant but probably working solution to making sure that games
-  # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
-  # and opponent_team_size and merge it to player_stats to be used as a 
-  
 
-  # Make a dataframe of team sizes in past games
-  # Count team size for each game
-  team_sizes = count(player_stats, game_id, team, name = "team_size") %>% 
-    # Pivot separate columns for team 
-    pivot_wider(names_from = team, 
-                values_from = team_size, 
-                names_glue = "size_{team}")
 
-  equivalent_games_player_stats = map(team_players$player_id, function(player){
-      # Subset each player's stats  to each player's stats and identify equivalent games
-      player_stats[player_stats$player_id == player & player_stats$game_id != current_game, ] %>% 
-        # Join team sizes to player stats
-        inner_join(team_sizes, by = "game_id") %>%
-        # Keep cases where the team sizes are equivalent
-        filter(if_else(team == "A", size_A, size_B) == team_size,
-               if_else(team == "B", size_A, size_B) == opponent_size)
 
-    })
-  
-  
-  # make a unique subsection of the scores table which only considers the given player in the
-  # given games. round_comparison should only be applied when a game is in progress. 
-  # While we're here, also tell the display not to care about winners maybe? I could also set
-  # a value here so that I don't have to execute a query later, but the issue becomes 
-  
-  ##
-  ## Scenario 1: Game is in progress
-  ##
-  in_progress = isFALSE(pull(dbGetQuery(con, sql(str_c("SELECT game_complete FROM game_stats WHERE game_id =", current_game, ";"))), 
-                             game_complete))
-  if (in_progress){
-    
-    # Filter to scores which are:
-    #   - only scored by players on this team
-    #   - less than or equal to the current round
-    scores_comparison = filter(past_scores,
-                               player_id %in% team_players$player_id, # Only include players on this team
-             parse_round_num(round_num) <= parse_round_num(current_round))
-
-    ##
-    ## Scenario 2: Game is complete
-    ##
-  } else {
-
-    scores_comparison = past_scores
-  }
-
-  # List scores which occurred at or before the current game's round
-  historical_scores = imap_dfr(team_players$player_id, function(player, index){
-      # Join each player's equivalent games to their scores from those games
-      left_join(equivalent_games_player_stats[[index]], 
-                scores_comparison, 
-                by = c("game_id", "player_id")) %>% 
-        filter(!(game_id %in% 38:48))
-    })
-  
-  # When in progress, keep the shot counter generated from current_shots
-  if(in_progress){
-    historical_scores = mutate(historical_scores, shots = current_shots)
-  }
-  
-  # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
-  # That means I have to recreate player_stats using this table 
-  
-  # Calculate game performance in equivalent games
-  comparison_player_stats = replace_na(historical_scores,
-                                       list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
-    # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, shots) %>% 
-    # Calculate summary stats
-    summarise(total_points = sum(points_scored),
-              ones = sum((points_scored == 1)),
-              twos = sum((points_scored == 2)),
-              threes = sum((points_scored == 3)),
-              impossibles = sum((points_scored > 3)),
-              paddle_points = sum(points_scored* (paddle | foot)),
-              clink_points = sum(points_scored*clink),
-              points_per_round = total_points / last(shots),
-              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
-              def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
-              .groups = "drop")
-  
-  # Filter player stats
-  player_info = select(team_player_stats, game_id, player_id, team) %>% 
-    inner_join(neers, by = c("player_id", "team")) 
-  
-  # Calculate current game performance
-  #   - Team score
-  #   - Which team is winning
-  # Then join on player info
-  player_summary = group_by(current_player_stats, team) %>% 
-    mutate(team_score = sum(total_points)) %>% 
-    ungroup() %>% 
-    mutate(winning = (team_score == max(team_score))) %>% 
-    filter(team == team_name) %>% 
-    select(team, winning, player_id,  
-           total_points, paddle_points, clink_points, threes, 
-           points_per_round:toss_efficiency)
-  
-  historical_stats = select(comparison_player_stats, game_id, player_id, 
-           shots, total_points, paddle_points, clink_points, sinks = threes, 
-           points_per_round:toss_efficiency) %>%
-    arrange(player_id, game_id) %>% 
-    group_by(player_id) %>% 
-    summarise(
-      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
-      across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
-      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
-             .fns = ~weighted.mean(., w = shots), 
-             .names = "{col}_wavg"),
-      .groups = "drop"
-    )
-  
-  player_summary_historical = full_join(player_summary, historical_stats, by = "player_id") %>% 
-    # Calculate the difference between current game and historical performance
-    mutate(total_points_diff = total_points - total_points_avg,
-           paddle_points_diff = paddle_points - paddle_points_avg,
-           clink_points_diff = clink_points - clink_points_avg,
-           points_per_round_diff = points_per_round - points_per_round_wavg,
-           off_ppr_diff = off_ppr - off_ppr_wavg,
-           def_ppr_diff = def_ppr - def_ppr_wavg,
-           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
-           # Format each difference for the table
-           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
-           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
-           toss_efficiency_diff = map_chr(toss_efficiency_diff, 
-                                          ~case_when(. >= 0 ~ toss_percent_plus(.), 
-                                                     . < 0 ~ toss_percent_minus(.)))) %>% 
-    # Remove historical stats
-    select(-ends_with("_avg"), -ends_with("wavg")) %>% 
-    # Order columns
-    select(starts_with("player"), team, winning, 
-           contains("total_points"), contains("paddle"), contains("clink"), sinks = threes, 
-           contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
-  
-  inner_join(select(team_players, player_id, player_name),
-             select(player_summary_historical,
-                    # -contains("clink"), -contains("sink"),
-                    -contains("points_per")), 
-             by = "player_id")
-  
-}
-
-#' Player Performance Summary
-#'
-#' @param game_started Start Game Input
-#' @param player_stats Player Stats data
-#' @param team_name Team
-#' @param game_obj Current Game object
-#' @param current_round Current Round
-#' @param past_scores Scores data from past games
-#' 
-#' Summarise how a player is performing in relation to their past performance in "similar" games".
-#' By similar, we mean games with the same team sizes e.g. 2v2, 2v3, 3v3, etc.
-#' For a 2 player team in a 2v3, only games where they were on the team of 2 are considered to be similar.
-#'
-#' @return
-#' @export
-#'
-#' @examples
-player_performance_summary = function(
-    game_started, 
-    player_stats, 
-    team_name, 
-    game_obj = NULL, 
-    current_round = NULL, 
-    past_scores
-    ){
-  # Produce a team's performance summary and comparison to historical performance in equivalent games
-  # 1. Get a list of games the player has played in
-  # 2. Get a list of scores from historical games at the equivalent point in the game
-  # 3. Calculate current game player stats
-  # 4. Calculate historical player stats from 1 & 2
-  # TODO: Specify relevant columns early on
-  if(game_started == 0){
-    ps_current = filter(player_stats, game_id == max(game_id))
-    
-    # Separate past game player stats
-    ps_past = filter(player_stats, game_id != max(game_id)) |> 
-      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
-             points_per_round, off_ppr, def_ppr, toss_efficiency)
-    current_game = unique(ps_current$game_id)
-  } else {
-    ps_current = game_obj$player_stats_db
-    
-    # Separate past game player stats
-    ps_past = filter(player_stats, game_id != game_obj$game_id) |> 
-      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
-             points_per_round, off_ppr, def_ppr, toss_efficiency)
-    
-    current_game = game_obj$game_id
-  }
-  
-  
-  # List players on the given team
-  ps_current_team = ps_current[ps_current$team == team_name, ]
-
-  # Store current team and opponent sizes
-  team_size = nrow(ps_current_team) 
-  opponent_size = nrow(ps_current[ps_current$team != team_name, ]) # Perhaps subtract? nrow(ps_current) - team_size
-  
-  # Store current game id and the given team's current player stats
-  current_shots = unique(ps_current_team$shots)
-  
-  # Make a historical stats table that is only comparing games which are similar
-  # to the current game
-  # 1) list games where player was in same team format e.g. 2v2,2v3,etc
-  #  This is player specific, so map() is used
-
-  # A not particularly elegant but probably working solution to making sure that games
-  # are really, truly, apples-to-apples. Create a table of game_id, ally_team_size,
-  # and opponent_team_size and merge it to player_stats to be used as a 
-  
-  # Make a dataframe of team sizes in past games
-  # ps_comparable = map(ps_current_team[, "player_id", drop=T],
-  ps_comparable = map(ps_current_team$player_id,
-      find_similar_games, player_stats = ps_past, team_size = team_size, opponent_size = opponent_size)
-
-  ## Scenario 1: Game is in progress
-  in_progress = (game_started != 0)
-  if (in_progress){
-    # browser()
-    # Filter to scores which are:
-    #   - only scored by players on this team
-    #   - less than or equal to the current round
-    # scores_comparable = filter(past_scores,
-    #                            player_id %in% ps_current_team$player_id, # Only include players on this team
-    #                            parse_round_num(round_num) <= parse_round_num(current_round))
-    scores_comparable = semi_join(past_scores,
-                                  ps_current_team, by = "player_id") |> # Only include players on this team
-      filter(parse_round_num(round_num) <= parse_round_num(current_round))
-    # scores_comparison = past_scores[past_scores$player_id %in% ps_current_team$player_id & parse_round_num(past_scores$round_num) <= parse_round_num(current_round), ]
-    
-  } else {
-    ## Scenario 2: Game is complete
-    scores_comparable = past_scores
-  }
-
-  # List scores which occurred at or before the current game's round
-  scores_historical = imap_dfr(ps_current_team$player_id, function(player, index){
-    # Join each player's comparable games to their scores from those games
-    left_join(ps_comparable[[index]], 
-              scores_comparable, 
-              by = c("game_id", "player_id")) %>% 
-      # Remove hard-coded games without player stats?
-      filter(!(game_id %in% 38:48))
-  })
-  
-  # When in progress, keep the shot counter generated from current_shots
-  if(in_progress){
-    scores_historical = mutate(scores_historical, shots = current_shots)
-  }
-  
-  # Now, this table is going to be plugged in to the pipeline that currently exists in the team summary tab function.
-  # That means I have to recreate player_stats using this table 
-  
-  # Calculate game performance in comparable games
-  ps_historical = replace_na(scores_historical,
-                                       list(points_scored = 0, paddle = F, clink = F, foot = F)) %>% 
-    # Group by game and player, (team and shots are held consistent)
-    group_by(game_id, player_id, shots) %>% 
-    # Calculate summary stats
-    summarise(total_points = sum(points_scored),
-              # ones = sum((points_scored == 1)),
-              # twos = sum((points_scored == 2)),
-              # threes = sum((points_scored == 3)),
-              # impossibles = sum((points_scored > 3)),
-              paddle_points = sum(points_scored* (paddle | foot)),
-              clink_points = sum(points_scored*clink),
-              points_per_round = total_points / last(shots),
-              off_ppr = sum(points_scored * !(paddle | foot))/ last(shots),
-              def_ppr = paddle_points/last(shots),
-              toss_efficiency = sum((points_scored>0)*!(paddle | foot ))/last(shots),
-              .groups = "drop")
-  
-  # Calculate current game performance
-  #   - Team score
-  #   - Which team is winning
-  # Then join on player info
-  current_game_stats = group_by(ps_current, team) %>% 
-    mutate(team_score = sum(total_points)) %>% 
-    ungroup() %>% 
-    mutate(winning = (team_score == max(team_score))) %>% 
-    filter(team == team_name) %>% 
-    select(team, winning, player_id,  
-           total_points, paddle_points, clink_points, #threes, 
-           points_per_round:toss_efficiency)
-  
-  historical_avg = select(ps_historical, game_id, player_id, 
-                            shots, total_points, paddle_points, clink_points, #sinks = threes, 
-                            points_per_round:toss_efficiency) %>%
-    arrange(player_id, game_id) %>% 
-    group_by(player_id) %>% 
-    summarise(
-      across(.cols = c(total_points, paddle_points, clink_points), .fns = mean, .names = "{col}_avg"),
-      # across(.cols = c(sinks), .fns = sum, .names = "{col}_total"),
-      across(.cols = c(points_per_round, off_ppr, def_ppr, toss_efficiency),
-             .fns = ~weighted.mean(., w = shots), 
-             .names = "{col}_wavg"),
-      .groups = "drop"
-    )
-  
-  current_game_comparison = full_join(current_game_stats, historical_avg, by = "player_id") %>% 
-    # Calculate the difference between current game and historical performance
-    mutate(total_points_diff = total_points - total_points_avg,
-           paddle_points_diff = paddle_points - paddle_points_avg,
-           clink_points_diff = clink_points - clink_points_avg,
-           points_per_round_diff = points_per_round - points_per_round_wavg,
-           off_ppr_diff = off_ppr - off_ppr_wavg,
-           def_ppr_diff = def_ppr - def_ppr_wavg,
-           toss_efficiency_diff = toss_efficiency - toss_efficiency_wavg,
-           # Format each difference for the table
-           across(matches("points_diff"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
-           across(matches("(per_round|ppr)_diff$"), ~str_c(if_else(.x >= 0, "+", ""), round(.x, 1))),
-           toss_efficiency_diff = map_chr(toss_efficiency_diff, 
-                                          ~case_when(. >= 0 ~ toss_percent_plus(.), 
-                                                     . < 0 ~ toss_percent_minus(.))))
-  
-  current_game_comparison %>% 
-    # Remove historical stats
-    select(-ends_with("_avg"), -ends_with("wavg"), -contains("points_per")) %>% 
-    # Order columns
-    select(starts_with("player"), team, winning, 
-           contains("total_points"), contains("paddle"), contains("clink"), #sinks = threes, 
-           contains("per_round"), contains("off_"), contains("def_"), contains("toss"))
-  
-  
-}
-
+# Create Table Outputs ----------------------------------------------------
 
 
 game_summary_tab_rt = function(df){
@@ -1511,6 +1251,9 @@ leaderboard_table_rt = function(career_stats_data, dividing_line, highlight_colo
   
 }
 
+
+# Visualizations ----------------------------------------------------------
+
 score_heatmap = function(df){
   max_score = summarise_at(df, vars(starts_with("score")), max) %>% 
     pull() %>% 
@@ -1546,300 +1289,6 @@ score_heatmap = function(df){
   
   
 }
-
-#' Game Summary Modal
-#'
-#' @param df Game summary data
-#' @param current_round Current round number
-#' @param a_sub Subtitle for Team A
-#' @param b_sub Subtitle for Team B
-#'
-#' @return
-#' @export
-#'
-#' @examples
-game_summary_modal = function(df, current_round, a_sub, b_sub){
-  # Display Modal
-  # showModal(
-    # Create Modal
-    # modalDialog(
-  sendSweetAlert(
-    html=T,
-    grow = "fullscreen",
-    btn_labels = NA,
-    showCloseButton = T,
-      # Title displays score
-      title = HTML(str_c(if_else(df$game_complete, "Last ", "Current "), 
-                         "game: <strong>", df$points_a, " - ", df$points_b, 
-                         "</strong> at ", 
-                         coalesce(rounds[df$rounds], current_round)
-                         )),  
-      # style = str_c("background-color: ", snappa_pal[1], ";"),
-      # plotOutput("summary_plot", height = "50vh"),
-      # reactableOutput("scores_tbl"),
-      
-      # footer = NULL, 
-      # easyClose = TRUE,
-      # size = "l",
-      
-
-    text = fluidPage(
-      # if_else(df$game_complete, stamp("Saturday, May 1 @ 10:30PM")(ymd_hms(df$game_end, tz = "America/Los_Angeles")), ""),
-      # Tables
-      fluidRow(align = "center",
-               # Team A
-               # reactableOutput("team_a_summary")
-               column(6, align = "center",
-                      h4("Team A", align = "left", style = str_c("color:", snappa_pal[2])),
-                      h5(a_sub, align = "left"),
-                      withSpinner(reactableOutput("team_a_summary"), color = snappa_pal[2], 
-                                  proxy.height = "145px", color.background = snappa_pal[1])
-               ),
-               
-               # Team B
-               column(6,align = "center",# offset = 2,
-                      h4("Team B", align = "left", style = str_c("color:", snappa_pal[3])),
-                      h5(b_sub, align = "left"),
-                      withSpinner(reactableOutput("team_b_summary"), color = snappa_pal[3], 
-                                  proxy.height = "145px", color.background = snappa_pal[1])
-               )
-      ),
-      # Summary plots
-      fluidRow(align = "center", 
-               # Team A Player Breakdown
-               column(4, style = "padding-right:0;",
-                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "54vh"), color = snappa_pal[2], 
-                                  proxy.height = "200px", color.background = snappa_pal[1])
-               ),
-               # Game Flow
-               column(4,style = "padding:0",
-                      div(style = "padding:16px;",
-                          h4("How the die flies", align = "left")#,
-                          # h5("Point progression throughout the game", align = "left")
-                      )
-                      ,
-                      withSpinner(plotOutput("game_flow", height = "48vh"), color.background = snappa_pal[1],
-                                  color = snappa_pal[4])
-               ),
-               # Team B Player Breakdown
-               column(4, style = "padding-left:0; top:6vh;",
-                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "48vh"), color = snappa_pal[3], 
-                                  proxy.height = "200px", color.background = snappa_pal[1])
-               )
-      )
-    )
-  )
-}
-
-
-
-markov_summary_data = function(simulations){
-  # Answer the basic questions
-  # Who won more? What's their win rate?
-  wins = simulations %>% map_chr( function(element){
-    element$won
-  })
-  A_winrate = length(wins[wins == "A"])/length(wins)
-  B_winrate = 1 - A_winrate
-
-  # In the games where the winningest team won, what was the modal score?
-  winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
-                    "A",
-                    "B")
-  if (length(winners) == 2){
-    tie = TRUE
-    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
-        team_A_score = simulations[[game_number]]$team_A %>% last()
-        team_B_score = simulations[[game_number]]$team_B %>% last()
-        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-        matrix = matrix(0, nrow = 51, ncol = 51)
-        matrix[team_A_score + 1, team_B_score + 1] = 1
-        
-        return(list("scores" = matrix,
-                    "final" = final_scores))
-      })
-    winrate = 0.50
-  } else {
-  # Using a matrix here so that I can treat each pairing of points as a unique
-  # value, rather than each team's individual total (meaning that I am truly
-  # looking for the pair of scores which are modal in the set of games that
-  # the winning team won)
-    tie = F
-    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
-      if (simulations[[game_number]]$won != winners){
-        team_A_score = simulations[[game_number]]$team_A %>% last()
-        team_B_score = simulations[[game_number]]$team_B %>% last()
-        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-        matrix = matrix(0, nrow = 51, ncol = 51)
-      } else {
-        team_A_score = simulations[[game_number]]$team_A %>% last()
-        team_B_score = simulations[[game_number]]$team_B %>% last()
-        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
-        matrix = matrix(0, nrow = 51, ncol = 51)
-        matrix[team_A_score + 1, team_B_score + 1] = 1
-      }
-      
-  
-      return(list("scores" = matrix,
-                  "final" = final_scores))
-    })
-    winrate = c("A" = A_winrate, "B" = B_winrate)[winners]
-  }
-  
-  # Initialize an empty matrix
-  scores_matrix = matrix(0, nrow = 51, ncol = 51)                     
-  for (i in 1:length(simulations)){
-    scores_matrix = scores_matrix + per_game_data[[i]]$scores 
-  }
-        
-  modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
-  
-  # As one may expect, this sometimes comes up with more than one 
-  # modal score! In that case, we have to tread a little more carefully.
-  # What I'll do is take advantage of the structure of the matrix to figure
-  # out which games look the best for everyone. What I'll do is look at the 
-  # score total that's the closest
-  if (length(modal_score_position) < 3){
-  modal_A_score = modal_score_position[1] - 1
-  modal_B_score = modal_score_position[2] - 1
-  } else{
-    modal_score_position = cbind(modal_score_position, 
-                                 abs(modal_score_position[, 1] - modal_score_position[, 2])) 
-    modal_row = which(modal_score_position[, 3] == min(modal_score_position[, 3]))
-    # If this is more than one, take the one with the highest A value. That will
-    # automatically break any ties. There cannot be duplicate A values in this 
-    # search already, because only one such A and B score pairing will have
-    # the smallest distance between them
-    if (length(modal_row) > 1){
-      if (all(winners == "A")){
-        modal_row = which(
-          modal_score_position[modal_row, 1] == max(modal_score_position[modal_row, 1])
-        )
-      } else {
-        #Technically this settles tie games with multiple modals in B's favor,
-        # but this is such a ridiculous outcome that I'm not going to worry about
-        # doing any more for now
-        modal_row = which(
-          modal_score_position[modal_row, 2] == max(modal_score_position[modal_row, 2])
-        )
-      } 
-    }
-    modal_A_score = modal_score_position[modal_row, 1] - 1
-    modal_B_score = modal_score_position[modal_row, 2] - 1
-  }
-  
-  final_scores_table = seq(1, length(per_game_data)) %>% 
-    map_df(function(number){
-      per_game_data[[number]]$final
-    })
-  
-  modal_frequency = final_scores_table %>%
-    filter(A == modal_A_score, B == modal_B_score) %>%
-    nrow()
-   
-  return(list("final_scores" = final_scores_table,
-              "wins" = wins,
-              "winner" = winners,
-              "winrate" = winrate,
-              "tie" = tie,
-              "modal_A" = modal_A_score,
-              "modal_B" = modal_B_score,
-              "modal_freq" = modal_frequency))
-}
-
-markov_visualizations = function(summary){
-  
-  # Create a histogram of each team's final score on a common x-axis
-  # This should be one of the interactive graphs that allows us to roll our cursor over
- scores_overlap = ggplot(data = summary$final_scores) +
-    # Team A
-    geom_histogram(aes(x = `A`), fill = snappa_pal[2], alpha = 0.9) +
-    geom_histogram(aes(x = `B`), fill = snappa_pal[3], alpha = 0.7) +
-   theme_snappa() + 
-   xlab("Total Points") + 
-   ylab("Number of Games")
-  
-  # Idea, use the final score summary data to make stacked geom_bars for each
-  # game, kind of like what I had in my thesis. Here, I'll separate according 
-  # to the margin of victory, so that we look from the most A favored games
-  # to the most B favored
-  
-  score_counts = summary$final_scores %>% 
-    mutate(difference = A - B) %>%
-    arrange(difference) %>%
-    mutate(game_id = row_number()) %>%
-    pivot_longer(cols = c(A,B), names_to = "team", values_to = "points")
-  score_counts = score_counts[rep(row.names(score_counts), score_counts$points), ]
-  # To make this raw data more useful, I expand this out so that my grouping
-  # id (game_id) will work
-  
-  # These geom bars look kind of bad without a line if the number of 
-  # obs is less than about 500. Setting the width to 1 fixes this
-  
-  
-  score_shares = ggplot(data = score_counts) + 
-      geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
-      geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", linewidth = 1) + 
-      geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", linewidth = 1) +
-    ylab("Share of Total Points") + 
-    xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
-    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
-    theme_snappa() +
-    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) +
-    theme(legend.position = "none")
-  
-  winners_tbl = tibble(won = summary$wins) %>%
-    mutate(game_id = row_number(), team = won) 
-  
-  winners_tbl = complete(winners_tbl,
-                         expand(winners_tbl, game_id, team),
-                         fill = list(won = "C")) %>%
-    mutate(won = case_when(won == team ~ 1,
-                    won != team ~ 0)
-    )
-  
-  
-  
-  win_probability_bar = winners_tbl %>% 
-    filter(won == 1) %>%
-    ggplot() + 
-    geom_bar(aes(y = won, fill = fct_rev(team)), position = "fill") +
-    geom_vline(xintercept = 0.5, color = "white", linetype = "dotted") + 
-    ylab("") +
-    xlab(" ") + 
-    scale_y_continuous(breaks = NULL) +
-    scale_x_continuous(breaks = 0.50, labels = scales::percent_format(1)) + 
-    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) + 
-    coord_fixed(0.01) + 
-    theme(panel.background = element_rect(fill = "transparent", colour = NA),
-          plot.background = element_rect(fill = "transparent", colour = NA),
-          panel.grid = element_blank(),
-          panel.border = element_blank(),
-          plot.margin = unit(c(0, 0, 0, 0), "null"),
-          panel.spacing = unit(c(0, 0, 0, 0), "null"),
-          axis.ticks.x = element_line(),
-          axis.ticks.y = element_blank(),
-          axis.text.x = element_text(size = 20),
-          axis.text.y = element_blank(),
-          axis.title = element_blank(),
-          axis.line = element_blank(),
-          legend.position = "none",
-          axis.ticks.length = unit(0, "null"),
-          legend.spacing = unit(0, "null"))
-  
-  return(list("overlap" = scores_overlap,
-              "shares" = score_shares,
-              "win_probability" = win_probability_bar))
-  
-}
-
-
-
-
-
-# Summary Visualizations --------------------------------------------------
-
-
 
 
 player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_team, chart_max = NA){
@@ -2217,15 +1666,6 @@ player_form_plot = function(stat, form_data){
           axis.line.y = element_blank())
 }
 
-breaks_rounds = function (n = 5, ...) {
-  scales:::force_all(n, ...)
-  n_default <- n
-  function(x, n = n_default) {
-    breaks <- pretty(x, n, ...)
-    names(breaks) <- c("0", rounds)[breaks+1]
-    breaks
-  }
-}
 
 game_summary_plot = function(player_stats, players, scores, game){
   # Function which creates the game summary plots and puts them together
@@ -2268,25 +1708,217 @@ game_summary_plot = function(player_stats, players, scores, game){
     plot_annotation(caption = str_c('<span style="color:', snappa_pal[2], ';">Snappa</span><span style="color:', snappa_pal[4], ';">DB</span>'), theme = theme_snappa(md=T, plot_margin = margin(5,5,15,5)))
 }
 
+markov_summary_data = function(simulations){
+  # Answer the basic questions
+  # Who won more? What's their win rate?
+  wins = simulations %>% map_chr( function(element){
+    element$won
+  })
+  A_winrate = length(wins[wins == "A"])/length(wins)
+  B_winrate = 1 - A_winrate
+  
+  # In the games where the winningest team won, what was the modal score?
+  winners = if_else(which(c(A_winrate, B_winrate) == max(c(A_winrate, B_winrate))) == 1,
+                    "A",
+                    "B")
+  if (length(winners) == 2){
+    tie = TRUE
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+      team_A_score = simulations[[game_number]]$team_A %>% last()
+      team_B_score = simulations[[game_number]]$team_B %>% last()
+      final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+      matrix = matrix(0, nrow = 51, ncol = 51)
+      matrix[team_A_score + 1, team_B_score + 1] = 1
+      
+      return(list("scores" = matrix,
+                  "final" = final_scores))
+    })
+    winrate = 0.50
+  } else {
+    # Using a matrix here so that I can treat each pairing of points as a unique
+    # value, rather than each team's individual total (meaning that I am truly
+    # looking for the pair of scores which are modal in the set of games that
+    # the winning team won)
+    tie = F
+    per_game_data = seq(1, length(simulations)) %>% map(function(game_number){
+      if (simulations[[game_number]]$won != winners){
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+      } else {
+        team_A_score = simulations[[game_number]]$team_A %>% last()
+        team_B_score = simulations[[game_number]]$team_B %>% last()
+        final_scores = tibble("A" = team_A_score, "B" = team_B_score)
+        matrix = matrix(0, nrow = 51, ncol = 51)
+        matrix[team_A_score + 1, team_B_score + 1] = 1
+      }
+      
+      
+      return(list("scores" = matrix,
+                  "final" = final_scores))
+    })
+    winrate = c("A" = A_winrate, "B" = B_winrate)[winners]
+  }
+  
+  # Initialize an empty matrix
+  scores_matrix = matrix(0, nrow = 51, ncol = 51)                     
+  for (i in 1:length(simulations)){
+    scores_matrix = scores_matrix + per_game_data[[i]]$scores 
+  }
+  
+  modal_score_position = which(scores_matrix == max(scores_matrix), arr.ind = T)
+  
+  # As one may expect, this sometimes comes up with more than one 
+  # modal score! In that case, we have to tread a little more carefully.
+  # What I'll do is take advantage of the structure of the matrix to figure
+  # out which games look the best for everyone. What I'll do is look at the 
+  # score total that's the closest
+  if (length(modal_score_position) < 3){
+    modal_A_score = modal_score_position[1] - 1
+    modal_B_score = modal_score_position[2] - 1
+  } else{
+    modal_score_position = cbind(modal_score_position, 
+                                 abs(modal_score_position[, 1] - modal_score_position[, 2])) 
+    modal_row = which(modal_score_position[, 3] == min(modal_score_position[, 3]))
+    # If this is more than one, take the one with the highest A value. That will
+    # automatically break any ties. There cannot be duplicate A values in this 
+    # search already, because only one such A and B score pairing will have
+    # the smallest distance between them
+    if (length(modal_row) > 1){
+      if (all(winners == "A")){
+        modal_row = which(
+          modal_score_position[modal_row, 1] == max(modal_score_position[modal_row, 1])
+        )
+      } else {
+        #Technically this settles tie games with multiple modals in B's favor,
+        # but this is such a ridiculous outcome that I'm not going to worry about
+        # doing any more for now
+        modal_row = which(
+          modal_score_position[modal_row, 2] == max(modal_score_position[modal_row, 2])
+        )
+      } 
+    }
+    modal_A_score = modal_score_position[modal_row, 1] - 1
+    modal_B_score = modal_score_position[modal_row, 2] - 1
+  }
+  
+  final_scores_table = seq(1, length(per_game_data)) %>% 
+    map_df(function(number){
+      per_game_data[[number]]$final
+    })
+  
+  modal_frequency = final_scores_table %>%
+    filter(A == modal_A_score, B == modal_B_score) %>%
+    nrow()
+  
+  return(list("final_scores" = final_scores_table,
+              "wins" = wins,
+              "winner" = winners,
+              "winrate" = winrate,
+              "tie" = tie,
+              "modal_A" = modal_A_score,
+              "modal_B" = modal_B_score,
+              "modal_freq" = modal_frequency))
+}
 
+markov_visualizations = function(summary){
+  
+  # Create a histogram of each team's final score on a common x-axis
+  # This should be one of the interactive graphs that allows us to roll our cursor over
+  scores_overlap = ggplot(data = summary$final_scores) +
+    # Team A
+    geom_histogram(aes(x = `A`), fill = snappa_pal[2], alpha = 0.9) +
+    geom_histogram(aes(x = `B`), fill = snappa_pal[3], alpha = 0.7) +
+    theme_snappa() + 
+    xlab("Total Points") + 
+    ylab("Number of Games")
+  
+  # Idea, use the final score summary data to make stacked geom_bars for each
+  # game, kind of like what I had in my thesis. Here, I'll separate according 
+  # to the margin of victory, so that we look from the most A favored games
+  # to the most B favored
+  
+  score_counts = summary$final_scores %>% 
+    mutate(difference = A - B) %>%
+    arrange(difference) %>%
+    mutate(game_id = row_number()) %>%
+    pivot_longer(cols = c(A,B), names_to = "team", values_to = "points")
+  score_counts = score_counts[rep(row.names(score_counts), score_counts$points), ]
+  # To make this raw data more useful, I expand this out so that my grouping
+  # id (game_id) will work
+  
+  # These geom bars look kind of bad without a line if the number of 
+  # obs is less than about 500. Setting the width to 1 fixes this
+  
+  
+  score_shares = ggplot(data = score_counts) + 
+    geom_bar(aes(x = game_id, fill = fct_rev(team)),  position = "fill", width = 1) + 
+    geom_hline(yintercept = 0.5, color = "white", linetype = "dashed", linewidth = 1) + 
+    geom_vline(xintercept = nrow(summary$final_scores)/2, color = "white", linetype = "dashed", linewidth = 1) +
+    ylab("Share of Total Points") + 
+    xlab("Simulated Game ID - Sorted by Score Difference Between A and B") +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) + 
+    theme_snappa() +
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) +
+    theme(legend.position = "none")
+  
+  winners_tbl = tibble(won = summary$wins) %>%
+    mutate(game_id = row_number(), team = won) 
+  
+  winners_tbl = complete(winners_tbl,
+                         expand(winners_tbl, game_id, team),
+                         fill = list(won = "C")) %>%
+    mutate(won = case_when(won == team ~ 1,
+                           won != team ~ 0)
+    )
+  
+  
+  
+  win_probability_bar = winners_tbl %>% 
+    filter(won == 1) %>%
+    ggplot() + 
+    geom_bar(aes(y = won, fill = fct_rev(team)), position = "fill") +
+    geom_vline(xintercept = 0.5, color = "white", linetype = "dotted") + 
+    ylab("") +
+    xlab(" ") + 
+    scale_y_continuous(breaks = NULL) +
+    scale_x_continuous(breaks = 0.50, labels = scales::percent_format(1)) + 
+    scale_fill_manual(values = c(snappa_pal[3], snappa_pal[2])) + 
+    coord_fixed(0.01) + 
+    theme(panel.background = element_rect(fill = "transparent", colour = NA),
+          plot.background = element_rect(fill = "transparent", colour = NA),
+          panel.grid = element_blank(),
+          panel.border = element_blank(),
+          plot.margin = unit(c(0, 0, 0, 0), "null"),
+          panel.spacing = unit(c(0, 0, 0, 0), "null"),
+          axis.ticks.x = element_line(),
+          axis.ticks.y = element_blank(),
+          axis.text.x = element_text(size = 20),
+          axis.text.y = element_blank(),
+          axis.title = element_blank(),
+          axis.line = element_blank(),
+          legend.position = "none",
+          axis.ticks.length = unit(0, "null"),
+          legend.spacing = unit(0, "null"))
+  
+  return(list("overlap" = scores_overlap,
+              "shares" = score_shares,
+              "win_probability" = win_probability_bar))
+  
+}
 
-# Visualization themes ----------------------------------------------------
+# Helper Functions --------------------------------------------------------
 
-
-snappa_pal = str_c("#", c("fafaf9","e26a6a","2574a9","ffaf47","67a283","793e8e","54b6f2"))
-options(reactable.theme = reactableTheme(
-  color = "gray20",
-  backgroundColor = snappa_pal[1], 
-  tableBodyStyle = list(
-    padding = "4px 2px"
-  ),
-  borderColor = "#DEDDDD",
-  headerStyle = list(
-    alignSelf = "flex-end",
-    fontSize = "13px",
-    borderBottom = "3px solid #7c7c7c"
-  ))
-)
+breaks_rounds = function (n = 5, ...) {
+  scales:::force_all(n, ...)
+  n_default <- n
+  function(x, n = n_default) {
+    breaks <- pretty(x, n, ...)
+    names(breaks) <- c("0", rounds)[breaks+1]
+    breaks
+  }
+}
 
 
 # Render a bar chart with a label on the left
@@ -2341,6 +1973,26 @@ rt_team_highlight = JS("function(rowInfo) {
                                             } 
                                             return { backgroundColor: color, color: '#fafaf9', fontWeight: 600 }
                                         }")
+
+
+# Theming ----------------------------------------------------
+
+
+options(reactable.theme = reactableTheme(
+  color = "gray20",
+  backgroundColor = snappa_pal[1], 
+  tableBodyStyle = list(
+    padding = "4px 2px"
+  ),
+  borderColor = "#DEDDDD",
+  headerStyle = list(
+    alignSelf = "flex-end",
+    fontSize = "13px",
+    borderBottom = "3px solid #7c7c7c"
+  ))
+)
+
+
 
 theme_snappa = function(title_family = "Roboto Medium",
                         text_family = "Roboto",

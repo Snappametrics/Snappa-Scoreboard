@@ -1699,13 +1699,12 @@ observe({
       vals$current_scores$team_B = 0
       
       vals$game_id = as.integer(dbGetQuery(con, "SELECT MAX(game_id)+1 FROM game_stats"))
-      
       # Initialize the current game's game_stats table
       vals$game_stats_db = bind_rows(vals$game_stats_db,
                                      tibble(
                                        game_id = vals$game_id,
                                        num_players = nrow(snappaneers()),
-                                       game_start = as.character(now(tzone = "America/Los_Angeles")),
+                                       game_start = strtrim(as.character(now(tzone = "America/Los_Angeles")), 19),
                                        game_end = NA_character_,
                                        night_dice = NA,
                                        points_a = NA_integer_,
@@ -2984,9 +2983,11 @@ observeEvent(input$resume_no, {
                   clink_points = sum(clink_points),
                   game_complete = F)
     }
+    
+    current_time = now(tzone = "America/Los_Angeles")
     # This uses select because the column names were no longer matching the DB ones after joining
-    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
-      mutate(night_dice = if_else(hour(now(tzone = "America/Los_Angeles")) > 20, T, F)) %>% 
+    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = strtrim(as.character(current_time), 19))) %>% 
+      mutate(night_dice = if_else(hour(current_time) > 20, T, F)) %>% 
       left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
       select(-contains("_old", ignore.case = F)) %>% 
       # Add quotes around character vars for update query
@@ -3072,9 +3073,10 @@ observeEvent(input$resume_no, {
                   clink_points = sum(clink_points),
                   game_complete = F)
     }
+    current_time = now(tzone = "America/Los_Angeles")
     # This uses select because the column names were no longer matching the DB ones after joining
-    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = as.character(now(tzone = "America/Los_Angeles")))) %>% 
-      mutate(night_dice = if_else(hour(now(tzone = "America/Los_Angeles")) > 20, T, F)) %>% 
+    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = strtrim(as.character(current_time), 19))) %>% 
+      mutate(night_dice = if_else(hour(current_time) > 20, T, F)) %>% 
       left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
       select(-contains("_old", ignore.case = F)) %>% 
       # Add quotes around character vars for update query
