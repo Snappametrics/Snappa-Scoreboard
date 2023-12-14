@@ -1368,8 +1368,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
   
   
   
-  
-  
+
   # df = aggregate_player_stats_and_sinks(scores, snappaneers) %>% 
   #   select(player_id, team, total_points, normal_points, sink_points,  paddle_points, clink_points) %>%
   #   mutate(total = total_points) %>% 
@@ -1562,7 +1561,9 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
     ggplot(plot_df, aes(y = toss_paddle, x = points, group = point_type, fill = bar_col))+
       geom_col(show.legend=reverse_legend, width = .6, colour = snappa_pal[1])+
       scale_x_continuous(name = "Points", 
-                         breaks = scales::breaks_pretty(n = 3), minor_breaks = 0:chart_max,
+                         breaks = scales::breaks_pretty(n = 3), 
+                         labels = ~scales::comma(., accuracy = 1),
+                         minor_breaks = 0:chart_max,
                          limits = c(0, chart_max), 
                          position = "top", sec.axis = dup_axis(name = NULL))+
       scale_y_discrete(name = NULL, drop=F, 
