@@ -1478,7 +1478,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
              bar_col = factor(bar_col, levels = c("Sink", "Foot", "Paddle", "Clink", "Normal"),
                               ordered = T)) |>
       group_by(point_type, bar_col, total, .add = T) |> 
-      summarise(points = sum(points_scored), .groups = "drop") |> 
+      summarise(points = sum(points_scored, na.rm=T), .groups = "drop") |> 
       inner_join(ps_players, by = "player_id") |> 
       # Sort by points, then paddles
       add_count(player_id, wt = points*(toss_paddle=="Paddle"), name = "paddles") |> 
