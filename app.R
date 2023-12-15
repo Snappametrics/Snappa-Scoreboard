@@ -122,11 +122,6 @@ ui <- dashboardPage(
         
       )
       
-      # icon = "desktop",
-      # actionBttn("new_game", "Restart",
-      #            icon = icon("plus"), size = "sm",
-      #            style = "material-flat", color = "warning"),
-      
     )
     ),
   body = dashboardBody(
@@ -411,8 +406,6 @@ server <- function(input, output, session) {
   # This checkFunc should update our tables when a game is complete
   
 
-
-  
   # Create object to store reactive values
   vals <- reactiveValues(
     # Initialize new game, player, and score IDs, as well as the shot number
@@ -884,30 +877,7 @@ server <- function(input, output, session) {
   
 
   output$team_a_summary = renderReactable({
-    # browser()
-    
-    
-    # if(input$start_game == 0){
-    #   last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
-    #   browser()
-    #   make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
-    #                      player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-    #                      neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
-    #                      team_name = "A", 
-    #                      past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
-    #     team_summary_tab_rt(.)
-    #   
-    # } else {
-    #   make_summary_table(current_player_stats = vals$player_stats_db, 
-    #                      player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
-    #                      neers = snappaneers(), 
-    #                      team_name = "A", 
-    #                      current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-    #                      past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)) %>%
-    #     team_summary_tab_rt(.)
-    #   
-    # }
-    
+
     team_summary_tab_rt(right_join(vals$players, team_a_summary_stats(), by = "player_id"))
     
   })  
@@ -915,26 +885,9 @@ server <- function(input, output, session) {
   
   
   output$team_b_summary = renderReactable({
-
-    # if(input$start_game == 0){
-    #   last_game = filter(vals$db_tbls()[["game_stats"]], game_id == max(game_id))
-    #   make_summary_table(current_player_stats = filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), 
-    #                      player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != max(game_id)),
-    #                      neers = left_join(filter(vals$db_tbls()[["player_stats"]], game_id == max(game_id)), vals$players, by = "player_id"), 
-    #                      team_name = "B", 
-    #                      past_scores = filter(vals$db_tbls()[["scores"]], game_id != max(game_id))) %>%
-    #     team_summary_tab_rt(.)
-    # } else {
-    #   make_summary_table(current_player_stats = vals$player_stats_db, 
-    #                      player_stats = filter(vals$db_tbls()[["player_stats"]], game_id != vals$game_id),
-    #                      neers = snappaneers(), 
-    #                      team_name = "B", 
-    #                      current_round = as.numeric(str_sub(round_num(), 1, -2)), 
-    #                      past_scores = filter(vals$db_tbls()[["scores"]], game_id != vals$game_id)) %>%
-    #     team_summary_tab_rt(.)
-    # }
     
     team_summary_tab_rt(right_join(vals$players, team_b_summary_stats(), by = "player_id"))
+    
   })  
   
   
@@ -968,7 +921,6 @@ server <- function(input, output, session) {
     current_date = today(tzone = "America/Los_Angeles")
     
     tagList(
-            # column(width = 4,
               dateRangeInput("leaderboard_range", label = "Timeframe", 
                              startview = "year", 
                              start = floor_date(current_date, unit = "year"), end = current_date, 
@@ -1046,14 +998,6 @@ server <- function(input, output, session) {
       mutate(winning = if_else(points_a > points_b, "A", "B"),
              won_game = if_else(team == winning, "Won", "Lost")) |> 
       select(player_id, game_id, won_game)
-    # inner_join(vals$players, 
-    #            vals$db_tbls()[["player_stats"]], 
-    #            by = "player_id") %>%
-    #   inner_join(dbGetQuery(con, "SELECT game_id, points_a, points_b FROM game_stats WHERE game_complete IS true"), 
-    #              by = "game_id") %>% 
-    #   # Identify which games were won
-    #   mutate(winning = if_else(points_a > points_b, "A", "B"),
-    #          won_game = if_else(team == winning, "Won", "Lost"))
   })
   
   
@@ -1485,8 +1429,6 @@ server <- function(input, output, session) {
             panel.grid.minor.x = element_blank(),
             strip.text = element_text(face = "bold", hjust = .4, margin = margin(b = 0)))
     
-    # For when we want to plotly dis beez
-    #ggplotly() %>% hide_legend() %>% layout(plot_bgcolor = snappa_pal[1])
   })
   
   
@@ -1557,12 +1499,7 @@ observe({
   } else {
     last_game_tbl = tbl(con, "incomplete_game")
 
-    # last_game_start = last_game_tbl |> 
-    #   select(game_start) |> 
-    #   collect()
-    # 
-    # last_game_start_rel = now(tzone = "America/Los_Angeles") - ymd_hms(last_game_start$game_start, tz = "America/Los_Angeles")
-    
+
     last_game_ps_tbl = last_game_tbl |> 
       select(game_id) |> 
       # Join player stats
@@ -1833,47 +1770,7 @@ observe({
   observeEvent(req(str_detect(round_num(), "^12[AB]")), {
     delay(runif(n = 1, min = 1000, max = 1200),
           {
-            # sendSweetAlert(session,
-            #              title = "It's high noon.",
-            #              type = "warning",
-            #              btn_labels = NA,
-            #              imageUrl = "gifs/mccree-duel.gif",
-            #              #customClass = "halftime",
-            #              text = tags$span(
-            #                tags$h3("Throw the die high in the sky"),
-            #                # "In", tags$b("bold"), "and", tags$em("italic"),
-            #                tags$br(),
-            #                "Everyone who gets caught throwing low rolls a die until someone rolls a one."
-            #                ),
-            #              #HTML(str_c("Throw the die high in the sky")),
-            #              html = T)
             highnoon_popup(snappaneers()$player_name)
-            # insertUI(selector = "#switch_sides",
-            #          where = "afterEnd",
-            #          ui = tags$audio(src = "highnoon.mp3", type = "audio/mp3", 
-            #                          autoplay = NA, controls = NA, class = "sound-effect"))
-            # 
-            # inputSweetAlert(
-            #   inputId = "highnoon",
-            #   customClass = list(
-            #     "popup" = "high-noon",
-            #     "icon" = "high-noon-icon"
-            #     ),
-            #   iconHtml = '<img height="100%" src="https://static.wikia.nocookie.net/overwatch/images/2/2c/DeadeyeIcon.png">',
-            #   title = "It's high noon.",
-            #   # type = "warning",
-            #   backdrop = T,
-            #   btn_labels = NA,
-            #   imageUrl = "gifs/mccree-duel.gif",
-            #   text = "Throw the die high in the sky",
-            #   input = "radio",
-            #   inputOptions = snappaneers()$player_name,
-            #   showDenyButton = T,
-            #   denyButtonText = "Everyone's safe",
-            #   confirmButtonText = "Got 'em"
-            # )
-            
-            
             })
     
     
@@ -1941,29 +1838,6 @@ observeEvent(input$game_summary, {
 
 
 })
-# output$scores_tbl = renderReactable({
-# 
-#   if(input$start_game == 0){
-#     scores = filter(vals$db_tbls()[["scores"]], game_id == max(game_id)) %>% 
-#       arrange(-score_id) %>% 
-#       inner_join(vals$players, by = "player_id") %>% 
-#       select(score_id, player_name, round_num, Points = points_scored,
-#              Paddle = paddle, Clink = clink, Foot = foot)
-#   } else {
-#     scores = filter(vals$scores_db, game_id == vals$game_id) %>% 
-#       arrange(-score_id) %>% 
-#       inner_join(snappaneers(), by = "player_id") %>% 
-#       select(score_id, player_name, round_num, Points = points_scored,
-#              Paddle = paddle, Clink = clink, Foot = foot)
-#   }
-#    
-#   scores %>% 
-#     reactable(compact = T,
-#               columns = list(
-#                 player_name = colDef(name = "Player"),
-#                 round_num = colDef(name = "Round")
-#               ))
-# })
 
   
   
@@ -1979,14 +1853,6 @@ observeEvent(input$game_summary, {
       left_join(tbl(con, "player_stats"), by = "game_id") |> 
       left_join(tbl(con, "players"), by = "player_id")
       
-    # players = dbGetQuery(con, "SELECT * FROM players")
-  
-    # lost_players = left_join(lost_player_stats[,2:3], players, by = "player_id") %>%
-    #   select(player_name, team) %>% 
-    #   group_by(team) %>% 
-    #   mutate(player_input = str_c("name_", team, row_number())) %>% 
-    #   ungroup()
-    
     lost_players = lost_player_stats |> 
       select(player_name, team) |> 
       group_by(team) |> 
@@ -2903,17 +2769,7 @@ observeEvent(input$resume_no, {
     
     vals$game_over = T
 
-    # showModal(
-    #   modalDialog(
-    #               h2("Well full send that data to the SnappaDB!"),
-    #               # Download to csv
-    #               downloadBttn("downloadData", "Download", style = "unite", color = "warning"),
-    #               # Send to DB
-    #               actionBttn("send_to_db", "Send to the SnappaDB", style = "unite", color = "warning",
-    #                          icon = icon("cloud-upload-alt"))
-    #   )
-    # )
-    
+
     # Update Game History
     # Calculate game-level stats from game stats players, and vary it based on whether the game is actually complete or not
     # to test it I use rebuttal since this is the one point in time where we can basically be certain that a game is/isn't over
@@ -3080,47 +2936,6 @@ observeEvent(input$resume_no, {
   })
   
 
-# Restart game ------------------------------------------------------------
-
-  
-  
-  # observeEvent(input$new_game, {
-  #   
-  #   showModal(
-  #     modalDialog( title = "Restart game", easyClose = T,
-  #       helpText("Are you sure?"),
-  #       footer = tagList(
-  #         actionBttn("new_game_sure", "Yup", style = "unite", color = "warning")
-  #       )
-  #     )
-  #   )
-  #   
-  # })
-  
-  # observeEvent(input$new_game_sure, {
-  #   # On a new game:
-  #   # 1. Switch to start screen
-  #   updateTabsetPanel(session, "switcher", selected = "start_screen")
-  #   
-  #   # 2. Reset player inputs
-  #   walk2(c("name_A1", "name_A2", "name_B1", "name_B2"), c("Player 1", "Player 2", "Player 1", "Player 2"), 
-  #        function(id, lab) updateSelectizeInput(session, inputId = id, label = lab, c(`Player Name`='', vals$players$player_name), 
-  #                                               options = list(create = TRUE)))
-  #   
-  #   # 3. Reset reactive values
-  #   # vals$game_stats_db = game_stats_tbl() %>% slice(0) %>% select(1:5)
-  #   # vals$player_stats_db = player_stats_tbl() %>% slice(0)
-  #   # vals$players_db = dbGetQuery(con, "SELECT * FROM players")
-  #   # vals$scores_db = scores_tbl() %>% slice(0)
-  #   # vals$score_id = as.integer(0)
-  #   # vals$shot_num = as.integer(1)
-  #   
-  # 
-  #   
-  #   removeModal()
-  #   
-  #   
-  # })
 
 
 
