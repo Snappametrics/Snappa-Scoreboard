@@ -665,6 +665,10 @@ server <- function(input, output, session) {
     )
   })
   
+  output$playing_to = renderUI({
+    p("Playing to: ", strong(score_to()))
+  })
+  
   # Die icon indicating the active team
   output$active_die_left = renderUI({
     # switch_counter is a counter for how many times switch_sides 
