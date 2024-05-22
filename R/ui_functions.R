@@ -1047,7 +1047,7 @@ team_summary_tab_rt = function(df){
               sortable = F,
               resizable = F, #fullWidth = F, 
               style = list(
-                fontSize = "16px", lineHeight = "2"#, width = "fit-content"
+                fontSize = "16px", lineHeight = "1.25"#, width = "fit-content"
               ),
               defaultColDef = colDef(format = colFormat(digits = 0), 
                                      align = "right", vAlign = "center", defaultSortOrder = "desc",
@@ -1071,34 +1071,34 @@ team_summary_tab_rt = function(df){
               # Columns
               columns = list(
                 player_id = colDef(show = F),
-                player_name = colDef(name = "Player", align = "left", headerStyle = list(textAlign = "left")),
+                player_name = colDef(name = "Player", minWidth = 100, align = "left", headerStyle = list(textAlign = "left")),
                 team = colDef(show = F),
                 winning = colDef(show = F),
-                total_points = colDef(name = "", minWidth = 32, #maxWidth = 40
+                total_points = colDef(name = "", width = 36, #maxWidth = 40
                                       ),
-                total_points_diff = colDef(name = "Diff", minWidth = 44, #maxWidth = 52, 
+                total_points_diff = colDef(name = "Diff", width = 52, #maxWidth = 52, 
                                            style = JS(game_summary_diff_style("total_points_diff"))),
                 paddle_points = colDef(name = "", minWidth = 36#, maxWidth = 40
                                        ),
-                paddle_points_diff = colDef(name = "Diff", minWidth = 48, 
+                paddle_points_diff = colDef(name = "Diff", width = 48, 
                                              # maxWidth = 56, 
                                             style = JS(game_summary_diff_style("paddle_points_diff"))),
-                clink_points = colDef(name = "", minWidth = 36#, maxWidth = 40
+                clink_points = colDef(name = "", width = 36#, maxWidth = 40
                                       ),
-                clink_points_diff = colDef(name = "Diff", minWidth = 48, #maxWidth = 56, 
+                clink_points_diff = colDef(name = "Diff", width = 48, #maxWidth = 56, 
                                             style = JS(game_summary_diff_style("clink_points_diff"))),
                 # sinks = colDef(show=F, name = "", minWidth = 48, maxWidth = 56),
-                off_ppr = colDef(show=F, name = "", minWidth = 40, #maxWidth = 56, 
+                off_ppr = colDef(show=F, name = "", width = 40, #maxWidth = 56, 
                                  format = colFormat(digits = 2)),
-                off_ppr_diff = colDef(show=F, name = "Diff", minWidth = 48, #maxWidth = 56, 
+                off_ppr_diff = colDef(show=F, name = "Diff", width = 48, #maxWidth = 56, 
                                       style = JS(game_summary_diff_style("off_ppr_diff"))),
-                def_ppr = colDef(show=F, name = "", minWidth = 40, 
+                def_ppr = colDef(show=F, name = "", width = 40, 
                                  format = colFormat(digits = 2)),
-                def_ppr_diff = colDef(show=F, name = "Diff", minWidth = 48, #maxWidth = 56, 
+                def_ppr_diff = colDef(show=F, name = "Diff", width = 48, #maxWidth = 56, 
                                       style = JS(game_summary_diff_style("def_ppr_diff"))),
-                toss_efficiency = colDef(name = "", minWidth = 44, #maxWidth = 56, 
+                toss_efficiency = colDef(name = "", width = 48, #maxWidth = 56, 
                                          format = colFormat(percent = T, digits = 0)),
-                toss_efficiency_diff = colDef(name = "Diff", minWidth = 52, #maxWidth = 64, 
+                toss_efficiency_diff = colDef(name = "Diff", width = 56, #maxWidth = 64, 
                                               style = JS(game_summary_diff_style("toss_efficiency_diff")))
               )
     )
