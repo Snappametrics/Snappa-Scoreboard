@@ -1616,6 +1616,8 @@ observe({
     
     
     shinyjs::enable("tifu")
+    
+    showNotification(str_c("Game is being played to ", input$score_to, " points!"), type = "message")
 
   })
   
