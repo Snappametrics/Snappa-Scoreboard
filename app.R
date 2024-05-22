@@ -145,7 +145,7 @@ ui <- dashboardPage(
                        uiOutput("validate_start"),
                        
                        helpText("Note: All players must enter their name before the game can begin"),
-                       reactableOutput("expected_inputs")
+                       # reactableOutput("expected_inputs")
                        ),
                        
                 
