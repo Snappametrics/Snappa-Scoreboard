@@ -1128,5 +1128,29 @@ input[type=radio]{
     */
 }
 
+.legend {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    column-gap: 10px;
+    row-gap: 5px;
+    margin-bottom: 5px;
+  }
 
+  .legend-colour {
+    width: 9px;
+    height: 9px;
+    display: inline-block;
+    border-radius: 25%;
+    border: 1px solid rgba(0, 0, 0, .5);
+  }
+
+  .legend > p {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    column-gap: 4px;
+    transition: opacity 300ms ease;
+  }
 

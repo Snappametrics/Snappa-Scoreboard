@@ -430,6 +430,17 @@ restart_game_popup = function(ps_tbl){
 #'
 #' @examples
 game_summary_modal = function(df, current_round, a_sub, b_sub){
+  
+  legend_colours = c("Normal" = "#67A283", "Clink" = "#54B6F2", "Sink" = "#FFA630", "Paddle" = "#793E8E", "Foot" = "#090C9B")
+  legend = div(class="legend",
+               imap(legend_colours, \(colour, name){
+                 p(
+                   span(class="legend-colour", style=str_c("background-color:", colour)),
+                   name
+                 )
+               })
+  )
+  
   # Display Modal
   # showModal(
   # Create Modal
@@ -478,15 +489,16 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
       # Summary plots
       fluidRow(align = "center", 
                # Team A Player Breakdown
-               column(4, style = "padding-right:0;",
-                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "54vh"), color = snappa_pal[2], 
-                                  proxy.height = "200px", color.background = snappa_pal[1])
+               column(4, style = "padding-right:0; top:6vh;",
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "48vh"), color = snappa_pal[2], 
+                                  color.background = snappa_pal[1]),
+                      legend
                ),
                # Game Flow
                column(4,style = "padding:0",
                       div(style = "padding:16px;",
-                          h4("How the die flies", align = "left")#,
-                          # h5("Point progression throughout the game", align = "left")
+                          h4("How the die flies", align = "left"),
+                          h5("Point progression throughout the game", align = "left")
                       )
                       ,
                       withSpinner(plotOutput("game_flow", height = "48vh"), color.background = snappa_pal[1],
@@ -495,7 +507,8 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
                # Team B Player Breakdown
                column(4, style = "padding-left:0; top:6vh;",
                       withSpinner(plotOutput("b_breakdown", width = "100%", height = "48vh"), color = snappa_pal[3], 
-                                  proxy.height = "200px", color.background = snappa_pal[1])
+                                  proxy.height = "200px", color.background = snappa_pal[1]),
+                      legend
                )
       )
     )
@@ -1577,7 +1590,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
                                              ncol = 3, reverse = T))+
       facet_wrap(~player_name, ncol = 1, strip.position = "left")+#if_else(reverse_legend, "left", "right"))+
       theme_snappa(plot_margin = margin(20,20,20,0), base_size = 14, line_colour = "#7c7c7c")+
-      theme(legend.position = "top",
+      theme(legend.position = "none",
             axis.line = element_blank(), # No axis line
             axis.text.y = element_text(size = 14, hjust = 1), #hjust = if_else(reverse_legend, 1, 0)),
             # No gridlines
@@ -1652,7 +1665,7 @@ game_flow = function(player_stats, players, scores, game){
                        limits = c(0, max_round+5),
                        expand = expansion())+
     scale_colour_manual(values = c("A" = "#e26a6a", "B" = "#2574a9"))+
-    labs(caption = "Point progression throughout the game")+
+    # labs(caption = "Point progression throughout the game")+
     # labs(title = "How the die flies",
     #      subtitle = "Players' point progression")+ #<img src = "www/sink.png" width="30px" height="30px">
     theme_snappa(base_size = 14)+
