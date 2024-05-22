@@ -1992,18 +1992,18 @@ observeEvent(input$resume_no, {
 
 # Score notifications -----------------------------------------------------
   
-  observe({
-    req(input$start_game)
-    validate(
-      need(vctrs::vec_in(vals$current_scores, 
-                         haystack = casualty_rules[,1:2]), label = "casualty score"),
-      need(none(vals$cooldowns(), isTRUE), label = "cooldowns")
-    )
-    casualty_popup(session,
-                   score = vals$current_scores,
-                   rules = casualty_rules,
-                   players = snappaneers()$player_name)
-  }, autoDestroy = F)
+  # observe({
+  #   req(input$start_game)
+  #   validate(
+  #     need(vctrs::vec_in(vals$current_scores, 
+  #                        haystack = casualty_rules[,1:2]), label = "casualty score"),
+  #     need(purrr::none(vals$cooldowns(), rlang::is_true), label = "cooldowns")
+  #   )
+  #   casualty_popup(session,
+  #                  score = vals$current_scores,
+  #                  rules = casualty_rules,
+  #                  players = snappaneers()$player_name)
+  # }, autoDestroy = F)
   
   observeEvent(input$casualty_manual, {
     casualty_popup(session,
