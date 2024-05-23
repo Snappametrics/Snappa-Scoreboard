@@ -1584,6 +1584,8 @@ observe({
   })
   # Game Start --------------------------------------------------------------
   
+  started = reactiveVal()
+  
   # When we click "Start Game", 
   #   - Add new players to the players table
   #   - switch to the scoreboard
@@ -1612,7 +1614,7 @@ observe({
           ~cooldown_check(casualties = vals$casualties[vals$casualties$casualty_type == .x, ], 
                           scores = vals$scores_db, 
                           current_round = round_num(), 
-                          rounds = rounds)) %>% 
+                          rounds = rounds)) |> 
           # Set the names of the list
           set_names(unique(casualty_rules$casualty_title))}
     )
@@ -1622,6 +1624,8 @@ observe({
     shinyjs::enable("tifu")
     
     showNotification(str_c("Game is being played to ", input$score_to, " points!"), type = "message")
+    
+    started(T)
 
   })
   
@@ -1992,18 +1996,18 @@ observeEvent(input$resume_no, {
 
 # Score notifications -----------------------------------------------------
   
-  # observe({
-  #   req(input$start_game)
-  #   validate(
-  #     need(vctrs::vec_in(vals$current_scores, 
-  #                        haystack = casualty_rules[,1:2]), label = "casualty score"),
-  #     need(purrr::none(vals$cooldowns(), rlang::is_true), label = "cooldowns")
-  #   )
-  #   casualty_popup(session,
-  #                  score = vals$current_scores,
-  #                  rules = casualty_rules,
-  #                  players = snappaneers()$player_name)
-  # }, autoDestroy = F)
+  observe({
+    req(started() == T)
+    validate(
+      need(vctrs::vec_in(vals$current_scores,
+                         haystack = casualty_rules[,1:2]), label = "casualty score"),
+      need(purrr::none(vals$cooldowns(), rlang::is_true), label = "cooldowns")
+    )
+    casualty_popup(session,
+                   score = vals$current_scores,
+                   rules = casualty_rules,
+                   players = snappaneers()$player_name)
+  })
   
   observeEvent(input$casualty_manual, {
     casualty_popup(session,
