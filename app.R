@@ -6,7 +6,7 @@
 #
 #    http://shiny.rstudio.com/
 #
-
+renv::diagnostics()
 
 
 library(waiter)
