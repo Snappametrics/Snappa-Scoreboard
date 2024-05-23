@@ -489,8 +489,8 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
       # Summary plots
       fluidRow(align = "center", 
                # Team A Player Breakdown
-               column(4, style = "padding-right:0; top:6vh;",
-                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "48vh"), color = snappa_pal[2], 
+               column(4, style = "padding-right:0; top:2vh;",
+                      withSpinner(plotOutput("a_breakdown", width = "100%", height = "46vh"), color = snappa_pal[2], 
                                   color.background = snappa_pal[1]),
                       legend
                ),
@@ -501,13 +501,13 @@ game_summary_modal = function(df, current_round, a_sub, b_sub){
                           h5("Point progression throughout the game", align = "left")
                       )
                       ,
-                      withSpinner(plotOutput("game_flow", height = "48vh"), color.background = snappa_pal[1],
+                      withSpinner(plotOutput("game_flow", height = "46vh"), color.background = snappa_pal[1],
                                   color = snappa_pal[4])
                ),
                # Team B Player Breakdown
-               column(4, style = "padding-left:0; top:6vh;",
-                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "48vh"), color = snappa_pal[3], 
-                                  proxy.height = "200px", color.background = snappa_pal[1]),
+               column(4, style = "padding-left:0; top:2vh;",
+                      withSpinner(plotOutput("b_breakdown", width = "100%", height = "46vh"), color = snappa_pal[3], 
+                                  color.background = snappa_pal[1]),
                       legend
                )
       )
@@ -1579,7 +1579,7 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
                          labels = ~scales::comma(., accuracy = 1),
                          minor_breaks = 0:chart_max,
                          limits = c(0, chart_max), 
-                         position = "top", sec.axis = dup_axis(name = NULL))+
+                         position = "bottom", sec.axis = dup_axis(name = NULL))+
       scale_y_discrete(name = NULL, drop=F, 
                        # labels = c("Toss" = "Toss", "Paddle" = emo::ji("waving_hand")), 
                        position = "left")+#if_else(reverse_legend, "left", "right"))+
@@ -1589,14 +1589,17 @@ player_score_breakdown = function(scores, snappaneers, ps_players, ps_game, ps_t
                         guide = guide_legend(direction = "horizontal", byrow = T,
                                              ncol = 3, reverse = T))+
       facet_wrap(~player_name, ncol = 1, strip.position = "left")+#if_else(reverse_legend, "left", "right"))+
-      theme_snappa(plot_margin = margin(20,20,20,0), base_size = 14, line_colour = "#7c7c7c")+
+      theme_snappa(plot_margin = margin(20,20,20,0), base_size = 14, line_colour = "#3D3D3D")+
       theme(legend.position = "none",
             axis.line = element_blank(), # No axis line
             axis.text.y = element_text(size = 14, hjust = 1), #hjust = if_else(reverse_legend, 1, 0)),
+            axis.title.x.bottom = element_text(size = 14, hjust = 1, margin = margin(0,0,0,0)),
             # No gridlines
             panel.grid.major.y = element_blank(),
             panel.grid.minor.y = element_blank(),
-            strip.placement = "outside", 
+            # panel.grid = element_line(colour = "#999999"),
+            strip.placement = "outside",
+            panel.spacing.y = unit(0, "null"), 
             strip.text.y.left = element_text(size = 16, family = "Roboto Medium", hjust = 1, angle = 0), 
             strip.text.y.right = element_text(size = 16, family = "Roboto Medium", hjust = 1, angle = 0))
     

@@ -1135,7 +1135,7 @@ input[type=radio]{
     flex-wrap: wrap;
     column-gap: 10px;
     row-gap: 5px;
-    margin-bottom: 5px;
+    margin-top: 14px;
   }
 
   .legend-colour {
@@ -1151,6 +1151,5 @@ input[type=radio]{
     display: flex;
     align-items: center;
     column-gap: 4px;
-    transition: opacity 300ms ease;
   }
 
