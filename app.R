@@ -21,8 +21,8 @@ rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
 round_labels = rep(c("Pass the dice", "Next round"),100)
 
 casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text, ~image,
-                         12, 7, "12-7", "Roll off to see who is taking the kamikaze to the face", 'https://cdn.britannica.com/96/192896-131-ECCA4FB7/Explosion-USS-Shaw-magazine-attack-Pearl-Harbor-Dec-7-1941.jpg',
-                         7, 12, "12-7", "Roll off to see who is taking the kamikaze to the face", 'https://cdn.britannica.com/96/192896-131-ECCA4FB7/Explosion-USS-Shaw-magazine-attack-Pearl-Harbor-Dec-7-1941.jpg',
+                         12, 7, "12-7", "Roll off to see who is taking the kamikaze to the face", 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Attack_on_Pearl_Harbor_Japanese_planes_view.jpg/1280px-Attack_on_Pearl_Harbor_Japanese_planes_view.jpg',
+                         7, 12, "12-7", "Roll off to see who is taking the kamikaze to the face", 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Attack_on_Pearl_Harbor_Japanese_planes_view.jpg/1280px-Attack_on_Pearl_Harbor_Japanese_planes_view.jpg',
                          18, 12, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.", NULL,
                          12, 18, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.", NULL,
                          20, 03, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams", NULL,
