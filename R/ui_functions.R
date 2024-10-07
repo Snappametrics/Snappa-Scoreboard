@@ -523,6 +523,7 @@ arena_select_popup = function(){
     type = "question",
     input = "select",
     inputOptions = c("Greenhaus 2: Electric Boogaloo", "Ventura", 
+                     "Highland Park", 
                      'The Oasis', "The River House", "Other?"),
     allowOutsideClick = FALSE
   )
