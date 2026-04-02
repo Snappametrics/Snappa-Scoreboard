@@ -7,7 +7,7 @@ library(pool)
 
 # Load Environment vars ---------------------------------------------------
 
-host = Sys.getenv("DB_HOST") # "DB_HOST_TEST"
+host = Sys.getenv("DB_HOST_TEST") # "DB_HOST_TEST"
 user = Sys.getenv("DB_USER")
 password = Sys.getenv("DB_PASSWORD")
 dbname = Sys.getenv("DB_NAME")

@@ -5,19 +5,6 @@ library(shiny)
 library(shinyjs)
 
 
-casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text,
-                         12, 7, "12-7", "Roll off to see who is taking the kamikaze to the face",
-                         7, 12, "12-7", "Roll off to see who is taking the kamikaze to the face",
-                         18, 12, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.",
-                         12, 18, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.",
-                         20, 03, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams",
-                         03, 20, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams")
-
-sink_criteria = tribble(~points_scored, ~clink, 
-                        3, F,
-                        5, T,
-                        7, T)
-
 
 # Helper functions --------------------------------------------------------
 
@@ -663,20 +650,16 @@ player_performance_summary = function(
 
 # Database updating -------------------------------------------------------
 
-
-
 db_update_player_stats = function(player_stats, specific_player, round_button = F){
-  
+
   if(round_button){
-    col_updates = select(player_stats, game_id, player_id, shots, points_per_round:toss_efficiency) %>% 
-      group_by(player_id) %>% 
-      # Transpose each player id's row
-      group_map(~t(.), .keep = T) %>% 
-      map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>% 
-      # Set names for use with imap
+    col_updates = select(player_stats, game_id, player_id, shots, points_per_round:toss_efficiency) %>%
+      group_by(player_id) %>%
+      group_map(~t(.), .keep = T) %>%
+      map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>%
       set_names(player_stats$player_id)
-    
-    update_player_stats_queries = imap(col_updates, 
+
+    update_player_stats_queries = imap(col_updates,
                                        ~str_c("UPDATE player_stats
                                              SET ", .x,
                                               " WHERE game_id = ", unique(player_stats$game_id),
@@ -684,76 +667,107 @@ db_update_player_stats = function(player_stats, specific_player, round_button = 
     walk(update_player_stats_queries, ~dbExecute(con, .))
     return(invisible())
   }
-  
-  # Add quotes around character vars for update query
-  player_stats = mutate(player_stats, across(where(is_character), ~str_c("'", ., "'")))
-  
-  
-  # If updating the whole table
-  
+
+  # Quote character vars using the DB driver's quoting (handles apostrophes, etc.)
+  player_stats = mutate(player_stats, across(where(is_character), ~as.character(dbQuoteLiteral(con, .))))
+
   if(missing(specific_player)){
-    # Convert tibble to list of character strings in the format: COLNAME = VALUE
-    # Separated for each player in player_stats
-    col_updates = group_by(player_stats, player_id) %>% 
-      # Transpose each player id's row
-      group_map(~t(.), .keep = T) %>% 
-      map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>% 
-      # Set names for use with imap
+    col_updates = group_by(player_stats, player_id) %>%
+      group_map(~t(.), .keep = T) %>%
+      map(~str_c(rownames(.), " = ", ., collapse = ", ")) %>%
       set_names(player_stats$player_id)
-    
-    update_player_stats_queries = imap(col_updates, 
+
+    update_player_stats_queries = imap(col_updates,
                                        ~str_c("UPDATE player_stats
                                              SET ", .x,
                                               " WHERE game_id = ", unique(player_stats$game_id),
                                               " AND player_id = ", .y, ";"))
     walk(update_player_stats_queries, ~dbExecute(con, .))
   } else {
-    
-    
-    # If a player is specified, only update their row
-    
-    col_updates = t(filter(player_stats, player_id == specific_player)) %>% 
+    col_updates = t(filter(player_stats, player_id == specific_player)) %>%
       str_c(rownames(.), " = ", ., collapse = ", ")
-    
+
     update_player_stats_query = str_c("UPDATE player_stats
                               SET ", col_updates,
                               " WHERE game_id = ", unique(player_stats$game_id),
                               " AND player_id = ", specific_player, ";")
-    
+
     dbExecute(con, update_player_stats_query)
   }
-  
-  
-  
 }
 
 db_update_round = function(round, game){
-  # Update round number in game_stats
-  dbExecute(con, 
-            sql(str_c("UPDATE game_stats 
-                 set last_round = '", round, "'
-                ",
-                      "WHERE game_id = ", game, ";")))
+  dbExecute(con,
+            "UPDATE game_stats SET last_round = $1 WHERE game_id = $2",
+            params = list(round, as.integer(game)))
 }
 
+
+finalize_game = function(vals, con, snappaneers_data, score_to_val, round_num_val, session) {
+  # Shared logic for finish_game and send_to_db handlers.
+  # Checks rebuttal, writes game_stats + player_stats to DB, shows confirmation alert.
+
+  vals$rebuttal = rebuttal_check(
+    a = vals$current_scores$team_A,
+    b = vals$current_scores$team_B,
+    round = round_num_val,
+    points_to_win = score_to_val
+  )
+
+  game_stats = group_by(vals$player_stats_db, game_id) %>%
+    summarise(
+      points_a = sum((team == "A") * total_points),
+      points_b = sum((team == "B") * total_points),
+      rounds = as.integer(vals$shot_num),
+      ones = sum(ones),
+      twos = sum(twos),
+      threes = sum(threes),
+      impossibles = sum(impossibles),
+      paddle_points = sum(paddle_points),
+      clink_points = sum(clink_points),
+      game_complete = vals$rebuttal
+    )
+
+  current_time = now(tzone = "America/Los_Angeles")
+  vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = strtrim(as.character(current_time), 19))) %>%
+    mutate(night_dice = if_else(hour(current_time) > 20, T, F)) %>%
+    left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>%
+    select(-contains("_old", ignore.case = F)) %>%
+    mutate(across(where(is_character), ~as.character(dbQuoteLiteral(con, .))))
+
+  col_updates = t(vals$game_stats_db) %>%
+    str_c(rownames(.), " = ", ., collapse = ", ")
+
+  update_game_query = str_c("UPDATE game_stats SET ", col_updates,
+                            " WHERE game_id = ", vals$game_id, ";")
+
+  dbExecute(con, update_game_query)
+
+  vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers_data, game = vals$game_id)
+  db_update_player_stats(vals$player_stats_db)
+
+  sendSweetAlert(session,
+                 title = "The die is cast",
+                 text = "Data sent to SnappaDB",
+                 type = "success")
+}
 
 
 
 calculate_leaderboard_stats = function(
-    con, 
-    min_date = ymd("2023-01-01"), 
+    con,
+    min_date = ymd("2023-01-01"),
     max_date = ceiling_date(today(), unit = "year")){
-  
-  # browser()
-  games_filtered = tbl(con, "game_stats") |> 
+
+  games_filtered = tbl(con, "game_stats") |>
     mutate(game_start_date = as.Date(game_start),
-           game_end_date = as.Date(game_end)) |> 
+           game_end_date = as.Date(game_end)) |>
     filter(game_start_date >= min_date,
-           game_end_date <= max_date) |> 
+           game_end_date <= max_date) |>
     select(game_id, points_a, points_b)
-  
-  score_stats = games_filtered |> 
-    left_join(tbl(con, "scores"), by = "game_id") |> 
+
+  score_stats = games_filtered |>
+    left_join(tbl(con, "scores"), by = "game_id") |>
     mutate(sinks = case_when(points_scored == 3 & !clink ~ 1,
                             T ~ 0),
            paddle_sinks = case_when(points_scored == 3 & !clink & paddle ~ 1,
@@ -761,18 +775,18 @@ calculate_leaderboard_stats = function(
            foot_sinks = case_when(points_scored == 3 & !clink & foot ~ 1,
                             T ~ 0),
            foot_paddle_points = case_when(foot ~ points_scored,
-                                   T ~ 0)) |> 
-    group_by(player_id) |> 
+                                   T ~ 0)) |>
+    group_by(player_id) |>
     summarise(
       across(c(sinks, paddle_sinks, foot_paddle_points, foot_sinks), \(x) sum(x, na.rm=T))
     )
-  
-  games_filtered |> 
-    left_join(tbl(con, "player_stats"), by = "game_id") |> 
+
+  games_filtered |>
+    left_join(tbl(con, "player_stats"), by = "game_id") |>
     mutate(game_won = case_when(points_a > points_b & team == "A" ~ 1,
                                 points_a < points_b & team == "B" ~ 1,
-                                T ~ 0)) |> 
-    group_by(player_id) |> 
+                                T ~ 0)) |>
+    group_by(player_id) |>
     summarise(
       games_played = n(),
       win_pct = sum(game_won, na.rm=T)/n(),
@@ -783,11 +797,10 @@ calculate_leaderboard_stats = function(
       off_ppg = mean(off_ppr * shots, na.rm=T),
       defensive_points = sum(def_ppr * shots, na.rm=T),
       def_ppg = mean(def_ppr * shots, na.rm=T)
-    ) |> 
-    left_join(score_stats, by = "player_id") |> 
-    replace_na(list(sinks = 0, paddle_sinks = 0, foot_paddle_points = 0, foot_sinks = 0)) |> 
-    inner_join(tbl(con, "players"), by = "player_id") |> 
-    # mutate(weighted_score = paddle_sinks * 6 + sinks * 5 + total_points + paddle_points * 1.5 + points_per_page * 2 + toss_efficiency * 10) |> 
-    arrange(desc(total_points)) |> 
+    ) |>
+    left_join(score_stats, by = "player_id") |>
+    replace_na(list(sinks = 0, paddle_sinks = 0, foot_paddle_points = 0, foot_sinks = 0)) |>
+    inner_join(tbl(con, "players"), by = "player_id") |>
+    arrange(desc(total_points)) |>
     mutate(rank = row_number())
 }

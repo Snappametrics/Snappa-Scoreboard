@@ -16,17 +16,7 @@ library(waiter)
 
 # Prior to app startup ----------------------------------------------------
 
-# Round numbers and labels
-rounds = str_c(rep(1:100, each = 2), rep(c("A", "B"), 100))
-round_labels = rep(c("Pass the dice", "Next round"),100)
-
-casualty_rules = tribble(~team_A, ~team_B, ~casualty_title, ~casualty_text, ~image,
-                         12, 7, "12-7", "Roll off to see who is taking the kamikaze to the face", 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Attack_on_Pearl_Harbor_Japanese_planes_view.jpg/1280px-Attack_on_Pearl_Harbor_Japanese_planes_view.jpg',
-                         7, 12, "12-7", "Roll off to see who is taking the kamikaze to the face", 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Attack_on_Pearl_Harbor_Japanese_planes_view.jpg/1280px-Attack_on_Pearl_Harbor_Japanese_planes_view.jpg',
-                         18, 12, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.", NULL,
-                         12, 18, "War of 1812", "Everyone roll a die, the lowest roll takes a shot.", NULL,
-                         20, 03, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams", NULL,
-                         03, 20, "2003", "Nevar forget: a 9/11 consists of a shot of fireball into a Sam Adams", NULL)
+# (rounds, round_labels, casualty_rules, sink_criteria defined in R/_globals.R)
 
 # DB Tables ---------------------------------------------------------------
 
@@ -2776,84 +2766,10 @@ observeEvent(input$resume_no, {
   })
   
   observeEvent(input$finish_game_sure, {
-    
     vals$game_over = T
-
-
-    # Update Game History
-    # Calculate game-level stats from game stats players, and vary it based on whether the game is actually complete or not
-    # to test it I use rebuttal since this is the one point in time where we can basically be certain that a game is/isn't over
-    # Checking vals$rebuttal here is redundant if we have already clicked next round, but this is necessary in games where
-    # players clicked "finish game" since rebuttal is checked on the next round button
-    vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
-                                   round = round_num(), points_to_win = score_to())
-    
-    
-    
-    if(vals$rebuttal == T){
-      game_stats = group_by(vals$player_stats_db, game_id) %>% 
-        summarise(points_a = sum((team == "A")*total_points),
-                  points_b = sum((team == "B")*total_points),
-                  rounds = as.integer(vals$shot_num),
-                  ones = sum(ones),
-                  twos = sum(twos),
-                  threes = sum(threes),
-                  impossibles = sum(impossibles),
-                  paddle_points = sum(paddle_points),
-                  clink_points = sum(clink_points),
-                  game_complete = T)
-    } else {
-      game_stats = group_by(vals$player_stats_db, game_id) %>% 
-        summarise(points_a = sum((team == "A")*total_points),
-                  points_b = sum((team == "B")*total_points),
-                  rounds = as.integer(vals$shot_num),
-                  ones = sum(ones),
-                  twos = sum(twos),
-                  threes = sum(threes),
-                  impossibles = sum(impossibles),
-                  paddle_points = sum(paddle_points),
-                  clink_points = sum(clink_points),
-                  game_complete = F)
-    }
-    
-    current_time = now(tzone = "America/Los_Angeles")
-    # This uses select because the column names were no longer matching the DB ones after joining
-    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = strtrim(as.character(current_time), 19))) %>% 
-      mutate(night_dice = if_else(hour(current_time) > 20, T, F)) %>% 
-      left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
-      select(-contains("_old", ignore.case = F)) %>% 
-      # Add quotes around character vars for update query
-      mutate(across(where(is_character), ~str_c("'", ., "'")))
-    
-    
-    # Convert tibble to character string in the format: COLNAME = VALUE
-    col_updates = t(vals$game_stats_db) %>% 
-      str_c(rownames(.), " = ", ., collapse = ", ")
-    
-    update_game_query = str_c("UPDATE game_stats
-                              SET ", col_updates,
-                              " WHERE game_id = ", vals$game_id, ";")
-    
-    dbExecute(con, update_game_query)
-    
-    
-    
-    # Update player stats table one final time
-    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
-    
-    db_update_player_stats(vals$player_stats_db)
-    
-    
-    # Confirmation that data was sent to db
-    sendSweetAlert(session, 
-                   title = "The die is cast",
-                   text = "Data sent to SnappaDB",
-                   type = "success")
-    
-    
-    game_summary_modal(game_summary()$df, round_num(), 
-                        game_summary()$subtitle_a, game_summary()$subtitle_b)
-    
+    finalize_game(vals, con, snappaneers(), score_to(), round_num(), session)
+    game_summary_modal(game_summary()$df, round_num(),
+                       game_summary()$subtitle_a, game_summary()$subtitle_b)
   })
   
 
@@ -2862,87 +2778,9 @@ observeEvent(input$resume_no, {
   
   
   observeEvent(input$send_to_db, {
-
-    # CODE TO USE IN RESUME GAME VALIDATION
-    #
-    # validate(need(any(vals$current_scores$team_a >= score_to(),
-    #                   vals$current_scores$team_b >= score_to()),
-    #               message = "Your game hasn't ended yet. Please finish the current game or restart before submitting",
-    #               label = "check_game_over"))
-
-    # Update Game History
-    # Calculate game-level stats from game stats players, and vary it based on whether the game is actually complete or not
-    # to test it I use rebuttal since this is the one point in time where we can basically be certain that a game is/isn't over
-    # Checking vals$rebuttal here is redundant if we have already clicked next round, but this is necessary in games where
-    # players clicked "finish game" since rebuttal is checked on the next round button
-    vals$rebuttal = rebuttal_check(a = vals$current_scores$team_A, b = vals$current_scores$team_B,
-                                   round = round_num(), points_to_win = score_to())
-    
-    
-
-    if(vals$rebuttal == T){
-    game_stats = group_by(vals$player_stats_db, game_id) %>% 
-      summarise(points_a = sum((team == "A")*total_points),
-                points_b = sum((team == "B")*total_points),
-                rounds = as.integer(vals$shot_num),
-                ones = sum(ones),
-                twos = sum(twos),
-                threes = sum(threes),
-                impossibles = sum(impossibles),
-                paddle_points = sum(paddle_points),
-                clink_points = sum(clink_points),
-                game_complete = T)
-    } else {
-      game_stats = group_by(vals$player_stats_db, game_id) %>% 
-        summarise(points_a = sum((team == "A")*total_points),
-                  points_b = sum((team == "B")*total_points),
-                  rounds = as.integer(vals$shot_num),
-                  ones = sum(ones),
-                  twos = sum(twos),
-                  threes = sum(threes),
-                  impossibles = sum(impossibles),
-                  paddle_points = sum(paddle_points),
-                  clink_points = sum(clink_points),
-                  game_complete = F)
-    }
-    current_time = now(tzone = "America/Los_Angeles")
-    # This uses select because the column names were no longer matching the DB ones after joining
-    vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = strtrim(as.character(current_time), 19))) %>% 
-      mutate(night_dice = if_else(hour(current_time) > 20, T, F)) %>% 
-      left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>% 
-      select(-contains("_old", ignore.case = F)) %>% 
-      # Add quotes around character vars for update query
-      mutate(across(where(is_character), ~str_c("'", ., "'")))
-    
-    
-    # Convert tibble to character string in the format: COLNAME = VALUE
-    col_updates = t(vals$game_stats_db) %>% 
-      str_c(rownames(.), " = ", ., collapse = ", ")
-    
-    update_game_query = str_c("UPDATE game_stats
-                              SET ", col_updates,
-                              " WHERE game_id = ", vals$game_id, ";")
-    
-    dbExecute(con, update_game_query)
-  
-
-    
-    # Update player stats table one final time
-    vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers(), game = vals$game_id)
-    
-    db_update_player_stats(vals$player_stats_db)
-    
-    
-    # Confirmation that data was sent to db
-    sendSweetAlert(session, 
-                   title = "The die is cast",
-                   text = "Data sent to SnappaDB",
-                   type = "success")
-    
-
-    game_summary_modal(game_summary()$df, round_num(), 
-                        game_summary()$subtitle_a, game_summary()$subtitle_b)
-    
+    finalize_game(vals, con, snappaneers(), score_to(), round_num(), session)
+    game_summary_modal(game_summary()$df, round_num(),
+                       game_summary()$subtitle_a, game_summary()$subtitle_b)
   })
   
 
