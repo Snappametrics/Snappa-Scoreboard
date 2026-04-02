@@ -73,3 +73,7 @@ Visualizations use ggplot2 with custom `snappa_pal` theme colors; interactive ta
 ## Branch Context
 
 The current branch `refactor-modularize` is an in-progress refactor. `docs/MODULE_ARCHITECTURE.md` describes the planned modular structure. The master branch reflects production state.
+
+## Git Conventions
+
+When exploring or modifying the project, commit meaningful progress incrementally rather than batching all changes.

@@ -478,11 +478,12 @@ make_summary_table = function(current_player_stats, player_stats, neers, team_na
 #'
 #' @examples
 player_performance_summary = function(
-    game_started, 
-    player_stats, 
-    team_name, 
-    game_obj = NULL, 
-    current_round = NULL, 
+    game_started,
+    player_stats,
+    team_name,
+    game_session = NULL,
+    game_state = NULL,
+    current_round = NULL,
     past_scores
 ){
   # Produce a team's performance summary and comparison to historical performance in equivalent games
@@ -493,21 +494,21 @@ player_performance_summary = function(
   # TODO: Specify relevant columns early on
   if(game_started == 0){
     ps_current = filter(player_stats, game_id == max(game_id))
-    
+
     # Separate past game player stats
-    ps_past = filter(player_stats, game_id != max(game_id)) |> 
-      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
+    ps_past = filter(player_stats, game_id != max(game_id)) |>
+      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points,
              points_per_round, off_ppr, def_ppr, toss_efficiency)
     current_game = unique(ps_current$game_id)
   } else {
-    ps_current = game_obj$player_stats_db
-    
+    ps_current = game_state$player_stats_db
+
     # Separate past game player stats
-    ps_past = filter(player_stats, game_id != game_obj$game_id) |> 
-      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points, 
+    ps_past = filter(player_stats, game_id != game_session$game_id) |>
+      select(game_id, player_id, team, shots, total_points, paddle_points, clink_points,
              points_per_round, off_ppr, def_ppr, toss_efficiency)
-    
-    current_game = game_obj$game_id
+
+    current_game = game_session$game_id
   }
   
   
@@ -649,48 +650,48 @@ player_performance_summary = function(
 
 
 
-finalize_game = function(vals, con, snappaneers_data, score_to_val, round_num_val, session) {
+finalize_game = function(game_session, game_state, con, snappaneers_data, score_to_val, round_num_val, session) {
   # Shared logic for finish_game and send_to_db handlers.
   # Checks rebuttal, writes game_stats + player_stats to DB, shows confirmation alert.
 
-  vals$rebuttal = rebuttal_check(
-    a = vals$current_scores$team_A,
-    b = vals$current_scores$team_B,
+  game_state$rebuttal = rebuttal_check(
+    a = game_state$current_scores$team_A,
+    b = game_state$current_scores$team_B,
     round = round_num_val,
     points_to_win = score_to_val
   )
 
-  game_stats = group_by(vals$player_stats_db, game_id) %>%
+  game_stats = group_by(game_state$player_stats_db, game_id) %>%
     summarise(
       points_a = sum((team == "A") * total_points),
       points_b = sum((team == "B") * total_points),
-      rounds = as.integer(vals$shot_num),
+      rounds = as.integer(game_state$shot_num),
       ones = sum(ones),
       twos = sum(twos),
       threes = sum(threes),
       impossibles = sum(impossibles),
       paddle_points = sum(paddle_points),
       clink_points = sum(clink_points),
-      game_complete = vals$rebuttal
+      game_complete = game_state$rebuttal
     )
 
   current_time = now(tzone = "America/Los_Angeles")
-  vals$game_stats_db = replace_na(vals$game_stats_db, list(game_end = strtrim(as.character(current_time), 19))) %>%
+  game_state$game_stats_db = replace_na(game_state$game_stats_db, list(game_end = strtrim(as.character(current_time), 19))) %>%
     mutate(night_dice = if_else(hour(current_time) > 20, T, F)) %>%
     left_join(game_stats, by = "game_id", suffix = c("_old", "")) %>%
     select(-contains("_old", ignore.case = F)) %>%
     mutate(across(where(is_character), ~as.character(dbQuoteLiteral(con, .))))
 
-  col_updates = t(vals$game_stats_db) %>%
+  col_updates = t(game_state$game_stats_db) %>%
     str_c(rownames(.), " = ", ., collapse = ", ")
 
   update_game_query = str_c("UPDATE game_stats SET ", col_updates,
-                            " WHERE game_id = ", vals$game_id, ";")
+                            " WHERE game_id = ", game_session$game_id, ";")
 
   dbExecute(con, update_game_query)
 
-  vals$player_stats_db = aggregate_player_stats(vals$scores_db, snappaneers_data, game = vals$game_id)
-  db_update_player_stats(vals$player_stats_db)
+  game_state$player_stats_db = aggregate_player_stats(game_state$scores_db, snappaneers_data, game = game_session$game_id)
+  db_update_player_stats(game_state$player_stats_db)
 
   sendSweetAlert(session,
                  title = "The die is cast",
