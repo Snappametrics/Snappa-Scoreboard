@@ -91,17 +91,17 @@ recent_scores_tab = function(scores_data){
                 heading.align = 'center')
 }
 
-career_stats_tab = function(){
+career_stats_tab = function(ns = NS(NULL)){
   tagList(
     box(width = 12, title = "Top Snappaneers",
         style = str_c("background:", snappa_pal[1]), align = "center",
         div(class = "top-snappaneers",
-            uiOutput("leaderboard_date_filter", width = "100%", class = "leaderboard-row"),
+            uiOutput(ns("leaderboard_date_filter"), width = "100%", class = "leaderboard-row"),
             div(class = "snappaneers-header",
                 # div(class = "snappaneers-title", "Top Snappaneers"),
                 "The deadliest die-throwers in all the land."
             ),
-            reactableOutput("leaderboard_rt", width = "100%"),
+            reactableOutput(ns("leaderboard_rt"), width = "100%"),
             div(class = "caption",
                 p("Toss efficiency = point-scoring tosses as % total tosses"),
                 p("Players need to play at least 5 games to be eligible for achievements.")
@@ -111,20 +111,20 @@ career_stats_tab = function(){
     box(width = 8, title = "Score Heatmap",
         style = str_c("background:", snappa_pal[1]), align = "center",
         p("A heatmap of the different scores that have occurred in games of Snappa."),
-        plotOutput("scoring_heatmap", height = "38em", width = "100%", 
-                   hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
-        uiOutput("heatmap_info")
+        plotOutput(ns("scoring_heatmap"), height = "38em", width = "100%",
+                   hover = hoverOpts(id = ns("heat_hover"), delay = 100, delayType = c("debounce"))),
+        uiOutput(ns("heatmap_info"))
     )
   )
 }
 
-player_stats_tab = function(){
+player_stats_tab = function(ns = NS(NULL)){
   tagList(
     fluidRow(
       # Filters
       box(width = 12, headerBorder = F, title = "Player Stats",
           # Player Select
-          selectInput("player_select", label = "Player", selectize = F,
+          selectInput(ns("player_select"), label = "Player", selectize = F,
                       choices = dbGetQuery(con, sql("SELECT player_name, p.player_id
                                                             FROM players AS p
                                                             INNER JOIN player_stats AS ps
@@ -132,22 +132,22 @@ player_stats_tab = function(){
                                                             GROUP BY player_name, p.player_id
                                                             ORDER BY COUNT(ps.*) DESC")) %>%
                         deframe())
-          
+
       )
     )
     ,
     fluidRow(
-      box(status = "success", 
-          title = "General Stats", 
+      box(status = "success",
+          title = "General Stats",
           collapsible = T,
           icon = icon("list"),
-          reactableOutput("general_stats", width = "100%")
+          reactableOutput(ns("general_stats"), width = "100%")
       ),
-      box(status = "success", 
+      box(status = "success",
           title = "Paddle Stats",
           collapsible = T,
           icon = icon("table-tennis-paddle-ball"),
-          reactableOutput("paddle_stats", width = "100%")
+          reactableOutput(ns("paddle_stats"), width = "100%")
       )
       # General and Paddle Stat boxes
     ),
@@ -158,7 +158,7 @@ player_stats_tab = function(){
           width = 5,
           status = "danger",
           icon = icon("user-injured"),
-          plotOutput("casualty_stats_plot")
+          plotOutput(ns("casualty_stats_plot"))
       ),
       # Top Teammates
       box(title = "Top Teammates",
@@ -167,11 +167,20 @@ player_stats_tab = function(){
           width = 7,
           status = "primary",
           icon = icon("user-group"),
-          reactableOutput("teammate_tab_rt",
+          reactableOutput(ns("teammate_tab_rt"),
                           width = "100%")
       )
     )
     ,
+    fluidRow(
+      box(title = textOutput(ns("game_history_title")),
+          collapsible = T, width = 12,
+          closable = F,
+          collapsed = T,
+          status = "primary",
+          icon = icon("timeline"),
+          reactableOutput(ns("player_game_stats")))
+    ),
     fluidRow(
       box(title = "Player Form",
           width = 12,
@@ -182,7 +191,7 @@ player_stats_tab = function(){
           fluidRow(class = "last-n-games",
                    column(width = 5,
                           # Stat selection
-                          selectInput("stat_select", label = NULL, selectize = F,
+                          selectInput(ns("stat_select"), label = NULL, selectize = F,
                                       choices = c("Total Points" = "total_points",
                                                   "Paddle Points" = "paddle_points",
                                                   "Toss Efficiency" = "toss_efficiency"),
@@ -192,27 +201,18 @@ player_stats_tab = function(){
                    ),
                    column(width = 3,
                           # Sample size selection
-                          selectInput("sample_select", label = NULL, selectize = F,
+                          selectInput(ns("sample_select"), label = NULL, selectize = F,
                                       choices = c(5, 10, 20, 50, 100, 200, "All"),
                                       selected = 5)),
                    column(width = 1, style = "padding-left:0;",
                           tags$span(" games", style = "font-weight:600;")
                    )
-                   
+
           ),
-          plotOutput("player_form")
+          plotOutput(ns("player_form"))
       )
       # Form plot
-      
-    ),
-    fluidRow(
-      box(title = textOutput("game_history_title"),
-          collapsible = T, width = 12,
-          closable = F,
-          collapsed = T,
-          status = "primary",
-          icon = icon("timeline"),
-          reactableOutput("player_game_stats"))
+
     )
   )
 }
@@ -1022,10 +1022,16 @@ remove_p4_input = function(current_tab, team, session){
 }
 
 
+#For the restart game screen, I'm going to make a UI to handle most of the modalDialog
+# output. My idea is that if I make a function which can just do this based on the game, 
+# then we can also parlay this into other things (e.g. a game history ui) at a later time
 glance_table_team = function(game.id, team.id){
-  base_table = dbGetQuery(con, str_c("SELECT players.player_name, ps.total_points, ps.team, ps.paddle_points, ps.shots, ps.toss_efficiency FROM player_stats AS ps
-                                LEFT JOIN players ON players.player_id = ps.player_id
-                          WHERE ps.game_id = ", game.id, " AND ps.team = '", team.id, "'"))
+  base_table = dbGetQuery(con,
+    "SELECT players.player_name, ps.total_points, ps.team, ps.paddle_points, ps.shots, ps.toss_efficiency
+     FROM player_stats AS ps
+     LEFT JOIN players ON players.player_id = ps.player_id
+     WHERE ps.game_id = $1 AND ps.team = $2",
+    params = list(as.integer(game.id), as.character(team.id)))
   return(base_table)
 }
 

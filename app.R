@@ -119,197 +119,39 @@ ui <- dashboardPage(
     use_waiter(),
     tabItems(
 
-      # Player Input ------------------------------------------------------------
+    ## Player Input ------------------------------------------------------------
 
-      
-      tabItem(tabName = "player_input",
-              fluidRow(
-                team_input_ui("A", 
-                              player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]),
-                
-                # Column 2 - empty
-                column(4,  align = "center",
-                       disabled(actionBttn("start_game", 
-                                           label = "Throw dice?", style = "pill", color = "primary", 
-                                           icon = icon("dice"), size = "sm")),
-                       uiOutput("validate_start"),
-                       
-                       helpText("Note: All players must enter their name before the game can begin"),
-                       # reactableOutput("expected_inputs")
-                       ),
-                       
-                
-                # Column 3 - Team B
-                team_input_ui("B", 
-                              player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1])
-              )
-              ),
-
-
-      # Scoreboard --------------------------------------------------------------
-
-
-      
-      tabItem(tabName = "scoreboard", #icon = icon("window-maximize"), 
-               div(
-                 fluidRow(id = "dice-row", 
-                          column(4, align = "center", 
-                                 uiOutput("active_die_left")),
-                          column(4, align = "center",
-                                 actionBttn("switch_sides", 
-                                            "Switch Sides", style = "material-flat", 
-                                            color = "primary", 
-                                            icon = icon("arrows-rotate"), size = "sm")),
-                          column(4, align = "center", 
-                                 uiOutput("active_die_right"))
-                          ),
-                 team_scoreboard_ui()
-                 
-               )
+      tabItem(
+        tabName = "player_input",
+        team_input_tab()
       ),
 
-# Career Stats ------------------------------------------------------------
+    ## Scoreboard --------------------------------------------------------------
 
-      
-      
-      tabItem(tabName = "career_stats",
-              box(width = 12, title = "Top Snappaneers",
-                    style = str_c("background:", snappa_pal[1]), align = "center",
-                    div(class = "top-snappaneers",
-                        uiOutput("leaderboard_date_filter", width = "100%", class = "leaderboard-row"),
-                        div(class = "snappaneers-header",
-                            # div(class = "snappaneers-title", "Top Snappaneers"),
-                            "The deadliest die-throwers in all the land."
-                        ),
-                        reactableOutput("leaderboard_rt", width = "100%"),
-                        div(class = "caption",
-                          p("Toss efficiency = point-scoring tosses as % total tosses"),
-                          p("Players need to play at least 5 games to be eligible for achievements.")
-                        )
-                    )
-                ),
-                box(width = 8, title = "Score Heatmap",
-                    style = str_c("background:", snappa_pal[1]), align = "center",
-                    p("A heatmap of the different scores that have occurred in games of Snappa."),
-                                 plotOutput("scoring_heatmap", height = "38em", width = "100%", 
-                                            hover = hoverOpts(id = "heat_hover", delay = 100, delayType = c("debounce"))),
-                                 uiOutput("heatmap_info")
-                )
+      tabItem(
+        tabName = "scoreboard", #icon = icon("window-maximize"), 
+        scoreboard_tab()
+      ),
 
-              ),
+    ## Career Stats ------------------------------------------------------------
 
-# Player Stats ------------------------------------------------------------
+      tabItem(
+        tabName = "career_stats",
+        careerStatsUI("career")
+      ),
 
-      
-      tabItem(tabName = "player_stats",
-              fluidRow(
-                # Filters
-                box(width = 12, headerBorder = F, title = "Player Stats",
-                        # Player Select
-                    selectInput("player_select", label = "Player", selectize = F,
-                                    choices = dbGetQuery(con, sql("SELECT player_name, p.player_id
-                                                            FROM players AS p
-                                                            INNER JOIN player_stats AS ps
-                                                            ON p.player_id = ps.player_id
-                                                            GROUP BY player_name, p.player_id
-                                                            ORDER BY COUNT(ps.*) DESC")) %>%
-                                      deframe())
-                
-                )
-              )
-              ,
-              fluidRow(
-                box(status = "success", 
-                    title = "General Stats", 
-                    collapsible = T,
-                    icon = icon("list"),
-                    reactableOutput("general_stats", width = "100%")
-                ),
-                box(status = "success", 
-                    title = "Paddle Stats",
-                    collapsible = T,
-                    icon = icon("table-tennis-paddle-ball"),
-                    reactableOutput("paddle_stats", width = "100%")
-                )
-                # General and Paddle Stat boxes
-              ),
-              fluidRow(
-                box(title = "Casualty Stats",
-                    collapsible = T,
-                    closable = F,
-                    width = 5,
-                    status = "danger",
-                    icon = icon("user-injured"),
-                    plotOutput("casualty_stats_plot")
-                       ),
-                # Top Teammates
-                box(title = "Top Teammates",
-                    collapsible = T,
-                    closable = F,
-                    width = 7,
-                    status = "primary",
-                    icon = icon("user-group"),
-                    reactableOutput("teammate_tab_rt",
-                                    width = "100%")
-                )
-              )
-              ,
-              fluidRow(
-                box(title = "Player Form",
-                    width = 12,
-                        collapsible = T,
-                        closable = F,
-                        status = "primary",
-                    icon = icon("chart-bar"),
-                        fluidRow(class = "last-n-games",
-                                 column(width = 5,
-                                        # Stat selection
-                                        selectInput("stat_select", label = NULL, selectize = F,
-                                                    choices = c("Total Points" = "total_points",
-                                                                "Paddle Points" = "paddle_points",
-                                                                "Toss Efficiency" = "toss_efficiency"),
-                                                    selected = "total_points")),
-                                 column(width = 1, style = "padding-right:3vw;padding-left:0",
-                                        tags$span("Last", style = "font-weight:600;")
-                                 ),
-                                 column(width = 3,
-                                        # Sample size selection
-                                        selectInput("sample_select", label = NULL, selectize = F,
-                                                    choices = c(5, 10, 20, 50, 100, 200, "All"),
-                                                    selected = 5)),
-                                 column(width = 1, style = "padding-left:0;",
-                                        tags$span(" games", style = "font-weight:600;")
-                                 )
+    ## Player Stats ------------------------------------------------------------
 
-                        ),
-                        plotOutput("player_form")
-              )
-              # Form plot
-
-              ),
-              fluidRow(
-                box(title = textOutput("game_history_title"),
-                        collapsible = T, width = 12,
-                        closable = F,
-                        collapsed = T,
-                        status = "primary",
-                    icon = icon("timeline"),
-                        reactableOutput("player_game_stats"))
-              )
-
-              )
-
-
-),
+      tabItem(
+        tabName = "player_stats",
+        playerStatsUI("player_stats")
+      )
+    ),
+    
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
     )
   )
-  # 
-  # This is supposed to go at the top tho
-  
-
-
 
 
 # Debugging ---------------------------------------------------------------
@@ -332,13 +174,10 @@ ui <- dashboardPage(
       #   )
   )
   
-  
-
-
-
 
 
 # Server ------------------------------------------------------------------
+
 server <- function(input, output, session) {
   
   observeEvent(input$debug, {
@@ -353,8 +192,8 @@ server <- function(input, output, session) {
      str_c("Yeeting Imaginary Dice Into The Sky"
      )
    ))
+  
   output$sidebar_menu <- renderUI({
-    
     
     if(input$start_game) {
       sidebarMenu(
@@ -417,28 +256,13 @@ server <- function(input, output, session) {
       intervalMillis = 1000*120,
       session = session,
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM game_stats where game_complete is true"))},
-      valueFunc = function() {
-        set_names(
-          map(tbls,
-            function(table){
-              dbGetQuery(con,
-                         sql(
-                           str_c("SELECT * FROM ", table,
-                                 if_else(table %in% c("scores", "player_stats", "game_stats"),
-                                         " WHERE game_id IN (SELECT game_id FROM game_stats WHERE game_complete is true)",
-                                         "")
-                           )
-                         )
-              )
-            }),
-          tbls)
-      }
+      valueFunc = function() { db_poll_completed_tables(con, tbls) }
     ),
     recent_scores = reactivePoll(
       intervalMillis = 100*30,
       session = session,
       checkFunc = function() {dbGetQuery(con, sql("SELECT COUNT(*) FROM recent_scores"))},
-      valueFunc = function() {dbGetQuery(con, sql("SELECT * FROM recent_scores"))}
+      valueFunc = function() { db_poll_recent_scores(con) }
     ),
     casualties = tibble(
       casualty_id = integer(), 
@@ -891,539 +715,19 @@ server <- function(input, output, session) {
   
 
 
-# Stats Outputs --------------------------------------------------------------
-  
+# Career Stats module ---------------------------------------------------------
 
-  output$leaderboard_rt = renderReactable({
-    req(input$leaderboard_range)
-    # Create the rank column, arrange the data, and select the columns
-    # aggregated_data = vals$db_tbls()[["career_stats"]]
-    
-    leaderboard_stats = calculate_leaderboard_stats(con, min_date = input$leaderboard_range[1], max_date = input$leaderboard_range[2])
-    
-    # Separate out those with under 5 games
-    # dividing_line = min(aggregated_data[aggregated_data$games_played < 5, "rank"])
-      
-    # leaderboard_table_rt(aggregated_data, dividing_line = dividing_line)
-    leaderboard_table_rt(collect(leaderboard_stats))
-  })
-  
-  output$leaderboard_date_filter = renderUI({
-    games = tbl(con, "game_stats") |> 
-      summarise(min_date = min(as.Date(game_start), na.rm=T))
-    
-    current_date = today(tzone = "America/Los_Angeles")
-    
-    tagList(
-              dateRangeInput("leaderboard_range", label = "Timeframe", 
-                             startview = "year", 
-                             start = floor_date(current_date, unit = "year"), end = current_date, 
-                             min = pull(games, min_date), max = current_date, format = "M d, yyyy"),
-              # Quick filters
-              actionButton("leaderboard_all", label = "All", class = "btn-primary"),
-              actionButton("leaderboard_past_year", label = "Past 12 Months", class = "btn-primary"),
-              actionButton("leaderboard_past_6mo", label = "Past 6 Months", class = "btn-primary"),
-              actionButton("leaderboard_past_3mo", label = "Past 3 Months", class = "btn-primary"),
-              actionButton("leaderboard_past_month", label = "Past Month", class = "btn-info")
-    )
-  })
-
-  # Observe quick filters
-  observeEvent(input$leaderboard_all, {
-    games = tbl(con, "game_stats") |> 
-      summarise(min_date = min(as.Date(game_start), na.rm=T))
-    
-    updateDateRangeInput(inputId = "leaderboard_range", 
-                         start = pull(games, min_date), 
-                         end = today(tzone = "America/Los_Angeles"))
-  })
-  observeEvent(input$leaderboard_past_year, {
-    updateDateRangeInput(inputId = "leaderboard_range", 
-                         start = today(tzone = "America/Los_Angeles") %m-% months(12), 
-                         end = today(tzone = "America/Los_Angeles"))
-  })
-  observeEvent(input$leaderboard_past_6mo, {
-    updateDateRangeInput(inputId = "leaderboard_range", 
-                         start = today(tzone = "America/Los_Angeles") %m-% months(6), 
-                         end = today(tzone = "America/Los_Angeles"))
-  })
-  observeEvent(input$leaderboard_past_3mo, {
-    updateDateRangeInput(inputId = "leaderboard_range", 
-                         start = today(tzone = "America/Los_Angeles") %m-% months(3), 
-                         end = today(tzone = "America/Los_Angeles"))
-  })
-  observeEvent(input$leaderboard_past_month, {
-    updateDateRangeInput(inputId = "leaderboard_range", 
-                         start = today(tzone = "America/Los_Angeles") %m-% months(1), 
-                         end = today(tzone = "America/Los_Angeles"))
-  })
-  
-  output$scoring_heatmap = renderPlot({
-    score_heatmap(tbl(con, "score_progression"))
-  }, res = 96)
-  
-  output$heatmap_info <- renderUI({
-    req(input$heat_hover)
-    x <- round(input$heat_hover$x, 0)
-    y <- round(input$heat_hover$y, 0)
-    
-    freq = filter(tbl(con, "score_progression"), score_a == y, score_b == x) %>% 
-      pull(n)
-    
-    HTML(str_c("<p><span style='font-weight:500'>Team B</span>: ", x, "  ", "<span style='font-weight:500'>Team A</span>: ", y, "</p>",
-          "<p><span style='font-weight:500'>How many occurrences?</span>: ", freq))
-  })
-  
-  
-  
-  
-  
-  player_game_stats = reactive({
-    
-    completed_games = tbl(con, "game_stats") |> 
-      filter(game_complete) |> 
-      select(game_id, points_a, points_b)
-    
-    inner_join(tbl(con, "players"), 
-               tbl(con, "player_stats"),
-               by = "player_id") |> 
-      inner_join(completed_games, by = "game_id") |> 
-      # Identify which games were won
-      mutate(winning = if_else(points_a > points_b, "A", "B"),
-             won_game = if_else(team == winning, "Won", "Lost")) |> 
-      select(player_id, game_id, won_game)
-  })
-  
-  
-  
-  
-  
-  # Reactive list of data for a given player's previous 5 games
-  player_form_data = reactive({
-    # Ensure player ID is an integer
-    player_selected = as.integer(input$player_select)
-    
-    # Calculate player's career avg and max for stat selected
-    player_career = tbl(con, "player_stats") |> 
-      filter(player_id == player_selected) |> 
-      mutate(avg_points = mean(!!sym(input$stat_select)),
-             max_points = max(!!sym(input$stat_select))) |> 
-      select(game_id, player_id, !!sym(input$stat_select), avg_points, max_points)
-    
-    # Subset to recent games
-    if(input$sample_select != "All"){
-      player_career = player_career |> 
-        slice_max(order_by = game_id, n = as.numeric(input$sample_select))
-    }
-    
-    # Join won/loss data and assign relative game number
-    recent_games = player_career |> 
-      left_join(player_game_stats(), by = c("player_id", "game_id")) |> 
-      arrange(game_id) |> 
-      mutate(game_num = row_number(), .before = "player_id")
-    
-
-    collect(recent_games)
-
-  })
-  
-  
-  
-  
-  
-  teammate_stats = reactive({
-    dbGetQuery(con, 
-               sql(str_c(
-                 "SELECT * FROM teammate_stats ",
-                 "WHERE player_id = ", input$player_select
-               )))
-  })
-  
-  
-  
-  
-  
-  output$teammate_tab_rt = renderReactable({
-    select(teammate_stats(), -1:-2) %>% 
-      reactable(
-        defaultSorted = "games_played",
-        columns = list(
-          teammate = colDef(
-            name = "Teammate"
-          ),
-          games_played = colDef(
-            name = "Games Played",
-            defaultSortOrder = "desc"
-          ),
-          win_pct = colDef(
-            name = "Win %",
-            defaultSortOrder = "desc",
-            # Render the bar charts using a custom cell render function
-            cell = function(value) {
-              # Format as percentages with 1 decimal place
-              value <- str_c(format(value* 100, nsmall = 1), "%")
-              # Fix width here to align single and double-digit percentages
-              value <- format(value, width = 6, justify = "right")
-              bar_chart(value, width = value, fill = snappa_pal[5], background = "#DEDDDD")
-            },
-            # And left-align the columns
-            align = "right"
-          ),
-          avg_points = colDef(
-            name = "Avg. Points",
-            defaultSortOrder = "desc",
-            format = colFormat(digits = 2)
-          ),
-          avg_paddle_points = colDef(
-            name = "Avg. Paddle Points",
-            defaultSortOrder = "desc",
-            format = colFormat(digits = 2)
-          )
-        ),
-        compact = T, defaultPageSize = 10
-      )
-      
-  })
-  
-  output$game_history_title = renderText({
-    str_c(players_tbl[players_tbl$player_id == input$player_select, "player_name"], 
-          "'s Game History")
-  })
-  
-  player_game_history = reactive({
-    dbGetQuery(con, 
-               sql(
-                 str_c(
-                   "SELECT game_id, 
-                        to_date(gs.game_start, 'YYYY-MM-DD') as date, 
-                    		(to_timestamp(gs.game_end, 'YYYY-MM-DD HH24:MI:SS')-to_timestamp(gs.game_start, 'YYYY-MM-DD HH24:MI:SS')) AS game_length,
-                    		ps.team,
-                    		CASE ps.team 
-                    			WHEN 'A' THEN gs.points_a || ' - ' || gs.points_b
-                    			WHEN 'B' THEN gs.points_b || ' - ' || gs.points_a
-                    		END AS final_score,
-                    		teammates.teammates,
-                    		round(ps.shots::numeric, 2) as shots,
-                    		ps.total_points,
-                    		ps.clink_points, ps.paddle_points, 
-                    		sc.foot_paddles,
-                    		sc.sinks,sc.paddle_sinks, sc.foot_sinks,
-                    		ps.points_per_round, ps.off_ppr, ps.def_ppr, ps.toss_efficiency
-                    FROM player_stats ps
-                    INNER JOIN game_stats gs
-                    USING (game_id)
-                    INNER JOIN (SELECT game_id, team, string_agg(players.player_name, ', ') AS teammates
-                    			FROM  player_stats
-                    			INNER JOIN players
-                    			USING (player_id)
-                    			WHERE player_id !=", input$player_select,"
-                    			GROUP BY game_id, team
-                    			ORDER BY game_id DESC) AS teammates
-                    USING (game_id, team)
-                    INNER JOIN ( SELECT scores.game_id,
-                                scores.player_id,
-                                sum(scores.points_scored) AS total_points,
-                                sum(
-                                    CASE
-                                        WHEN scores.points_scored = 3 AND scores.clink = false THEN 1
-                                        ELSE 0
-                                    END) AS sinks,
-                                sum(
-                                    CASE
-                                        WHEN scores.points_scored = 3 AND scores.clink = false AND scores.paddle = true THEN 1
-                                        ELSE 0
-                                    END) AS paddle_sinks,
-                    			SUM(
-                    				CASE
-                    					WHEN scores.foot = TRUE THEN scores.points_scored
-                    				ELSE 0
-                    				END) AS foot_paddles,
-                    			SUM(
-                    				CASE
-                    					WHEN scores.points_scored = 3 AND scores.clink = FALSE AND scores.foot = TRUE THEN 1
-                    				ELSE 0
-                    				END) AS foot_sinks
-                               FROM scores
-                              GROUP BY scores.game_id, scores.player_id) sc
-                    USING (game_id, player_id)
-                    WHERE ps.player_id = ", input$player_select, "
-                    ORDER BY game_id DESC")))
-  })
-  
-  output$player_game_stats = renderReactable({
-    reactable(
-      player_game_history(), 
-        defaultSorted = "game_id",
-        defaultSortOrder = "desc",
-        columns = list(
-          game_id = colDef(
-            name = "Game", width = 78
-          ),
-          date = colDef(
-            name = "Date", width = 107
-          ),
-          game_length = colDef(
-            name = "Game Length"
-          ),
-          team = colDef(
-            name = "Team", width = 72,
-            sortable = F
-          ),
-          final_score = colDef(
-            name = "Final Score", width = 75,
-            style = function(value) {
-              blue_team = as.numeric(str_extract(value, "^[0-9]{1,2}"))
-              red_team = as.numeric(str_extract(value, "[0-9]{1,2}$"))
-              bg_color = if_else(blue_team > red_team, snappa_pal[5], snappa_pal[2])
-              
-              list(background = bg_color,
-                   color = snappa_pal[1])
-            },
-            sortable = F
-          ),
-          teammates = colDef(
-            name = "Teammate(s)", width = 115,
-            sortable = F
-          ),
-          shots = colDef(
-            name = "Shots", width = 77
-          ),
-          total_points = colDef(
-            name = "Points", width = 81
-          ),
-          clink_points = colDef(
-            name = "Clink Points", width = 81
-          ),
-          paddle_points = colDef(
-            name = "Paddle Points", width = 86
-          ),
-          foot_paddles = colDef(
-            name = "Foot Paddles"
-          ),
-          sinks = colDef(
-            name = "Sinks"
-          ),
-          paddle_sinks = colDef(
-            name = "Paddle Sinks"
-          ),
-          foot_sinks = colDef(
-            name = "Foot Sinks"
-          ),
-          points_per_round = colDef(
-            name = "Points per Round (PPR)",
-            format = colFormat(digits = 2)
-          ),
-          off_ppr = colDef(
-            name = "Off. PPR",
-            format = colFormat(digits = 2)
-          ),
-          def_ppr = colDef(
-            name = "Def. PPR",
-            format = colFormat(digits = 2)
-          ),
-          toss_efficiency = colDef(
-            name = "Toss Efficiency",
-            format = colFormat(digits = 1, percent = T)
-          )
-        ),
-        compact = T
-      )
-  })
+  careerStatsServer("career", con)
   
   
   
   
   
 
-  # Player form plot
-  output$player_form = renderPlot({
-    
-    player_form_plot(input$stat_select, player_form_data())
-    
-    
-  })
-  
-  
-  overall_player_stats = reactive({
-    dbGetQuery(con,
-    sql("SELECT *
-              FROM basic_career_stats ")
-    ) %>% 
-      filter(player_id == !!input$player_select)
-    
-  })
-  
-  
-  output$general_stats = renderReactable({
-    mutate(overall_player_stats(),
-           sink_freq = HTML(if_else(sinks > 0, 
-                                      str_c("<span style='font-weight: 500;'>Every </span>", 
-                                            round(1/(sinks/games_played), 1), 
-                                            "<span style='font-weight: 500;'> games</span>"),
-                                      "TBD"))) %>% 
-      select(`GAMES` = games_played, 
-             `WIN %` = win_pct, 
-             `SINKS` = sinks, 
-             `SINK FREQUENCY` = sink_freq) %>% 
-      reactable(fullWidth = T, 
-                rowStyle = list(alignItems = "center"),
-                # Default style, set up footer
-                defaultColDef = colDef(footer = JS("function(cellInfo) {
-                                                    return cellInfo.column.id
-                                                   }"), 
-                                       footerStyle = list(
-                                         fontSize = "13px",
-                                          borderTop = "none",
-                                          fontWeight = 600
-                                        ), 
-                                       style = list(padding = "3px 4px"), 
-                                       headerStyle = list(display = "none"), 
-                                       align = "center"),
-                # Columns
-                columns = list(
-                  games_played = colDef(name = "GAMES"),
-                  `WIN %` = colDef(format = colFormat(percent = T, digits = 1)),
-                  `SINK FREQUENCY` = colDef(html = T, style = list(fontSize = "14px"))
-                )
-      )
-  })
-  
-  output$paddle_stats = renderReactable({
-    select(overall_player_stats(),
-           `PADDLE POINTS` = paddle_points, 
-             `PADDLE SINKS` = paddle_sinks, 
-             `FOOT PADDLES` = foot_paddles, 
-             `FOOT SINKS` = foot_sinks) %>% 
-      reactable(fullWidth = T, 
-                rowStyle = list(alignItems = "center"),
-                # Default style, set up footer
-                defaultColDef = colDef(footer = JS("function(cellInfo) {
-                                                    return cellInfo.column.id
-                                                   }"), 
-                                       footerStyle = list(
-                                         fontSize = "13px",
-                                         borderTop = "none",
-                                         fontWeight = 600
-                                       ), 
-                                       format = colFormat(digits = 0, separators = T),
-                                       style = list(padding = "3px 4px"), 
-                                       headerStyle = list(display = "none"), 
-                                       align = "center")
-                
-      )
-  })
-  
+# Player Stats module --------------------------------------------------------
 
-  casualty_stats = reactive({
-    req(input$player_select)
-    # browser()
-    filter(dbGetQuery(con,
-               sql("SELECT *
-              FROM casualty_stats ")
-    ), player_id == input$player_select) %>% 
-      # Remove from here down to get the 
-      # simple casualty stats headers to work
-      right_join(
-        tibble(
-          player_id = as.integer(input$player_select),
-          casualty_type = c("Sunk", "Self sink", "Team sink", "12-7", "War of 1812", "2003")
-        ),
-        by = c("player_id", "casualty_type")
-      ) %>% 
-      replace_na(list(casualties = 0))
-  })
-  
-  # Casualty stats plot
-  output$casualty_stats_plot = renderPlot({
-    req(input$player_select)
-    
-    # In order to include all casualties on the page
-    # Create rows for casualties not yet experienced by a player
-    no_casualties = tibble(
-      x = 0, 
-      y = 0,
-      # group = pull(filter(casualty_stats(), casualties == 0), casualty_type),
-      group = casualty_stats()[casualty_stats()$casualties == 0, "casualty_type", drop=T]
-    ) %>% 
-      group_split(group)
-    
-    # Set the number of rows we want in the waffle chart
-    waffle_rows = 6
-    
-    # To keep the number of columns consistent across players
-    # Calculate the number of columns for the max casualties
-    waffle_cols = filter(dbGetQuery(con,
-                             sql("SELECT *
-              FROM casualty_stats ")
-    ), casualties == max(casualties)) %>% 
-      # Divide the max casualties by the number of rows
-      # take the ceiling to know the max value needed
-      transmute(columns = ceiling(casualties/waffle_rows)) %>% 
-      deframe()
-    
-    # Uncount is the dopest dope around for this particular task
-    # Could this be done by rewriting the waffle_iron function for 
-    # the original data format? Definitely...but this probably won't be too slow
-    waffle_list = uncount(casualty_stats(), weights = casualties) %>% 
-      group_split(casualty_type)
-    
-    waffle_sample_size = map_dbl(waffle_list, nrow)
-    
-    
-    
-    
-    waffle_data = map2_dfr(waffle_list, waffle_sample_size,
-                           ~waffle_iron(.x, rows = min(c(.y, waffle_rows)), mapping = aes_d(group = casualty_type))
-    ) %>% 
-      bind_rows(no_casualties) %>% 
-      group_by(group) %>% 
-      mutate(casualties = if_else(x == 0, 0L, n()),
-             group_lab = factor(group, 
-                            levels = c("Sunk", "Self sink", "Team sink", "12-7", "War of 1812", "2003"), 
-                            labels = str_wrap(c("Sunk", "Self sink", "Team sink", "Pearl Harbour", "War of 1812", "2003"), 8))) %>% 
-      ungroup()
-    
-    # Make label positions
-    labels = list(
-      x = mean(c(1, waffle_cols)),
-      y = waffle_rows+1.3
-    )
-    
-    # Casualty
-    ggplot(waffle_data, aes(x,y))+
-      # geom_tile(data = filter(waffle_data, x > 0), 
-      geom_tile(data = waffle_data[waffle_data$x > 0, ], 
-                aes(fill = group), 
-                colour = snappa_pal[1], size = 2)+
-      #geom_waffle(data = filter(waffle_data, x > 0))+
-      geom_text(data = distinct(waffle_data, group_lab, casualties),
-                 aes(label = casualties, 
-                     x = labels$x, y = labels$y),
-                colour = "gray20", #fill = snappa_pal[1], 
-                # label.padding = unit(.4, "lines"), label.r = unit(.4, "lines"), 
-                 size = 6, hjust = 0.5,
-                 family = "Inter Medium")+
-      scale_fill_manual(values = c("Sunk" = snappa_pal[3], 
-                                   "Self sink" = snappa_pal[4], 
-                                   "Team sink" = snappa_pal[2], 
-                                   "12-7" = snappa_pal[5], 
-                                   "War of 1812" = snappa_pal[6], 
-                                   "2003" = snappa_pal[7]), 
-                        guide = guide_none())+
-      scale_x_continuous(limits = c(.5, waffle_cols+1))+
-      scale_y_continuous(limits = c(.5, waffle_rows+1.3), 
-                         expand = expansion(add = c(0,.6)))+
-      facet_wrap(~group_lab, nrow = 2, strip.position = "top")+
-      theme_snappa(md=T, base_size = 20, plot_margin = margin(10, 10, 10, 10))+
-      theme(axis.text = element_blank(), axis.text.y.left = element_blank(),
-            axis.title = element_blank(), axis.line = element_blank(),
-            panel.grid.major.y = element_blank(),
-            panel.grid.minor.y = element_blank(),
-            panel.grid.major.x = element_blank(), 
-            panel.grid.minor.x = element_blank(),
-            strip.text = element_text(face = "bold", hjust = .4, margin = margin(b = 0)))
-    
-  })
+  playerStatsServer("player_stats", con)
+
   
   
   
