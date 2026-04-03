@@ -80,40 +80,13 @@ ui <- dashboardPage(
   controlbar = dashboardControlbar(
     skin = "dark",
     controlbarMenu(
-    #   id = 1,
       controlbarItem(
-        title = "Game Options",
-        sliderInput(
-          inputId = "score_to",
-          label = "What score are you playing to?",
-          min = 11, max = 50, value = 21
-        ),
-        br(),
-        actionBttn("finish_game", "Finish",
-                   icon = icon("check"), size = "sm",
-                   style = "material-flat", color = "warning"),
-        br(),
-        actionBttn("debug", label = "debug", icon = icon("bug"), 
+        title = "Debug",
+        actionBttn("debug", label = "debug", icon = icon("bug"),
                    style = "material-flat", color = "danger")
-      ),
-      controlbarItem(
-        title = "Casualties",
-        disabled(actionBttn("tifu", "Friendly Fire",
-                            style = "material-flat",
-                            size = "sm", color = "danger")),
-        br(),
-        actionBttn("highnoon_manual", 
-                   "High noon", size = "sm",
-                   style = "material-flat", color = "success"),
-        br(),
-        actionBttn("casualty_manual", 
-                   "Casualty Check", size = "sm",
-                   style = "material-flat", color = "royal")
-        
       )
-      
     )
-    ),
+  ),
   body = dashboardBody(
     useShinyjs(),
     use_waiter(),
@@ -123,14 +96,14 @@ ui <- dashboardPage(
 
       tabItem(
         tabName = "player_input",
-        team_input_tab()
+        teamInputUI("team_input")
       ),
 
     ## Scoreboard --------------------------------------------------------------
 
       tabItem(
-        tabName = "scoreboard", #icon = icon("window-maximize"), 
-        scoreboard_tab()
+        tabName = "scoreboard",
+        scoreboardUI("scoreboard")
       ),
 
     ## Career Stats ------------------------------------------------------------

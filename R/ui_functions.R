@@ -223,12 +223,12 @@ player_stats_tab = function(ns = NS(NULL)){
 
 
 # Score pop-up dialog box
-score_check <- function(team, players, round) {
+score_check <- function(team, players, round, ns = NS(NULL)) {
   # Identify which team scored
   team_scored = paste("ok", team, sep = "_")
   team_colour = if_else(team_scored == "ok_A", "#e26a6a", "#2574a9")
   score_val = paste(team, "score_val", sep = "_")
-  
+
   # Ask how many points were scored and by whom
   modalDialog(align = "center", easyClose = T, size = "l",
               # Header
@@ -239,59 +239,59 @@ score_check <- function(team, players, round) {
                 column(8,
                        # Who Scored?
                        radioGroupButtons(
-                         inputId = "scorer",
+                         inputId = ns("scorer"),
                          label = "Who scored?",
                          choices = players,
                          direction = "horizontal",
                          individual = T,
                          size = "lg",
                          checkIcon = list(
-                           yes = tags$i(class = "fa fa-dice", 
+                           yes = tags$i(class = "fa fa-dice",
                                         style = paste("color:", team_colour)))
                        ),
                        # Number of points
                        radioGroupButtons(
-                         inputId = "score",
+                         inputId = ns("score"),
                          label = "Points",
                          choices = c(1, 2, 3, 4, 5, 6, 7),
                          size = "lg"
                        )
                        ),
-                column(4, 
+                column(4,
                        wellPanel(
                          align = "center",
                          h3("Anything cool happen?", style = "font-weight:700; font-size: 2rem;"),
                          # Was it a paddle?
                          awesomeCheckbox(
-                           inputId = "paddle", 
+                           inputId = ns("paddle"),
                            label = tags$div(HTML(str_c('<i id="paddle-icon" class="fas fa-hand-paper" style = "color:', team_colour, ';"></i>  Paddle?'))),#"Was it a paddle?",
                            status = "warning"
                          ),
                          # Was it a clink?
                          awesomeCheckbox(
-                           inputId = "clink", 
+                           inputId = ns("clink"),
                            label = tags$div(HTML(str_c('<i id="clink-icon" class="fas fa-assistive-listening-systems" style = "color:', team_colour, ';"></i>  Clink?'))),#"Was it a clink?",
                            status = "warning"
                          ),
                          # feet?
                          awesomeCheckbox(
-                           inputId = "foot", 
+                           inputId = ns("foot"),
                            label =tags$div(HTML(str_c('<i id="foot-icon" class="fas fa-shoe-prints" style = "color:', team_colour, ';"></i>  Foot?'))),#"Was it a clink?",
                            status = "warning"
                          )
                        )
-                       
+
                        )
               )
               ,
-              
-              textOutput("skip_error_msg"),
+
+              textOutput(ns("skip_error_msg")),
               # Use score_val output to only show score button on valid scoring combinations
               footer = tagList(
-                uiOutput(score_val)
+                uiOutput(ns(score_val))
               )
   )
-  
+
 }
 
 
@@ -316,7 +316,7 @@ casualty_popup = function(session, score, rules, players = snappaneers()$player_
                     inputOptions = players)
     
     if(current_rule$casualty_title == "12-7"){
-      insertUI(selector = "#switch_sides",
+      insertUI(selector = paste0("#", session$ns("switch_sides")),
                where = "afterEnd",
                ui = tags$audio(src = "PearlHarbor.mp3", type = "audio/mp3", autoplay = NA, controls = NA, class = "sound-effect"))
     }
@@ -359,12 +359,12 @@ sink_casualty_popup = function(session, score_row, players = snappaneers()$playe
 
 
 
-tifu_casualty_popup <- function(players) {
+tifu_casualty_popup <- function(players, ns = NS(NULL)) {
   player_choices = deframe(players[, c("player_name", "player_id")])
   # Ask what happened and to whom
   modalDialog(align = "center", easyClose = T, size = "l", style = "margin:7vh 4vw 0;",
-              
-              
+
+
               fluidRow(style="display: flex;",
                 column(8,
                        style="display: flex; flex-flow: column; align-self: center; align-items: flex-start;",
@@ -378,11 +378,11 @@ tifu_casualty_popup <- function(players) {
                        )
               ),
               fluidRow(
-              
+
                 column(8, style = "text-align: left;",
                        # Casualty
                        radioGroupButtons(
-                         inputId = "tifu_casualty",
+                         inputId = ns("tifu_casualty"),
                          label = "Who was the casualty?",
                          choices = player_choices,
                          size = "lg",
@@ -391,33 +391,22 @@ tifu_casualty_popup <- function(players) {
                        ),
                        # Shooter
                        radioGroupButtons(
-                         inputId = "tifu_accused",
+                         inputId = ns("tifu_accused"),
                          label = "Who was the shooter?",
                          choices = player_choices,
                          size = "lg",
                          checkIcon = list(
                            yes = tags$i(class = "fa fa-trash"))
                        )
-                       # radioGroupButtons(
-                       #   inputId = "tifu_accused",
-                       #   label = "Who was the shooter?",
-                       #   choices = players,
-                       #   size = "lg",
-                       #   checkIcon = list(
-                       #     yes = tags$i(class = "fa fa-trash"))
-                       # ),
-                       # to whom?
-                       
                 ),
-                
+
                 column(4, style = "text-align:left;",
                        # What happened?
                        radioGroupButtons(
-                         inputId = "casualty_type",
+                         inputId = ns("casualty_type"),
                          label = "How friendly we talking?",
                          choices = c("Self sink", "Team sink"),
                          direction = "vertical",
-                         # individual = T,
                          justified = T,
                          size = "lg",
                          checkIcon = list(
@@ -425,20 +414,19 @@ tifu_casualty_popup <- function(players) {
                        )
                 )
               ),
-              
+
               footer = tagList(
                 modalButton("Back"),
-                uiOutput("casualty_validation", style = "margin:0px 15px;align-self:center;")
-                
+                uiOutput(ns("casualty_validation"), style = "margin:0px 15px;align-self:center;")
               )
   )
-  
+
 }
 
-highnoon_popup = function(players){
-  insertUI(selector = "#switch_sides",
+highnoon_popup = function(players, ns = NS(NULL)){
+  insertUI(selector = paste0("#", ns("switch_sides")),
            where = "afterEnd",
-           ui = tags$audio(src = "highnoon.mp3", type = "audio/mp3", 
+           ui = tags$audio(src = "highnoon.mp3", type = "audio/mp3",
                            autoplay = NA, controls = NA, class = "sound-effect"))
   
   inputSweetAlert(
@@ -469,7 +457,7 @@ highnoon_popup = function(players){
   )
 }
 
-restart_game_popup = function(ps_tbl){
+restart_game_popup = function(ps_tbl, ns = NS(NULL)){
   # Gather the items that are needed to assemble the UI
   df_a = collect(filter(ps_tbl, team == "A"))
   df_b = collect(filter(ps_tbl, team == "B"))
@@ -516,21 +504,19 @@ restart_game_popup = function(ps_tbl){
       footer = tagList(
         # fluidRow(
         # column(2,
-        actionBttn("resume_no",
+        actionBttn(ns("resume_no"),
                    label = "No",
                    style = "material-flat",
                    color = "danger",
-                   size = "md", 
-                   class = "restart-bttn", 
+                   size = "md",
+                   class = "restart-bttn",
                    icon = icon("trash")),
-        # ),
-        # column(2,
-        actionBttn("resume_yes",
+        actionBttn(ns("resume_yes"),
                    label = "Yes",
-                   style = "material-flat", 
+                   style = "material-flat",
                    color = "warning",
-                   size = "md", 
-                   class = "restart-bttn", 
+                   size = "md",
+                   class = "restart-bttn",
                    icon = icon("check"))
         # )
         # )
@@ -656,62 +642,55 @@ arena_select_popup = function(){
 # Player Input ------------------------------------------------------------
 
 
-player_input = function(team, number, player_choices){
-  div(id = str_c("player-input-", team, number), 
+player_input = function(team, number, player_choices, ns = NS(NULL)){
+  div(id = ns(str_c("player-input-", team, number)),
       class = str_c("player-input ", team),
-      selectizeInput(inputId = paste0('name_', team, number), 
-                     label = NULL, 
-                     choices = c(`Player Name`='', player_choices), 
+      selectizeInput(inputId = ns(paste0('name_', team, number)),
+                     label = NULL,
+                     choices = c(`Player Name`='', player_choices),
                      options = list(create = TRUE, hideSelected=T), width = "125%"))
 }
 
-extra_player_input = function(team, number, player_choices){
+extra_player_input = function(team, number, player_choices, ns = NS(NULL)){
   tagList(
     htmltools::tagAppendAttributes(
-      prettySwitch(inputId = str_c("add_player_", team, number), 
+      prettySwitch(inputId = ns(str_c("add_player_", team, number)),
                    label = str_c("Player ", number), inline = T, bigger = T,
                    status = if_else(team == "A", "primary", "danger")),
       class = "toggle-player",
       style = "text-align:initial;"
     ),
-    disabled(player_input(team = team, number = number, player_choices = player_choices))
+    disabled(player_input(team = team, number = number, player_choices = player_choices, ns = ns))
   )
 }
 
-team_input_ui = function(team, player_choices){
-  
-  players = str_c("#name_", team, 1:4, "-selectized", collapse = ", ")
-  player_inputs = str_c("#name_", team, 1:4, collapse = ", ")
+team_input_ui = function(team, player_choices, ns = NS(NULL)){
+
+  players = str_c("#", ns(str_c("name_", team, 1:4)), "-selectized", collapse = ", ")
   team_colour = if_else(team == "A", "#e26a6a", "#2574a9")
-  # well_selector = if_else(team == 'A', 'input-well-A', 'input-well-B')
-  # div_selector = if_else(team == 'A', 'input-forms-A','input-forms-B')
-  # class_selector = paste0('input-well ', if_else(team == 'A', 'well-A', 'well-B'))
-  
+
   column(4, align = "center",
-         
+
          wellPanel(
            class = str_c("input-well well-", team),
            id = str_c("input-well-", team),
            style = paste("background:", team_colour),
            # Header
            h1(paste("Team", toupper(team)), style = "text-align: center; color: white; font-size: 400%; width: fit-content; align-self:center"),
-           tags$div( id = str_c("input-forms-", team),
+           tags$div(id = str_c("input-forms-", team),
                 class = 'player-input-forms',
                 # Player 1
-                selectizeInput(paste0('name_', team, '1'), 'Player 1', c(`Player Name`='', player_choices),  
+                selectizeInput(ns(paste0('name_', team, '1')), 'Player 1', c(`Player Name`='', player_choices),
                           options = list(create = TRUE, hideSelected=T), width = "125%"),
                 # Player 2
-                selectizeInput(paste0('name_', team, '2'), 'Player 2', c(`Player Name`='', player_choices), 
+                selectizeInput(ns(paste0('name_', team, '2')), 'Player 2', c(`Player Name`='', player_choices),
                                options = list(create = TRUE, hideSelected=T), width = "125%"),
-                # Add Player 3 button
-                # actionBttn(paste0("extra_player_", team, "3"), 
-                #            label = "+ Add Player", style = "unite", color = "danger", size = "sm"),
                 # Player 3
-                extra_player_input(team = team, number = 3, player_choices = player_choices),
+                extra_player_input(team = team, number = 3, player_choices = player_choices, ns = ns),
                 # Player 4
-                extra_player_input(team = team, number = 4, player_choices = player_choices),
+                extra_player_input(team = team, number = 4, player_choices = player_choices, ns = ns),
                 # Player 5
-                extra_player_input(team = team, number = 5, player_choices = player_choices),
+                extra_player_input(team = team, number = 5, player_choices = player_choices, ns = ns),
 
                 # CSS: Increase font size, change color to white, add top and bottom margins
                 tags$style(type = "text/css", paste(players, "{color: white; margin-top:30px;margin-bottom:30px;}"))
@@ -720,26 +699,29 @@ team_input_ui = function(team, player_choices){
   )
 }
 
-team_input_tab = function(){
+team_input_tab = function(ns = NS(NULL)){
+  player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]
   fluidRow(
-    team_input_ui("A", 
-                  player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1]),
-    
-    # Column 2 - empty
-    column(4,  align = "center",
-           disabled(actionBttn("start_game", 
-                               label = "Throw dice?", style = "pill", color = "primary", 
+    team_input_ui("A", player_choices = player_choices, ns = ns),
+
+    # Column 2 - center controls
+    column(4, align = "center",
+           sliderInput(
+             inputId = ns("score_to"),
+             label = "What score are you playing to?",
+             min = 11, max = 50, value = 21
+           ),
+           br(),
+           disabled(actionBttn(ns("start_game"),
+                               label = "Throw dice?", style = "pill", color = "primary",
                                icon = icon("dice"), size = "sm")),
-           uiOutput("validate_start"),
-           
-           helpText("Note: All players must enter their name before the game can begin"),
-           # reactableOutput("expected_inputs")
+           uiOutput(ns("validate_start")),
+
+           helpText("Note: All players must enter their name before the game can begin")
     ),
-    
-    
+
     # Column 3 - Team B
-    team_input_ui("B", 
-                  player_choices = dbGetQuery(con, "SELECT player_name FROM thirstiest_players")[,1])
+    team_input_ui("B", player_choices = player_choices, ns = ns)
   )
 }
 
@@ -798,56 +780,53 @@ team_edit_ui = function(team, player_choices, active_players){
 }
 
 
-team_scoreboard_ui = function(left_team = "A", right_team = "B"){
-  
+team_scoreboard_ui = function(left_team = "A", right_team = "B", ns = NS(NULL)){
+
   team_colours = list("A" = "#e26a6a", "B" = "#2574a9")
-  
+
   well_panel_style = "margin-top: 2vh; padding-top: 2vh; padding-bottom: 2vh; min-height: 70vh; opacity: 0.92; background:"
   h1_style = "color: white; font-size: 5.5rem; font-weight: 700;"
-  
 
-  div(id = "ScoreboardUI", 
-           
+  div(id = ns("ScoreboardUI"),
+
            fluidRow(
              # Left Team
              column(width = 4, align = "center",
-                     
+
                      wellPanel(
-                       class = paste0('scoreboard-well ', 'well-', left_team), 
+                       class = paste0('scoreboard-well ', 'well-', left_team),
                        style = paste(well_panel_style, team_colours[[left_team]]),
-                       # uiOutput("active_die_a"),
                        # Header
                        h1(class = 'team_name',
                           paste("Team", toupper(left_team)), style = h1_style),
                        # Score
-                       h2(class = 'team-score numbers', 
-                          textOutput(paste0("score_", left_team))),
+                       h2(class = 'team-score numbers',
+                          textOutput(ns(paste0("score_", left_team)))),
                        # Score button
-                       div(id = paste0(left_team, '_score_and_undo'),
-                        actionBttn(paste0(left_team, "_score_button"), 
+                       div(id = ns(paste0(left_team, '_score_and_undo')),
+                        actionBttn(ns(paste0(left_team, "_score_button")),
                                    label = "We scored!", color = "danger",
                                    size = "lg"),
                         actionBttn(
-                          inputId = paste0("undo_score_", left_team),
+                          inputId = ns(paste0("undo_score_", left_team)),
                           label = "Undo", style = "unite", color = "danger", icon = icon("rotate-left"), size = "md"
-                        )#,
-                       # h3(textOutput(paste0("player_names_", left_team)))
+                        )
                       )
                      )
-              ), 
+              ),
               # Round
               column(width = 4, align = "center", style = 'padding: 0;',
                      div(id = 'scoreboard_center_controls',
-                         uiOutput("playing_to"),
+                         uiOutput(ns("playing_to")),
                          h1("Round", style = "font-size: 5rem; font-weight: 600;"),
-                         uiOutput("round_num"),
-                         uiOutput("round_control_buttons")
+                         uiOutput(ns("round_num")),
+                         uiOutput(ns("round_control_buttons"))
                      )
 
               ),
-              # Team B
+              # Right Team
              column(width = 4, align = "center",
-                    
+
                     wellPanel(
                       class = paste0('scoreboard-well ', 'well-', right_team),
                       style = paste(well_panel_style, team_colours[[right_team]]),
@@ -856,17 +835,16 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
                          paste("Team", toupper(right_team)), style = h1_style),
                       # Score
                       h2(class = 'team-score numbers',
-                         textOutput(paste0("score_", right_team))),
+                         textOutput(ns(paste0("score_", right_team)))),
                       # Score button
-                      div(id = paste0(right_team, "_score_and_undo"),
-                          actionBttn(paste0(right_team, "_score_button"), 
+                      div(id = ns(paste0(right_team, "_score_and_undo")),
+                          actionBttn(ns(paste0(right_team, "_score_button")),
                                  label = "We scored!", color = "danger",
                                  size = "lg"),
                           actionBttn(
-                            inputId = paste0("undo_score_", right_team),
+                            inputId = ns(paste0("undo_score_", right_team)),
                             label = "Undo", style = "unite", color = "danger", icon = icon("rotate-left"), size = "md"
-                          )#,
-                      # h3(textOutput(paste0("player_names_", right_team)))
+                          )
                       )
                     )
              )
@@ -874,21 +852,37 @@ team_scoreboard_ui = function(left_team = "A", right_team = "B"){
   )
 }
 
-scoreboard_tab = function(){
+scoreboard_tab = function(ns = NS(NULL)){
   div(
-    fluidRow(id = "dice-row", 
-             column(4, align = "center", 
-                    uiOutput("active_die_left")),
+    fluidRow(id = ns("dice-row"),
              column(4, align = "center",
-                    actionBttn("switch_sides", 
-                               "Switch Sides", style = "material-flat", 
-                               color = "primary", 
-                               icon = icon("arrows-rotate"), size = "sm")),
-             column(4, align = "center", 
-                    uiOutput("active_die_right"))
+                    uiOutput(ns("active_die_left"))),
+             column(4, align = "center",
+                    actionBttn(ns("switch_sides"),
+                               "Switch Sides", style = "material-flat",
+                               color = "primary",
+                               icon = icon("arrows-rotate"), size = "sm"),
+                    br(), br(),
+                    actionBttn(ns("finish_game"), "Finish",
+                               icon = icon("check"), size = "sm",
+                               style = "material-flat", color = "warning"),
+                    br(),
+                    disabled(actionBttn(ns("tifu"), "Friendly Fire",
+                                        style = "material-flat",
+                                        size = "sm", color = "danger")),
+                    br(),
+                    actionBttn(ns("highnoon_manual"),
+                               "High noon", size = "sm",
+                               style = "material-flat", color = "success"),
+                    br(),
+                    actionBttn(ns("casualty_manual"),
+                               "Casualty Check", size = "sm",
+                               style = "material-flat", color = "royal")
+             ),
+             column(4, align = "center",
+                    uiOutput(ns("active_die_right")))
     ),
-    team_scoreboard_ui()
-    
+    team_scoreboard_ui(ns = ns)
   )
 }
 
